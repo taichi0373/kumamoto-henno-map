@@ -6,7 +6,7 @@
 \i '/docker-entrypoint-initdb.d/DDL/TABLE/NAT_BENEFIT_ELIGIBILITY.SQL';
 \i '/docker-entrypoint-initdb.d/DDL/TABLE/NAT_FARE_DISCOUNT.SQL';
 \i '/docker-entrypoint-initdb.d/DDL/TABLE/NAT_COMMUNITY_BUS.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/NAT_USERS.SQL';
+\i '/docker-entrypoint-initdb.d/DDL/TABLE/NAT_USER.SQL';
 
 -- 2. DML
 \i '/docker-entrypoint-initdb.d/DML/TABLE/NAT_AGENCY.SQL';
