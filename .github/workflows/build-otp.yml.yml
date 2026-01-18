@@ -1,8 +1,7 @@
-name: OTP CI
-
+name: Build for OTP
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "main", "develop", "develop-oci" ]
     paths:
       - 'docker-compose.yml'
       - 'config/otp/**'
@@ -13,12 +12,12 @@ on:
 
 jobs:
   graph-build:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ubuntu-22.04, x64]
     timeout-minutes: 30
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Check GTFS filename
         run: |
