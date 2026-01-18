@@ -31,7 +31,8 @@ jobs:
   backend-build:
     name: Backend Build
     timeout-minutes: ${{ inputs.timeout-minutes }}
-    runs-on: [self-hosted, ubuntu-22.04, x64]
+    # Github-hosted runner を使用
+    runs-on: ubuntu-latest
 
     env:
       GITHUB_USERNAME: ${{ github.actor }}
