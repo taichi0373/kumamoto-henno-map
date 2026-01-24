@@ -1,0 +1,64 @@
+---
+description: Javaコーディング規約とベストプラクティス
+alwaysApply: true
+---
+
+# Javaコーディング規約
+
+## 命名規則
+
+- **変数・フィールド名**: `camelCase`を使用
+- **クラス名**: `PascalCase`を使用
+- **DBカラム名**: `snake_case`を使用（Entityの`@Column`アノテーションでマッピング）
+- **定数**: `UPPER_SNAKE_CASE`を使用
+
+## 禁止事項
+
+- ❌ **`any`は使用しない** - 型安全性を保つため、明示的な型を使用すること
+
+```java
+// ❌ BAD
+public void processData(Object any) { ... }
+
+// ✅ GOOD
+public void processData(String data) { ... }
+```
+
+## パッケージ構造
+
+- パッケージ名: `io.github.taichi0373.benefit_map`
+- レイヤー別の配置:
+  - `controller`: REST APIエンドポイント
+  - `service`: ビジネスロジック
+  - `repository.dao`: データアクセス（Doma）
+  - `repository.entity`: エンティティ（Doma）
+
+## コメント
+
+- クラス、メソッド、フィールドには日本語でJavaDocコメントを記述
+- 複雑なロジックには説明コメントを追加
+
+```java
+/**
+ * 主キー検索
+ */
+default AgencyEntity selectById(String agencyId) {
+    // 実装
+}
+```
+
+## ロギング
+
+- SLF4Jを使用（`LoggerFactory.getLogger()`）
+- ログレベルを適切に使い分ける（`log.info()`, `log.error()`, `log.warn()`, `log.debug()`）
+
+```java
+private static final Logger log = LoggerFactory.getLogger(YourClass.class);
+log.info("処理開始: {}", param);
+```
+
+## Lombok
+
+- `@RequiredArgsConstructor`でコンストラクタインジェクション
+- 必要に応じて`@Getter`, `@Setter`を使用
+- `lombok.config`の設定に従う

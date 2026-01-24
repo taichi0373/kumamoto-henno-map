@@ -1,0 +1,43 @@
+// Storybookのプレビュー画面用スタイル
+.sb-show-main {
+  &.sb-main-padded {
+    padding: 0px;
+  }
+
+  // 基本フォント設定
+  :not(.pi) {
+    font-family: "Nunito Sans", -apple-system, "SFNSText-Regular", "SanFrancisco", BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  }
+
+  // Vue 3コンポーネント用の日本語フォント設定
+  & > .p-component,
+  .innerZoomElementWrapper,
+  [data-v-app],
+  .vue-component {
+    :not(.pi) {
+      font-family: "メイリオ", "Meiryo", "Hiragino Sans", "ヒラギノ角ゴシック", "Yu Gothic UI", "游ゴシック", sans-serif !important;
+    }
+    
+    // 行政文書用明朝体
+    .font-ipa-mj:not(.pi) {
+      font-family: "行政事務標準当用明朝", "Times New Roman", serif !important;
+    }
+  }
+}
+
+// Vue 3のコンポーネント用の追加スタイル
+.storybook-preview {
+  // グローバルリセット
+  * {
+    box-sizing: border-box;
+  }
+
+  // Vue Routerのリンク用スタイル
+  .router-link-active,
+  .router-link-exact-active {
+    text-decoration: none;
+  }
+}
+
+
+
