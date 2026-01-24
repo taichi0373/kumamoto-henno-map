@@ -32,6 +32,8 @@ dependencies {
     implementation 'org.seasar.doma.boot:doma-spring-boot-starter:2.2.0'
     annotationProcessor 'org.seasar.doma:doma-processor:2.57.0'
 
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'

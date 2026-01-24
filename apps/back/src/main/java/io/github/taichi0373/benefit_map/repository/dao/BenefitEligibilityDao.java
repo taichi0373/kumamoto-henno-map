@@ -41,47 +41,39 @@ public interface BenefitEligibilityDao {
         
         List<BenefitEligibilityEntity> results = entityql.from(e)
                       .where(c -> {
-                          var conditions = c.and();
-                          
                           // 年齢条件
                           if (age != null) {
-                              conditions = conditions.and(
-                                  c.or(
-                                      c.isNull(e.minAge),
-                                      c.eq(e.minAge, ""),
-                                      c.le(e.minAge, String.valueOf(age))
-                                  ),
-                                  c.or(
-                                      c.isNull(e.maxAge),
-                                      c.eq(e.maxAge, ""),
-                                      c.ge(e.maxAge, String.valueOf(age))
-                                  )
-                              );
+                              c.and(() -> {
+                                  c.or(() -> {
+                                      c.isNull(e.minAge);
+                                      c.eq(e.minAge, "");
+                                      c.le(e.minAge, String.valueOf(age));
+                                  });
+                                  c.or(() -> {
+                                      c.isNull(e.maxAge);
+                                      c.eq(e.maxAge, "");
+                                      c.ge(e.maxAge, String.valueOf(age));
+                                  });
+                              });
                           }
                           
                           // 運転免許所持状況
                           if (licenseStatus != null && !licenseStatus.isEmpty()) {
-                              conditions = conditions.and(
-                                  c.or(
-                                      c.isNull(e.licenseStatus),
-                                      c.eq(e.licenseStatus, ""),
-                                      c.eq(e.licenseStatus, licenseStatus)
-                                  )
-                              );
+                              c.or(() -> {
+                                  c.isNull(e.licenseStatus);
+                                  c.eq(e.licenseStatus, "");
+                                  c.eq(e.licenseStatus, licenseStatus);
+                              });
                           }
                           
                           // 自治体コード
                           if (municipalityCd != null && !municipalityCd.isEmpty()) {
-                              conditions = conditions.and(
-                                  c.or(
-                                      c.isNull(e.municipalityCd),
-                                      c.eq(e.municipalityCd, ""),
-                                      c.eq(e.municipalityCd, municipalityCd)
-                                  )
-                              );
+                              c.or(() -> {
+                                  c.isNull(e.municipalityCd);
+                                  c.eq(e.municipalityCd, "");
+                                  c.eq(e.municipalityCd, municipalityCd);
+                              });
                           }
-                          
-                          return conditions;
                       })
                       .fetch();
         
