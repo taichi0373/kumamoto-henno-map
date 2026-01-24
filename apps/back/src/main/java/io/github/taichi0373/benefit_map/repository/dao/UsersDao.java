@@ -31,23 +31,17 @@ public interface UsersDao {
                       .fetchOne();
     }
 
-    // /**
-    //  * 自治体コードで検索
-    //  */
-    // @Select
-    // List<UsersEntity> selectByMunicipalityCode(String municipalityCode);
-
-    // /**
-    //  * 運転免許所持状況で検索
-    //  */
-    // @Select
-    // List<UsersEntity> selectByLicenseStatus(String licenseStatus);
-
-    // /**
-    //  * 年齢で検索（birthDate から計算）
-    //  */
-    // @Select
-    // List<UsersEntity> selectByAgeRange(int minAge, int maxAge);
+    /**
+     * ユーザー名で検索
+     */
+    default UsersEntity selectByUsername(String username) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+        
+        return entityql.from(e)
+                      .where(c -> c.eq(e.username, username))
+                      .fetchOne();
+    }
 
     /**
      * 登録

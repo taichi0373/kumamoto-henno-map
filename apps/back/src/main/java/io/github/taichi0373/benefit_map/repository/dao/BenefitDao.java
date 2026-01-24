@@ -31,29 +31,33 @@ public interface BenefitDao {
                       .fetchOne();
     }
 
-    // /**
-    //  * 自治体コードで検索
-    //  */
-    // @Select
-    // List<BenefitEntity> selectByMunicipalityCd(String municipalityCd);
+    /**
+     * 特典IDリストで検索
+     */
+    default List<BenefitEntity> selectByIds(List<String> benefitIds) {
+        if (benefitIds == null || benefitIds.isEmpty()) {
+            return List.of();
+        }
+        
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitEntity_ e = new BenefitEntity_();
+        
+        return entityql.from(e)
+                      .where(c -> c.in(e.benefitId, benefitIds))
+                      .fetch();
+    }
 
-    // /**
-    //  * カテゴリコードで検索
-    //  */
-    // @Select
-    // List<BenefitEntity> selectByCategoryCd(String categoryCd);
-
-    // /**
-    //  * 自治体 × カテゴリ検索
-    //  */
-    // @Select
-    // List<BenefitEntity> selectByMunicipalityAndCategory(String municipalityCd, String categoryCd);
-
-    // /**
-    //  * 名称あいまい検索
-    //  */
-    // @Select
-    // List<BenefitEntity> selectByNameLike(String keyword);
+    /**
+     * カテゴリコードで検索
+     */
+    default List<BenefitEntity> selectByCategoryCd(String categoryCd) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitEntity_ e = new BenefitEntity_();
+        
+        return entityql.from(e)
+                      .where(c -> c.eq(e.categoryCd, categoryCd))
+                      .fetch();
+    }
 
     /**
      * 登録

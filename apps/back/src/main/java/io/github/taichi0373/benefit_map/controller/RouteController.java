@@ -1,54 +1,48 @@
-// package com.example.back.controller;
+package io.github.taichi0373.benefit_map.controller;
 
-// import com.example.back.dto.RouteRequest;
-// import com.example.back.service.OtpService;
-// import com.fasterxml.jackson.databind.JsonNode;
-// import lombok.RequiredArgsConstructor;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
-// import org.springframework.http.ResponseEntity;
-// import org.springframework.web.bind.annotation.*;
+import org.apache.hc.core5.http.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-// @RestController
-// @RequestMapping("/route")
-// @RequiredArgsConstructor
-// @CrossOrigin
-// public class RouteController {
+import com.fasterxml.jackson.databind.JsonNode;
 
-//     private static final Logger log = LoggerFactory.getLogger(RouteController.class);
+import io.github.taichi0373.benefit_map.dto.RouteRequest;
+import io.github.taichi0373.benefit_map.service.RouteService;
+import lombok.RequiredArgsConstructor;
 
-//     private final OtpService otpService;
+import java.io.IOException;
 
-//     @PostMapping("/search")
-//     public ResponseEntity<JsonNode> searchRoute(@RequestBody RouteRequest request) {
-//         try {
-//             log.info("Route search request: {}", request);
-//             JsonNode routes = otpService.searchRoutes(request);
-//             return ResponseEntity.ok(routes);
-//         } catch (Exception e) {
-//             log.error("Error searching routes", e);
-//             return ResponseEntity.status(500).build();
-//         }
-//     }
-
-//     @GetMapping("/search")
-//     public ResponseEntity<JsonNode> searchRouteGet(
-//             @RequestParam String from,
-//             @RequestParam String to,
-//             @RequestParam(required = false) String time,
-//             @RequestParam(required = false) String date,
-//             @RequestParam(defaultValue = "WALK") String mode,
-//             @RequestParam(defaultValue = "false") String arriveBy) {
-        
-//         try {
-//             RouteRequest request = new RouteRequest(from, to, mode, null, date, time, "true".equals(arriveBy));
-            
-//             log.info("Route search request (GET): {}", request);
-//             JsonNode routes = otpService.searchRoutes(request);
-//             return ResponseEntity.ok(routes);
-//         } catch (Exception e) {
-//             log.error("Error searching routes", e);
-//             return ResponseEntity.status(500).build();
-//         }
-//     }
-// }
+@RestController
+@RequestMapping("/route")
+@RequiredArgsConstructor
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:6006", "http://127.0.0.1:3000", "http://127.0.0.1:6006"}, allowCredentials = "true")
+public class RouteController {
+    
+    private static final Logger log = LoggerFactory.getLogger(RouteController.class);
+    
+    private final RouteService routeService;
+    
+    /**
+     * 経路探索
+     */
+    @PostMapping("/search")
+    public ResponseEntity<JsonNode> searchRoutes(@RequestBody RouteRequest request) {
+        try {
+            log.info("経路探索リクエスト: {}", request);
+            JsonNode result = routeService.searchRoutes(request);
+            return ResponseEntity.ok(result);
+        } catch (IOException | ParseException e) {
+            log.error("経路探索エラー", e);
+            return ResponseEntity.status(500).build();
+        } catch (Exception e) {
+            log.error("経路探索エラー", e);
+            return ResponseEntity.status(500).build();
+        }
+    }
+}

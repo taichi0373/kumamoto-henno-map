@@ -1,4 +1,4 @@
-package com.example.back.dto;
+package io.github.taichi0373.benefit_map.dto;
 
 public class BenefitSearchRequest {
     private Integer age;

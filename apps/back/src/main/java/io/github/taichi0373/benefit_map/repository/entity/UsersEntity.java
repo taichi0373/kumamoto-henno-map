@@ -11,9 +11,13 @@ import org.seasar.doma.Metamodel;
 import org.seasar.doma.Table;
 
 import io.github.taichi0373.benefit_map.repository.entity.SystemField;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity(metamodel = @Metamodel)
 @Table(name = "users")
+@Getter
+@Setter
 public class UsersEntity implements Serializable {
 
     /** シリアルバージョンUID */

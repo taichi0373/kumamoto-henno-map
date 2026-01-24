@@ -1,4 +1,4 @@
-package com.example.back.config;
+package io.github.taichi0373.benefit_map.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
