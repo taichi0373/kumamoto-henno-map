@@ -11,59 +11,59 @@ import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.criteria.Entityql;
 
-import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity;
-import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity_;
+import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
+import io.github.taichi0373.benefit_map.repository.entity.UsersEntity_;
 
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")
-public interface MunicipalityDao {
+public interface UsersDao {
 
     /** 
      * 主キー検索
      */
-    default MunicipalityEntity selectById(String municipalityCd) {
+    default UsersEntity selectById(String userId) {
         Entityql entityql = new Entityql(Config.get(this));
-        MunicipalityEntity_ e = new MunicipalityEntity_();
+        UsersEntity_ e = new UsersEntity_();
 
         return entityql.from(e)
-                      .where(c -> c.eq(e.municipalityCd, municipalityCd))
+                      .where(c -> c.eq(e.userId, userId))
                       .fetchOne();
     }
 
     // /**
-    //  * 全件取得（名称順）
+    //  * 自治体コードで検索
     //  */
     // @Select
-    // List<MunicipalityEntity> selectAllOrderByName();
+    // List<UsersEntity> selectByMunicipalityCode(String municipalityCode);
 
     // /**
-    //  * 名称あいまい検索
+    //  * 運転免許所持状況で検索
     //  */
     // @Select
-    // List<MunicipalityEntity> selectByNameLike(String keyword);
+    // List<UsersEntity> selectByLicenseStatus(String licenseStatus);
 
     // /**
-    //  * かな検索
+    //  * 年齢で検索（birthDate から計算）
     //  */
     // @Select
-    // List<MunicipalityEntity> selectByKanaLike(String keyword);
+    // List<UsersEntity> selectByAgeRange(int minAge, int maxAge);
 
     /**
      * 登録
      */
     @Insert
-    int insert(MunicipalityEntity entity);
+    int insert(UsersEntity entity);
 
     /**
      * 更新
      */
     @Update
-    int update(MunicipalityEntity entity);
+    int update(UsersEntity entity);
 
     /**
      * 削除
      */
     @Delete
-    int delete(MunicipalityEntity entity);
+    int delete(UsersEntity entity);
 }
