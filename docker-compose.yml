@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:15
+    container_name: db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: benefit_map
+    volumes:
+      - ./config/database:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "65432:80"
+    depends_on:
+      - db
+
+  otp:
+    image: docker.io/opentripplanner/opentripplanner:2.5.0
+    container_name: otp
+    volumes:
+      - ./config/otp/data:/var/opentripplanner
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xmx4g
+    command: ["--load", "--serve"]
+
+volumes:
+  db-data:

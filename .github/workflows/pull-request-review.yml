@@ -1,0 +1,63 @@
+name: Check on pull request
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'apps/front/**'
+      - 'apps/back/**'
+      - '.github/workflows/pull-request-review.yml'
+  
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# jobs: 動作内容
+jobs:
+  # 前処理（差分チェック）
+  precheck:
+    name: Precheck
+    uses: ./.github/workflows/review-precheck.yml
+    with:
+      frontend-dir: apps/front
+      component-dir: apps/front/src/components
+      backend-dir: apps/back
+      # openapi-dir: apps/openapi
+      # doc-dir: docs
+
+  # フロントエンドの変更がある場合のみビルド
+  frontend-build:
+    name: Frontend Build
+    needs: precheck
+    if: >
+      needs.precheck.outputs.frontend-changed == 'true' ||
+      needs.precheck.outputs.component-changed == 'true'
+    uses: ./.github/workflows/build-frontend.yml
+
+  # バックエンドの変更がある場合のみビルド
+  backend-build:
+    name: Backend Build
+    needs: precheck
+    if: needs.precheck.outputs.backend-changed == 'true'
+    uses: ./.github/workflows/build-backend.yml
+
+  # OpenAPI チェック（任意）
+  # openapi-check:
+  #   name: OpenAPI Check
+  #   needs: precheck
+  #   if: needs.precheck.outputs.openapi-changed == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: echo "Run OpenAPI validation here"
+
+  # Docs のみ変更時（ビルドなし）
+  # docs-only:
+  #   name: Docs Only
+  #   needs: precheck
+  #   if: >
+  #     needs.precheck.outputs.document-changed == 'true' &&
+  #     needs.precheck.outputs.frontend-changed != 'true' &&
+  #     needs.precheck.outputs.backend-changed != 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: echo "Docs changed only. Skip build."
