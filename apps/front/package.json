@@ -6,8 +6,8 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "storybook": "storybook -s ./public -p 6006",
-    "build-storybook": "storybook -s ./public"
+    "storybook": "storybook -p 6006",
+    "build-storybook": "storybook"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.0.0",
