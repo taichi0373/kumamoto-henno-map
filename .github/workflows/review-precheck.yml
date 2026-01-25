@@ -23,9 +23,9 @@ on:
       # openapi-dir:
       #   type: string
 
-      # doc-dir:
-      #   type: string
-      #   default: 'docs'
+      document-dir:
+        type: string
+        default: 'docs'
 
     # アウトプット
     outputs:
@@ -37,8 +37,8 @@ on:
         value: ${{ jobs.precheck.outputs.backend-changed }}
       # openapi-changed:
       #   value: ${{ jobs.precheck.outputs.openapi-changed }}
-      # document-changed:
-      #   value: ${{ jobs.precheck.outputs.document-changed }}
+      document-changed:
+        value: ${{ jobs.precheck.outputs.document-changed }}
 
 env:
   TZ: Asia/Tokyo
@@ -46,7 +46,7 @@ env:
   COMPONENT_DIR: ${{ inputs.component-dir }}
   BACKEND_DIR: ${{ inputs.backend-dir }}
   # OPENAPI_DIR: ${{ inputs.openapi-dir }}
-  # DOC_DIR: ${{ inputs.doc-dir }}
+  DOCUMENT_DIR: ${{ inputs.document-dir }}
 
 # jobs: 動作内容
 jobs:
@@ -62,7 +62,7 @@ jobs:
       component-changed: ${{ steps.component.outputs.diff != '' }}
       backend-changed: ${{ steps.backend.outputs.diff != '' }}
       # openapi-changed: ${{ steps.openapi.outputs.diff != '' }}
-      # document-changed: ${{ steps.document.outputs.diff != '' }}
+      document-changed: ${{ steps.document.outputs.diff != '' }}
     
 
     steps:
@@ -106,9 +106,9 @@ jobs:
       #   with:
       #     files: ${{ env.OPENAPI_DIR }}/**
 
-      # # 6. ドキュメント差分チェック
-      # - name: Document diff
-      #   id: document
-      #   uses: tj-actions/changed-files@v34
-      #   with:
-      #     files: ${{ env.DOC_DIR }}/**
+      # 6. ドキュメント差分チェック
+      - name: Document diff
+        id: document
+        uses: tj-actions/changed-files@v34
+        with:
+          files: ${{ env.DOCUMENT_DIR }}/**
