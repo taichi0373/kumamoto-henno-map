@@ -55,3 +55,7 @@ jobs:
     needs: precheck
     if: needs.precheck.outputs.document-changed != ''
     uses: ./.github/workflows/build-document.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

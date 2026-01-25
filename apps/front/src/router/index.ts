@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { AuthUtils } from '@/utils/auth'
 
 // コンポーネント
@@ -8,7 +8,7 @@ import Register from '../pages/Register.vue'
 import Profile from '../pages/Profile.vue'
 import SupportInfo from '../pages/SupportInfo.vue'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
@@ -44,7 +44,7 @@ const router = createRouter({
 
 // ルートガード
 router.beforeEach((to, from, next) => {
-  if (to.matched.some(record => record.meta.requiresAuth) && !AuthUtils.isLoggedIn()) {
+  if (to.matched.some(record => record.meta?.requiresAuth) && !AuthUtils.isLoggedIn()) {
     next({ path: '/login', query: { redirect: to.fullPath } })
   } else {
     next()

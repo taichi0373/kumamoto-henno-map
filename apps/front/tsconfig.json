@@ -12,6 +12,7 @@
     "sourceMap": false,
     "inlineSourceMap": true,
     "baseUrl": ".",
+    "noImplicitAny": false,
     "paths": {
       "@/*": ["src/*"]
     },
