@@ -49,14 +49,9 @@ jobs:
   #   steps:
   #     - run: echo "Run OpenAPI validation here"
 
-  # Docs のみ変更時（ビルドなし）
-  # docs-only:
-  #   name: Docs Only
-  #   needs: precheck
-  #   if: >
-  #     needs.precheck.outputs.document-changed != '' &&
-  #     needs.precheck.outputs.frontend-changed == '' &&
-  #     needs.precheck.outputs.backend-changed == ''
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - run: echo "Docs changed only. Skip build."
+  # ドキュメントの変更がある場合、ビルドして公開
+  document-build:
+    name: Document Build and Deploy
+    needs: precheck
+    if: needs.precheck.outputs.document-changed != ''
+    uses: ./.github/workflows/build-document.yml

@@ -28,6 +28,11 @@ env:
   TZ: Asia/Tokyo
   DOCUMENT_DIR: ${{ inputs.document-dir }}
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 # jobs: 動作内容
 jobs:
   # ドキュメントのビルド処理
@@ -58,6 +63,7 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           cache: npm
+          cache-dependency-path: ${{ env.DOCUMENT_DIR }}/package-lock.json
 
       # 依存関係はルートでインストール
       - name: Install dependencies
@@ -65,14 +71,14 @@ jobs:
 
       # HonKit ビルド
       - name: Build HonKit
-        run: npx honkit build ${{ env.DOCUMENT_DIR }} ${{ env.DOCUMENT_DIR }}/_book
+        run: npx honkit build . ./_book
 
       # HTML整形
       - name: Format HTML
         run: npm run format || echo "skip format"
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ${{ env.DOCUMENT_DIR }}/_book
 
