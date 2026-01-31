@@ -4,7 +4,7 @@
 
 ## エンティティ関係概要
 
-```mermaid
+```text
 erDiagram
     AGENCY {
         string AGENCY_ID PK

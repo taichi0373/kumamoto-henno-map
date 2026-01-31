@@ -1,9 +1,9 @@
 {
-  "title": "自主返納特典マップ 設計書",
-  "description": "熊本県の自主返納特典情報を地図上で表示・検索できるWebアプリケーションの設計書",
-  "author": "benefit-map development team",
+  "title": "",
+  "description": "",
   "language": "ja",
   "styles": {
-    "website": "styles/website.css"
-  }
+    "website": "styles/base.css"
+  },
+  "plugins": ["livereload"]
 }

@@ -1,6 +1,6 @@
 # Summary
 
-* [自主返納特典マップ 基本設計書](README.md)
+* [熊本県自主返納特典マップ](README.md)
 
 ## 1. アプリケーション概要・仕様
 * [概要](01_overview/overview.md)

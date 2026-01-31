@@ -1,32 +1,21 @@
 <template>
   <div class="login-page">
     <div class="login-container">
-      <BaseCard title="ログイン" variant="default" size="medium" :hoverable="true" shadow="medium">
+      <BaseCard title="管理者ログイン" variant="default" size="medium" :hoverable="true" shadow="medium">
         <form @submit.prevent="handleLogin">
           <BaseFormGroup size="medium">
-            <BaseLabel text="ユーザー名" html-for="username" :required="true" alignConfig="center" size="medium"
+            <BaseLabel text="API Key" html-for="apikey" :required="true" alignConfig="center" size="medium"
               variant="default" />
-            <BaseInput id="username" type="text" v-model="credentials.username" placeholder="ユーザー名を入力してください"
+            <BaseInput id="apikey" type="password" v-model="credentials.apiKey" placeholder="API Keyを入力してください"
               :required="true" alignConfig="center" size="medium" variant="default"
-              :error-message="validationErrors.username" />
-          </BaseFormGroup>
-
-          <BaseFormGroup size="medium">
-            <BaseLabel text="パスワード" html-for="password" :required="true" alignConfig="center" size="medium"
-              variant="default" />
-            <BaseInput id="password" type="password" v-model="credentials.password" placeholder="パスワードを入力してください"
-              :required="true" size="medium" variant="default" :error-message="validationErrors.password" />
+              :error-message="validationErrors.apiKey" />
           </BaseFormGroup>
 
           <div class="submit-button">
-            <BaseButton type="submit" :label="isLoading ? 'ログイン中...' : 'ログイン'" :primary="true" :disabled="isLoading"
+            <BaseButton type="submit" :label="isLoading ? '認証中...' : 'ログイン'" :primary="true" :disabled="isLoading"
               :elipsis="isLoading" />
           </div>
         </form>
-
-        <div class="register-link">
-          <BaseLink to="/register" text="新規登録はこちら" variant="primary" size="medium" underline="hover" />
-        </div>
 
         <BaseAlert v-if="errorMessage" :message="errorMessage" variant="error" size="medium" :show="!!errorMessage" />
       </BaseCard>
@@ -41,7 +30,6 @@ import BaseLabel from '@/components/atoms/Label.vue'
 import BaseInput from '@/components/atoms/Input.vue'
 import BaseButton from '@/components/atoms/Button.vue'
 import BaseCard from '@/components/atoms/Card.vue'
-import BaseLink from '@/components/atoms/Link.vue'
 import BaseAlert from '@/components/atoms/Alert.vue'
 import BaseFormGroup from '@/components/atoms/FormGroup.vue'
 import apiClient from '@/utils/api'
@@ -54,7 +42,6 @@ export default {
     BaseInput,
     BaseButton,
     BaseCard,
-    BaseLink,
     BaseAlert,
     BaseFormGroup,
   },
@@ -62,14 +49,12 @@ export default {
     const router = useRouter()
 
     const credentials = ref({
-      username: '',
-      password: ''
+      apiKey: ''
     })
     const isLoading = ref(false)
     const errorMessage = ref('')
     const validationErrors = ref({
-      username: '',
-      password: ''
+      apiKey: ''
     })
 
     // 既にログイン済みの場合はホームにリダイレクト
@@ -81,25 +66,16 @@ export default {
 
     const validateForm = () => {
       validationErrors.value = {
-        username: '',
-        password: ''
+        apiKey: ''
       }
 
       let isValid = true
 
-      if (!credentials.value.username.trim()) {
-        validationErrors.value.username = 'ユーザー名は必須です'
+      if (!credentials.value.apiKey.trim()) {
+        validationErrors.value.apiKey = 'API Keyは必須です'
         isValid = false
-      } else if (credentials.value.username.length < 3) {
-        validationErrors.value.username = 'ユーザー名は3文字以上で入力してください'
-        isValid = false
-      }
-
-      if (!credentials.value.password.trim()) {
-        validationErrors.value.password = 'パスワードは必須です'
-        isValid = false
-      } else if (credentials.value.password.length < 6) {
-        validationErrors.value.password = 'パスワードは6文字以上で入力してください'
+      } else if (credentials.value.apiKey.length < 10) {
+        validationErrors.value.apiKey = 'API Keyは10文字以上で入力してください'
         isValid = false
       }
 
@@ -116,18 +92,12 @@ export default {
 
       try {
         const response = await apiClient.post('/auth/login', {
-          username: credentials.value.username,
-          password: credentials.value.password
+          apiKey: credentials.value.apiKey
         })
 
         if (response.data.success) {
-          // セッションストレージに認証情報を保存
-          AuthUtils.login(response.data.user, response.data.token)
-
-          // ユーザープロフィール情報も保存
-          if (response.data.user) {
-            sessionStorage.setItem('userProfile', JSON.stringify(response.data.user))
-          }
+          // API Keyを保存
+          AuthUtils.login(credentials.value.apiKey)
           // ホームページにリダイレクト
           router.push('/')
         } else {
@@ -135,7 +105,7 @@ export default {
         }
       } catch (error) {
         console.error('Login error:', error)
-        errorMessage.value = 'ログインに失敗しました。ネットワーク接続を確認してください。'
+        errorMessage.value = 'ログインに失敗しました。API Keyを確認してください。'
       } finally {
         isLoading.value = false
       }

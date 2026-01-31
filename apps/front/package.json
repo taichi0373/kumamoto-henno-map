@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.0.0",
-    "axios": "^1.6.0",
+    "axios": "^1.13.4",
     "core-js": "^3.38.0",
     "maplibre-gl": "^5.6.0",
     "vue": "^3.5.0",
@@ -53,7 +53,9 @@
       "ecmaVersion": 2020,
       "sourceType": "module"
     },
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+      "@typescript-eslint"
+    ],
     "rules": {
       "vue/multi-word-component-names": "off",
       "no-unused-vars": "off",

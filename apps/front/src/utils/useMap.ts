@@ -1,13 +1,35 @@
-import { ref } from 'vue'
-import { createMapInstance, setupMapLibre, setupMapControls, setupMapClickEvents } from '../utils/mapConfig'
-import { createStoreMarker, MarkerManager } from '../utils/markerConfig'
+import { ref, type Ref } from 'vue'
+import type { Map, Marker } from 'maplibre-gl'
+import { 
+  createMapInstance, 
+  setupMapLibre, 
+  setupMapControls, 
+  setupMapClickEvents,
+  type MapConfig,
+  type MapClickOptions
+} from '../utils/mapConfig'
+import { createStoreMarker, MarkerManager, type Store } from '../utils/markerConfig'
 
-export const useMap = () => {
-  const mapInstance = ref(null)
-  const storeMarkers = ref([])
+export interface UseMapReturn {
+  mapInstance: Ref<Map | null>
+  storeMarkers: Ref<Marker[]>
+  markerManager: any
+  initializeMap: (containerId: string, config?: Partial<MapConfig>, clickEventOptions?: MapClickOptions | null) => Map
+  addStoreMarkers: (stores: Store[]) => void
+  removeStoreMarkers: () => void
+  cleanup: () => void
+}
+
+export const useMap = (): UseMapReturn => {
+  const mapInstance: Ref<Map | null> = ref(null)
+  const storeMarkers: Ref<Marker[]> = ref([])
   const markerManager = ref(new MarkerManager())
 
-  const initializeMap = (containerId, config = {}, clickEventOptions = null) => {
+  const initializeMap = (
+    containerId: string, 
+    config: Partial<MapConfig> = {}, 
+    clickEventOptions: MapClickOptions | null = null
+  ): Map => {
     setupMapLibre()
     const map = createMapInstance(containerId, config)
     mapInstance.value = map
@@ -23,7 +45,7 @@ export const useMap = () => {
     return map
   }
 
-  const addStoreMarkers = (stores) => {
+  const addStoreMarkers = (stores: Store[]): void => {
     if (!mapInstance.value || !stores?.length) return
 
     // 既存マーカーを削除
@@ -31,7 +53,7 @@ export const useMap = () => {
 
     stores.forEach((store, index) => {
       const marker = createStoreMarker(store)
-      if (marker) {
+      if (marker && mapInstance.value) {
         marker.addTo(mapInstance.value)
         storeMarkers.value.push(marker)
         // マーカー管理クラスにも登録
@@ -40,14 +62,14 @@ export const useMap = () => {
     })
   }
 
-  const removeStoreMarkers = () => {
+  const removeStoreMarkers = (): void => {
     storeMarkers.value.forEach(marker => marker.remove())
     storeMarkers.value = []
     // マーカー管理クラスからも削除
     markerManager.value.removeMarkersByType('store')
   }
 
-  const cleanup = () => {
+  const cleanup = (): void => {
     if (mapInstance.value) {
       markerManager.value.clearAllMarkers()
       mapInstance.value.remove()

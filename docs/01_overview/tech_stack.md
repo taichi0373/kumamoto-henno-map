@@ -4,19 +4,19 @@
 
 ## アーキテクチャ概要
 
-```mermaid
+```text
 graph TB
     subgraph "Frontend Layer"
         A[Vue 3 + TypeScript]
         B[Vue Router]
-        C[Leaflet Map]
+        C[MapLibre GL JS]
         D[Storybook]
     end
     
     subgraph "Backend Layer"
         E[Spring Boot 3]
         F[Doma 2]
-        G[JWT Authentication]
+        G[API Key Authentication]
     end
     
     subgraph "Database Layer"
@@ -28,6 +28,25 @@ graph TB
         J[OpenStreetMap]
         K[GTFS Data]
     end
+    
+    A --> E
+    B --> A
+    C --> A
+    E --> F
+    F --> H
+    E --> I
+    I --> J
+    I --> K
+    
+    classDef frontend fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef backend fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef database fill:#f1f8e9,stroke:#388e3c,stroke-width:2px
+    classDef external fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    
+    class A,B,C,D frontend
+    class E,F,G backend
+    class H database
+    class I,J,K external
     
     subgraph "Infrastructure"
         L[Docker]
@@ -86,18 +105,16 @@ graph TB
 
 ### 地図ライブラリ
 
-**Leaflet** + 関連プラグイン
+**MapLibre GL JS**
+
+**バージョン**: 5.6.0
 
 **選定理由**:
-- 軽量で高性能
-- 豊富なプラグインエコシステム
+- 軽量で高性能なベクトル地図表示
+- WebGL による高速レンダリング
 - モバイル対応
 - オープンソース
-
-**使用プラグイン**:
-- Marker Clustering
-- Geocoding
-- Routing Control
+- カスタマイズ性の高いスタイリング
 
 ### ビルド・開発ツール
 
@@ -133,7 +150,7 @@ graph TB
 
 #### Storybook
 
-**バージョン**: 7.x
+**バージョン**: 8.6.14
 
 **機能**:
 - コンポーネント単体開発
@@ -143,8 +160,6 @@ graph TB
 ### パッケージ管理
 
 **npm**
-
-**バージョン**: 10.9.2
 
 ## バックエンド技術スタック
 
@@ -160,7 +175,7 @@ graph TB
 
 ### Spring Boot
 
-**バージョン**: 3.x
+**バージョン**: 3.3.5
 
 **選定理由**:
 - 迅速な開発とデプロイ
@@ -181,6 +196,8 @@ graph TB
 - Spring Boot Starter Actuator
 
 ### Doma 2
+
+**バージョン**: 2.60.0 (Spring Boot Starter 2.1.0)
 
 **選定理由**:
 - SQLファーストのアプローチ
@@ -212,8 +229,6 @@ graph TB
 ### ビルドツール
 
 #### Gradle
-
-**バージョン**: 8.14.3
 
 **選定理由**:
 - 柔軟なビルド定義

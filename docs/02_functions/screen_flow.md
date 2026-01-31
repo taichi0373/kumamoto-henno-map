@@ -4,7 +4,7 @@
 
 ## 全体画面遷移図
 
-```mermaid
+```text
 graph TD
     Start([アプリケーション開始]) --> Home[S001: ホーム画面]
     
@@ -28,6 +28,20 @@ graph TD
     
     %% サポート機能
     Home --> Support[S021: サポート情報画面]
+    
+    %% スタイリング
+    classDef startStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef mainStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef authStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef userStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef supportStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    
+    class Start startStyle
+    class Home,Detail,Results,Route mainStyle
+    class Login,Register authStyle
+    class Profile,PasswordChange,Favorites userStyle
+    class Support supportStyle
+```
     Support --> Contact[S022: 問い合わせ画面]
     Support --> FAQ[S023: FAQ画面]
     Home --> Terms[S024: 利用規約画面]
@@ -72,7 +86,7 @@ graph TD
 
 ### 1. 基本利用フロー（未登録ユーザー）
 
-```mermaid
+```text
 sequenceDiagram
     participant User as ユーザー
     participant Home as ホーム画面
@@ -91,7 +105,7 @@ sequenceDiagram
 
 ### 2. 会員登録・ログインフロー
 
-```mermaid
+```text
 stateDiagram-v2
     [*] --> ゲスト利用
     ゲスト利用 --> ログイン画面 : ログインボタン
@@ -107,7 +121,7 @@ stateDiagram-v2
 
 ### 3. 特典検索・表示フロー
 
-```mermaid
+```text
 flowchart TD
     A[ホーム画面] --> B{検索方法選択}
     B -->|キーワード検索| C[キーワード入力]
@@ -138,7 +152,7 @@ flowchart TD
 
 ### 1. 管理者認証・ダッシュボード
 
-```mermaid
+```text
 sequenceDiagram
     participant Admin as 管理者
     participant LoginPage as ログイン画面
@@ -159,7 +173,7 @@ sequenceDiagram
 
 ### 2. 特典管理フロー
 
-```mermaid
+```text
 stateDiagram-v2
     [*] --> ダッシュボード
     ダッシュボード --> 特典一覧画面 : 特典管理選択
@@ -185,7 +199,7 @@ stateDiagram-v2
 
 ### 3. 事業者管理フロー
 
-```mermaid
+```text
 flowchart LR
     A[ダッシュボード] --> B[事業者一覧画面]
     B --> C[新規事業者登録]
@@ -220,7 +234,7 @@ flowchart LR
 
 ### 認証が必要な画面
 
-```mermaid
+```text
 flowchart TD
     A[画面アクセス] --> B{認証状態確認}
     B -->|認証済み| C[画面表示]
@@ -276,7 +290,7 @@ const router = createRouter({
 
 ### エラーハンドリングフロー
 
-```mermaid
+```text
 flowchart TD
     A[画面操作実行] --> B{エラー発生?}
     B -->|なし| C[正常処理継続]

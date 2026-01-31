@@ -1,7 +1,35 @@
 import maplibregl from 'maplibre-gl'
+import type { Map, NavigationControl, GeolocateControl } from 'maplibre-gl'
+
+// 型定義
+export interface MapConfig {
+  style: string
+  center: [number, number]
+  zoom: number
+  minZoom: number
+  maxZoom: number
+  pitch: number
+  bearing: number
+  maxPitch: number
+}
+
+export interface MapClickOptions {
+  onMapClick?: (e: maplibregl.MapMouseEvent, lat: number, lon: number) => void
+  ReverseGeocoding?: (lat: number, lon: number) => Promise<{ name: string } | null>
+  isWaitingForInput_S?: boolean
+  isWaitingForInput_E?: boolean
+  start_location?: { value: string }
+  end_location?: { value: string }
+  placeMarker?: (lat: number, lon: number, name: string, type: string) => void
+  startMarker?: any
+  endMarker?: any
+  clearMarker?: (type: string) => void
+  clearRoutes?: () => void
+  searchRouteEvent?: () => void
+}
 
 // デフォルト設定
-export const DEFAULT_MAP_CONFIG = {
+export const DEFAULT_MAP_CONFIG: MapConfig = {
   style: 'https://tile.openstreetmap.jp/styles/osm-bright-ja/style.json',
   center: [130.741584, 32.7898], // 熊本市中心部
   zoom: 14,
@@ -19,12 +47,12 @@ const KUMAMOTO_BOUNDS = [
 ]
 
 // MapLibre GL JSの設定
-export const setupMapLibre = () => {
+export const setupMapLibre = (): void => {
   // 必要に応じて追加の設定
 }
 
 // マップ初期化関数
-export const createMapInstance = (containerId, config = {}) => {
+export const createMapInstance = (containerId: string, config: Partial<MapConfig> = {}): Map => {
   const mapConfig = { ...DEFAULT_MAP_CONFIG, ...config }
   
   return new maplibregl.Map({
@@ -34,14 +62,14 @@ export const createMapInstance = (containerId, config = {}) => {
 }
 
 // マップ基本設定関数（コントロール、境界、現在地取得）
-export const setupMapControls = (map) => {
+export const setupMapControls = (map: Map): void => {
   map.on('load', function () {
     // コントロールを右下に配置
-    const navControl = new maplibregl.NavigationControl()
+    const navControl: NavigationControl = new maplibregl.NavigationControl()
     map.addControl(navControl, 'bottom-right')
     
     // 現在位置コントロール
-    const geolocateControl = new maplibregl.GeolocateControl({
+    const geolocateControl: GeolocateControl = new maplibregl.GeolocateControl({
       positionOptions: {
         enableHighAccuracy: false
       },
@@ -57,7 +85,7 @@ export const setupMapControls = (map) => {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const userLocation = [position.coords.longitude, position.coords.latitude]
+        const userLocation: [number, number] = [position.coords.longitude, position.coords.latitude]
         map.setCenter(userLocation)
       },
       () => {
@@ -69,11 +97,11 @@ export const setupMapControls = (map) => {
   }
 
   // 熊本県の境界を設定
-  map.setMaxBounds(KUMAMOTO_BOUNDS)
+  map.setMaxBounds(KUMAMOTO_BOUNDS as any)
 }
 
 // 地図クリックイベント設定関数
-export const setupMapClickEvents = (map, options = {}) => {
+export const setupMapClickEvents = (map: Map, options: MapClickOptions = {}): void => {
   const {
     onMapClick,
     ReverseGeocoding,
@@ -89,21 +117,21 @@ export const setupMapClickEvents = (map, options = {}) => {
     searchRouteEvent
   } = options
 
-  map.on('click', async function (e) {
-    const lat = e.lngLat.lat
-    const lon = e.lngLat.lng
+  map.on('click', async function (e: maplibregl.MapMouseEvent) {
+    const lat: number = e.lngLat.lat
+    const lon: number = e.lngLat.lng
     
     if (onMapClick) {
       onMapClick(e, lat, lon)
       return
     }
 
-    if (isWaitingForInput_S) {
+    if (isWaitingForInput_S && ReverseGeocoding && start_location && placeMarker) {
       const locationData = await ReverseGeocoding(lat, lon)
       if (locationData) {
         start_location.value = locationData.name
         placeMarker(lat, lon, locationData.name, 'start')
-        if (startMarker && endMarker) {
+        if (startMarker && endMarker && clearMarker && clearRoutes && searchRouteEvent) {
           clearMarker('stop')
           clearRoutes()
           searchRouteEvent()
@@ -111,12 +139,12 @@ export const setupMapClickEvents = (map, options = {}) => {
       } else {
         alert('位置情報データが見つかりませんでした')
       }
-    } else if (isWaitingForInput_E) {
+    } else if (isWaitingForInput_E && ReverseGeocoding && end_location && placeMarker) {
       const locationData = await ReverseGeocoding(lat, lon)
       if (locationData) {
         end_location.value = locationData.name
         placeMarker(lat, lon, locationData.name, 'end')
-        if (startMarker && endMarker) {
+        if (startMarker && endMarker && clearMarker && clearRoutes && searchRouteEvent) {
           clearMarker('stop')
           clearRoutes()
           searchRouteEvent()
@@ -129,7 +157,7 @@ export const setupMapClickEvents = (map, options = {}) => {
 }
 
 // 地図のズーム関数
-export const zoomToLocation = (map, lat, lon) => {
+export const zoomToLocation = (map: Map, lat: number, lon: number): void => {
   map.flyTo({
     center: [lon, lat],
     zoom: 16
@@ -137,10 +165,10 @@ export const zoomToLocation = (map, lat, lon) => {
 }
 
 // 地図のルート追加関数
-export const addRouteLayer = (map, routeNumber, index, coordinates) => {
-  const layerId = 'route-' + routeNumber + '-' + index
-  const colors = ['#1A74FD', '#757575', '#757575']
-  const color = colors[routeNumber]
+export const addRouteLayer = (map: Map, routeNumber: number, index: number, coordinates: number[][]): void => {
+  const layerId: string = 'route-' + routeNumber + '-' + index
+  const colors: string[] = ['#1A74FD', '#757575', '#757575']
+  const color: string = colors[routeNumber] || '#757575'
   
   // 既存のレイヤーとソースを削除
   if (map.getLayer(layerId)) {
@@ -158,6 +186,7 @@ export const addRouteLayer = (map, routeNumber, index, coordinates) => {
       type: 'geojson',
       data: {
         type: 'Feature',
+        properties: {},
         geometry: {
           type: 'LineString',
           coordinates: coordinates

@@ -1,4 +1,4 @@
-# 自主返納特典マップ 設計書
+# 自主返納特典マップ
 
 ## システム概要
 
@@ -27,18 +27,23 @@
 
 ## 技術スタック
 
-**フロントエンド**: Vue 3 + TypeScript + Vue CLI  
-**バックエンド**: Java 21 + Spring Boot + Doma 2  
-**データベース**: PostgreSQL  
-**その他**: OTP 2.5.0, Docker, GitHub Actions
+**フロントエンド**: Vue 3 + TypeScript + Vue CLI
+
+**バックエンド**: Java 21 + Spring Boot + Doma 2
+
+**データベース**: PostgreSQL
+
+**経路探索エンジン**: OTP 2.5.0
+
+**その他**: Docker, GitHub Actions
 
 ## プロジェクト構成
 
 ```
 benefit_map/
-├── apps/front/         # Vue フロントエンド
-├── apps/back/          # Spring Boot バックエンド
-├── config/database/    # DB設定・DDL・DML
+├── apps/front/         # フロントエンド（Vue 3 + TypeScript + Vue CLI）
+├── apps/back/          # バックエンド（Java 21 + Spring Boot + Doma 2）
+├── config/database/    # データベース設定
 ├── config/otp/         # 経路探索設定
-└── docs/              # 設計書
+└── docs/               # 基本設計書
 ```

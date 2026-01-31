@@ -1,5 +1,5 @@
 
-# Copilot Instructions for 自主返納特典マップ
+# Copilot Instructions for 熊本県自主返納特典マップ
 
 ## このドキュメントについて
 
@@ -38,7 +38,7 @@
 
 ## アプリ概要
 
-**自主返納特典マップ** は、熊本県の自主返納特典情報を地図上で表示・検索できるWebアプリケーションです。ユーザーは地図上で特典提供施設を確認し、条件に応じた絞り込み検索が可能です。管理者向けには特典情報の登録・編集・削除機能も備えています。また、GTFSデータを取り込んだ経路探索機能も提供しています。
+**熊本県自主返納特典マップ** は、熊本県の自主返納特典情報を地図上で表示・検索できるWebアプリケーションです。ユーザーは地図上で特典提供施設を確認し、条件に応じた絞り込み検索が可能です。管理者向けには特典情報の登録・編集・削除機能も備えています。また、GTFSデータを取り込んだ経路探索機能も提供しています。
 
 ### 主な機能
 
@@ -50,24 +50,27 @@
 
 ## 技術スタック概要
 
-- **言語**: TypeScript, JavaScript, Java 21.0.6
-- **フレームワーク**: Vue, Spring Boot, Doma 2
-- **ビルドツール**: Vue CLI, Gradle
-- **パッケージマネージャー**: npm 10.9.2, Gradle 8.14.3
-- **ルーティング**: Vue Router
-- **スタイリング**: CSS
-- **UIコンポーネント**: Storybook
-- **API通信**: RESTful API
-- **認証**: JWT
-- **バックエンド**: Java (Spring Boot, Doma 2)
-- **経路探索**: OTP (OpenTripPlanner) 2.5.0
+- **言語**: TypeScript 5.9.3, JavaScript, Java 21
+- **フロントエンド**:
+  - **フレームワーク**: Vue 3.5.0
+  - **ルーティング**: Vue Router 4.4.0
+  - **ビルドツール**: Vue CLI 5.0.0
+  - **UIコンポーネント**: Storybook 8.6.14
+  - **地図表示**: MapLibre GL JS 5.6.0
+  - **スタイリング**: CSS, Sass 1.89.2
+- **バックエンド**:
+  - **フレームワーク**: Spring Boot 3.3.5
+  - **ORM**: Doma 2.60.0 (Spring Boot Starter 2.1.0)
+  - **ビルドツール**: Gradle
+  - **Domaコンパイラ**: Doma Processor 2.60.0
 - **データベース**: PostgreSQL
-- **リンター/フォーマッター**: ESLint + Prettier
-- **型チェック**: TypeScript
+- **認証**: API Key認証
+- **経路探索**: OTP (OpenTripPlanner) 2.5.0
+- **API通信**: RESTful API (Axios 1.13.4)
+- **リンター/フォーマッター**: ESLint 8.57.0 + Prettier
 - **CI/CD**: GitHub Actions
 - **バージョン管理**: Git + GitHub
-- **ドキュメント**: Markdown
-- **ドキュメント管理**: GitHub pages, Honkit
+- **ドキュメント**: Markdown (Honkit)
 - **コンテナ管理**: Docker
 
 ## プロジェクト構成と役割
