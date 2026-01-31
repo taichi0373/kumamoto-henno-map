@@ -1,18 +1,44 @@
 # 自主返納特典マップ 設計書
 
-## ■ システム概要
-自主返納特典マップは、運転免許を自主返納した高齢者が利用できる特典を
-地図上で検索・閲覧できるWebアプリケーションである。
+## システム概要
 
-## ■ 対象ユーザー
-- 運転免許自主返納者
+熊本県の自主返納特典情報を地図上で表示・検索できるWebアプリケーション。特典施設の地図表示、条件絞り込み検索、管理機能、経路探索機能を提供。
 
-## ■ 主な機能
-- 地図上で特典施設を表示
-- カテゴリ検索
-- 地域フィルタ
-- 特典詳細閲覧
+## ドキュメント構成
 
-## ■ 本書の目的
-本書は「自主返納特典マップ」の設計情報を一元管理し、
-開発・保守・引き継ぎを容易にすることを目的とする。
+### 1. [アプリケーション概要・仕様](01_overview/)
+- [概要](01_overview/overview.md)
+- [技術スタック](01_overview/tech_stack.md)
+- [命名規則](01_overview/naming_conventions.md)
+
+### 2. [機能仕様](02_functions/)
+- [機能一覧](02_functions/feature_list.md)
+- [画面一覧](02_functions/screen_list.md)
+- [画面遷移図](02_functions/screen_flow.md)
+
+### 3. [データ設計](03_database/)
+- [テーブル一覧](03_database/table_list.md)
+- [テーブル定義](03_database/table_definitions.md)
+- [ER図](03_database/er_diagram.md)
+
+### 4. [外部インターフェース](04_interfaces/)
+- [インターフェース一覧](04_interfaces/interface_list.md)
+- [インターフェース仕様](04_interfaces/interface_spec.md)
+
+## 技術スタック
+
+**フロントエンド**: Vue 3 + TypeScript + Vue CLI  
+**バックエンド**: Java 21 + Spring Boot + Doma 2  
+**データベース**: PostgreSQL  
+**その他**: OTP 2.5.0, Docker, GitHub Actions
+
+## プロジェクト構成
+
+```
+benefit_map/
+├── apps/front/         # Vue フロントエンド
+├── apps/back/          # Spring Boot バックエンド
+├── config/database/    # DB設定・DDL・DML
+├── config/otp/         # 経路探索設定
+└── docs/              # 設計書
+```
