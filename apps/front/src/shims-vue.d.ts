@@ -4,12 +4,54 @@ declare module '*.vue' {
   export default component
 }
 
-declare module '*.css' {
-  const content: { [className: string]: string };
-  export default content;
+declare module './router' {
+  import { Router } from 'vue-router'
+  const router: Router
+  export default router
 }
 
-declare module '*.scss' {
-  const content: { [className: string]: string };
-  export default content;
+declare module './router/index' {
+  import { Router } from 'vue-router'
+  const router: Router
+  export default router
+}
+
+declare module './router/index.js' {
+  import { Router } from 'vue-router'
+  const router: Router
+  export default router
+}
+
+declare module '@/utils/auth' {
+  interface User {
+    id: string
+    username: string
+    [key: string]: any
+  }
+  
+  export const AuthUtils: {
+    login(user: User | null, token: string): void
+    isLoggedIn(): boolean
+    getUser(): User | null
+    getUserId(): string | null
+    getToken(): string | null
+    logout(): void
+  }
+}
+
+declare module './utils/auth' {
+  interface User {
+    id: string
+    username: string
+    [key: string]: any
+  }
+  
+  export const AuthUtils: {
+    login(user: User | null, token: string): void
+    isLoggedIn(): boolean
+    getUser(): User | null
+    getUserId(): string | null
+    getToken(): string | null
+    logout(): void
+  }
 }

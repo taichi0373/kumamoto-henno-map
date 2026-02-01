@@ -4,8 +4,7 @@ module.exports = {
   stories: ["../src/**/*.stories.@(js|jsx|ts|tsx|mdx)"],
   addons: [
     "@storybook/addon-webpack5-compiler-babel",
-    "@storybook/addon-essentials",
-    "@storybook/addon-interactions",
+    "@storybook/addon-essentials"
   ],
   framework: {
     name: "@storybook/vue3-webpack5",
@@ -14,7 +13,7 @@ module.exports = {
   typescript: {
     check: false,
   },
-  webpackFinal: async (config) => {
+  webpackFinal: async (config: any) => {
     // CSS/SCSS support
     config.module.rules.push({
       test: /\.scss$/,

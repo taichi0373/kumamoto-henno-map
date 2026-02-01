@@ -279,7 +279,7 @@ export default {
         
         const response = await fetch(nominatimUrl, {
           headers: {
-            'User-Agent': 'navigation_app/1.0'
+            'User-Agent': 'benefit_map/1.0'
           }
         })
         

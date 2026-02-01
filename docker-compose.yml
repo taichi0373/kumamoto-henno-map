@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: pass
-      POSTGRES_DB: navigation
+      POSTGRES_DB: benefit_map
     volumes:
       - ./config/database:/docker-entrypoint-initdb.d
     ports:

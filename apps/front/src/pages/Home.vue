@@ -280,7 +280,7 @@ export default {
     // 逆ジオコーディングAPI
     const reverseGeocode = async (lat, lon) => {
       const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ja&addressdetails=1`;
-      const res = await fetch(url, { headers: { 'User-Agent': 'navigation_app/1.0' } });
+      const res = await fetch(url, { headers: { 'User-Agent': 'benefit_map/1.0' } });
       if (!res.ok) return null;
       const data = await res.json();
       return {

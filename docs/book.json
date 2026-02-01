@@ -1,0 +1,9 @@
+{
+  "title": "",
+  "description": "",
+  "language": "ja",
+  "styles": {
+    "website": "styles/base.css"
+  },
+  "plugins": ["livereload"]
+}

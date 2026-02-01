@@ -1,24 +1,17 @@
-# front
+## npm
 
-## Project setup
-```
+### 基本コマンド
+
+```bash
+# 依存関係のインストール
 npm install
-```
 
-### Compiles and hot-reloads for development
-```
+# サーバーの起動
 npm run serve
-```
 
-### Compiles and minifies for production
-```
+# ビルド
 npm run build
-```
 
-### Lints and fixes files
+# テストの実行
+npm run test
 ```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

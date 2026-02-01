@@ -1,89 +1,88 @@
-INSERT INTO community_bus (route_id, agency_id, origin_agency_id, business_name, trip_name) VALUES
-('102_102020_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→漁協前〜→さんぱーる'),
-('102_102021_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→上天草高校前〜スパタラソ→さんぱーる'),
-('102_102060_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→漁協前〜瀬高→さんぱーる'),
-('102_102061_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→瀬高〜漁協前→さんぱーる'),
-('104_104020_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→〜南・野釜→さんぱーる'),
-('104_104021_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→南・野釜〜→さんぱーる'),
-('117_117580_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（黄）', '水俣駅前→→葛彩館'),
-('117_117581_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（黄）', '葛彩館→→水俣駅前'),
-('117_117590_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（黄）', '水俣駅前→→大川公民館前'),
-('117_117591_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（黄）', '大川公民館前→→水俣駅前'),
-('118_118040_1', 'communitybus_008', 9330001006723, '八代市街地循環バス「みなバス」', 'R1：八代産交→右回〜萩原→八代産交'),
-('118_118041_1', 'communitybus_008', 9330001006723, '八代市街地循環バス「みなバス」', 'L1：八代産交→左回〜上日置→八代産交'),
-('118_118050_1', 'communitybus_008', 9330001006723, '八代市街地循環バス「まちバス」', 'R2：八代産交→右回〜北部中央公園→八代産交'),
-('118_118051_1', 'communitybus_008', 9330001006723, '八代市街地循環バス「まちバス」', 'L2：八代産交→左廻り〜田中北町→八代産交'),
-('119_119540_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（黄）', '水俣駅前→→中屋敷'),
-('119_119541_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（黄）', '中屋敷→→水俣駅前'),
-('120_120720_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（おれんじ）', '茂道漁港→→頭石'),
-('120_120721_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（おれんじ）', '頭石→→茂道漁港'),
-('120_120730_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（おれんじ）', '茂道漁港→→招川内'),
-('120_120731_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（おれんじ）', '招川内→→茂道漁港'),
-('120_120740_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（おれんじ）', '茂道漁港→→招川内'),
-('120_120741_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（おれんじ）', '招川内→→茂道漁港'),
-('121_121471_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（赤）', '水俣市役所→→水俣駅前'),
-('121_121480_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（赤）', '木臼野上→→水俣市役所'),
-('121_121481_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（赤）', '水俣市役所→→木臼野上'),
-('122_122410_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（青）', '水俣駅前→→湯の児'),
-('122_122411_1', 'communitybus_002', 9330001006723, '水俣市みなくるバス（青）', '湯の児→→水俣駅前'),
-('130_130080_1', 'communitybus_011', 9330001006723, '人吉周遊バス', '人吉ＩＣ乗降口→～→人吉駅前'),
-('130_130081_1', 'communitybus_011', 9330001006723, '人吉周遊バス', '人吉駅前→～→人吉ＩＣ乗降口'),
-('130_130091_1', 'communitybus_011', 9330001006723, '人吉周遊バス', '人吉駅前→→人吉ＩＣ乗降口'),
-('130_130120_1', 'communitybus_011', 9330001006723, '人吉周遊バス', '人吉ＩＣ乗降口→九日町～医療センター→人吉駅前'),
-('130_130121_1', 'communitybus_011', 9330001006723, '人吉周遊バス', '人吉駅前→医療センター～九日町→人吉ＩＣ乗降口'),
-('130_130131_1', 'communitybus_011', 9330001006723, '人吉周遊バス', '人吉駅前→医療センター～球磨川下り発船場→人吉ＩＣ乗降口'),
-('131_131090_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', '三角産交→岩谷入口〜大矢野庁舎前→さんぱーる'),
-('131_131091_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→大矢野庁舎前〜岩谷入口→三角産交'),
-('131_131100_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', '三角病院・防災拠点センター→岩谷入口〜大矢野庁舎前→さんぱーる'),
-('131_131101_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→大矢野庁舎前〜岩谷入口→三角病院・防災拠点センター'),
-('131_131270_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', 'さんぱーる→大矢野庁舎前〜三角西港→三角産交'),
-('131_131271_1', 'communitybus_005', 9330001006723, '上天草SUNまりんバス', '三角産交→三角西港〜大矢野庁舎前→さんぱーる'),
-('141_141100_1', 'communitybus_009', 9330001006723, '天草本渡市街地循環バス「のってみゅうかー」', '22：本渡バスセンター→水の平〜箱の水→本渡バスセンター'),
-('141_141101_1', 'communitybus_009', 9330001006723, '天草本渡市街地循環バス「のってみゅうかー」', '20：本渡バスセンター→箱の水〜水の平→本渡バスセンター'),
-('141_141120_1', 'communitybus_009', 9330001006723, '天草本渡市街地循環バス「のってみゅうかー」', '23：本渡バスセンター→水の平〜ここらす→本渡バスセンター'),
-('141_141121_1', 'communitybus_009', 9330001006723, '天草本渡市街地循環バス「のってみゅうかー」', '21：本渡バスセンター→ここらす〜水の平→本渡バスセンター'),
-('146_146090_1', 'communitybus_001', 9330001006723, '宇土市コミュニティバス「行長しゃん号」', '宇土シティモール南口→左回り→宇土シティモール南口'),
-('146_146091_1', 'communitybus_001', 9330001006723, '宇土市コミュニティバス「行長しゃん号」', '宇土シティモール南口→右回り→宇土シティモール南口'),
-('148_148100_1', 'communitybus_006', 9330001006723, '菊陽町巡回バス「キャロッピー号」', '菊陽町役場→宮の上→菊陽町役場'),
-('148_148101_1', 'communitybus_006', 9330001006723, '菊陽町巡回バス「キャロッピー号」', '菊陽町役場→緑陽台→菊陽町役場'),
-('148_148690_1', 'communitybus_006', 9330001006723, '菊陽町巡回バス「キャロッピー号」', '曲手→→戸次上村'),
-('148_148691_1', 'communitybus_006', 9330001006723, '菊陽町巡回バス「キャロッピー号」', '戸次上村→→曲手'),
-('150_150410_1', 'communitybus_008', 9330001006723, '八代市街地循環バス「ゆめバス」', 'L3：ゆめタウン（八代）→楠町〜→ゆめタウン（八代）'),
-('150_150411_1', 'communitybus_008', 9330001006723, '八代市街地循環バス「ゆめバス」', 'R3：ゆめタウン（八代）→旭中央〜→ゆめタウン（八代）'),
-('165_165010_1', 'communitybus_007', 9330001006723, '玉名市街地循環バス「ぐるっとメロディー号／ぐるっとフラワー号」', '玉名駅前→春出ループ橋〜→玉名駅前'),
-('165_165011_1', 'communitybus_007', 9330001006723, '玉名市街地循環バス「ぐるっとメロディー号／ぐるっとフラワー号」', '玉名駅前→玉名市役所前〜→玉名駅前'),
-('60_9501_1', 'communitybus_010', 1330001001517, '合志市レターバス', '南ルート　御代志→泉ヶ丘→光の森駅→アンビー熊本'),
-('60_9512_2', 'communitybus_010', 1330001001517, '合志市レターバス', '南ルート　アンビー熊本→光の森駅→泉ヶ丘→ユーパレス弁天→御代志'),
-('60_9521_1', 'communitybus_010', 1330001001517, '合志市レターバス', '南ルート　御代志→ユーパレス弁天→黒石団地→すずかけ台→光の森駅→アンビー熊本'),
-('60_9522_2', 'communitybus_010', 1330001001517, '合志市レターバス', '南ルート　アンビー熊本→光の森駅→すずかけ台→黒石団地→ユーパレス弁天→御代志'),
-('60_9531_1', 'communitybus_010', 1330001001517, '合志市レターバス', '北ルート　辻久保→アンビー熊本→光の森駅'),
-('60_9532_2', 'communitybus_010', 1330001001517, '合志市レターバス', '北ルート　光の森駅→アンビー熊本→辻久保'),
-('60_9541_1', 'communitybus_010', 1330001001517, '合志市レターバス', '北ルート　辻久保→アンビー熊本'),
-('60_9542_2', 'communitybus_010', 1330001001517, '合志市レターバス', '北ルート　アンビー熊本→辻久保'),
-('60_9551_1', 'communitybus_010', 1330001001517, '合志市レターバス', '中央ルート　辻久保→ユーパレス弁天→御代志→泉ヶ丘→アンビー熊本'),
-('60_9552_2', 'communitybus_010', 1330001001517, '合志市レターバス', '中央ルート　アンビー熊本→泉ヶ丘→御代志→ユーパレス弁天→辻久保'),
-('70_151_1', 'communitybus_006', 1330001001517, '菊陽町巡回バス「キャロッピー号」', '西部線　向陽台→キャロッピア→光の森駅→菊陽町図書館→菊陽町役場'),
-('70_161_1', 'communitybus_006', 1330001001517, '菊陽町巡回バス「キャロッピー号」', '西部線　菊陽町役場→菊陽町図書館→光の森駅→キャロッピア→向陽台'),
-('86_86010_1', 'communitybus_003', 9330001006723, '高森町民バス', '高森町役場前→フレイン〜アスカ→高森駅前'),
-('86_86020_1', 'communitybus_003', 9330001006723, '高森町民バス', '高森町役場前→色見入口〜アスカ→天神'),
-('86_86040_1', 'communitybus_003', 9330001006723, '高森町民バス', '天神→アスカ〜フレイン→天神'),
-('86_86050_1', 'communitybus_003', 9330001006723, '高森町民バス', '天神→アスカ〜フレイン→高森中央'),
-('86_86060_1', 'communitybus_003', 9330001006723, '高森町民バス', '天神→色見入口〜フレイン→天神'),
-('86_86100_1', 'communitybus_003', 9330001006723, '高森町民バス', 'フレイン高森店→河原〜高森町役場前→高森中央'),
-('86_86200_1', 'communitybus_003', 9330001006723, '高森町民バス', '阿蘇０９６区前→猿丸〜埋立→高森中央'),
-('86_86210_1', 'communitybus_003', 9330001006723, '高森町民バス', '阿蘇０９６区前→埋立〜山の口→高森中央'),
-('86_86300_1', 'communitybus_003', 9330001006723, '高森町民バス', '阿蘇０９６区前→高尾野〜今村（高森）→高森中央'),
-('86_86410_1', 'communitybus_003', 9330001006723, '高森町民バス', 'フレイン高森店→アスカ〜阿蘇096区前→高森中央'),
-('86_86500_1', 'communitybus_003', 9330001006723, '高森町民バス', '阿蘇０９６区前→アスカ〜朋遊館→高森中央'),
-('86_86520_1', 'communitybus_003', 9330001006723, '高森町民バス', '高森駅前→休暇村〜西中原→天神'),
-('86_86530_1', 'communitybus_003', 9330001006723, '高森町民バス', '高森駅前→梅香苑前〜大道→高森中央'),
-('86_86540_1', 'communitybus_003', 9330001006723, '高森町民バス', '高森駅前→高森随道〜草部出張所→高森温泉館前'),
-('86_86550_1', 'communitybus_003', 9330001006723, '高森町民バス', '高森駅前→川上〜下切→高森温泉館前'),
-('86_86570_1', 'communitybus_003', 9330001006723, '高森町民バス', '高森駅前→高尾野〜今村（高森）→高森温泉館前'),
-('86_86580_1', 'communitybus_003', 9330001006723, '高森町民バス', '高森駅前→洗川〜馬渡→高森中央'),
-('96_96420_1', 'communitybus_004', 9330001006723, '南阿蘇ゆるっとバス', '高森中央→白川駅〜瑠璃→立野駅'),
-('96_96421_1', 'communitybus_004', 9330001006723, '南阿蘇ゆるっとバス', '立野駅→瑠璃〜白川駅→高森中央'),
-('96_96430_1', 'communitybus_004', 9330001006723, '南阿蘇ゆるっとバス', '高森中央→白川駅→立野駅'),
-('96_96431_1', 'communitybus_004', 9330001006723, '南阿蘇ゆるっとバス', '立野駅→白川駅→高森中央'),
-('96_96440_1', 'communitybus_004', 9330001006723, '南阿蘇ゆるっとバス', '高森中央→久木野→南阿蘇村役場'),
-('96_96441_1', 'communitybus_004', 9330001006723, '南阿蘇ゆるっとバス', '南阿蘇村役場→久木野→高森中央');
+INSERT INTO COMMUNITY_BUS VALUES ('146_146090_1', 'CB-0000000001', '宇土シティモール南口→左回り→宇土シティモール南口', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('146_146091_1', 'CB-0000000001', '宇土シティモール南口→右回り→宇土シティモール南口', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('121_121471_1', 'CB-0000000002', '水俣市役所→→水俣駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('121_121480_1', 'CB-0000000002', '木臼野上→→水俣市役所', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('121_121481_1', 'CB-0000000002', '水俣市役所→→木臼野上', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('117_117580_1', 'CB-0000000002', '水俣駅前→→葛彩館', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('117_117581_1', 'CB-0000000002', '葛彩館→→水俣駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('117_117590_1', 'CB-0000000002', '水俣駅前→→大川公民館前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('117_117591_1', 'CB-0000000002', '大川公民館前→→水俣駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('119_119540_1', 'CB-0000000002', '水俣駅前→→中屋敷', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('119_119541_1', 'CB-0000000002', '中屋敷→→水俣駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('122_122410_1', 'CB-0000000002', '水俣駅前→→湯の児', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('122_122411_1', 'CB-0000000002', '湯の児→→水俣駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('120_120720_1', 'CB-0000000002', '茂道漁港→→頭石', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('120_120721_1', 'CB-0000000002', '頭石→→茂道漁港', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('120_120730_1', 'CB-0000000002', '茂道漁港→→招川内', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('120_120731_1', 'CB-0000000002', '招川内→→茂道漁港', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('120_120740_1', 'CB-0000000002', '茂道漁港→→招川内', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('120_120741_1', 'CB-0000000002', '招川内→→茂道漁港', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86010_1',   'CB-0000000003', '高森町役場前→フレイン〜アスカ→高森駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86020_1',   'CB-0000000003', '高森町役場前→色見入口〜アスカ→天神', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86040_1',   'CB-0000000003', '天神→アスカ〜フレイン→天神', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86050_1',   'CB-0000000003', '天神→アスカ〜フレイン→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86060_1',   'CB-0000000003', '天神→色見入口〜フレイン→天神', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86100_1',   'CB-0000000003', 'フレイン高森店→河原〜高森町役場前→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86200_1',   'CB-0000000003', '阿蘇０９６区前→猿丸〜埋立→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86210_1',   'CB-0000000003', '阿蘇０９６区前→埋立〜山の口→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86300_1',   'CB-0000000003', '阿蘇０９６区前→高尾野〜今村（高森）→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86410_1',   'CB-0000000003', 'フレイン高森店→アスカ〜阿蘇096区前→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86500_1',   'CB-0000000003', '阿蘇０９６区前→アスカ〜朋遊館→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86520_1',   'CB-0000000003', '高森駅前→休暇村〜西中原→天神', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86530_1',   'CB-0000000003', '高森駅前→梅香苑前〜大道→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86540_1',   'CB-0000000003', '高森駅前→高森随道〜草部出張所→高森温泉館前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86550_1',   'CB-0000000003', '高森駅前→川上〜下切→高森温泉館前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86570_1',   'CB-0000000003', '高森駅前→高尾野〜今村（高森）→高森温泉館前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('86_86580_1',   'CB-0000000003', '高森駅前→洗川〜馬渡→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('96_96420_1',   'CB-0000000004', '高森中央→白川駅〜瑠璃→立野駅', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('96_96421_1',   'CB-0000000004', '立野駅→瑠璃〜白川駅→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('96_96430_1',   'CB-0000000004', '高森中央→白川駅→立野駅', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('96_96431_1',   'CB-0000000004', '立野駅→白川駅→高森中央', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('96_96440_1',   'CB-0000000004', '高森中央→久木野→南阿蘇村役場', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('96_96441_1',   'CB-0000000004', '南阿蘇村役場→久木野→高森中央');
+INSERT INTO COMMUNITY_BUS VALUES ('102_102020_1', 'CB-0000000005', 'さんぱーる→漁協前〜→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('102_102021_1', 'CB-0000000005', 'さんぱーる→上天草高校前〜スパタラソ→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('102_102060_1', 'CB-0000000005', 'さんぱーる→漁協前〜瀬高→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('102_102061_1', 'CB-0000000005', 'さんぱーる→瀬高〜漁協前→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('104_104020_1', 'CB-0000000005', 'さんぱーる→〜南・野釜→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('104_104021_1', 'CB-0000000005', 'さんぱーる→南・野釜〜→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('131_131090_1', 'CB-0000000005', '三角産交→岩谷入口〜大矢野庁舎前→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('131_131091_1', 'CB-0000000005', 'さんぱーる→大矢野庁舎前〜岩谷入口→三角産交', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('131_131100_1', 'CB-0000000005', '三角病院・防災拠点センター→岩谷入口〜大矢野庁舎前→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('131_131101_1', 'CB-0000000005', 'さんぱーる→大矢野庁舎前〜岩谷入口→三角病院・防災拠点センター', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('131_131270_1', 'CB-0000000005', 'さんぱーる→大矢野庁舎前〜三角西港→三角産交', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('131_131271_1', 'CB-0000000005', '三角産交→三角西港〜大矢野庁舎前→さんぱーる', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('148_148100_1', 'CB-0000000006', '菊陽町役場→宮の上→菊陽町役場', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('148_148101_1', 'CB-0000000006', '菊陽町役場→緑陽台→菊陽町役場', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('148_148690_1', 'CB-0000000006', '曲手→→戸次上村', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('148_148691_1', 'CB-0000000006', '戸次上村→→曲手', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('70_151_1',     'CB-0000000006', '西部線 向陽台→キャロッピア→光の森駅→菊陽町図書館→菊陽町役場', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('70_161_1',     'CB-0000000006', '西部線 菊陽町役場→菊陽町図書館→光の森駅→キャロッピア→向陽台', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('165_165010_1', 'CB-0000000007', '玉名駅前→春出ループ橋〜→玉名駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('165_165011_1', 'CB-0000000007', '玉名駅前→玉名市役所前〜→玉名駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('118_118040_1', 'CB-0000000008', 'R1：八代産交→右回〜萩原→八代産交', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('118_118041_1', 'CB-0000000008', 'L1：八代産交→左回〜上日置→八代産交', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('118_118050_1', 'CB-0000000008', 'R2：八代産交→右回〜北部中央公園→八代産交', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('118_118051_1', 'CB-0000000008', 'L2：八代産交→左廻り〜田中北町→八代産交', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('150_150410_1', 'CB-0000000008', 'L3：ゆめタウン（八代）→楠町〜→ゆめタウン（八代）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('150_150411_1', 'CB-0000000008', 'R3：ゆめタウン（八代）→旭中央〜→ゆめタウン（八代）', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('141_141100_1', 'CB-0000000009', '22：本渡バスセンター→水の平〜箱の水→本渡バスセンター', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('141_141101_1', 'CB-0000000009', '20：本渡バスセンター→箱の水〜水の平→本渡バスセンター', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('141_141120_1', 'CB-0000000009', '23：本渡バスセンター→水の平〜ここらす→本渡バスセンター', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('141_141121_1', 'CB-0000000009', '21：本渡バスセンター→ここらす〜水の平→本渡バスセンター', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9501_1',    'CB-0000000010', '南ルート 御代志→泉ヶ丘→光の森駅→アンビー熊本', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9512_2',    'CB-0000000010', '南ルート アンビー熊本→光の森駅→泉ヶ丘→ユーパレス弁天→御代志', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9521_1',    'CB-0000000010', '南ルート 御代志→ユーパレス弁天→黒石団地→すずかけ台→光の森駅→アンビー熊本', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9522_2',    'CB-0000000010', '南ルート アンビー熊本→光の森駅→すずかけ台→黒石団地→ユーパレス弁天→御代志', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9531_1',    'CB-0000000010', '北ルート 辻久保→アンビー熊本→光の森駅', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9532_2',    'CB-0000000010', '北ルート 光の森駅→アンビー熊本→辻久保', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9541_1',    'CB-0000000010', '北ルート 辻久保→アンビー熊本', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9542_2',    'CB-0000000010', '北ルート アンビー熊本→辻久保', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9551_1',    'CB-0000000010', '中央ルート 辻久保→ユーパレス弁天→御代志→泉ヶ丘→アンビー熊本', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('60_9552_2',    'CB-0000000010', '中央ルート アンビー熊本→泉ヶ丘→御代志→ユーパレス弁天→辻久保', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('130_130080_1', 'CB-0000000011', '人吉ＩＣ乗降口→～→人吉駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('130_130081_1', 'CB-0000000011', '人吉駅前→～→人吉ＩＣ乗降口', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('130_130091_1', 'CB-0000000011', '人吉駅前→→人吉ＩＣ乗降口', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('130_130120_1', 'CB-0000000011', '人吉ＩＣ乗降口→九日町～医療センター→人吉駅前', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('130_130121_1', 'CB-0000000011', '人吉駅前→医療センター～九日町→人吉ＩＣ乗降口', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO COMMUNITY_BUS VALUES ('130_130131_1', 'CB-0000000011', '人吉駅前→医療センター～球磨川下り発船場→人吉ＩＣ乗降口', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

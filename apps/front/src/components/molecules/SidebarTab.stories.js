@@ -152,7 +152,7 @@ export const InSidebarLayout = {
           
           <!-- ライセンス情報エリア（簡略版） -->
           <div style="padding: 15px; background: white; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
-            <p style="margin: 0;">© 2025 Navigation App</p>
+            <p style="margin: 0;">© 2025 Benefit Map</p>
           </div>
         </div>
         

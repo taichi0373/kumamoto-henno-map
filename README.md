@@ -41,7 +41,7 @@ docker compose logs -f
 
 ```bash
 docker compose exec db bash
-psql -U user -d navigation
+psql -U user -d benefit_map
 ```
 
 ### テーブル確認
@@ -58,9 +58,9 @@ psql -U user -d navigation
 
 | 項目 | 値 |
 |------|-----|
-| 名前 | navigation_app_db |
+| 名前 | benefit_map_db |
 | ホスト名/アドレス | db |
 | ポート番号 | 5432 |
-| 管理用データベース | navigation |
+| 管理用データベース | benefit_map |
 | ユーザ名 | user |
 | パスワード | pass |

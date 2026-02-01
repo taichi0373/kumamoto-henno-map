@@ -1,0 +1,114 @@
+name: Review Precheck
+
+# ワークフロー共有設定
+on:
+  workflow_call:
+    inputs:
+      timeout-minutes:
+        type: number
+        default: 3
+
+      frontend-dir:
+        type: string
+        default: 'apps/front'
+
+      component-dir:
+        type: string
+        default: 'apps/front/src/components'
+
+      backend-dir:
+        type: string
+        default: 'apps/back'
+
+      # openapi-dir:
+      #   type: string
+
+      document-dir:
+        type: string
+        default: 'docs'
+
+    # アウトプット
+    outputs:
+      frontend-changed:
+        value: ${{ jobs.precheck.outputs.frontend-changed }}
+      component-changed:
+        value: ${{ jobs.precheck.outputs.component-changed }}
+      backend-changed:
+        value: ${{ jobs.precheck.outputs.backend-changed }}
+      # openapi-changed:
+      #   value: ${{ jobs.precheck.outputs.openapi-changed }}
+      document-changed:
+        value: ${{ jobs.precheck.outputs.document-changed }}
+
+env:
+  TZ: Asia/Tokyo
+  FRONTEND_DIR: ${{ inputs.frontend-dir }}
+  COMPONENT_DIR: ${{ inputs.component-dir }}
+  BACKEND_DIR: ${{ inputs.backend-dir }}
+  # OPENAPI_DIR: ${{ inputs.openapi-dir }}
+  DOCUMENT_DIR: ${{ inputs.document-dir }}
+
+# jobs: 動作内容
+jobs:
+  # 前処理（差分のチェック）
+  precheck:
+    name: Diff Precheck
+    # Github-hosted runner を使用
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    outputs:
+      frontend-changed: ${{ steps.frontend.outputs.diff != '' }}
+      component-changed: ${{ steps.component.outputs.diff != '' }}
+      backend-changed: ${{ steps.backend.outputs.diff != '' }}
+      # openapi-changed: ${{ steps.openapi.outputs.diff != '' }}
+      document-changed: ${{ steps.document.outputs.diff != '' }}
+    
+
+    steps:
+      # 全履歴取得（差分検知必須）
+      - name: Checkout PR head
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Fetch base branch
+        run: git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
+            
+      # 2. フロントエンド差分チェック
+      - name: Frontend diff
+        id: frontend
+        uses: tj-actions/changed-files@v34
+        with:
+          files: ${{ env.FRONTEND_DIR }}/**
+
+      # 3. コンポーネント差分チェック
+      - name: Component diff
+        id: component
+        uses: tj-actions/changed-files@v34
+        with:
+          files: ${{ env.COMPONENT_DIR }}/**
+
+      # 4. バックエンド差分チェック
+      - name: Backend diff
+        id: backend
+        uses: tj-actions/changed-files@v34
+        with:
+          files: ${{ env.BACKEND_DIR }}/**
+
+      # # 5. OpenAPI差分チェック
+      # - name: OpenAPI diff
+      #   id: openapi
+      #   if: env.OPENAPI_DIR != ''
+      #   uses: tj-actions/changed-files@v34
+      #   with:
+      #     files: ${{ env.OPENAPI_DIR }}/**
+
+      # 6. ドキュメント差分チェック
+      - name: Document diff
+        id: document
+        uses: tj-actions/changed-files@v34
+        with:
+          files: ${{ env.DOCUMENT_DIR }}/**
