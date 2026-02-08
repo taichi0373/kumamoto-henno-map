@@ -6,11 +6,12 @@ import java.time.LocalDate;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
+import org.seasar.doma.GeneratedValue;
+import org.seasar.doma.GenerationType;
 import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
 import org.seasar.doma.Table;
 
-import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,8 +27,9 @@ public class UsersEntity implements Serializable {
     
     /** ユーザーID */
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    String userId;
+    Integer userId;
 
     /** ユーザー名 */
     @Column(name = "username")

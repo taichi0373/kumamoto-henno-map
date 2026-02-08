@@ -1,7 +1,5 @@
 package io.github.taichi0373.benefit_map.repository.dao;
 
-import java.util.List;
-
 import org.seasar.doma.Dao;
 import org.seasar.doma.Delete;
 import org.seasar.doma.Insert;

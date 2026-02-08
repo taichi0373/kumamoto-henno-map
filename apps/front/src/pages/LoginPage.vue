@@ -141,7 +141,7 @@ export default {
   justify-content: center;
   margin-top: 20px;
 }
-.register-link {
+.signup-link {
   display: flex;
   justify-content: center;
   margin-top: 10px;

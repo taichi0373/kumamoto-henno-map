@@ -8,7 +8,6 @@ import org.seasar.doma.Column;
 import org.seasar.doma.Embeddable;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /** 
@@ -18,7 +17,6 @@ import lombok.NoArgsConstructor;
 @Embeddable
 @NoArgsConstructor
 @AllArgsConstructor
-@Getter
 public class SystemField implements Serializable {
 
     /** シリアルバージョンUID */

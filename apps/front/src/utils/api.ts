@@ -1,9 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
 // Vue CLI用の環境変数（VUE_APP_プレフィックスが必要）
-const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 
-                    process.env.VUE_APP_BENEFIT_MAP_URL || 
-                    'http://localhost:8000/api'
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8081/benefit-map/api';
 
 /**
  * RESTful APIクライアント（axiosベース）

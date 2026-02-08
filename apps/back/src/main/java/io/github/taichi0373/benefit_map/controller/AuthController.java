@@ -1,57 +1,54 @@
 package io.github.taichi0373.benefit_map.controller;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.taichi0373.benefit_map.dto.LoginRequest;
-import io.github.taichi0373.benefit_map.dto.RegisterRequest;
-import io.github.taichi0373.benefit_map.service.UserService;
+import io.github.taichi0373.benefit_map.dto.UsersDto;
+import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
+import io.github.taichi0373.benefit_map.service.UsersService;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:6006", "http://127.0.0.1:3000", "http://127.0.0.1:6006"}, allowCredentials = "true")
 public class AuthController {
-    
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-    
-    private final UserService userService;
-    
+
+    /**
+     * ユーザー情報サービス
+     */
+    @Autowired
+    private UsersService usersService;
+
     /**
      * ログイン
      */
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody UsersDto users) {
+        HashMap<String, Object> result = new HashMap<>();
         try {
-            log.info("ログイン試行: username={}", request.getUsername());
-            Map<String, Object> result = userService.authenticateUser(request.getUsername(), request.getPassword());
+            UsersEntity usersEntity = usersService.loginUser(users.getUsername(), users.getPassword());
             
-            if ((Boolean) result.get("success")) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> user = (Map<String, Object>) result.get("user");
-                session.setAttribute("user_id", user.get("userId"));
-                session.setAttribute("username", user.get("username"));
-                log.info("ユーザー {} がログインしました", user.get("username"));
+            if (ValidateUtils.isNullOrEmpty(usersEntity)) {
+                return ResponseEntity.noContent().build();
+            } else {
+                result.put("usersEntity", usersEntity);
+                result.put("message", "");
+                return ResponseEntity.ok(result);
             }
-            
-            return ResponseEntity.ok(result);
         } catch (Exception e) {
-            log.error("ログインエラー", e);
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     /**
      * ログアウト
      */
@@ -59,62 +56,47 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> logout(HttpSession session) {
         try {
             session.invalidate();
-            log.info("ユーザーがログアウトしました");
-            return ResponseEntity.ok(Map.of("success", true, "message", "ログアウトしました"));
+            return ResponseEntity.ok(Map.of("message", "ログアウトしました"));
         } catch (Exception e) {
-            log.error("ログアウトエラー", e);
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     /**
      * ユーザー登録
      */
-    @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest request) {
+    @PostMapping("/signup")
+    public ResponseEntity<Map<String, Object>> signup(@RequestBody UsersDto users) {
+        HashMap<String, Object> result = new HashMap<>();
         try {
-            log.info("ユーザー登録試行: username={}", request.getUsername());
-            Map<String, Object> result = userService.registerUser(request);
-            return ResponseEntity.ok(result);
+            System.out.println("signup users: " + users);
+            UsersEntity userEntity = usersService.signupUser(users);
+            if (ValidateUtils.isNullOrEmpty(userEntity)) {
+                return ResponseEntity.noContent().build();
+            } else {
+                result.put("usersEntity", userEntity);
+                result.put("message", "ユーザー登録が完了しました");
+                return ResponseEntity.ok(result);
+            }
         } catch (Exception e) {
-            log.error("ユーザー登録エラー", e);
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     /**
      * セッション確認
      */
     @GetMapping("/session")
     public ResponseEntity<Map<String, Object>> getSession(HttpSession session) {
         try {
-            Object userId = session.getAttribute("user_id");
-            Object username = session.getAttribute("username");
-            
-            if (userId != null) {
-                return ResponseEntity.ok(Map.of(
-                    "authenticated", true,
-                    "user_id", userId,
-                    "username", username
-                ));
+            Object userId = session.getAttribute("userId");
+            if (ValidateUtils.isNullOrEmpty(userId)) {
+                return ResponseEntity.noContent().build();
             } else {
-                return ResponseEntity.ok(Map.of("authenticated", false));
+                return ResponseEntity.ok(Map.of("userId", userId));
             }
         } catch (Exception e) {
-            log.error("セッション確認エラー", e);
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-    }
-    
-    /**
-     * ヘルスチェック
-     */
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> health() {
-        return ResponseEntity.ok(Map.of(
-            "status", "OK",
-            "message", "Backend server is running",
-            "timestamp", System.currentTimeMillis()
-        ));
     }
 }
