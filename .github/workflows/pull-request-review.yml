@@ -21,8 +21,7 @@ jobs:
       frontend-dir: apps/front
       component-dir: apps/front/src/components
       backend-dir: apps/back
-      # openapi-dir: apps/openapi
-      # doc-dir: docs
+      doc-dir: docs
 
   # フロントエンドの変更がある場合のみビルド
   frontend-build:
@@ -40,22 +39,11 @@ jobs:
     if: needs.precheck.outputs.backend-changed != ''
     uses: ./.github/workflows/build-backend.yml
 
-  # OpenAPI チェック（任意）
-  # openapi-check:
-  #   name: OpenAPI Check
-  #   needs: precheck
-  #   if: needs.precheck.outputs.openapi-changed != ''
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - run: echo "Run OpenAPI validation here"
-
-  # ドキュメントの変更がある場合、ビルドして公開
+  # ドキュメントの変更がある場合、ビルドのみ実行
   document-build:
-    name: Document Build and Deploy
+    name: Document Build
     needs: precheck
     if: needs.precheck.outputs.document-changed != ''
     uses: ./.github/workflows/build-document.yml
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+    with:
+      is-deploy: false

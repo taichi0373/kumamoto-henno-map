@@ -10,7 +10,7 @@
               <router-link class="nav-link" to="/" exact-active-class="active">ホーム</router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link" to="/register" active-class="active">新規登録</router-link>
+              <router-link class="nav-link" to="/signup" active-class="active">新規登録</router-link>
             </li>
             <li class="nav-item" v-if="!isLoggedIn">
               <router-link class="nav-link" to="/login" active-class="active">ログイン</router-link>
@@ -65,7 +65,7 @@
                 <router-link class="nav-link-mobile" to="/" exact-active-class="active">ホーム</router-link>
               </li>
               <li class="nav-item-mobile">
-                <router-link class="nav-link-mobile" to="/register" active-class="active">新規登録</router-link>
+                <router-link class="nav-link-mobile" to="/signup" active-class="active">新規登録</router-link>
               </li>
               <li class="nav-item-mobile" v-if="!isLoggedIn">
                 <router-link class="nav-link-mobile" to="/login" active-class="active">ログイン</router-link>

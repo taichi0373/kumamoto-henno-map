@@ -16,9 +16,9 @@ graph TD
     
     %% 認証フロー
     Home --> Login[S011: ログイン画面]
-    Login --> Register[S012: 会員登録画面]
+    Login --> Signup[S012: 会員登録画面]
     Login --> Home
-    Register --> Home
+    Signup --> Home
     
     %% ユーザー機能
     Home --> Profile[S013: プロフィール画面]
@@ -27,7 +27,7 @@ graph TD
     Favorites --> Detail
     
     %% サポート機能
-    Home --> Support[S021: サポート情報画面]
+    Home --> SupportInfo[S021: サポート情報画面]
     
     %% スタイリング
     classDef startStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px
@@ -38,12 +38,12 @@ graph TD
     
     class Start startStyle
     class Home,Detail,Results,Route mainStyle
-    class Login,Register authStyle
+    class Login,Signup authStyle
     class Profile,PasswordChange,Favorites userStyle
-    class Support supportStyle
+    class SupportInfo supportStyle
 ```
-    Support --> Contact[S022: 問い合わせ画面]
-    Support --> FAQ[S023: FAQ画面]
+    SupportInfo --> Contact[S022: 問い合わせ画面]
+    SupportInfo --> FAQ[S023: FAQ画面]
     Home --> Terms[S024: 利用規約画面]
     
     %% 管理者フロー
@@ -77,8 +77,8 @@ graph TD
     classDef supportScreen fill:#e8f5e8
     
     class Home,Detail,Results,Route userScreen
-    class Login,Register,Profile,PasswordChange,Favorites authScreen
-    class Support,Contact,FAQ,Terms supportScreen
+    class Login,Signup,Profile,PasswordChange,Favorites authScreen
+    class SupportInfo,Contact,FAQ,Terms supportScreen
     class AdminLogin,Dashboard,BenefitList,BenefitCreate,BenefitEdit,BenefitBulk,AgencyList,AgencyCreate,AgencyEdit,UserList,UserDetail,LogViewer,Statistics,Settings adminScreen
 ```
 

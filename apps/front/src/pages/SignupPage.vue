@@ -1,8 +1,8 @@
 <template>
-  <div class="register-page">
-    <div class="register-container">
+  <div class="signup-page">
+    <div class="signup-container">
       <BaseCard title="新規登録" variant="default" size="medium" :hoverable="true" shadow="medium">
-        <form @submit.prevent="handleRegister">
+        <form @submit.prevent="handleSignup">
           <div class="form-row">
             <div class="form-col">
               <BaseFormGroup size="medium">
@@ -84,7 +84,7 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import BaseLabel from '@/components/atoms/Label.vue'
 import BaseInput from '@/components/atoms/Input.vue'
 import BaseButton from '@/components/atoms/Button.vue'
@@ -94,9 +94,9 @@ import BaseAlert from '@/components/atoms/Alert.vue'
 import BaseFormGroup from '@/components/atoms/FormGroup.vue'
 import BaseSelect from '@/components/atoms/Select.vue'
 import apiClient from '@/utils/api'
-import { AuthUtils } from '@/utils/auth'
+import { codeConstants } from '@/utils/codeConstants'
 export default {
-  name: 'RegisterPage',
+  name: 'SignupPage',
   components: {
     BaseLabel,
     BaseInput,
@@ -129,68 +129,43 @@ export default {
       licenseStatus: ''
     })
 
-    const addressOptions = ref([
-      // 政令指定都市
-      { value: '431001', label: '熊本市中央区' },
-      { value: '431002', label: '熊本市東区' },
-      { value: '431003', label: '熊本市西区' },
-      { value: '431004', label: '熊本市南区' },
-      { value: '431005', label: '熊本市北区' },
-      // 市部
-      { value: '432024', label: '八代市' },
-      { value: '432032', label: '人吉市' },
-      { value: '432041', label: '荒尾市' },
-      { value: '432059', label: '水俣市' },
-      { value: '432067', label: '玉名市' },
-      { value: '432091', label: '山鹿市' },
-      { value: '432105', label: '菊池市' },
-      { value: '432113', label: '宇土市' },
-      { value: '432121', label: '上天草市' },
-      { value: '432130', label: '宇城市' },
-      { value: '432148', label: '阿蘇市' },
-      { value: '432156', label: '天草市' },
-      { value: '432164', label: '合志市' },
-      // 郡部（一部）
-      { value: '433616', label: '美里町' },
-      { value: '434035', label: '玉東町' },
-      { value: '434051', label: '南関町' },
-      { value: '434060', label: '長洲町' },
-      { value: '434078', label: '和水町' },
-      { value: '434213', label: '大津町' },
-      { value: '434221', label: '菊陽町' },
-      { value: '434311', label: '南小国町' },
-      { value: '434329', label: '小国町' },
-      { value: '434337', label: '産山村' },
-      { value: '434345', label: '高森町' },
-      { value: '434361', label: '西原村' },
-      { value: '434370', label: '南阿蘇村' },
-      { value: '434434', label: '御船町' },
-      { value: '434442', label: '嘉島町' },
-      { value: '434451', label: '益城町' },
-      { value: '434469', label: '甲佐町' },
-      { value: '434493', label: '山都町' },
-      { value: '434639', label: '氷川町' },
-      { value: '434647', label: '芦北町' },
-      { value: '434655', label: '津奈木町' },
-      { value: '434671', label: '錦町' },
-      { value: '434680', label: '多良木町' },
-      { value: '434698', label: '湯前町' },
-      { value: '434701', label: '水上村' },
-      { value: '434710', label: '相良村' },
-      { value: '434728', label: '五木村' },
-      { value: '434736', label: '山江村' },
-      { value: '434744', label: '球磨村' },
-      { value: '434752', label: 'あさぎり町' },
-      { value: '434876', label: '苓北町' },
-    ])
+    // 居住地域プルダウン
+    const addressOptions = ref([])
+    // 自治体データを取得
+    const getMunicipalities = async () => {
+      try {
+        const response = await apiClient.get('/municipality/all')
+        if (response.municipalities) {
+          addressOptions.value = response.municipalities.map(dto => ({
+            value: dto.municipalityCd,
+            label: dto.municipalityName
+          }))
+        }
+      } catch (error) {
+        console.error('自治体データの取得に失敗しました:', error)
+      }
+    }
 
-    const licenseOptions = ref([
-      { value: 'licensed', label: '所持している' },
-      { value: 'unlicensed', label: '所持していない' },
-      { value: 'returned', label: '返納済み' },
-      { value: 'suspension', label: '停止している' },
-      { value: 'expired', label: '失効している' },
-    ])
+    // 運転免許の所持状況のプルダウン
+    const licenseStatusLabels = {
+      [codeConstants.LICENSE_STATUS.UNLICENSED]: '所持していない',
+      [codeConstants.LICENSE_STATUS.LICENSED]: '所持している',
+      [codeConstants.LICENSE_STATUS.RETURNED]: '返納',
+      [codeConstants.LICENSE_STATUS.EXPIRED]: '失効',
+      [codeConstants.LICENSE_STATUS.SUSPENDED]: '停止',
+      [codeConstants.LICENSE_STATUS.OTHER]: 'その他',
+    }
+    const licenseOptions = ref(
+      Object.entries(codeConstants.LICENSE_STATUS).map(([key, value]) => ({
+        value: value.toString(),
+        label: licenseStatusLabels[value]
+      }))
+    )
+
+    // 初期表示
+    onMounted(() => {
+      getMunicipalities()
+    })
 
     return {
       registrationData,
@@ -254,11 +229,10 @@ export default {
       return isValid
     },
 
-    async handleRegister() {
+    async handleSignup() {
       if (!this.validateForm()) {
         return
       }
-
       this.isLoading = true
       this.errorMessage = ''
       this.successMessage = ''
@@ -270,7 +244,7 @@ export default {
         // デバッグ用: 送信データをログ出力
         console.log('送信するデータ:', requestData);
 
-        const response = await apiClient.post('/auth/register', requestData);
+        const response = await apiClient.post('/auth/signup', requestData);
         if (response.data.success) {
           this.successMessage = '登録が完了しました。ログインページに移動してください。'
           setTimeout(() => {
@@ -290,7 +264,7 @@ export default {
 </script>
 
 <style scoped>
-.register-page {
+.signup-page {
   min-height: calc(100vh - 70px);
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   display: flex;
@@ -298,7 +272,7 @@ export default {
   justify-content: center;
 }
 
-.register-container {
+.signup-container {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
