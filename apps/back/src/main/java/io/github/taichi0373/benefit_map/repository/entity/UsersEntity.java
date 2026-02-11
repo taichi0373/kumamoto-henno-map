@@ -29,7 +29,7 @@ public class UsersEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    Integer userId;
+    Long userId;
 
     /** ユーザー名 */
     @Column(name = "username")

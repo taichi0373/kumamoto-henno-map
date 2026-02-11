@@ -73,7 +73,7 @@ public class BenefitService {
     /**
      * ユーザーIDからユーザーが受けられる特典を検索
      */
-    public List<BenefitEntity> getUsersBenefits(Integer userId) {
+    public List<BenefitEntity> getUsersBenefits(Long userId) {
         try {
             // ユーザー情報を取得
             UsersEntity user = usersDao.selectById(userId);

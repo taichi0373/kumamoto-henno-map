@@ -19,7 +19,7 @@ public interface UsersDao {
     /** 
      * 主キー検索
      */
-    default UsersEntity selectById(Integer userId) {
+    default UsersEntity selectById(Long userId) {
         Entityql entityql = new Entityql(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 

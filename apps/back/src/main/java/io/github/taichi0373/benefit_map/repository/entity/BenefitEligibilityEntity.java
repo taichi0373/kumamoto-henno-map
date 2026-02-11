@@ -5,6 +5,8 @@ import java.io.Serializable;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
+import org.seasar.doma.GeneratedValue;
+import org.seasar.doma.GenerationType;
 import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
 import org.seasar.doma.Table;
@@ -24,8 +26,9 @@ public class BenefitEligibilityEntity implements Serializable {
     
     /** ID */
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Integer id;
+    Long id;
 
     /** 特典ID */
     @Column(name = "benefit_id")

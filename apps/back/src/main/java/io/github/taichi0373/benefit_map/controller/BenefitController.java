@@ -56,7 +56,7 @@ public class BenefitController {
      * ユーザー特典取得
      */
     @GetMapping("/users/{userId}")
-    public ResponseEntity<Map<String, Object>> getUsersBenefits(@PathVariable Integer userId, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> getUsersBenefits(@PathVariable Long userId, HttpSession session) {
         try {
             // セッション認証チェック
             Object sessionUserId = session.getAttribute("user_id");

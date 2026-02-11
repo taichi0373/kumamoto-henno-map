@@ -1,5 +1,5 @@
 CREATE TABLE USERS (
-  USER_ID                SERIAL PRIMARY KEY,
+  USER_ID                BIGSERIAL PRIMARY KEY,
   USERNAME               VARCHAR(20) NOT NULL,
   PASSWORD_HASH          VARCHAR(200) NOT NULL,
   EMAIL                  VARCHAR(200),

@@ -44,7 +44,7 @@ public class UsersService {
             return null;
         }
     }
-    
+
     /**
      * 新規登録
      */
@@ -69,10 +69,16 @@ public class UsersService {
             newUser.setMunicipalityCode(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
             
+            System.out.println("signupUser newUser: " + newUser);
+
             // ユーザーをデータベースに挿入
-            usersDao.insert(newUser);
-            
-            return newUser;
+            int insertCount = usersDao.insert(newUser);
+            System.out.println("signupUser insertCount: " + insertCount);
+            if (insertCount > 0) {
+                return newUser;
+            } else {
+                return null;
+            }
         } catch (Exception e) {
             System.err.println("signupUser error: " + e.getMessage());
             e.printStackTrace();
@@ -83,7 +89,7 @@ public class UsersService {
     /**
      * ユーザー情報の取得
      */
-    public UsersEntity getUsersInfo(Integer userId) {
+    public UsersEntity getUsersInfo(Long userId) {
         try {
             return usersDao.selectById(userId);
         } catch (Exception e) {
@@ -102,6 +108,7 @@ public class UsersService {
             }
             
             // ユーザー情報を更新
+            existingUser.setEmail(users.getEmail());
             existingUser.setBirthDate(users.getBirthDate());
             existingUser.setMunicipalityCode(users.getAddress());
             existingUser.setLicenseStatus(users.getLicenseStatus());

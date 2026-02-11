@@ -34,7 +34,7 @@ public class UsersController {
      * ユーザー情報取得
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<Map<String, Object>> getUsersInfo(@PathVariable Integer userId, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> getUsersInfo(@PathVariable Long userId, HttpSession session) {
         try {
             // セッション認証チェック
             Object sessionUserId = session.getAttribute("user_id");

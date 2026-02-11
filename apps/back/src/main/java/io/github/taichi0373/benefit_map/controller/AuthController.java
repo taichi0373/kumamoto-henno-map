@@ -71,8 +71,10 @@ public class AuthController {
         try {
             UsersEntity userEntity = usersService.signupUser(users);
             if (ValidateUtils.isNullOrEmpty(userEntity)) {
+                System.out.println("ユーザー登録に失敗しました");
                 return ResponseEntity.noContent().build();
             } else {
+                System.out.println("ユーザー登録に成功しました: " + userEntity);
                 result.put("usersEntity", userEntity);
                 result.put("message", "ユーザー登録が完了しました");
                 return ResponseEntity.ok(result);
