@@ -14,30 +14,30 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.taichi0373.benefit_map.dto.RouteRequest;
-import lombok.RequiredArgsConstructor;
+import io.github.taichi0373.benefit_map.dto.RouteRequestDto;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 @Service
-@RequiredArgsConstructor
 public class RouteService {
     
-    private static final Logger log = LoggerFactory.getLogger(RouteService.class);
+    @Value("${otp.api.url}")
+    private String otpApiUrl;
     
-    @Value("${otp.base-url:http://160.16.92.209:8080/otp/routers/default/plan}")
-    private String otpBaseUrl;
-    
+    // 最大徒歩距離
     private static final int MAX_WALK_DISTANCE = 1000;
+    // 取得経路数
     private static final int NUM_ITINERARIES = 5;
+    // ロケール
     private static final String LOCALE = "ja";
+    // 最適化設定
     private static final String OPTIMIZE = "QUICK";
+    // 歩行速度（m/s）
     private static final double WALK_SPEED = 1.389;
     
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -45,9 +45,8 @@ public class RouteService {
     /**
      * 経路探索を実行
      */
-    public JsonNode searchRoutes(RouteRequest request) throws IOException, ParseException {
+    public JsonNode searchRoutes(RouteRequestDto request) throws IOException, ParseException {
         String otpUrl = buildOtpUrl(request);
-        log.info("OTP Request URL: {}", otpUrl);
         
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpGet httpGet = new HttpGet(otpUrl);
@@ -57,7 +56,6 @@ public class RouteService {
             String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
             
             if (response.getCode() != 200) {
-                log.error("OTP API error: {} - {}", response.getCode(), responseBody);
                 throw new RuntimeException("経路探索に失敗しました");
             }
             
@@ -69,15 +67,15 @@ public class RouteService {
     /**
      * OTP URLを構築
      */
-    private String buildOtpUrl(RouteRequest request) {
-        StringBuilder url = new StringBuilder(otpBaseUrl);
+    private String buildOtpUrl(RouteRequestDto request) {
+        StringBuilder url = new StringBuilder(otpApiUrl);
         url.append("?fromPlace=").append(encodeParam(request.getStartLocation()));
         url.append("&toPlace=").append(encodeParam(request.getEndLocation()));
         
-        if (request.getTime() != null && !request.getTime().isEmpty()) {
+        if (!ValidateUtils.isNullOrEmpty(request.getTime())) {
             url.append("&time=").append(encodeParam(request.getTime()));
         }
-        if (request.getDate() != null && !request.getDate().isEmpty()) {
+        if (!ValidateUtils.isNullOrEmpty(request.getDate())) {
             url.append("&date=").append(encodeParam(request.getDate()));
         }
         
@@ -103,11 +101,10 @@ public class RouteService {
     /**
      * OTPレスポンスを処理
      */
-    private JsonNode processOtpResponse(JsonNode otpResponse, RouteRequest request) {
+    private JsonNode processOtpResponse(JsonNode otpResponse, RouteRequestDto request) {
         try {
             JsonNode planNode = otpResponse.get("plan");
-            if (planNode == null || !planNode.has("itineraries")) {
-                log.warn("経路が見つかりませんでした");
+            if (ValidateUtils.isNullOrEmpty(planNode) || !planNode.has("itineraries")) {
                 return objectMapper.createArrayNode();
             }
             
@@ -124,7 +121,6 @@ public class RouteService {
             
             return objectMapper.valueToTree(processedItineraries);
         } catch (Exception e) {
-            log.error("OTPレスポンス処理エラー", e);
             throw new RuntimeException("経路データの処理に失敗しました", e);
         }
     }

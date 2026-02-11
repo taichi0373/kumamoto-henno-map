@@ -9,7 +9,6 @@ import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
 import org.seasar.doma.Table;
 
-import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -36,14 +35,13 @@ public class BenefitEligibilityEntity implements Serializable {
     @Column(name = "license_status")
     private String licenseStatus;
 
-
     /** 最低年齢 */
     @Column(name = "min_age")
-    private String minAge;
+    private Integer minAge;
 
     /** 最高年齢 */
     @Column(name = "max_age")
-    private String maxAge;
+    private Integer maxAge;
 
     /** 対象自治体コード */
     @Column(name = "municipality_cd")
@@ -55,5 +53,4 @@ public class BenefitEligibilityEntity implements Serializable {
 
     /** システム共通フィールド */
     private SystemField systemField;
-
 }

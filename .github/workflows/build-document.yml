@@ -24,6 +24,11 @@ on:
         type: string
         default: '22'
 
+      is-deploy:
+        description: 'デプロイ実行フラグ'
+        type: boolean
+        default: false
+
 env:
   TZ: Asia/Tokyo
   DOCUMENT_DIR: ${{ inputs.document-dir }}
@@ -88,7 +93,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: document-build
-
+    if: ${{ inputs.is-deploy }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
