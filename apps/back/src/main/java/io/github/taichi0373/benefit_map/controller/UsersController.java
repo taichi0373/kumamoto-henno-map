@@ -41,9 +41,9 @@ public class UsersController {
             if (ValidateUtils.isNullOrEmpty(sessionUserId)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-
-            // ユーザーIDの一致確認（自分の情報のみ取得可能）
-            if (!Objects.equals(userId, sessionUserId)) {
+            
+            // ユーザーIDの一致確認
+            if (!userId.equals(sessionUserId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -77,7 +77,7 @@ public class UsersController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
-            // ユーザーIDの一致確認（自分の情報のみ更新可能）
+            // ユーザーIDの一致確認
             if (!Objects.equals(users.getUserId(), sessionUserId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }

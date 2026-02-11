@@ -21,17 +21,23 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.taichi0373.benefit_map.dto.RouteRequestDto;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 @Service
 public class RouteService {
     
-    @Value("${otp.base-url:http://160.16.92.209:8080/otp/routers/default/plan}")
-    private String otpBaseUrl;
+    @Value("${otp.api.url}")
+    private String otpApiUrl;
     
+    // 最大徒歩距離
     private static final int MAX_WALK_DISTANCE = 1000;
+    // 取得経路数
     private static final int NUM_ITINERARIES = 5;
+    // ロケール
     private static final String LOCALE = "ja";
+    // 最適化設定
     private static final String OPTIMIZE = "QUICK";
+    // 歩行速度（m/s）
     private static final double WALK_SPEED = 1.389;
     
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -62,14 +68,14 @@ public class RouteService {
      * OTP URLを構築
      */
     private String buildOtpUrl(RouteRequestDto request) {
-        StringBuilder url = new StringBuilder(otpBaseUrl);
+        StringBuilder url = new StringBuilder(otpApiUrl);
         url.append("?fromPlace=").append(encodeParam(request.getStartLocation()));
         url.append("&toPlace=").append(encodeParam(request.getEndLocation()));
         
-        if (request.getTime() != null && !request.getTime().isEmpty()) {
+        if (!ValidateUtils.isNullOrEmpty(request.getTime())) {
             url.append("&time=").append(encodeParam(request.getTime()));
         }
-        if (request.getDate() != null && !request.getDate().isEmpty()) {
+        if (!ValidateUtils.isNullOrEmpty(request.getDate())) {
             url.append("&date=").append(encodeParam(request.getDate()));
         }
         
@@ -98,7 +104,7 @@ public class RouteService {
     private JsonNode processOtpResponse(JsonNode otpResponse, RouteRequestDto request) {
         try {
             JsonNode planNode = otpResponse.get("plan");
-            if (planNode == null || !planNode.has("itineraries")) {
+            if (ValidateUtils.isNullOrEmpty(planNode) || !planNode.has("itineraries")) {
                 return objectMapper.createArrayNode();
             }
             

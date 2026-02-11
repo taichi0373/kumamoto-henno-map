@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.benefit_map.service.BenefitService;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEntity;
 import jakarta.servlet.http.HttpSession;
 
@@ -59,11 +60,11 @@ public class BenefitController {
         try {
             // セッション認証チェック
             Object sessionUserId = session.getAttribute("user_id");
-            if (sessionUserId == null) {
+            if (ValidateUtils.isNullOrEmpty(sessionUserId)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
             
-            // ユーザーIDの一致確認（自分の情報のみアクセス可能）
+            // ユーザーIDの一致確認
             if (!userId.equals(sessionUserId)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }

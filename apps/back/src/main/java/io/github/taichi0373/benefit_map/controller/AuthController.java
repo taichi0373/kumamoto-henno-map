@@ -69,7 +69,6 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> signup(@RequestBody UsersDto users) {
         HashMap<String, Object> result = new HashMap<>();
         try {
-            System.out.println("signup users: " + users);
             UsersEntity userEntity = usersService.signupUser(users);
             if (ValidateUtils.isNullOrEmpty(userEntity)) {
                 return ResponseEntity.noContent().build();

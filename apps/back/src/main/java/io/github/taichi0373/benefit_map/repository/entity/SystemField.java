@@ -9,6 +9,7 @@ import org.seasar.doma.Embeddable;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 /** 
  * システム共通フィールド 
@@ -17,6 +18,7 @@ import lombok.NoArgsConstructor;
 @Embeddable
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class SystemField implements Serializable {
 
     /** シリアルバージョンUID */
