@@ -3,6 +3,7 @@ package io.github.taichi0373.benefit_map.controller;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +35,10 @@ public class UsersController {
      * ユーザー情報取得
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<Map<String, Object>> getUsersInfo(@PathVariable Integer userId, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> getUsersInfo(@PathVariable UUID userId, HttpSession session) {
         try {
             // セッション認証チェック
-            Object sessionUserId = session.getAttribute("user_id");
+            UUID sessionUserId = (UUID) session.getAttribute("user_id");
             if (ValidateUtils.isNullOrEmpty(sessionUserId)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }

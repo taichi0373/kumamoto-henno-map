@@ -3,11 +3,10 @@ package io.github.taichi0373.benefit_map.repository.entity;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.UUID;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
-import org.seasar.doma.GeneratedValue;
-import org.seasar.doma.GenerationType;
 import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
 import org.seasar.doma.Table;
@@ -27,9 +26,8 @@ public class UsersEntity implements Serializable {
     
     /** ユーザーID */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    Integer userId;
+    UUID userId;
 
     /** ユーザー名 */
     @Column(name = "username")

@@ -1,9 +1,8 @@
 package io.github.taichi0373.benefit_map.service;
 
-import java.time.LocalDate;
-import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -73,7 +72,7 @@ public class BenefitService {
     /**
      * ユーザーIDからユーザーが受けられる特典を検索
      */
-    public List<BenefitEntity> getUsersBenefits(Integer userId) {
+    public List<BenefitEntity> getUsersBenefits(UUID userId) {
         try {
             // ユーザー情報を取得
             UsersEntity user = usersDao.selectById(userId);

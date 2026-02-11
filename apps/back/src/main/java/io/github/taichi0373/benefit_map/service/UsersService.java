@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.service;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -83,7 +85,7 @@ public class UsersService {
     /**
      * ユーザー情報の取得
      */
-    public UsersEntity getUsersInfo(Integer userId) {
+    public UsersEntity getUsersInfo(UUID userId) {
         try {
             return usersDao.selectById(userId);
         } catch (Exception e) {

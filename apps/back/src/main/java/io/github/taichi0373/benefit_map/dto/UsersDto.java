@@ -1,5 +1,6 @@
 package io.github.taichi0373.benefit_map.dto;
 import java.time.LocalDate;
+import java.util.UUID;
 import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import lombok.Data;
 
@@ -7,7 +8,7 @@ import lombok.Data;
 public class UsersDto {
 
     /** ユーザーID */
-    private Integer userId;
+    private UUID userId;
 
     /** ユーザー名 */
     private String username;

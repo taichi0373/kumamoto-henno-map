@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.repository.dao;
 
+import java.util.UUID;
+
 import org.seasar.doma.Dao;
 import org.seasar.doma.Delete;
 import org.seasar.doma.Insert;
@@ -19,7 +21,7 @@ public interface UsersDao {
     /** 
      * 主キー検索
      */
-    default UsersEntity selectById(Integer userId) {
+    default UsersEntity selectById(UUID userId) {
         Entityql entityql = new Entityql(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 

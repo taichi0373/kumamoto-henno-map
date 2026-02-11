@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -56,10 +57,10 @@ public class BenefitController {
      * ユーザー特典取得
      */
     @GetMapping("/users/{userId}")
-    public ResponseEntity<Map<String, Object>> getUsersBenefits(@PathVariable Integer userId, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> getUsersBenefits(@PathVariable UUID userId, HttpSession session) {
         try {
             // セッション認証チェック
-            Object sessionUserId = session.getAttribute("user_id");
+            UUID sessionUserId = (UUID) session.getAttribute("user_id");
             if (ValidateUtils.isNullOrEmpty(sessionUserId)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
