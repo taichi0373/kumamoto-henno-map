@@ -30,7 +30,7 @@ public class BenefitEligibilityEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @SequenceGenerator(sequence = "benefit_eligibility_id_seq")
     @Column(name = "id")
-    Long id;
+    private Long id;
 
     /** 特典ID */
     @Column(name = "benefit_id")

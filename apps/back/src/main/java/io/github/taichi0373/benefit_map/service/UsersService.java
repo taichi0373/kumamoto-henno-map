@@ -1,10 +1,12 @@
 package io.github.taichi0373.benefit_map.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import io.github.taichi0373.benefit_map.dto.UsersDto;
+import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
@@ -26,6 +28,9 @@ public class UsersService {
     
     /**
      * ログイン
+     * @param username ユーザー名
+     * @param password パスワード
+     * @return ログイン成功時はユーザー情報（パスワードは含まない）、ログイン失敗時はnull
      */
     public UsersEntity loginUser(String username, String password) {
         try {
@@ -33,10 +38,17 @@ public class UsersService {
             if (ValidateUtils.isNullOrEmpty(user)) {
                 return null;
             }
-            
             // パスワードの照合
             if (passwordEncoder.matches(password, user.getPasswordHash())) {
-                return user;
+                // パスワード以外のユーザー情報を返す
+                 UsersEntity usersEntity = new UsersEntity();
+                 usersEntity.setUserId(user.getUserId());
+                 usersEntity.setUsername(user.getUsername());
+                 usersEntity.setEmail(user.getEmail());
+                 usersEntity.setBirthDate(user.getBirthDate());
+                 usersEntity.setMunicipalityCode(user.getMunicipalityCode());
+                 usersEntity.setLicenseStatus(user.getLicenseStatus());
+                return usersEntity;
             } else {
                 return null;
             }
@@ -48,6 +60,8 @@ public class UsersService {
     
     /**
      * 新規登録
+     * @param users ユーザ情報
+     * @return 登録されたユーザ情報（パスワードは含まない）
      */
     public UsersEntity signupUser(UsersDto users) {
         try {
@@ -65,32 +79,54 @@ public class UsersService {
             
             usersDao.insert(newUser);
             return newUser;
+        } catch (DataIntegrityViolationException e) {
+            // 一意制約違反（ユーザー名重複）の場合
+            String message = e.getMessage();
+            if (message != null && (message.contains("username") || message.contains("unique"))) {
+                throw new DuplicateUserException("このユーザー名は既に使用されています", e);
+            }
+            return null;
         } catch (Exception e) {
-            System.err.println("signupUser error: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
     
     /**
      * ユーザー情報の取得
+     * @param userId ユーザーID
+     * @return ユーザー情報（パスワードは含まない）
      */
     public UsersEntity getUsersInfo(Long userId) {
         try {
-            return usersDao.selectById(userId);
+            UsersEntity user = usersDao.selectById(userId);
+            if (ValidateUtils.isNullOrEmpty(user)) {
+                return null;
+            }
+            
+            // パスワード以外のユーザー情報を返す
+            UsersEntity usersEntity = new UsersEntity();
+            usersEntity.setUserId(user.getUserId());
+            usersEntity.setUsername(user.getUsername());
+            usersEntity.setEmail(user.getEmail());
+            usersEntity.setBirthDate(user.getBirthDate());
+            usersEntity.setMunicipalityCode(user.getMunicipalityCode());
+            usersEntity.setLicenseStatus(user.getLicenseStatus());
+            return usersEntity;
         } catch (Exception e) {
             return null;
         }
     }
     
     /**
-     * ユーザー名でユーザー情報の取得（重複チェック用）
+     * ユーザー名によるユーザーの存在確認
+     * @param username ユーザー名
+     * @return 存在する場合はtrue、存在しない場合はfalse
      */
-    public UsersEntity getUserByUsername(String username) {
+    public Boolean getUserByUsername(String username) {
         try {
-            return usersDao.selectByUsername(username);
+            return usersDao.selectByUsername(username) != null;
         } catch (Exception e) {
-            return null;
+            throw new RuntimeException("ユーザー名による検索処理でエラーが発生しました", e);
         }
     }
     

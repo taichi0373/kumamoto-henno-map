@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.github.taichi0373.benefit_map.dto.UsersDto;
+import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.service.UsersService;
 import jakarta.servlet.http.HttpSession;
@@ -105,7 +106,6 @@ public class UsersController {
      */
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody UsersDto users, HttpSession session) {
-        HashMap<String, Object> result = new HashMap<>();
         try {
             UsersEntity usersEntity = usersService.loginUser(users.getUsername(), users.getPassword());
             if (ValidateUtils.isNullOrEmpty(usersEntity)) {
@@ -150,7 +150,6 @@ public class UsersController {
      */
     @PostMapping("/signup")
     public ResponseEntity<Map<String, Object>> signup(@RequestBody UsersDto users, HttpSession session) {
-        HashMap<String, Object> result = new HashMap<>();
         try {
             // ユーザー名の重複チェック
             UsersEntity existingUser = usersService.getUserByUsername(users.getUsername());
@@ -179,6 +178,20 @@ public class UsersController {
                 response.put("data", data);
                 return ResponseEntity.ok(response);
             }
+        } catch (DuplicateUserException e) {
+            // データベース制約違反による重複エラー
+            Map<String, Object> errorData = new HashMap<>();
+            errorData.put("error", e.getMessage());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("data", errorData);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+        } catch (RuntimeException e) {
+            // ユーザー名重複チェック時のデータベースエラー等
+            Map<String, Object> errorData = new HashMap<>();
+            errorData.put("error", "データベース接続エラーが発生しました。しばらく時間をおいて再度お試しください。");
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("data", errorData);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
         } catch (Exception e) {
             Map<String, Object> errorData = new HashMap<>();
             errorData.put("error", "サーバーエラーが発生しました");
