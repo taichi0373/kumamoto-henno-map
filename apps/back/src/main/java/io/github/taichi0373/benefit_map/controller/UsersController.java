@@ -152,8 +152,8 @@ public class UsersController {
     public ResponseEntity<Map<String, Object>> signup(@RequestBody UsersDto users, HttpSession session) {
         try {
             // ユーザー名の重複チェック
-            UsersEntity existingUser = usersService.getUserByUsername(users.getUsername());
-            if (!ValidateUtils.isNullOrEmpty(existingUser)) {
+            Boolean userExists = usersService.existsByUsername(users.getUsername());
+            if (Boolean.TRUE.equals(userExists)) {
                 Map<String, Object> errorData = new HashMap<>();
                 errorData.put("error", "このユーザー名は既に使用されています");
                 Map<String, Object> errorResponse = new HashMap<>();

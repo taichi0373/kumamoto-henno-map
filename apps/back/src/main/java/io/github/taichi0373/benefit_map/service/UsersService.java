@@ -80,12 +80,8 @@ public class UsersService {
             usersDao.insert(newUser);
             return newUser;
         } catch (DataIntegrityViolationException e) {
-            // 一意制約違反（ユーザー名重複）の場合
-            String message = e.getMessage();
-            if (message != null && (message.contains("username") || message.contains("unique"))) {
-                throw new DuplicateUserException("このユーザー名は既に使用されています", e);
-            }
-            return null;
+            // 一意制約違反（ユーザー名重複）の場合は DuplicateUserException に変換してスローする
+            throw new DuplicateUserException("このユーザー名は既に使用されています", e);
         } catch (Exception e) {
             return null;
         }
@@ -122,7 +118,7 @@ public class UsersService {
      * @param username ユーザー名
      * @return 存在する場合はtrue、存在しない場合はfalse
      */
-    public Boolean getUserByUsername(String username) {
+    public Boolean existsByUsername(String username) {
         try {
             return usersDao.selectByUsername(username) != null;
         } catch (Exception e) {

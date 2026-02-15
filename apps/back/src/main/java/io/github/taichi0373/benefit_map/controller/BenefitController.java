@@ -48,7 +48,7 @@ public class BenefitController {
         } catch (Exception e) {
             Map<String, Object> errorData = new HashMap<>();
             errorData.put("success", false);
-            errorData.put("message", "特典検索中にエラーが発生しました: ");
+            errorData.put("message", "特典検索中にエラーが発生しました");
             errorData.put("benefits", new ArrayList<>());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("data", errorData);
@@ -84,7 +84,7 @@ public class BenefitController {
         } catch (Exception e) {
             Map<String, Object> errorData = new HashMap<>();
             errorData.put("success", false);
-            errorData.put("message", "ユーザー特典情報の取得に失敗しました: " + e.getMessage());
+            errorData.put("message", "ユーザー特典情報の取得に失敗しました: ");
             errorData.put("benefits", new ArrayList<>());
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("data", errorData);
