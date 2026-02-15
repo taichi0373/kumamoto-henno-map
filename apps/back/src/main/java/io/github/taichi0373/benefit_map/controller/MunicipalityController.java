@@ -1,6 +1,5 @@
 package io.github.taichi0373.benefit_map.controller;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +33,11 @@ public class MunicipalityController {
     public ResponseEntity<Map<String, Object>> getAllMunicipality() {
         try {
             List<MunicipalityEntity> municipalities = municipalityService.getMunicipality();
-            return ResponseEntity.ok(Map.of("municipalities", municipalities));
+            Map<String, Object> data = new HashMap<>();
+            data.put("municipalities", municipalities);
+            Map<String, Object> response = new HashMap<>();
+            response.put("data", data);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

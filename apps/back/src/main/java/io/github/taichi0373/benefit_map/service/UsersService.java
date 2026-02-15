@@ -45,21 +45,15 @@ public class UsersService {
         }
     }
 
+    
     /**
      * 新規登録
      */
     public UsersEntity signupUser(UsersDto users) {
         try {
-            System.out.println("signupUser users: " + users);
-            // 既に同じユーザー名が存在するか確認
-            UsersEntity existingUser = usersDao.selectByUsername(users.getUsername());
-            if (!ValidateUtils.isNullOrEmpty(existingUser)) {
-                return null; // ユーザー名が既に存在する場合はnullを返す
-            }
-            
             // パスワードをハッシュ化
             String hashedPassword = passwordEncoder.encode(users.getPassword());
-            
+
             // 新しいユーザーエンティティを作成
             UsersEntity newUser = new UsersEntity();
             newUser.setUsername(users.getUsername());
@@ -69,16 +63,8 @@ public class UsersService {
             newUser.setMunicipalityCode(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
             
-            System.out.println("signupUser newUser: " + newUser);
-
-            // ユーザーをデータベースに挿入
-            int insertCount = usersDao.insert(newUser);
-            System.out.println("signupUser insertCount: " + insertCount);
-            if (insertCount > 0) {
-                return newUser;
-            } else {
-                return null;
-            }
+            usersDao.insert(newUser);
+            return newUser;
         } catch (Exception e) {
             System.err.println("signupUser error: " + e.getMessage());
             e.printStackTrace();
@@ -92,6 +78,17 @@ public class UsersService {
     public UsersEntity getUsersInfo(Long userId) {
         try {
             return usersDao.selectById(userId);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+    
+    /**
+     * ユーザー名でユーザー情報の取得（重複チェック用）
+     */
+    public UsersEntity getUserByUsername(String username) {
+        try {
+            return usersDao.selectByUsername(username);
         } catch (Exception e) {
             return null;
         }
