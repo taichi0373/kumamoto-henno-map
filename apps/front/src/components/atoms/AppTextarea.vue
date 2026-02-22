@@ -38,7 +38,7 @@ const props = withDefaults(defineProps<{
   rows?: number;
   inputStyle?: object | string;
   inputClass?: string;
-  maxlength?: string | number | null;
+  maxlength?: number | null;
   tabindex?: number;
 }>(), {
   modelValue: "",

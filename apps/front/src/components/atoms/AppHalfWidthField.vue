@@ -34,7 +34,7 @@ const props = withDefaults(defineProps<{
   inputStyle?: object | string;
   inputClass?: string;
   tabindex?: number;
-  maxlength?: string | number | null;
+  maxlength?: number | null;
   rule?: string | null;
   showError?: boolean;
 }>(), {
@@ -68,15 +68,23 @@ const computedModel = computed({
   },
 });
 
+/**
+ * 入力値を半角に変換する関数
+ * @param value 
+ */
 const format = (value: string | null) => {
+  // 全角ひらがな → 半角カタカナに変換
   let replaceValue = StringEditUtils.replaceFullWidthHiraganaToHalfWidthKatakana(
     TypeConvertUtils.toStringNullToEmpty(value)
   );
+  // 全角記号 → 半角記号に変換
   replaceValue = StringEditUtils.replaceFullWidthCharToHalfWidthChar(replaceValue);
   if (props.halfWidthKana) {
-    return replaceValue.replace(/[^ -~]/g, "");
+    // 半角カタカナ（記号含む）以外を削除
+    return replaceValue.replace(/([^ｦ-ﾟ])/g, "");
   } else {
-    return replaceValue.replace(/[^ -~｡-ﾟ]/g, "");
+    // 半角英数記号 + 半角カタカナ 以外（＝全角文字など）を削除
+    return replaceValue.replace(/([^ -~｡-ﾟ])/g, "");
   }
 };
 
@@ -85,6 +93,7 @@ const onFocus = (e: Event) => {
 };
 
 const onBlur = (e: Event) => {
+  emit('update:modelValue', format(computedModel.value));
   emit('blur', e);
 };
 

@@ -1,7 +1,7 @@
 /** 
  * メッセージ情報インターフェース
 */
-interface messageInterface {
+interface MessageInterface {
     /** メッセージ番号 */
     messageNo: number;
     /** メッセージ種別番号 */
@@ -13,22 +13,22 @@ interface messageInterface {
 /** 
  * メッセージ情報DTO
 */
-class messageDto {
+class MessageDto {
     /** メッセージ番号 */
-    messageNo: number
+    messageNo: number;
     /** メッセージ種別番号 */
-    messageType: number
+    messageType: number;
     /** メッセージ内容 */
-    messageContent: string
+    messageContent: string;
     /**
      * コンストラクタ
      * @param messageInterface メッセージ情報インターフェース
      * */
-    constructor(messageInterface: messageInterface) {
+    constructor(messageInterface: MessageInterface) {
         this.messageNo = messageInterface.messageNo;
         this.messageType = messageInterface.messageType;
         this.messageContent = messageInterface.messageContent;
     }
 }
 
-export { messageInterface, messageDto };
+export { MessageInterface, MessageDto };
