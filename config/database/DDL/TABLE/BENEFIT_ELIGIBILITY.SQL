@@ -1,7 +1,7 @@
 CREATE TABLE BENEFIT_ELIGIBILITY (
-  ID                              SERIAL PRIMARY KEY,
+  ID                              BIGSERIAL PRIMARY KEY,
   BENEFIT_ID                      VARCHAR(20) NOT NULL,
-  LICENSE_STATUS                  VARCHAR(1), -- 0:未所持, 1:所持, 2:返納, 3:失効, 4:その他
+  LICENSE_STATUS                  VARCHAR(1),
   MIN_AGE                         INTEGER,
   MAX_AGE                         INTEGER,
   MUNICIPALITY_CD                 VARCHAR(6),
