@@ -26,7 +26,7 @@ declare module '@/utils/auth' {
   interface User {
     id: string
     username: string
-    [key: string]: any
+    [key: string]: unknown
   }
   
   export const AuthUtils: {
@@ -43,7 +43,7 @@ declare module './utils/auth' {
   interface User {
     id: string
     username: string
-    [key: string]: any
+    [key: string]: unknown
   }
   
   export const AuthUtils: {

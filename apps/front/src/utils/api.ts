@@ -68,7 +68,7 @@ class RestApiClient {
   /**
    * GET リクエスト
    */
-  async get<T = any>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
+  async get<T = unknown>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.axiosInstance.get<T>(endpoint, config)
     return response.data
   }
@@ -76,7 +76,7 @@ class RestApiClient {
   /**
    * POST リクエスト
    */
-  async post<T = any>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async post<T = unknown>(endpoint: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.axiosInstance.post<T>(endpoint, data, config)
     return response.data
   }
@@ -84,7 +84,7 @@ class RestApiClient {
   /**
    * PUT リクエスト
    */
-  async put<T = any>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async put<T = unknown>(endpoint: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.axiosInstance.put<T>(endpoint, data, config)
     return response.data
   }
@@ -92,7 +92,7 @@ class RestApiClient {
   /**
    * PATCH リクエスト
    */
-  async patch<T = any>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  async patch<T = unknown>(endpoint: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.axiosInstance.patch<T>(endpoint, data, config)
     return response.data
   }
@@ -100,7 +100,7 @@ class RestApiClient {
   /**
    * DELETE リクエスト
    */
-  async delete<T = any>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
+  async delete<T = unknown>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.axiosInstance.delete<T>(endpoint, config)
     return response.data
   }
@@ -108,7 +108,7 @@ class RestApiClient {
   /**
    * 汎用リクエストメソッド（axios互換）
    */
-  async request<T = any>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+  async request<T = unknown>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.axiosInstance.request<T>(config)
   }
 
@@ -119,42 +119,42 @@ class RestApiClient {
   /**
    * リソースの一覧取得
    */
-  async list<T = any>(resource: string, params?: any): Promise<T[]> {
+  async list<T = unknown>(resource: string, params?: Record<string, unknown>): Promise<T[]> {
     return this.get<T[]>(`/${resource}`, { params })
   }
 
   /**
    * リソースの詳細取得
    */
-  async show<T = any>(resource: string, id: string | number): Promise<T> {
+  async show<T = unknown>(resource: string, id: string | number): Promise<T> {
     return this.get<T>(`/${resource}/${id}`)
   }
 
   /**
    * リソースの作成
    */
-  async create<T = any>(resource: string, data: any): Promise<T> {
+  async create<T = unknown>(resource: string, data: unknown): Promise<T> {
     return this.post<T>(`/${resource}`, data)
   }
 
   /**
    * リソースの更新（PUT）
    */
-  async update<T = any>(resource: string, id: string | number, data: any): Promise<T> {
+  async update<T = unknown>(resource: string, id: string | number, data: unknown): Promise<T> {
     return this.put<T>(`/${resource}/${id}`, data)
   }
 
   /**
    * リソースの部分更新（PATCH）
    */
-  async partialUpdate<T = any>(resource: string, id: string | number, data: any): Promise<T> {
+  async partialUpdate<T = unknown>(resource: string, id: string | number, data: unknown): Promise<T> {
     return this.patch<T>(`/${resource}/${id}`, data)
   }
 
   /**
    * リソースの削除
    */
-  async destroy<T = any>(resource: string, id: string | number): Promise<T> {
+  async destroy<T = unknown>(resource: string, id: string | number): Promise<T> {
     return this.delete<T>(`/${resource}/${id}`)
   }
 
