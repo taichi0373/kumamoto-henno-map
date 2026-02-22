@@ -1,10 +1,12 @@
 package io.github.taichi0373.benefit_map.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import io.github.taichi0373.benefit_map.dto.UsersDto;
+import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
@@ -26,6 +28,9 @@ public class UsersService {
     
     /**
      * ログイン
+     * @param username ユーザー名
+     * @param password パスワード
+     * @return ログイン成功時はユーザー情報（パスワードは含まない）、ログイン失敗時はnull
      */
     public UsersEntity loginUser(String username, String password) {
         try {
@@ -33,10 +38,17 @@ public class UsersService {
             if (ValidateUtils.isNullOrEmpty(user)) {
                 return null;
             }
-            
             // パスワードの照合
             if (passwordEncoder.matches(password, user.getPasswordHash())) {
-                return user;
+                // パスワード以外のユーザー情報を返す
+                 UsersEntity usersEntity = new UsersEntity();
+                 usersEntity.setUserId(user.getUserId());
+                 usersEntity.setUsername(user.getUsername());
+                 usersEntity.setEmail(user.getEmail());
+                 usersEntity.setBirthDate(user.getBirthDate());
+                 usersEntity.setMunicipalityCode(user.getMunicipalityCode());
+                 usersEntity.setLicenseStatus(user.getLicenseStatus());
+                return usersEntity;
             } else {
                 return null;
             }
@@ -44,22 +56,18 @@ public class UsersService {
             return null;
         }
     }
+
     
     /**
      * 新規登録
+     * @param users ユーザ情報
+     * @return 登録されたユーザ情報（パスワードは含まない）
      */
     public UsersEntity signupUser(UsersDto users) {
         try {
-            System.out.println("signupUser users: " + users);
-            // 既に同じユーザー名が存在するか確認
-            UsersEntity existingUser = usersDao.selectByUsername(users.getUsername());
-            if (!ValidateUtils.isNullOrEmpty(existingUser)) {
-                return null; // ユーザー名が既に存在する場合はnullを返す
-            }
-            
             // パスワードをハッシュ化
             String hashedPassword = passwordEncoder.encode(users.getPassword());
-            
+
             // 新しいユーザーエンティティを作成
             UsersEntity newUser = new UsersEntity();
             newUser.setUsername(users.getUsername());
@@ -69,25 +77,52 @@ public class UsersService {
             newUser.setMunicipalityCode(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
             
-            // ユーザーをデータベースに挿入
             usersDao.insert(newUser);
-            
             return newUser;
+        } catch (DataIntegrityViolationException e) {
+            // 一意制約違反（ユーザー名重複）の場合は DuplicateUserException に変換してスローする
+            throw new DuplicateUserException("このユーザー名は既に使用されています", e);
         } catch (Exception e) {
-            System.err.println("signupUser error: " + e.getMessage());
-            e.printStackTrace();
             return null;
         }
     }
     
     /**
      * ユーザー情報の取得
+     * @param userId ユーザーID
+     * @return ユーザー情報（パスワードは含まない）
      */
-    public UsersEntity getUsersInfo(Integer userId) {
+    public UsersEntity getUsersInfo(Long userId) {
         try {
-            return usersDao.selectById(userId);
+            UsersEntity user = usersDao.selectById(userId);
+            if (ValidateUtils.isNullOrEmpty(user)) {
+                return null;
+            }
+            
+            // パスワード以外のユーザー情報を返す
+            UsersEntity usersEntity = new UsersEntity();
+            usersEntity.setUserId(user.getUserId());
+            usersEntity.setUsername(user.getUsername());
+            usersEntity.setEmail(user.getEmail());
+            usersEntity.setBirthDate(user.getBirthDate());
+            usersEntity.setMunicipalityCode(user.getMunicipalityCode());
+            usersEntity.setLicenseStatus(user.getLicenseStatus());
+            return usersEntity;
         } catch (Exception e) {
             return null;
+        }
+    }
+    
+    /**
+     * ユーザー名によるユーザーの存在確認
+     * @param username ユーザー名
+     * @return 存在する場合はtrue、存在しない場合はfalse
+     */
+    public Boolean existsByUsername(String username) {
+        try {
+            return usersDao.selectByUsername(username) != null;
+        } catch (Exception e) {
+            throw new RuntimeException("ユーザー名による検索処理でエラーが発生しました", e);
         }
     }
     
@@ -102,6 +137,7 @@ public class UsersService {
             }
             
             // ユーザー情報を更新
+            existingUser.setEmail(users.getEmail());
             existingUser.setBirthDate(users.getBirthDate());
             existingUser.setMunicipalityCode(users.getAddress());
             existingUser.setLicenseStatus(users.getLicenseStatus());

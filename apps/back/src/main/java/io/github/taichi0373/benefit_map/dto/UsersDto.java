@@ -7,7 +7,7 @@ import lombok.Data;
 public class UsersDto {
 
     /** ユーザーID */
-    private Integer userId;
+    private Long userId;
 
     /** ユーザー名 */
     private String username;

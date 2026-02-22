@@ -38,17 +38,21 @@ public class BenefitController {
     public ResponseEntity<Map<String, Object>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
         try {
             List<BenefitEntity> benefit = benefitService.searchBenefits(request);
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("message", "特典検索に成功しました");
-            result.put("benefits", benefit);
-            return ResponseEntity.ok(result);
+            Map<String, Object> data = new HashMap<>();
+            data.put("success", true);
+            data.put("message", "特典検索に成功しました");
+            data.put("benefits", benefit);
+            Map<String, Object> response = new HashMap<>();
+            response.put("data", data);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> errorResult = new HashMap<>();
-            errorResult.put("success", false);
-            errorResult.put("message", "特典検索中にエラーが発生しました: " + e.getMessage());
-            errorResult.put("benefits", new ArrayList<>());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
+            Map<String, Object> errorData = new HashMap<>();
+            errorData.put("success", false);
+            errorData.put("message", "特典検索中にエラーが発生しました");
+            errorData.put("benefits", new ArrayList<>());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("data", errorData);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
     
@@ -56,7 +60,7 @@ public class BenefitController {
      * ユーザー特典取得
      */
     @GetMapping("/users/{userId}")
-    public ResponseEntity<Map<String, Object>> getUsersBenefits(@PathVariable Integer userId, HttpSession session) {
+    public ResponseEntity<Map<String, Object>> getUsersBenefits(@PathVariable Long userId, HttpSession session) {
         try {
             // セッション認証チェック
             Object sessionUserId = session.getAttribute("user_id");
@@ -70,17 +74,21 @@ public class BenefitController {
             }
             
             List<BenefitEntity> benefit = benefitService.getUsersBenefits(userId);
-            Map<String, Object> result = new HashMap<>();
-            result.put("success", true);
-            result.put("message", "ユーザー特典情報を取得しました");
-            result.put("benefits", benefit);
-            return ResponseEntity.ok(result);
+            Map<String, Object> data = new HashMap<>();
+            data.put("success", true);
+            data.put("message", "ユーザー特典情報を取得しました");
+            data.put("benefits", benefit);
+            Map<String, Object> response = new HashMap<>();
+            response.put("data", data);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            Map<String, Object> errorResult = new HashMap<>();
-            errorResult.put("success", false);
-            errorResult.put("message", "ユーザー特典情報の取得に失敗しました: " + e.getMessage());
-            errorResult.put("benefits", new ArrayList<>());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResult);
+            Map<String, Object> errorData = new HashMap<>();
+            errorData.put("success", false);
+            errorData.put("message", "ユーザー特典情報の取得に失敗しました: ");
+            errorData.put("benefits", new ArrayList<>());
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("data", errorData);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 }
