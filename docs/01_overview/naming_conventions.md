@@ -32,12 +32,12 @@
 // ✅ GOOD
 public class BenefitService {}
 public class MunicipalityEntity {}
-public class UserController {}
+public class UsersController {}
 
 // ❌ BAD
 public class benefitService {}
 public class municipality_entity {}
-public class usercontroller {}
+public class userscontroller {}
 ```
 
 ### インターフェース名
@@ -142,21 +142,22 @@ public class BenefitDetailRes {}
 
 ### ファイル名
 
-**形式**: `kebab-case`（小文字、ハイフン区切り）
+**形式**: `camelCase`
 
 ```
 // ✅ GOOD
+benefitSearch.vue
+userProfile.vue
+mapComponent.vue
+apiClient.ts
+authService.ts
+
+// ❌ BAD
 benefit-search.vue
 user-profile.vue
 map-component.vue
 api-client.ts
 auth-service.ts
-
-// ❌ BAD
-BenefitSearch.vue
-user_profile.vue
-mapComponent.vue
-APIClient.ts
 ```
 
 ### コンポーネント名

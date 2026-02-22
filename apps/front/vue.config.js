@@ -29,6 +29,11 @@ module.exports = defineConfig({
   
   // CSS関連の設定
   css: {
-    extract: process.env.NODE_ENV === 'production'
-  }
+    extract: process.env.NODE_ENV === 'production',
+    loaderOptions: {
+      scss: {
+        additionalData: `@use "@/assets/scss/variable" as *;`
+      }
+    }
+  },
 })

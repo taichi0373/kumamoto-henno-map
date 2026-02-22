@@ -2,58 +2,50 @@
   <div class="profile-page">
 
     <div class="profile-container">
-      <BaseCard title="プロフィール編集" variant="default" size="medium" :hoverable="true" shadow="medium">
+      <AppCard title="プロフィール編集">
         <form @submit.prevent="handleUpdateProfile">
           <div class="form-row">
             <div class="form-col">
-              <BaseFormGroup size="medium">
-                <BaseLabel text="ユーザー名" html-for="username" :required="true" alignConfig="center" size="medium"
+                <AppLabel text="ユーザー名" html-for="username" :required="true" size="medium"
                   variant="default" />
-                <BaseInput id="username" type="text" v-model="profileData.username" placeholder="ユーザー名を入力してください"
+                <AppTextarea id="username" type="text" v-model="profileData.username" placeholder="ユーザー名を入力してください"
                   :required="true" size="medium" variant="default" :error-message="validationErrors.username" />
-              </BaseFormGroup>
             </div>
             <div class="form-col">
-              <BaseFormGroup size="medium">
-                <BaseLabel text="生年月日" html-for="birthDate" :required="true" alignConfig="center" size="medium"
+                <AppLabel text="生年月日" html-for="birthDate" :required="true" size="medium"
                   variant="default" />
-                <BaseInput id="birthDate" type="date" v-model="profileData.birthDate" :required="true"
-                  alignConfig="center" size="medium" variant="default" :error-message="validationErrors.birthDate" />
-              </BaseFormGroup>
+                <AppTextarea id="birthDate" type="date" v-model="profileData.birthDate" :required="true"
+                  size="medium" variant="default" :error-message="validationErrors.birthDate" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-col">
-              <BaseFormGroup size="medium">
-                <BaseLabel text="居住地域" html-for="address" :required="true" alignConfig="center" size="medium"
+                <AppLabel text="居住地域" html-for="address" :required="true" size="medium"
                   variant="default" />
-                <BaseSelect id="address" v-model="profileData.address" placeholder="選択してください"
+                <AppSelect id="address" v-model="profileData.address" placeholder="選択してください"
                   :options="addressOptions" :required="true" size="medium" variant="default"
                   :error-message="validationErrors.address" />
-              </BaseFormGroup>
             </div>
             <div class="form-col">
-              <BaseFormGroup size="medium">
-                <BaseLabel text="運転免許の所持状況" html-for="licenseStatus" :required="true" alignConfig="center" size="medium"
+                <AppLabel text="運転免許の所持状況" html-for="licenseStatus" :required="true" size="medium"
                   variant="default" />
-                <BaseSelect id="licenseStatus" v-model="profileData.licenseStatus" placeholder="選択してください"
+                <AppSelect id="licenseStatus" v-model="profileData.licenseStatus" placeholder="選択してください"
                   :options="licenseOptions" :required="true" size="medium" variant="default"
                   :error-message="validationErrors.licenseStatus" />
-              </BaseFormGroup>
             </div>
           </div>
           <div class="submit-button">
-            <BaseButton type="submit" :label="isLoading ? '更新中...' : 'プロフィール更新'" :primary="true" :disabled="isLoading"
-              :elipsis="isLoading" />
+            <AppButton type="submit" :label="isLoading ? '更新中...' : 'プロフィール更新'" severity="primary" :disabled="isLoading"
+              :loading="isLoading" />
           </div>
         </form>
 
-        <BaseAlert v-if="errorMessage" :message="errorMessage" variant="error" size="medium" :show="!!errorMessage" />
+        <AppAlert v-if="errorMessage" :message="errorMessage" variant="error" size="medium" :show="!!errorMessage" />
 
-        <BaseAlert v-if="successMessage" :message="successMessage" variant="success" size="medium"
+        <AppAlert v-if="successMessage" :message="successMessage" variant="success" size="medium"
           :show="!!successMessage" />
-      </BaseCard>
+      </AppCard>
     </div>
   </div>
 </template>
@@ -62,24 +54,22 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { AuthUtils } from '@/utils/auth'
-import BaseLabel from '@/components/atoms/Label.vue'
-import BaseInput from '@/components/atoms/Input.vue'
-import BaseButton from '@/components/atoms/Button.vue'
-import BaseCard from '@/components/atoms/Card.vue'
-import BaseAlert from '@/components/atoms/Alert.vue'
-import BaseFormGroup from '@/components/atoms/FormGroup.vue'
-import BaseSelect from '@/components/atoms/Select.vue'
+import AppLabel from '@/components/atoms/AppLabel.vue'
+import AppTextarea from '@/components/atoms/AppTextarea.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import AppCard from '@/components/atoms/AppCard.vue'
+import AppAlert from '@/components/atoms/AppAlert.vue'
+import AppSelect from '@/components/atoms/AppSelect.vue'
 
 export default {
   name: 'ProfilePage',
   components: {
-    BaseLabel,
-    BaseInput,
-    BaseButton,
-    BaseCard,
-    BaseAlert,
-    BaseFormGroup,
-    BaseSelect,
+    AppLabel,
+    AppTextarea,
+    AppButton,
+    AppCard,
+    AppAlert,
+    AppSelect,
   },
   setup() {
     const router = useRouter()
@@ -343,7 +333,9 @@ export default {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "@/assets/scss/base";
+
 .profile-page {
   min-height: calc(100vh - 70px); /* ヘッダーの高さを考慮 */
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);

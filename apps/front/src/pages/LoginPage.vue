@@ -1,61 +1,72 @@
 <template>
   <div class="login-page">
     <div class="login-container">
-      <BaseCard title="管理者ログイン" variant="default" size="medium" :hoverable="true" shadow="medium">
-        <form @submit.prevent="handleLogin">
-          <BaseFormGroup size="medium">
-            <BaseLabel text="API Key" html-for="apikey" :required="true" alignConfig="center" size="medium"
-              variant="default" />
-            <BaseInput id="apikey" type="password" v-model="credentials.apiKey" placeholder="API Keyを入力してください"
-              :required="true" alignConfig="center" size="medium" variant="default"
-              :error-message="validationErrors.apiKey" />
-          </BaseFormGroup>
+      <AppCard title="ログイン">
 
-          <div class="submit-button">
-            <BaseButton type="submit" :label="isLoading ? '認証中...' : 'ログイン'" :primary="true" :disabled="isLoading"
-              :elipsis="isLoading" />
-          </div>
-        </form>
+        <div class="form-field">
+          <AppLabel :id="'username'" :required="true">ユーザ名</AppLabel>
+          <AppTextField :input-id="'username'" :type="'text'" v-model="usersModel.username" placeholder="ユーザー名を入力してください"
+            :required="true" :error="usernameErrorDto" />
+        </div>
 
-        <BaseAlert v-if="errorMessage" :message="errorMessage" variant="error" size="medium" :show="!!errorMessage" />
-      </BaseCard>
+        <div class="form-field">
+          <AppLabel :id="'password'" :required="true">パスワード</AppLabel>
+          <AppPassword :input-id="'password'" v-model="usersModel.password" placeholder="パスワードを入力してください"
+            :error="passwordErrorDto" />
+        </div>
+
+        <div class="submit-button">
+          <AppButton :primary="true" label="ログイン" @click="onClick()"/>
+        </div>
+
+        <div class="signup-link">
+          <AppLink @click="router.push('/signup')">新規登録はこちら</AppLink>
+        </div>
+
+      </AppCard>
     </div>
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue'
+<script lang="ts">
+import { ref, onMounted, Ref } from 'vue'
 import { useRouter } from 'vue-router'
-import BaseLabel from '@/components/atoms/Label.vue'
-import BaseInput from '@/components/atoms/Input.vue'
-import BaseButton from '@/components/atoms/Button.vue'
-import BaseCard from '@/components/atoms/Card.vue'
-import BaseAlert from '@/components/atoms/Alert.vue'
-import BaseFormGroup from '@/components/atoms/FormGroup.vue'
-import apiClient from '@/utils/api'
+import AppLabel from '@/components/atoms/AppLabel.vue'
+import AppTextField from '@/components/atoms/AppTextField.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import AppCard from '@/components/atoms/AppCard.vue'
+import AppLink from '@/components/atoms/AppLink.vue'
+import AppPassword from '@/components/atoms/AppPassword.vue'
+
+import { UsersDto } from '@/dto/usersDto'
+import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
+
 import { AuthUtils } from '@/utils/auth'
 
 export default {
   name: 'LoginPage',
   components: {
-    BaseLabel,
-    BaseInput,
-    BaseButton,
-    BaseCard,
-    BaseAlert,
-    BaseFormGroup,
+    AppLabel,
+    AppTextField,
+    AppButton,
+    AppCard,
+    AppLink,
+    AppPassword,
   },
   setup() {
+    /** ルーター */
     const router = useRouter()
 
-    const credentials = ref({
-      apiKey: ''
-    })
+    /** ユーザー情報 */
+    const usersModel = ref<UsersDto>(new UsersDto());
+
+    // エラーオブジェクト
+    const usernameErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+    const passwordErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+
+    // ローディング状態
     const isLoading = ref(false)
     const errorMessage = ref('')
-    const validationErrors = ref({
-      apiKey: ''
-    })
 
     // 既にログイン済みの場合はホームにリダイレクト
     onMounted(() => {
@@ -64,65 +75,34 @@ export default {
       }
     })
 
-    const validateForm = () => {
-      validationErrors.value = {
-        apiKey: ''
-      }
-
-      let isValid = true
-
-      if (!credentials.value.apiKey.trim()) {
-        validationErrors.value.apiKey = 'API Keyは必須です'
-        isValid = false
-      } else if (credentials.value.apiKey.length < 10) {
-        validationErrors.value.apiKey = 'API Keyは10文字以上で入力してください'
-        isValid = false
-      }
-
-      return isValid
+    const clearError = () => {
+      usernameErrorDto.value.splice(0);
+      passwordErrorDto.value.splice(0);
     }
 
-    const handleLogin = async () => {
-      if (!validateForm()) {
-        return
-      }
-
-      isLoading.value = true
-      errorMessage.value = ''
-
-      try {
-        const response = await apiClient.post('/auth/login', {
-          apiKey: credentials.value.apiKey
-        })
-
-        if (response.data.success) {
-          // API Keyを保存
-          AuthUtils.login(credentials.value.apiKey)
-          // ホームページにリダイレクト
-          router.push('/')
-        } else {
-          errorMessage.value = response.data.message || 'ログインに失敗しました'
-        }
-      } catch (error) {
-        console.error('Login error:', error)
-        errorMessage.value = 'ログインに失敗しました。API Keyを確認してください。'
-      } finally {
-        isLoading.value = false
-      }
+    /**
+     * ログイン処理
+     */
+    const onClick = () => {
+      clearError()
+      console.log(usersModel.value)
     }
 
     return {
-      credentials,
-      isLoading,
-      errorMessage,
-      validationErrors,
-      handleLogin
+      router,
+      usersModel,
+      usernameErrorDto,
+      passwordErrorDto,
+      clearError,
+      onClick,
     }
   }
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "@/assets/scss/base";
+
 .login-page {
   min-height: calc(100vh - 70px);
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -136,11 +116,20 @@ export default {
   max-width: 500px;
   margin: 0 auto;
 }
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
 .submit-button {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 24px;
 }
+
 .signup-link {
   display: flex;
   justify-content: center;
