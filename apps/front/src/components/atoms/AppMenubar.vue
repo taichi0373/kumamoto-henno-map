@@ -4,7 +4,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { Menubar } from 'primevue/menubar';
+import Menubar from 'primevue/menubar';
 
 const items = ref([
   {

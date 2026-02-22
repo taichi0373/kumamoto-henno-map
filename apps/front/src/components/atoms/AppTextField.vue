@@ -1,29 +1,19 @@
 <template>
   <div class="p-field">
-    <PInputText
-      :id="inputId"
-      v-model="computedModel"
-      :type="type"
-      :disabled="disabled"
-      :readonly="readonly"
-      :placeholder="placeholder"
-      class="text-field"
-      :class="[inputClass, { error: errorType == 1, warning: errorType == 2 }]"
-      :style="inputStyle"
-      :maxlength="maxlength"
-      :tabindex="computedTabindex"
-      @focus="onFocus"
-      @blur="onBlur"
-    />
+    <PInputText :id="inputId" v-model="model" :type="type" :disabled="disabled" :readonly="readonly"
+      :placeholder="placeholder" class="text-field"
+      :class="[inputClass, { error: errorType == 1, warning: errorType == 2 }]" :style="inputStyle"
+      :maxlength="maxlength" :tabindex="computedTabindex" @input="onInput" @focus="onFocus" @blur="onBlur" />
     <AppFormError v-if="showError" :error="errors" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, toRefs, nextTick, watch } from 'vue';
 import PInputText from 'primevue/inputtext';
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 import AppFormError from '@/components/atoms/AppFormError.vue';
+import { ValidateUtils } from '@/utils/validateUtils';
 
 const props = withDefaults(defineProps<{
   modelValue?: string | null;
@@ -36,7 +26,7 @@ const props = withDefaults(defineProps<{
   disabled?: boolean;
   inputStyle?: object | string;
   inputClass?: string;
-  maxlength?: string | number | null;
+  maxlength?: number | null;
   tabindex?: number;
   rule?: string | null;
 }>(), {
@@ -56,20 +46,43 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-  (e: 'input', value: unknown): void;
   (e: 'update:modelValue', value: string | null): void;
+  (e: 'input', value: unknown): void;
   (e: 'focus', event: Event): void;
   (e: 'blur', event: Event): void;
 }>();
 
-const computedModel = computed({
-  get: () => props.modelValue,
-  set: (value) => {
-    if (value !== props.modelValue) {
-      emit('update:modelValue', value);
+const inputControl = (input: string | null) => {
+  if (input == null || ValidateUtils.isNullOrEmpty(props.rule)) {
+    return input;
+  }
+  return input.replace(new RegExp(`[^${props.rule}]+`, "g"), "");
+};
+
+/** 初期値の設定 */
+const initValue = inputControl(props.modelValue);
+/** 入力値を管理するリアクティブな変数 */
+const model = ref(initValue);
+
+if (initValue !== props.modelValue) {
+  emit('update:modelValue', initValue);
+}
+const { modelValue } = toRefs(props);
+
+const handleInput = (targetValue: string) => {
+  const value = inputControl(targetValue);
+  nextTick().then(() => {
+    if (props.modelValue == model.value) {
+      emit("input", value);
     }
-  },
-});
+    model.value = value;
+  });
+};
+
+const onInput = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  handleInput(target.value);
+};
 
 const onFocus = (e: Event) => {
   emit('focus', e);
@@ -101,6 +114,12 @@ const errorType = computed(() => {
 const computedTabindex = computed(() => {
   return props.disabled ? -1 : props.tabindex;
 });
+
+watch(modelValue, () => {
+  if (model.value !== modelValue.value) {
+    model.value = modelValue.value;
+  }
+});
 </script>
 
 <style lang="scss" scoped>
@@ -109,6 +128,7 @@ const computedTabindex = computed(() => {
 .p-field {
   display: inline-block;
   width: 100%;
+
   .text-field {
     width: 100%;
     height: base.$input-height;
@@ -120,43 +140,54 @@ const computedTabindex = computed(() => {
       background-color: base.$base-100;
       border-color: base.$base-400;
     }
+
     &:focus {
       background-color: base.$base-100;
       border-color: base.$base-700;
       box-shadow: none;
     }
-    &.p-inputtext-disabled, &.p-inputtext-readonly {
+
+    &.p-inputtext-disabled,
+    &.p-inputtext-readonly {
       &:hover {
         background-color: base.$base-200;
         border-color: base.$base-200;
       }
+
       &:focus {
         background-color: base.$base-200;
         border-color: base.$base-200;
       }
     }
+
     &::placeholder {
       color: base.$placeholder-color;
     }
+
     &.error {
       background-color: base.$error-200;
       border: 1px solid base.$error-100;
+
       &:hover {
         background-color: base.$error-200;
         border-color: base.$error-100;
       }
+
       &:focus {
         background-color: base.$error-200;
         border-color: base.$error-100;
       }
     }
+
     &.warning {
       background-color: base.$warning-200;
       border: 1px solid base.$warning-100;
+
       &:hover {
         background-color: base.$warning-200;
         border-color: base.$warning-100;
       }
+
       &:focus {
         background-color: base.$warning-200;
         border-color: base.$warning-100;

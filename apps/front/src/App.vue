@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import AppHeader from './components/organisms/AppHeader.vue'
 
 const restoreUserSession = () => {
@@ -44,24 +44,27 @@ const clearSession = () => {
   sessionStorage.removeItem('userId')
 }
 
-const setupResponsiveDesign = () => {
-  const handleResize = () => {
-    const formSelectElements = document.querySelectorAll('.form-select')
-    if (window.innerWidth < 360) {
-      formSelectElements.forEach(element => {
-        element.classList.add('form-select-sm')
-      })
-    } else {
-      formSelectElements.forEach(element => {
-        element.classList.remove('form-select-sm')
-      })
-    }
-
-    // vh設定
-    const height = window.innerHeight
-    document.documentElement.style.setProperty('--vh', height / 100 + 'px')
+/**
+ * リサイズイベントハンドラ
+ */
+const handleResize = () => {
+  const formSelectElements = document.querySelectorAll('.form-select')
+  if (window.innerWidth < 360) {
+    formSelectElements.forEach(element => {
+      element.classList.add('form-select-sm')
+    })
+  } else {
+    formSelectElements.forEach(element => {
+      element.classList.remove('form-select-sm')
+    })
   }
 
+  // vh設定
+  const height = window.innerHeight
+  document.documentElement.style.setProperty('--vh', height / 100 + 'px')
+}
+
+const setupResponsiveDesign = () => {
   window.addEventListener('resize', handleResize)
   handleResize()
 }
@@ -75,6 +78,11 @@ onMounted(() => {
   }
   // ウィンドウリサイズイベントの設定
   setupResponsiveDesign()
+})
+
+onUnmounted(() => {
+  // リサイズイベントの解除
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 

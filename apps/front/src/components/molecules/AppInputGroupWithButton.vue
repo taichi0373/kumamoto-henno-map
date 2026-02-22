@@ -24,8 +24,10 @@
         :label="buttonLabel"
         :icon="buttonIcon"
         :disabled="buttonDisabled"
+        :loading="buttonLoading"
+        :class="buttonClass"
         :tabindex="computedTabindex"
-        @click="() => onButtonClick"
+        @click="onButtonClick"
       />
     </InputGroup>
   </div>
@@ -85,9 +87,9 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string | null): void;
   (e: 'focus', event: Event): void;
   (e: 'blur', event: Event): void;
-  (e: 'input', event: Event): void;
+  (e: 'input', event: unknown): void;
   (e: 'keydown', event: KeyboardEvent): void;
-  (e: 'button-click', event: MouseEvent): void;
+  (e: 'button-click', event: unknown): void;
 }>();
 
 const computedModel = computed({
@@ -95,7 +97,7 @@ const computedModel = computed({
   set: (value: string | null) => emit('update:modelValue', value)
 });
 
-/** フォーカス時の処理 */
+/** フォーカス時の処理 */   
 const onFocus = (e: Event) => {
   emit('focus', e);
 };
@@ -116,7 +118,7 @@ const onKeydown = (e: KeyboardEvent) => {
 };
 
 /** ボタンクリック時の処理 */
-const onButtonClick = (e: MouseEvent) => {
+const onButtonClick = (e: unknown) => {
   emit('button-click', e);
 };
 
