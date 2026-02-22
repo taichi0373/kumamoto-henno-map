@@ -1,10 +1,11 @@
 <template>
-  <pButton class="app-link p-button-link" oncontextmenu="return false;" :tabindex="tabindex" @click="onClick">
+  <PButton class="app-link p-button-link" @contextmenu.prevent :tabindex="tabindex" @click="onClick">
     <slot></slot>
-  </pButton>
+  </PButton>
 </template>
 
 <script setup lang="ts">
+import PButton from 'primevue/button';
 withDefaults(defineProps<{
   tabindex?: number;
 }>(), {
@@ -30,10 +31,7 @@ const onClick = (e: Event) => {
   text-decoration: underline;
   align-items: baseline;
   &:hover {
-    color: base.$base-400 !important;
-  }
-  &:focus {
-    box-shadow: 0 0 0 0.2rem base.$base-400 !important;
+    color: base.$base-500 !important;
   }
 }
 </style>
