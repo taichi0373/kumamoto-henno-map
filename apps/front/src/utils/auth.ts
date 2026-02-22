@@ -40,14 +40,14 @@ export class AuthUtils {
 
   /**
    * ログイン処理
-   * @param token 認証トークン
    * @param user ユーザー情報
    * @param remember ログイン状態を保持するか
    */
-  static login(token: string, user: User, remember: boolean = false): void {
+  static login(user: User, remember: boolean = false): void {
     const storage = remember ? localStorage : sessionStorage
     
-    storage.setItem(this.TOKEN_KEY, token)
+    // セッション認証のダミートークンを設定
+    storage.setItem(this.TOKEN_KEY, 'session-authenticated')
     storage.setItem(this.USER_KEY, JSON.stringify(user))
     
     // 互換性のため、usernameもsessionStorageに保存

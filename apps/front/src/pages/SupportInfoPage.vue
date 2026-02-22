@@ -20,19 +20,19 @@
           <h2 class="section-title">自主返納のメリット</h2>
           <div class="merit-list">
             <div class="merit-item">
-              <i class="fa-solid fa-shield-halved"></i>
+              <i class="pi pi-shield"></i>
               <span>交通事故のリスクを減らすことができます</span>
             </div>
             <div class="merit-item">
-              <i class="fa-solid fa-gift"></i>
+              <i class="pi pi-gift"></i>
               <span>様々な特典やサービスを利用できます</span>
             </div>
             <div class="merit-item">
-              <i class="fa-solid fa-bus"></i>
+              <i class="pi pi-truck"></i>
               <span>公共交通機関の利用促進に繋がります</span>
             </div>
             <div class="merit-item">
-              <i class="fa-solid fa-heart"></i>
+              <i class="pi pi-heart"></i>
               <span>地域社会の安全向上に貢献できます</span>
             </div>
           </div>
@@ -110,11 +110,11 @@
             <h3 class="contact-title">熊本県警察本部 運転免許課</h3>
             <div class="contact-details">
               <div class="contact-item">
-                <i class="fa-solid fa-phone"></i>
+                <i class="pi pi-phone"></i>
                 <span>電話：096-233-0110</span>
               </div>
               <div class="contact-item">
-                <i class="fa-solid fa-clock"></i>
+                <i class="pi pi-clock"></i>
                 <span>受付時間：平日 8:30-17:15</span>
               </div>
             </div>
@@ -123,12 +123,12 @@
         
         <!-- 戻るボタン -->
         <div class="back-section">
-          <BaseButton
+          <AppButton
             type="button"
             label="マップに戻る"
-            :primary="true"
+            severity="primary"
             size="large"
-            icon="fa-solid fa-map"
+            icon="pi pi-map"
             @click="$router.push('/')"
           />
         </div>
@@ -137,28 +137,26 @@
   </div>
 </template>
 
-<script>
-import BaseButton from '../components/atoms/Button.vue'
-
-export default {
-  name: 'SupportInfoPage',
-  components: {
-    BaseButton
-  }
-}
+<script setup lang="ts">
+import AppButton from '../components/atoms/AppButton.vue'
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use "@/assets/scss/base";
+
 .support-info-page {
-  padding: 20px 0;
-  min-height: calc(100vh - 60px);
+  height: calc(100vh - 60px);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  overflow-y: auto;
+  padding: 0;
 }
 
 .container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 20px;
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 .page-header {
