@@ -84,90 +84,86 @@
   </header>
 </template>
 
-<script>
+<script setup lang="ts">
+import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { AuthUtils } from '@/utils/auth'
 
-export default {
-  name: 'AppHeader',
-  data() {
-    return {
-      isLoggedIn: false,
-      dropdownOpen: false,
-      mobileMenuOpen: false,
-      currentUser: {
-        username: ''
-      }
-    }
-  },
-  mounted() {
-    this.checkLoginStatus()
-    this.loadUserInfo()
-    // セッションストレージの変更を監視
-    window.addEventListener('storage', this.onStorageChange)
-    // クリック外でドロップダウンを閉じる
-    document.addEventListener('click', this.closeDropdownOnClickOutside)
-  },
-  beforeUnmount() {
-    window.removeEventListener('storage', this.onStorageChange)
-    document.removeEventListener('click', this.closeDropdownOnClickOutside)
-  },
-  watch: {
-    '$route'() {
-      // ルートが変更されるたびに認証状態をチェック
-      this.checkLoginStatus()
-      this.loadUserInfo()
-    }
-  },
-  methods: {
-    checkLoginStatus() {
-      this.isLoggedIn = AuthUtils.isLoggedIn()
-      console.log('Login Status:', this.isLoggedIn)
-    },
+const route = useRoute()
+const router = useRouter()
 
-    loadUserInfo() {
-      if (this.isLoggedIn) {
-        const user = AuthUtils.getUser()
-        this.currentUser.username = user.username || sessionStorage.getItem('username') || ''
-      } else {
-        // ログアウト状態の場合はユーザー情報をクリア
-        this.currentUser.username = ''
-      }
-      console.log('Current User:', this.currentUser.username)
-    },
+const isLoggedIn = ref(false)
+const dropdownOpen = ref(false)
+const mobileMenuOpen = ref(false)
+const currentUser = reactive({ username: '' })
 
-    onStorageChange() {
-      this.checkLoginStatus()
-      this.loadUserInfo()
-    },
+const checkLoginStatus = () => {
+  isLoggedIn.value = AuthUtils.isLoggedIn()
+  console.log('Login Status:', isLoggedIn.value)
+}
 
-    closeDropdownOnClickOutside(event) {
-      if (!event.target.closest('.dropdown')) {
-        this.dropdownOpen = false
-      }
-    },
+const loadUserInfo = () => {
+  if (isLoggedIn.value) {
+    const user = AuthUtils.getUser()
+    currentUser.username = user.username || sessionStorage.getItem('username') || ''
+  } else {
+    // ログアウト状態の場合はユーザー情報をクリア
+    currentUser.username = ''
+  }
+  console.log('Current User:', currentUser.username)
+}
 
-    handleLogout() {
-      AuthUtils.logout()
-      this.isLoggedIn = false
-      this.currentUser.username = ''
-      this.dropdownOpen = false
-      this.mobileMenuOpen = false
-      this.$router.push('/login')
-    },
+const onStorageChange = () => {
+  checkLoginStatus()
+  loadUserInfo()
+}
 
-    toggleDropdown() {
-      this.dropdownOpen = !this.dropdownOpen
-    },
-
-    toggleMobileMenu() {
-      this.mobileMenuOpen = !this.mobileMenuOpen
-    },
-
-    closeMobileMenu() {
-      this.mobileMenuOpen = false
-    }
+const closeDropdownOnClickOutside = (event: MouseEvent) => {
+  if (!(event.target as Element).closest('.dropdown')) {
+    dropdownOpen.value = false
   }
 }
+
+const handleLogout = () => {
+  AuthUtils.logout()
+  isLoggedIn.value = false
+  currentUser.username = ''
+  dropdownOpen.value = false
+  mobileMenuOpen.value = false
+  router.push('/login')
+}
+
+const toggleDropdown = () => {
+  dropdownOpen.value = !dropdownOpen.value
+}
+
+const toggleMobileMenu = () => {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+const closeMobileMenu = () => {
+  mobileMenuOpen.value = false
+}
+
+// ルートが変更されるたびに認証状態をチェック
+watch(route, () => {
+  checkLoginStatus()
+  loadUserInfo()
+})
+
+onMounted(() => {
+  checkLoginStatus()
+  loadUserInfo()
+  // セッションストレージの変更を監視
+  window.addEventListener('storage', onStorageChange)
+  // クリック外でドロップダウンを閉じる
+  document.addEventListener('click', closeDropdownOnClickOutside)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', onStorageChange)
+  document.removeEventListener('click', closeDropdownOnClickOutside)
+})
 </script>
 
 <style scoped>
@@ -514,54 +510,5 @@ header {
   height: 100vh;
   background: rgba(0, 0, 0, 0.5);
   z-index: -1;
-}
-
-/* レスポンシブ対応 */
-@media (max-width: 991.98px) {
-  #pc-nav {
-    display: none;
-  }
-
-  #sm-nav {
-    display: block;
-  }
-
-  body {
-    padding-top: 70px;
-    /* モバイルナビの高さ分 */
-  }
-}
-
-@media (min-width: 992px) {
-  #pc-nav {
-    display: block;
-  }
-
-  #sm-nav {
-    display: none;
-  }
-}
-
-@media (max-width: 576px) {
-  .nav-brand-mobile {
-    font-size: 1.1rem;
-  }
-
-  .user-name-mobile {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-  }
-
-  .mobile-menu {
-    width: 280px;
-  }
-}
-
-/* アクセシビリティ向上 */
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    transform: none !important;
-  }
 }
 </style>

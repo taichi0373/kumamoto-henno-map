@@ -1,41 +1,44 @@
-@forward "variables";
-@use "variables";
+@forward "variable";
+@use "variable";
 
 /* 全画面共通 */
 :root {
-    --base-100: #{variables.$base-100};
-    --base-200: #{variables.$base-200};
-    --base-300: #{variables.$base-300};
-    --base-400: #{variables.$base-400};
-    --base-500: #{variables.$base-500};
-    --base-600: #{variables.$base-600};
-    --base-700: #{variables.$base-700};
-    --error-100: #{variables.$error-100};
-    --error-200: #{variables.$error-200};
-    --warning-100: #{variables.$warning-100};
-    --warning-200: #{variables.$warning-200};
-    --success-100: #{variables.$success-100};
-    --success-200: #{variables.$success-200};
-    --chose-100: #{variables.$chose-100};
-    --chose-200: #{variables.$chose-200};
-    --theme-100: #{variables.$theme-100};
-    --theme-200: #{variables.$theme-200};
-    --theme-300: #{variables.$theme-300};
-    --theme-400: #{variables.$theme-400};
-    --theme-500: #{variables.$theme-500};
-    --theme-600: #{variables.$theme-600};
-    --theme-700: #{variables.$theme-700};
-    --theme-800: #{variables.$theme-800};
+    --base-100: #{variable.$base-100};
+    --base-200: #{variable.$base-200};
+    --base-300: #{variable.$base-300};
+    --base-400: #{variable.$base-400};
+    --base-500: #{variable.$base-500};
+    --base-600: #{variable.$base-600};
+    --base-700: #{variable.$base-700};
+    --error-100: #{variable.$error-100};
+    --error-200: #{variable.$error-200};
+    --warning-100: #{variable.$warning-100};
+    --warning-200: #{variable.$warning-200};
+    --success-100: #{variable.$success-100};
+    --success-200: #{variable.$success-200};
+    --chose-100: #{variable.$chose-100};
+    --chose-200: #{variable.$chose-200};
+    --theme-100: #{variable.$theme-100};
+    --theme-200: #{variable.$theme-200};
+    --theme-300: #{variable.$theme-300};
+    --theme-400: #{variable.$theme-400};
+    --theme-500: #{variable.$theme-500};
+    --theme-600: #{variable.$theme-600};
+    --theme-700: #{variable.$theme-700};
+    --theme-800: #{variable.$theme-800};
 }
 
 html {
     height: 100%;
+    width: 100%;
     font-size: 14px;
+    overflow: hidden;
 }
 
 body {
     height: 100%;
     margin: 0px;
+    overflow: hidden;
 }
 
 #app {

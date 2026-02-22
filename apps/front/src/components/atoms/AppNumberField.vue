@@ -21,161 +21,93 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import PInputNumber from 'primevue/inputnumber';
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 import AppFormError from '@/components/atoms/AppFormError.vue';
 
-export default defineComponent({
-  name: "AppNumberField",
-  components: {
-    PInputNumber,
-    AppFormError,
+const props = withDefaults(defineProps<{
+  modelValue?: number | null;
+  placeholder?: string;
+  error?: InputFormErrorDto | InputFormErrorDto[];
+  showError?: boolean;
+  inputId?: string;
+  readonly?: boolean;
+  disabled?: boolean;
+  min?: number;
+  max?: number;
+  step?: number;
+  useGrouping?: boolean;
+  inputStyle?: object | string;
+  inputClass?: string;
+  tabindex?: number;
+}>(), {
+  modelValue: null,
+  placeholder: "",
+  error: () => [],
+  showError: true,
+  inputId: undefined,
+  readonly: false,
+  disabled: false,
+  min: undefined,
+  max: undefined,
+  step: 1,
+  useGrouping: false,
+  inputStyle: "",
+  inputClass: "",
+  tabindex: 0,
+});
+
+const emit = defineEmits<{
+  (e: 'input', value: unknown): void;
+  (e: 'update:modelValue', value: number | null): void;
+  (e: 'focus', event: unknown): void;
+  (e: 'blur', event: unknown): void;
+}>();
+
+const computedModel = computed({
+  get: () => props.modelValue,
+  set: (value) => {
+    if (value !== props.modelValue) {
+      emit('update:modelValue', value);
+    }
   },
-  props: {
-    // バインド値
-    modelValue: {
-      type: Number,
-      default: null,
-    },
-    // プレースホルダー
-    placeholder: {
-      type: String,
-      default: "",
-    },
-    // エラー情報
-    error: {
-      type: [Array, Object],
-      default: () => [],
-    },
-    // エラー表示フラグ
-    showError: {
-      type: Boolean,
-      default: true,
-    },
-    // 入力ID
-    inputId: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
-    // 読み取り専用フラグ
-    readonly: {
-      type: Boolean,
-      default: false,
-    },
-    // 無効化フラグ
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    // 最小値
-    min: {
-      type: Number,
-      required: false,
-      default: undefined,
-    },
-    // 最大値
-    max: {
-      type: Number,
-      required: false,
-      default: undefined,
-    },
-    // ステップ
-    step: {
-      type: Number,
-      required: false,
-      default: 1,
-    },
-    // 3桁区切り
-    useGrouping: {
-      type: Boolean,
-      default: false,
-    },
-    // インプットのスタイル
-    inputStyle: {
-      type: [Object, String],
-      required: false,
-      default: "",
-    },
-    // インプットのクラス
-    inputClass: {
-      type: String,
-      required: false,
-      default: "",
-    },
-    // タブインデックス
-    tabindex: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-  },
-  emits: [
-    /** 入力時 */
-    "input",
-    /** 入力時 */
-    "update:modelValue",
-    /** フォーカス時 */
-    "focus",
-    /** ブラー時 */
-    "blur",
-  ],
-  setup(props, context) {
-    const computedModel = computed({
-      get: () => props.modelValue,
-      set: (value) => {
-        if (value !== props.modelValue) {
-          context.emit('update:modelValue', value);
-        }
-      },
-    });
+});
 
-    /** フォーカス時の処理 */
-    const onFocus = (e: any) => {
-      context.emit('focus', e);
-    };
+/** フォーカス時の処理 */
+const onFocus = (e: any) => {
+  emit('focus', e);
+};
 
-    /** ブラー時の処理 */
-    const onBlur = (e: any) => {
-      context.emit('blur', e);
-    };
+/** ブラー時の処理 */
+const onBlur = (e: any) => {
+  emit('blur', e);
+};
 
-    /** エラー情報 */
-    const errors = computed(() => {
-      return props.error instanceof Array ? props.error : [props.error];
-    }) as any;
+/** エラー情報 */
+const errors = computed(() => {
+  return props.error instanceof Array ? props.error : [props.error];
+}) as any;
 
-    /** エラータイプ */
-    const errorType = computed(() => {
-      let type = Number.MAX_VALUE;
-      if (props.error instanceof Array) {
-        props.error.forEach((err) => {
-          const errorType = (err as InputFormErrorDto).type;
-          if (errorType != 0) {
-            type = Math.min(type, errorType);
-          }
-        });
-      } else {
-        type = props.error.type;
+/** エラータイプ */
+const errorType = computed(() => {
+  let type = Number.MAX_VALUE;
+  if (props.error instanceof Array) {
+    props.error.forEach((err) => {
+      const errorType = (err as InputFormErrorDto).type;
+      if (errorType != 0) {
+        type = Math.min(type, errorType);
       }
-      return type;
     });
-
-    const computedTabindex = computed(() => {
-      return props.disabled ? -1 : props.tabindex;
-    });
-
-    return {
-      errors,
-      errorType,
-      computedModel,
-      computedTabindex,
-      onFocus,
-      onBlur,
-    };
+  } else {
+    type = (props.error as InputFormErrorDto).type;
   }
+  return type;
+});
+
+const computedTabindex = computed(() => {
+  return props.disabled ? -1 : props.tabindex;
 });
 </script>
 

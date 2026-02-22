@@ -3,23 +3,15 @@
     </Toast>
 </template>
 
-<script lang="ts">
-import { defineComponent, onMounted } from 'vue';
+<script setup lang="ts">
+import { onMounted } from 'vue';
 import Toast from 'primevue/toast';
 import ToastMessageUtils from '@/utils/toastMessageUtils';
 import { useToast } from 'primevue';
-export default defineComponent({
-  name: "AppToastMessage",
-  components: {
-    Toast,
-  },
-  setup() {
-    onMounted(() => {
-        const toast = useToast();
-        ToastMessageUtils.init(toast);
-    });
-    return {};
-  },
+
+onMounted(() => {
+  const toast = useToast();
+  ToastMessageUtils.init(toast);
 });
 </script>
 <style lang="scss" scoped>

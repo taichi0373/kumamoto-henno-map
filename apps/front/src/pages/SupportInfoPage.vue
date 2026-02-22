@@ -137,30 +137,26 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import AppButton from '../components/atoms/AppButton.vue'
-
-export default {
-  name: 'SupportInfoPage',
-  components: {
-    AppButton
-  }
-}
 </script>
 
 <style scoped lang="scss">
 @use "@/assets/scss/base";
 
 .support-info-page {
-  padding: 20px 0;
-  min-height: calc(100vh - 60px);
+  height: calc(100vh - 60px);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  overflow-y: auto;
+  padding: 0;
 }
 
 .container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 20px;
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 .page-header {

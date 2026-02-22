@@ -20,143 +20,85 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import DatePicker, { DatePickerBlurEvent } from 'primevue/datepicker';
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 import AppFormError from '@/components/atoms/AppFormError.vue';
 
-export default defineComponent({
-  name: "AppMonthCalendar",
-  components: {
-    DatePicker,
-    AppFormError,
+const props = withDefaults(defineProps<{
+  modelValue?: Date | null;
+  placeholder?: string;
+  dateFormat?: string;
+  showIcon?: boolean;
+  error?: InputFormErrorDto | InputFormErrorDto[];
+  showError?: boolean;
+  inputId?: string;
+  readonly?: boolean;
+  disabled?: boolean;
+  inputStyle?: object | string;
+  inputClass?: string;
+  tabindex?: number;
+}>(), {
+  modelValue: null,
+  placeholder: "",
+  dateFormat: "yy/mm",
+  showIcon: true,
+  error: () => [],
+  showError: true,
+  inputId: undefined,
+  readonly: false,
+  disabled: false,
+  inputStyle: "",
+  inputClass: "",
+  tabindex: 0,
+});
+
+const emit = defineEmits<{
+  (e: 'input', value: unknown): void;
+  (e: 'update:modelValue', value: Date | null): void;
+  (e: 'focus', event: Event): void;
+  (e: 'blur', event: DatePickerBlurEvent): void;
+}>();
+
+const computedModel = computed({
+  get: () => props.modelValue,
+  set: (value) => {
+    if (value !== props.modelValue) {
+      emit('update:modelValue', value);
+    }
   },
-  props: {
-    // バインド値
-    modelValue: {
-      type: Date,
-      default: null,
-    },
-    // プレースホルダー
-    placeholder: {
-      type: String,
-      default: "",
-    },
-    // 表示フォーマット
-    dateFormat: {
-      type: String,
-      default: "yy/mm",
-    },
-    // アイコン表示
-    showIcon: {
-      type: Boolean,
-      default: true,
-    },
-    // エラー情報
-    error: {
-      type: [Array, Object],
-      default: () => [],
-    },
-    // エラー表示フラグ
-    showError: {
-      type: Boolean,
-      default: true,
-    },
-    // 入力ID
-    inputId: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
-    // 読み取り専用フラグ
-    readonly: {
-      type: Boolean,
-      default: false,
-    },
-    // 無効化フラグ
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    // インプットのスタイル
-    inputStyle: {
-      type: [Object, String],
-      required: false,
-      default: "",
-    },
-    // インプットのクラス
-    inputClass: {
-      type: String,
-      required: false,
-      default: "",
-    },
-    // タブインデックス
-    tabindex: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-  },
-  emits: [
-    /** 入力時 */
-    "input",
-    /** 入力時 */
-    "update:modelValue",
-    /** フォーカス時 */
-    "focus",
-    /** ブラー時 */
-    "blur",
-  ],
-  setup(props, context) {
-    const computedModel = computed({
-      get: () => props.modelValue,
-      set: (value) => {
-        if (value !== props.modelValue) {
-          context.emit('update:modelValue', value);
-        }
-      },
-    });
-    const onFocus = (e: Event) => {
-      context.emit('focus', e);
-    };
+});
 
-    const onBlur = (e: DatePickerBlurEvent) => {
-      context.emit('blur', e);
-    };
+const onFocus = (e: Event) => {
+  emit('focus', e);
+};
 
-    const errors = computed(() => {
-      return props.error instanceof Array ? props.error : [props.error];
-    }) as any;
+const onBlur = (e: DatePickerBlurEvent) => {
+  emit('blur', e);
+};
 
-    const errorType = computed(() => {
-      let type = Number.MAX_VALUE;
-      if (props.error instanceof Array) {
-        props.error.forEach((err) => {
-          const errorType = (err as InputFormErrorDto).type;
-          if (errorType != 0) {
-            type = Math.min(type, errorType);
-          }
-        });
-      } else {
-        type = props.error.type;
+const errors = computed(() => {
+  return props.error instanceof Array ? props.error : [props.error];
+}) as any;
+
+const errorType = computed(() => {
+  let type = Number.MAX_VALUE;
+  if (props.error instanceof Array) {
+    props.error.forEach((err) => {
+      const errorType = (err as InputFormErrorDto).type;
+      if (errorType != 0) {
+        type = Math.min(type, errorType);
       }
-      return type;
     });
-
-    const computedTabindex = computed(() => {
-      return props.disabled ? -1 : props.tabindex;
-    });
-
-    return {
-      errors,
-      errorType,
-      computedModel,
-      computedTabindex,
-      onFocus,
-      onBlur,
-    };
+  } else {
+    type = (props.error as InputFormErrorDto).type;
   }
+  return type;
+});
+
+const computedTabindex = computed(() => {
+  return props.disabled ? -1 : props.tabindex;
 });
 </script>
 

@@ -177,12 +177,13 @@ benefit_map/
 - 可読性・保守性を最優先とする
 - ESLint / Prettier のルールに従う
 - ロジックは可能な限り composables に分離する
+- コメントは日本語で記述し、/** */ を使用する
 
 ### コンポーネント規約
 
 - 1コンポーネント = 1ファイル（PascalCase）
 - ファイル構成は `template → script → style` の順とする
-- `export default` は使用しない
+- `export default`（Options API）は使用せず、`<script setup>`（Composition API）を使用する
 - ロジックの記述順は以下とする
 
 1. import  

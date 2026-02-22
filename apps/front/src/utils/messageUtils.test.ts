@@ -1,53 +1,84 @@
 import { MessageUtils } from './messageUtils';
+import { messageDto } from '@/dto/messageDto';
+
+/** テスト用メッセージリスト */
+const TEST_MESSAGE_LIST: messageDto[] = [
+    { messageNo: 1, messageType: 1, messageContent: "{0}を入力してください。" },
+    { messageNo: 2, messageType: 1, messageContent: "{0}は{1}文字以上で入力してください。" },
+    { messageNo: 3, messageType: 2, messageContent: "{0}は{1}文字以下で入力してください。" },
+    { messageNo: 4, messageType: 3, messageContent: "保存しました。" },
+];
 
 /**
  * MessageUtilsのテストクラス
  */
 describe('MessageUtils', () => {
 
-  // ----------------------------------------------------------------
-  // format
-  // ----------------------------------------------------------------
-  describe('format', () => {
+    // ----------------------------------------------------------------
+    // getMessageDto
+    // ----------------------------------------------------------------
+    describe('getMessageDto', () => {
 
-    test('単一プレースホルダを置換する', () => {
-      const result = MessageUtils.format('こんにちは、{0}さん！', '田中');
-      expect(result).toBe('こんにちは、田中さん！');
+        test('単一プレースホルダを置換してDTOを返す', () => {
+            const result = MessageUtils.getMessageDto(TEST_MESSAGE_LIST, 1, 'ユーザ名');
+            expect(result.type).toBe(1);
+            expect(result.message).toBe('ユーザ名を入力してください。');
+        });
+
+        test('複数プレースホルダを置換してDTOを返す', () => {
+            const result = MessageUtils.getMessageDto(TEST_MESSAGE_LIST, 2, 'パスワード', '8');
+            expect(result.type).toBe(1);
+            expect(result.message).toBe('パスワードは8文字以上で入力してください。');
+        });
+
+        test('プレースホルダがないメッセージはそのまま返す', () => {
+            const result = MessageUtils.getMessageDto(TEST_MESSAGE_LIST, 4);
+            expect(result.type).toBe(3);
+            expect(result.message).toBe('保存しました。');
+        });
+
+        test('存在しないメッセージ番号の場合はtype=0, message=""のDTOを返す', () => {
+            const result = MessageUtils.getMessageDto(TEST_MESSAGE_LIST, 999, '値');
+            expect(result.type).toBe(0);
+            expect(result.message).toBe('');
+        });
     });
 
-    test('複数プレースホルダを置換する', () => {
-      const result = MessageUtils.format('{0}年{1}月{2}日', 2026, 2, 11);
-      expect(result).toBe('2026年2月11日');
+    // ----------------------------------------------------------------
+    // getMessageType
+    // ----------------------------------------------------------------
+    describe('getMessageType', () => {
+
+        test('メッセージ番号に対応する種別番号を返す', () => {
+            const result = MessageUtils.getMessageType(TEST_MESSAGE_LIST, 2);
+            expect(result).toBe(1);
+        }
+        );
+
+        test('存在しないメッセージ番号の場合は0を返す', () => {
+            const result = MessageUtils.getMessageType(TEST_MESSAGE_LIST, 999);
+            expect(result).toBe(0);
+        });
     });
 
-    test('nullパターンの場合はnullを返す', () => {
-      const result = MessageUtils.format(null, '値');
-      expect(result).toBeNull();
-    });
+    // ----------------------------------------------------------------
+    // getFormatMessage
+    // ----------------------------------------------------------------
+    describe('getFormatMessage', () => {
 
-    test('数値を埋め込む', () => {
-      const result = MessageUtils.format('価格: {0}円', 1000);
-      expect(result).toBe('価格: 1000円');
-    });
+        test('単一プレースホルダを置換した文字列を返す', () => {
+            const result = MessageUtils.getFormatMessage(TEST_MESSAGE_LIST, 1, 'メールアドレス');
+            expect(result).toBe('メールアドレスを入力してください。');
+        });
 
-    test('真偽値を埋め込む', () => {
-      const result = MessageUtils.format('在庫: {0}', true);
-      expect(result).toBe('在庫: true');
-    });
+        test('複数プレースホルダを置換した文字列を返す', () => {
+            const result = MessageUtils.getFormatMessage(TEST_MESSAGE_LIST, 2, '氏名', '2');
+            expect(result).toBe('氏名は2文字以上で入力してください。');
+        });
 
-    test('数値と真偽値を複数埋め込む', () => {
-      const result = MessageUtils.format('価格: {0}円、在庫: {1}', 1000, true);
-      expect(result).toBe('価格: 1000円、在庫: true');
+        test('存在しないメッセージ番号の場合は空文字を返す', () => {
+            const result = MessageUtils.getFormatMessage(TEST_MESSAGE_LIST, 999, '値');
+            expect(result).toBe('');
+        });
     });
-
-    test('プレースホルダがない場合はそのまま返す', () => {
-      const result = MessageUtils.format('プレースホルダなし');
-      expect(result).toBe('プレースホルダなし');
-    });
-
-    test('引数が余分にある場合は余分な引数は無視される', () => {
-      const result = MessageUtils.format('{0}のみ', '値1', '値2');
-      expect(result).toBe('値1のみ');
-    });
-  });
 });

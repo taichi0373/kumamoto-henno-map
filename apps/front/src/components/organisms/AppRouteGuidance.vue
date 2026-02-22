@@ -93,29 +93,22 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import AppLabel from '../atoms/AppLabel.vue'
 import AppSelect from '../atoms/AppSelect.vue'
 import AppButton from '../atoms/AppButton.vue'
 import AppInputGroupWithButton from '../molecules/AppInputGroupWithButton.vue'
-
 import AppSuggestionList from '../atoms/AppSuggestionList.vue'
 import AppCalendar from '../atoms/AppCalendar.vue'
 import AppTimePicker from '../atoms/AppTimePicker.vue'
 
-export default {
-  name: 'RouteGuidance',
-  components: {
-    AppLabel,
-    AppSelect,
-    AppButton,
-    AppInputGroupWithButton,
-    AppSuggestionList,
-    AppCalendar,
-    AppTimePicker,
-  },
-  setup(props, { emit }) {
+const emit = defineEmits<{
+  (e: 'set-marker', payload: { type: string; lat: number; lon: number; address: unknown }): void;
+  (e: 'select-on-map', type: string): void;
+}>();
+
+
     // リアクティブデータ
     const showConditions = ref(false)
     const startSuggestions = ref([])
@@ -527,32 +520,7 @@ export default {
       }
     })
 
-    return {
-      showConditions,
-      startSuggestions,
-      endSuggestions,
-      startSuggestionIndex,
-      endSuggestionIndex,
-      isWaitingForMapClick,
-      transportMode,
-      startLocation,
-      endLocation,
-      routes,
-      routeConditions,
-      transportOptions,
-      timeSelectOptions,
-      toggleConditions,
-      onStartLocationInput,
-      onEndLocationInput,
-      selectStartLocation,
-      selectEndLocation,
-      onStartLocationKeydown,
-      onEndLocationKeydown,
-      toggleMapSelection,
-      searchRoute
-    }
-  }
-}
+
 </script>
 
 <style scoped lang="scss">

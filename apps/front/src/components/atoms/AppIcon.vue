@@ -1,58 +1,43 @@
 <template>
     <i :class="classes" :style="styles" @click="onClick"></i>
 </template>
-<script lang="ts">
-import { defineComponent, computed } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 
-export default defineComponent({
-  name: "AppIcon",
-  props: {
-    // 名称
-    iconName: {
-      type: String,
-      required: true,
-    },
-    // 色
-    color: {
-        type: String,
-        default: "base-700",
-    },
-    // サイズ
-    size: {
-        type: String,
-        default: "small",
-    }
-  },
-  emits: [
-    /**クリック時 */
-    "click",
-  ],
-  setup(props, context) {
-    const classes = computed(() => 
-        "pi " + props.iconName + " icon-" + props.color
-    );
-    const styles = computed(() => {
-        return "font-size: " + fontSize();
-    });
-
-    const sizeMap = new Map([
-        ["small", "14px"],
-        ["medium", "16px"],
-        ["large", "24px"],
-    ])
-    const fontSize = () => {
-        return sizeMap.get(props.size) || "12px";
-    }
-    const onClick = (e: unknown) => {
-        context.emit("click", e);
-    }
-    return {
-        classes,
-        styles,
-        onClick,
-    }
-  }
+const props = withDefaults(defineProps<{
+  iconName: string;
+  color?: string;
+  size?: string;
+}>(), {
+  color: "base-700",
+  size: "small",
 });
+
+const emit = defineEmits<{
+  (e: 'click', event: unknown): void;
+}>();
+
+const classes = computed(() =>
+  "pi " + props.iconName + " icon-" + props.color
+);
+
+const sizeMap = new Map([
+  ["small", "14px"],
+  ["medium", "16px"],
+  ["large", "24px"],
+]);
+
+const fontSize = () => {
+  return sizeMap.get(props.size) || "12px";
+};
+
+const styles = computed(() => {
+  return "font-size: " + fontSize();
+});
+
+const onClick = (e: unknown) => {
+  emit("click", e);
+};
 </script>
 <style lang="scss" scoped>
 @use "@/assets/scss/base";

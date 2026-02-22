@@ -8,30 +8,15 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
 import AppIcon from './AppIcon.vue';
 
-export default defineComponent({
-  name: "AppMessageBar",
-  components: {
-    AppIcon,
-  },
-  props: {
-    // モード
-    mode: {
-      type: String,
-      default: undefined,
-    },
-    // メッセージ
-    message: {
-      type: String,
-      default: undefined,
-    },
-  },
-  setup() {
-    return {};
-  },
+withDefaults(defineProps<{
+  mode?: string;
+  message?: string;
+}>(), {
+  mode: undefined,
+  message: undefined,
 });
 </script>
 

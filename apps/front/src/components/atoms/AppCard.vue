@@ -22,44 +22,21 @@
   </Card>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
 import Card from 'primevue/card';
 
-export default defineComponent({
-  name: "AppCard",
-  components: {
-    Card,
-  },
-  props: {
-    // タイトル
-    title: {
-      type: String,
-      default: "",
-    },
-    // サブタイトル
-    subtitle: {
-      type: String,
-      default: "",
-    },
-    // ヘッダー
-    header: {
-      type: String,
-      default: "",
-    },
-    // インプットスタイル
-    inputStyle: {
-      type: [Object, String] as PropType<Record<string, string> | string>,
-      required: false,
-      default: "",
-    },
-    // インプットクラス
-    inputClass: {
-      type: String,
-      required: false,
-      default: "",
-    },
-  },
+withDefaults(defineProps<{
+  title?: string;
+  subtitle?: string;
+  header?: string;
+  inputStyle?: Record<string, string> | string;
+  inputClass?: string;
+}>(), {
+  title: "",
+  subtitle: "",
+  header: "",
+  inputStyle: "",
+  inputClass: "",
 });
 </script>
 

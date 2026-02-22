@@ -26,8 +26,8 @@
 </template>
 
 
-<script lang="ts">
-import { defineComponent, computed, PropType } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 
@@ -37,66 +37,36 @@ interface TabItem {
   disabled?: boolean;
 }
 
-export default defineComponent({
-  name: "AppTabView",
-  components: {
-    TabView,
-    TabPanel,
-  },
-  props: {
-    // アクティブタブ
-    modelValue: {
-      type: Number,
-      default: 0,
-    },
-    // タブ一覧
-    tabs: {
-      type: Array as PropType<TabItem[]>,
-      default: () => [],
-    },
-    // スクロール
-    scrollable: {
-      type: Boolean,
-      default: false,
-    },
-    // スタイル
-    inputStyle: {
-      type: [Object, String] as PropType<Record<string, string> | string>,
-      required: false,
-      default: "",
-    },
-    // クラス
-    inputClass: {
-      type: String,
-      required: false,
-      default: "",
-    },
-  },
-  emits: [
-    /** アクティブタブ更新 */
-    "update:modelValue",
-    /** タブ変更 */
-    "tab-change",
-  ],
-  setup(props, context) {
-    const computedActiveIndex = computed({
-      get: () => props.modelValue,
-      set: (value) => {
-        context.emit('update:modelValue', value);
-      },
-    });
-
-    const onTabChange = (e: { index: number }) => {
-      context.emit('update:modelValue', e.index);
-      context.emit('tab-change', e);
-    };
-
-    return {
-      computedActiveIndex,
-      onTabChange,
-    };
-  }
+const props = withDefaults(defineProps<{
+  modelValue?: number;
+  tabs?: TabItem[];
+  scrollable?: boolean;
+  inputStyle?: Record<string, string> | string;
+  inputClass?: string;
+}>(), {
+  modelValue: 0,
+  tabs: () => [],
+  scrollable: false,
+  inputStyle: "",
+  inputClass: "",
 });
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: number): void;
+  (e: 'tab-change', event: { index: number }): void;
+}>();
+
+const computedActiveIndex = computed({
+  get: () => props.modelValue,
+  set: (value) => {
+    emit('update:modelValue', value);
+  },
+});
+
+const onTabChange = (e: { index: number }) => {
+  emit('update:modelValue', e.index);
+  emit('tab-change', e);
+};
 </script>
 
 <style lang="scss" scoped>

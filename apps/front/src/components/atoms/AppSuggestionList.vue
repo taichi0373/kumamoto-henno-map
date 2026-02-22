@@ -18,9 +18,7 @@
   </ul>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
-
+<script setup lang="ts">
 interface SuggestionItem {
   id: string | number;
   name: string;
@@ -28,48 +26,28 @@ interface SuggestionItem {
   [key: string]: unknown;
 }
 
-export default defineComponent({
-  name: "AppSuggestionList",
-  props: {
-    // 提案リスト
-    suggestions: {
-      type: Array as PropType<SuggestionItem[]>,
-      required: true,
-    },
-    // アクティブなインデックス
-    activeIndex: {
-      type: Number,
-      default: -1,
-    },
-    // 追加CSSクラス
-    inputClass: {
-      type: [String, Array, Object] as PropType<string | string[] | Record<string, boolean>>,
-      default: "",
-    },
-    // 追加スタイル
-    inputStyle: {
-      type: [String, Object] as PropType<string | Record<string, string>>,
-      default: "",
-    },
-  },
-  emits: {
-    // 提案選択時
-    select: (suggestion: SuggestionItem) => true,
-  },
-  setup(props, { emit }) {
-    /**
-     * 提案アイテム選択ハンドラ
-     * @param suggestion 選択された提案アイテム
-     */
-    const onSelect = (suggestion: SuggestionItem): void => {
-      emit('select', suggestion);
-    };
-
-    return {
-      onSelect,
-    };
-  },
+withDefaults(defineProps<{
+  suggestions: SuggestionItem[];
+  activeIndex?: number;
+  inputClass?: string | string[] | Record<string, boolean>;
+  inputStyle?: string | Record<string, string>;
+}>(), {
+  activeIndex: -1,
+  inputClass: "",
+  inputStyle: "",
 });
+
+const emit = defineEmits<{
+  (e: 'select', suggestion: SuggestionItem): void;
+}>();
+
+/**
+ * 提案アイテム選択ハンドラ
+ * @param suggestion 選択された提案アイテム
+ */
+const onSelect = (suggestion: SuggestionItem): void => {
+  emit('select', suggestion);
+};
 </script>
 
 <style scoped>

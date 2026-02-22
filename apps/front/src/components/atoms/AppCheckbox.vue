@@ -11,98 +11,55 @@
   />
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import PCheckbox from 'primevue/checkbox';
-import AppFormError from '@/components/atoms/AppFormError.vue';
 
-export default defineComponent({
-  name: "AppCheckbox",
-  components: {
-    PCheckbox,
-    AppFormError,
+const props = withDefaults(defineProps<{
+  modelValue: unknown[] | string | number | boolean;
+  inputId?: string;
+  name?: string;
+  required?: boolean;
+  value?: string | number | null;
+  binary?: boolean;
+  disabled?: boolean;
+  tabindex?: number;
+}>(), {
+  inputId: undefined,
+  name: undefined,
+  required: false,
+  value: null,
+  binary: false,
+  disabled: false,
+  tabindex: 0,
+});
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: unknown): void;
+  (e: 'change'): void;
+}>();
+
+const computedModel = computed({
+  get: () => {
+    if (props.modelValue instanceof Array || (props.binary && typeof props.modelValue === 'boolean')) {
+      return props.modelValue;
+    } else {
+      return [props.modelValue];
+    }
   },
-  props: {
-    // バインド値
-    modelValue: {
-      type: [Array, String, Number, Boolean],
-      required: true,
-    },
-    // 入力ID
-    inputId: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
-    // 入力名
-    name: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
-    // 必須表示
-    required: {
-      type: Boolean,
-      default: false,
-    },
-    // チェック時の値
-    value: {
-      type: [String, Number],
-      default: null,
-    },
-    // boolean値として扱うかどうか
-    binary: {
-      type: Boolean,
-      default: false,
-    },
-    // 無効化フラグ
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    // タブインデックス
-    tabindex: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
+  set: (value) => {
+    if (value !== props.modelValue) {
+      emit('update:modelValue', value);
+    }
   },
-  emits: [
-    /** 入力時 */
-    "update:modelValue",
-    /** 変更時 */
-    "change",
-  ],
-  setup(props, context) {
-    const computedModel = computed({
-      get: () => {
-        if (props.modelValue instanceof Array || (props.binary && typeof props.modelValue === 'boolean')) {
-          return props.modelValue;
-        } else {
-          return [props.modelValue];
-        }
-      },
-      set: (value) => {
-        if (value !== props.modelValue) {
-          context.emit('update:modelValue', value);
-        }
-      },
-    });
+});
 
-    const onChange = () => {
-      context.emit('change');
-    };
+const onChange = () => {
+  emit('change');
+};
 
-    const computedTabindex = computed(() => {
-      return props.disabled ? -1 : props.tabindex;
-    });
-
-    return {
-      computedModel,
-      computedTabindex,
-      onChange,
-    };
-  }
+const computedTabindex = computed(() => {
+  return props.disabled ? -1 : props.tabindex;
 });
 </script>
 

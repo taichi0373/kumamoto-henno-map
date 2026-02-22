@@ -18,138 +18,80 @@
   />
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import AppTextField from './AppTextField.vue';
 import { StringEditUtils } from '@/utils/stringEditUtils';
 import { TypeConvertUtils } from '@/utils/typeConvertUtils';
 
-export default defineComponent({
-  name: "AppHalfWidthField",
-  components: {
-    AppTextField,
-  },
-  props: {
-    // バインド値
-    modelValue: {
-      type: String,
-      default: "",
-    },
-    // 無効化フラグ
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    // 読み取り専用フラグ
-    readonly: {
-      type: Boolean,
-      default: false,
-    },
-    // プレースホルダー
-    placeholder: {
-      type: String,
-      default: "",
-    },
-    // 入力ID
-    inputId: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
-    // 半角カナ入力フラグ
-    halfWidthKana: {
-      type: Boolean,
-      default: false,
-    },
-    // インプットのスタイル
-    inputStyle: {
-      type: [Object, String],
-      required: false,
-      default: "",
-    },
-    // インプットのクラス
-    inputClass: {
-      type: String,
-      required: false,
-      default: "",
-    },
-    // タブインデックス
-    tabindex: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-    // 最大文字数
-    maxlength: {
-      type: [String, Number],
-      required: false,
-      default: null,
-    },
-    // バリデーションルール
-    rule: {
-      type: String,
-      required: false,
-      default: null,
-    },
-    // エラー表示フラグ
-    showError: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  emits: [
-    /** 入力時 */
-    "input",
-    /** 入力時 */
-    "update:modelValue",
-    /** フォーカス時 */
-    "focus",
-    /** ブラー時 */
-    "blur",
-  ],
-  setup(props, context) {
-    const computedModel = computed({
-      get: () => props.modelValue,
-      set: (value) => {
-        if (value !== props.modelValue) {
-          context.emit('update:modelValue', value);
-        }
-      },
-    });
-
-    const format = (value: string | null) => {
-      let replaceValue = StringEditUtils.replaceFullWidthHiraganaToHalfWidthKatakana(
-        TypeConvertUtils.toStringNullToEmpty(value)
-      );
-      replaceValue = StringEditUtils.replaceFullWidthCharToHalfWidthChar(replaceValue);
-      if (props.halfWidthKana) {
-        return replaceValue.replace(/[^ -~]/g, "");
-      } else {
-        return replaceValue.replace(/[^ -~｡-ﾟ]/g, "");
-      }
-    };
-
-    const onFocus = (e: Event) => {
-      context.emit('focus', e);
-    };
-
-    const onBlur = (e: Event) => {
-      context.emit('blur', e);
-    };
-
-    const onInput = (value: string) => {
-      context.emit('update:modelValue', format(value));
-      context.emit('input', format(value));
-    };
-
-    return {
-      computedModel,
-      onFocus,
-      onBlur,
-      onInput,
-    };
-  }
+const props = withDefaults(defineProps<{
+  modelValue?: string;
+  disabled?: boolean;
+  readonly?: boolean;
+  placeholder?: string;
+  inputId?: string;
+  halfWidthKana?: boolean;
+  inputStyle?: object | string;
+  inputClass?: string;
+  tabindex?: number;
+  maxlength?: string | number | null;
+  rule?: string | null;
+  showError?: boolean;
+}>(), {
+  modelValue: "",
+  disabled: false,
+  readonly: false,
+  placeholder: "",
+  inputId: undefined,
+  halfWidthKana: false,
+  inputStyle: "",
+  inputClass: "",
+  tabindex: 0,
+  maxlength: null,
+  rule: null,
+  showError: true,
 });
+
+const emit = defineEmits<{
+  (e: 'input', value: string): void;
+  (e: 'update:modelValue', value: string): void;
+  (e: 'focus', event: Event): void;
+  (e: 'blur', event: Event): void;
+}>();
+
+const computedModel = computed({
+  get: () => props.modelValue,
+  set: (value) => {
+    if (value !== props.modelValue) {
+      emit('update:modelValue', value);
+    }
+  },
+});
+
+const format = (value: string | null) => {
+  let replaceValue = StringEditUtils.replaceFullWidthHiraganaToHalfWidthKatakana(
+    TypeConvertUtils.toStringNullToEmpty(value)
+  );
+  replaceValue = StringEditUtils.replaceFullWidthCharToHalfWidthChar(replaceValue);
+  if (props.halfWidthKana) {
+    return replaceValue.replace(/[^ -~]/g, "");
+  } else {
+    return replaceValue.replace(/[^ -~｡-ﾟ]/g, "");
+  }
+};
+
+const onFocus = (e: Event) => {
+  emit('focus', e);
+};
+
+const onBlur = (e: Event) => {
+  emit('blur', e);
+};
+
+const onInput = (value: string) => {
+  emit('update:modelValue', format(value));
+  emit('input', format(value));
+};
 </script>
 
 <style lang="scss" scoped>

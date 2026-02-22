@@ -14,73 +14,36 @@
   </Message>
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import Message from 'primevue/message';
 
-export default defineComponent({
-  name: "AppAlert",
-  components: {
-    Message,
-  },
-  props: {
-    // メッセージ
-    message: {
-      type: String,
-      required: true,
-    },
-    // 表示フラグ
-    show: {
-      type: Boolean,
-      default: true,
-    },
-    // バリアント
-    variant: {
-      type: String as PropType<'success' | 'info' | 'warn' | 'error'>,
-      default: 'info',
-    },
-    // 閉じるボタンの表示フラグ
-    closable: {
-      type: Boolean,
-      default: true,
-    },
-    // サイズ
-    size: {
-      type: String as PropType<'small' | 'medium' | 'large'>,
-      default: 'medium',
-    },
-    // インプットスタイル
-    inputStyle: {
-      type: [Object, String] as PropType<Record<string, string> | string>,
-      required: false,
-      default: "",
-    },
-    // インプットクラス
-    inputClass: {
-      type: String,
-      required: false,
-      default: "",
-    },
-  },
-  emits: [
-    /** 閉じるボタンクリック時 */
-    "close",
-  ],
-  computed: {
-    severity() {
-      return this.variant;
-    }
-  },
-  setup(props, context) {
-    const onClose = () => {
-      context.emit('close');
-    };
-
-    return {
-      onClose,
-    };
-  }
+const props = withDefaults(defineProps<{
+  message: string;
+  show?: boolean;
+  variant?: 'success' | 'info' | 'warn' | 'error';
+  closable?: boolean;
+  size?: 'small' | 'medium' | 'large';
+  inputStyle?: Record<string, string> | string;
+  inputClass?: string;
+}>(), {
+  show: true,
+  variant: 'info',
+  closable: true,
+  size: 'medium',
+  inputStyle: "",
+  inputClass: "",
 });
+
+const emit = defineEmits<{
+  (e: 'close'): void;
+}>();
+
+const severity = computed(() => props.variant);
+
+const onClose = () => {
+  emit('close');
+};
 </script>
 
 <style lang="scss" scoped>

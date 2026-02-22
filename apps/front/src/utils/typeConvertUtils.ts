@@ -80,4 +80,23 @@ export class TypeConvertUtils {
         if (isNullorUndefined || isNan) return "";
         return String(data);
     }
+
+
+    /**
+     * 対象を文字列に変換する
+     * 引数が `null` または `undefined` の場合は空文字を返す。
+     * 引数が数値の0の場合は空文字を返す。
+     * 引数が空文字の場合は空文字を返す。
+    * @param data data 文字列へ変換する対象
+    * @returns 変換した文字列
+     */
+    public static toStringNullOrZeroToEmpty(data: string | number | null | undefined): string {
+        const isNullorUndefined = data == null;
+        const isNan = Number.isNaN(data);
+        const isEmpty = data === "";
+        const isZero = data === 0 || data === "0";
+        if (isNullorUndefined || isNan || isEmpty || isZero) return "";
+        return String(data);
+    }
+
 }

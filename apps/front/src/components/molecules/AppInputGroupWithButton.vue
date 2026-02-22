@@ -31,182 +31,97 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import InputGroup from 'primevue/inputgroup';
 import AppTextField from '@/components/atoms/AppTextField.vue';
 import AppButton from '@/components/atoms/AppButton.vue';
 
-export default defineComponent({
-  name: "AppInputGroupWithButton",
-  components: {
-    AppTextField,
-    InputGroup,
-    AppButton,
-  },
-  props: {
-    // バインド値
-    modelValue: {
-      type: String as () => string | null,
-      default: "",
-    },
-    // 入力タイプ
-    type: {
-      type: String,
-      default: "text",
-    },
-    // プレースホルダー
-    placeholder: {
-      type: String,
-      default: "",
-    },
-    // エラー表示フラグ
-    showError: {
-      type: Boolean,
-      default: true,
-    },
-    // エラー情報
-    error: {
-      type: [Array, Object],
-      default: () => ({}),
-    },
-    // 無効化フラグ
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    // 読み取り専用フラグ
-    readonly: {
-      type: Boolean,
-      default: false,
-    },
-    // ID
-    inputId: {
-      type: String,
-      default: "",
-    },
-    // 入力制限文字数
-    maxlength: {
-      type: Number,
-      default: null,
-    },
-    // タブインデックス
-    tabindex: {
-      type: Number,
-      default: null,
-    },
-    // エラータイプ（1:エラー, 2:警告）
-    errorType: {
-      type: Number,
-      default: 0,
-    },
-    // インプットのクラス名
-    inputClass: {
-      type: String,
-      default: "",
-    },
-    // インプットのスタイル
-    inputStyle: {
-      type: Object,
-      default: () => ({}),
-    },
-    // 必須项目化フラグ
-    required: {
-      type: Boolean,
-      default: false,
-    },
-    // ボタンのスタイル
-    buttonPrimary: {
-      type: Boolean,
-      default: false,
-    },
-    // ボタン関連のプロパティ
-    buttonIcon: {
-      type: String,
-      required: true,
-    },
-    // ボタンのラベル
-    buttonLabel: {
-      type: String,
-      default: "",
-    },
-    // ボタンの無効化フラグ
-    buttonDisabled: {
-      type: Boolean,
-      default: false,
-    },
-    // ボタンのローディングフラグ
-    buttonLoading: {
-      type: Boolean,
-      default: false,
-    },
-    // ボタンのクラス名
-    buttonClass: {
-      type: String,
-      default: "",
-    },
-  },
-  emits: [
-    /** 入力時 */
-    "update:modelValue",
-    /** フォーカス時 */
-    "focus",
-    /** ブラー時 */
-    "blur",
-    /** 入力イベント */
-    "input",
-    /** キーダウンイベント */
-    "keydown",
-    /** ボタンクリック時 */
-    "button-click",
-  ],
-  setup(props, { emit }) {
-    // computed
-    const computedModel = computed({
-      get: () => props.modelValue,
-      set: (value: string | null) => emit('update:modelValue', value)
-    });
+const props = withDefaults(defineProps<{
+  modelValue?: string | null;
+  type?: string;
+  placeholder?: string;
+  showError?: boolean;
+  error?: unknown[] | Record<string, unknown>;
+  disabled?: boolean;
+  readonly?: boolean;
+  inputId?: string;
+  maxlength?: number | null;
+  tabindex?: number | null;
+  errorType?: number;
+  inputClass?: string;
+  inputStyle?: Record<string, unknown>;
+  required?: boolean;
+  buttonPrimary?: boolean;
+  buttonIcon: string;
+  buttonLabel?: string;
+  buttonDisabled?: boolean;
+  buttonLoading?: boolean;
+  buttonClass?: string;
+}>(), {
+  modelValue: "",
+  type: "text",
+  placeholder: "",
+  showError: true,
+  error: () => ({}),
+  disabled: false,
+  readonly: false,
+  inputId: "",
+  maxlength: null,
+  tabindex: null,
+  errorType: 0,
+  inputClass: "",
+  inputStyle: () => ({}),
+  required: false,
+  buttonPrimary: false,
+  buttonLabel: "",
+  buttonDisabled: false,
+  buttonLoading: false,
+  buttonClass: "",
+});
 
-    /** フォーカス時の処理 */
-    const onFocus = (e: any) => {
-      emit('focus', e);
-    };
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | null): void;
+  (e: 'focus', event: unknown): void;
+  (e: 'blur', event: unknown): void;
+  (e: 'input', event: unknown): void;
+  (e: 'keydown', event: unknown): void;
+  (e: 'button-click', event: unknown): void;
+}>();
 
-    /** ブラー時の処理 */
-    const onBlur = (e: any) => {
-      emit('blur', e);
-    };
+const computedModel = computed({
+  get: () => props.modelValue,
+  set: (value: string | null) => emit('update:modelValue', value)
+});
 
-    /** 入力イベントの処理 */
-    const onInput = (e: any) => {
-      emit('input', e);
-    };
+/** フォーカス時の処理 */
+const onFocus = (e: any) => {
+  emit('focus', e);
+};
 
-    /** キーダウンイベントの処理 */
-    const onKeydown = (e: any) => {
-      emit('keydown', e);
-    };
+/** ブラー時の処理 */
+const onBlur = (e: any) => {
+  emit('blur', e);
+};
 
-    /** ボタンクリック時の処理 */
-    const onButtonClick = (e: any) => {
-      emit('button-click', e);
-    };
+/** 入力イベントの処理 */
+const onInput = (e: any) => {
+  emit('input', e);
+};
 
-    /** タブインデックス */
-    const computedTabindex = computed(() => {
-      return props.disabled ? -1 : props.tabindex;
-    });
+/** キーダウンイベントの処理 */
+const onKeydown = (e: any) => {
+  emit('keydown', e);
+};
 
-    return {
-      computedModel,
-      computedTabindex,
-      onFocus,
-      onBlur,
-      onInput,
-      onKeydown,
-      onButtonClick,
-    };
-  },
+/** ボタンクリック時の処理 */
+const onButtonClick = (e: any) => {
+  emit('button-click', e);
+};
+
+/** タブインデックス */
+const computedTabindex = computed(() => {
+  return props.disabled ? -1 : props.tabindex;
 });
 </script>
 

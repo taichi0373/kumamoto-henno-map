@@ -11,80 +11,43 @@
   />
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, reactive } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import PButton from 'primevue/button';
 
-export default defineComponent({
-  name: "AppButton",
-  components: {
-    PButton,
-  },
-  props: {
-    // アイコン
-    icon: {
-      type: String,
-      default: "",
-    },
-    // ラベル
-    label: {
-      type: String,
-      required: true,
-    },
-    // プライマリー表示フラグ
-    primary: {
-      type: Boolean,
-      default: false,
-    },
-    // 無効化フラグ
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    // 省略表示フラグ
-    ellipsis: {
-      type: Boolean,
-      default: false,
-    },
-    // ローディングフラグ
-    loading: {
-      type: Boolean,
-      default: false,
-    },
-    // タブインデックス
-    tabindex: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-  },
-  emits: [
-    /** クリック時 */
-    "click",
-  ],
-  setup(props, context) {
-    props = reactive(props);
-
-    const modelValue = computed(() => {
-      if (props.ellipsis) return `${props.label}...`;
-      return props.label;
-    });
-
-    const classes = computed(() => ({
-      "p-app-button-primary": props.primary,
-    }));
-
-    const onClick = () => {
-      context.emit('click');
-    };
-
-    return {
-      modelValue,
-      classes,
-      onClick,
-    };
-  }
+const props = withDefaults(defineProps<{
+  icon?: string;
+  label: string;
+  primary?: boolean;
+  disabled?: boolean;
+  ellipsis?: boolean;
+  loading?: boolean;
+  tabindex?: number;
+}>(), {
+  icon: "",
+  primary: false,
+  disabled: false,
+  ellipsis: false,
+  loading: false,
+  tabindex: 0,
 });
+
+const emit = defineEmits<{
+  (e: 'click'): void;
+}>();
+
+const modelValue = computed(() => {
+  if (props.ellipsis) return `${props.label}...`;
+  return props.label;
+});
+
+const classes = computed(() => ({
+  "p-app-button-primary": props.primary,
+}));
+
+const onClick = () => {
+  emit('click');
+};
 </script>
 
 <style lang="scss" scoped>

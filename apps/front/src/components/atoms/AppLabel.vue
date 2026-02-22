@@ -5,38 +5,23 @@
   </label>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-
-export default defineComponent({
-  name: "AppLabel",
-  props: {
-    // リンクされる入力フィールドのID
-    id: {
-      type: String,
-      default: "",
-    },
-    // 必須項目かどうか
-    required: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  emits: [
-    /** クリック時 */
-    "click",
-  ],
-  setup(props, context) {
-    /** クリック時 */
-    const onClick = () => {
-      context.emit("click");
-    };
-
-    return {
-      onClick,
-    };
-  },
+<script setup lang="ts">
+withDefaults(defineProps<{
+  id?: string;
+  required?: boolean;
+}>(), {
+  id: "",
+  required: false,
 });
+
+const emit = defineEmits<{
+  (e: 'click'): void;
+}>();
+
+/** クリック時 */
+const onClick = () => {
+  emit("click");
+};
 </script>
 
 <style lang="scss" scoped>

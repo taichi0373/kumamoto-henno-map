@@ -9,7 +9,7 @@
     :style="dialogStyle"
     class="app-dialog"
     :class="dialogClass"
-    @show="onShow"
+    @show="emit('show')"
     @hide="onHide"
   >
     <slot />
@@ -19,97 +19,60 @@
   </Dialog>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, PropType } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import Dialog from 'primevue/dialog';
 
-export default defineComponent({
-  name: "AppDialog",
-  components: {
-    Dialog,
-  },
-  props: {
-    // 表示フラグ
-    modelValue: {
-      type: Boolean,
-      default: false,
-    },
-    // ヘッダー
-    header: {
-      type: String,
-      default: "",
-    },
-    // モーダル
-    modal: {
-      type: Boolean,
-      default: true,
-    },
-    // 閉じるボタン
-    closable: {
-      type: Boolean,
-      default: true,
-    },
-    // ドラッグ可
-    draggable: {
-      type: Boolean,
-      default: false,
-    },
-    // マスククリックで閉じる
-    dismissableMask: {
-      type: Boolean,
-      default: false,
-    },
-    // スタイル
-    dialogStyle: {
-      type: [Object, String] as PropType<Record<string, string> | string>,
-      required: false,
-      default: "",
-    },
-    // クラス
-    dialogClass: {
-      type: String,
-      default: "",
-    },
-  },
-  emits: [
-    /** 変更時 */
-    "update:modelValue",
-    /** 表示時 */
-    "show",
-    /** 非表示時 */
-    "hide",
-    /** 閉じる時 */
-    "close",
-  ],
-  setup(props, context) {
-    const computedVisible = computed({
-      get: () => props.modelValue,
-      set: (value) => {
-        context.emit('update:modelValue', value);
-      },
-    });
-
-    const onShow = () => {
-      context.emit('show');
-    };
-
-    const onHide = () => {
-      context.emit('update:modelValue', false);
-      context.emit('hide');
-      context.emit('close');
-    };
-
-    return {
-      computedVisible,
-      onShow,
-      onHide,
-    };
-  }
+const props = withDefaults(defineProps<{
+  /** 表示フラグ */
+  modelValue?: boolean;
+  /** ヘッダー */
+  header?: string;
+  /** モーダル */
+  modal?: boolean;
+  /** 閉じるボタン */
+  closable?: boolean;
+  /** ドラッグ可 */
+  draggable?: boolean;
+  /** マスククリックで閉じる */
+  dismissableMask?: boolean;
+  /** スタイル */
+  dialogStyle?: Record<string, string> | string;
+  /** クラス */
+  dialogClass?: string;
+}>(), {
+  modelValue: false,
+  header: '',
+  modal: true,
+  closable: true,
+  draggable: false,
+  dismissableMask: false,
+  dialogStyle: '',
+  dialogClass: '',
 });
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: boolean): void;
+  (e: 'show'): void;
+  (e: 'hide'): void;
+  (e: 'close'): void;
+}>();
+
+const computedVisible = computed({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value),
+});
+
+const onHide = () => {
+  emit('update:modelValue', false);
+  emit('hide');
+  emit('close');
+};
 </script>
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
+
 .app-dialog :deep(.p-dialog) {
   border-radius: 12px;
 }

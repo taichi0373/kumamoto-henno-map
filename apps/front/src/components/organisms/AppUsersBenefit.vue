@@ -148,9 +148,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, ref, PropType } from 'vue';
-import { useRouter } from 'vue-router';
+<script setup lang="ts">
+import { computed, ref } from 'vue';
 import AppButton from '../atoms/AppButton.vue';
 import AppLabel from '../atoms/AppLabel.vue';
 import AppSelect from '../atoms/AppSelect.vue';
@@ -172,104 +171,79 @@ interface UserBenefit {
   conditions?: string[];
 }
 
-export default defineComponent({
-  name: "AppUsersBenefit",
-  components: {
-    AppButton,
-    AppLabel,
-    AppSelect,
-  },
-  props: {
-    userBenefits: {
-      type: Array as PropType<UserBenefit[]>,
-      default: () => []
-    },
-    loading: {
-      type: Boolean,
-      default: false
-    }
-  },
-  setup(props) {
-    const router = useRouter();
-    const selectedCategory = ref('');
-    const sortOrder = ref('name');
-
-    const categoryOptions = computed(() => {
-      if (!props.userBenefits) return [];
-      const categories = [...new Set(props.userBenefits.map(b => b.category))];
-      return [
-        { label: 'すべて', value: '' },
-        ...categories.map(cat => ({ label: cat, value: cat }))
-      ];
-    });
-
-    const sortOptions = [
-      { label: '名前順', value: 'name' },
-      { label: 'カテゴリー順', value: 'category' },
-      { label: '有効期限順', value: 'validPeriod' }
-    ];
-
-    const filteredBenefits = computed(() => {
-      if (!props.userBenefits) return [];
-      
-      let benefits = [...props.userBenefits];
-      
-      // フィルター
-      if (selectedCategory.value) {
-        benefits = benefits.filter(b => b.category === selectedCategory.value);
-      }
-      
-      // ソート
-      benefits.sort((a, b) => {
-        switch (sortOrder.value) {
-          case 'category':
-            return a.category.localeCompare(b.category);
-          case 'validPeriod':
-            if (!a.validPeriod) return 1;
-            if (!b.validPeriod) return -1;
-            return new Date(a.validPeriod).getTime() - new Date(b.validPeriod).getTime();
-          default:
-            return a.name.localeCompare(b.name);
-        }
-      });
-      
-      return benefits;
-    });
-
-    const formatDate = (dateString: string) => {
-      try {
-        return new Intl.DateTimeFormat('ja-JP').format(new Date(dateString));
-      } catch {
-        return dateString;
-      }
-    };
-
-    const openWebsite = (url: string) => {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    };
-
-    const showOnMap = (benefit: UserBenefit) => {
-      // 地図にマーカーを表示し、その場所にズーム
-      // この実装は親コンポーネントのマップ制御ロジックに依存
-      const event = new CustomEvent('show-benefit-on-map', {
-        detail: benefit
-      });
-      window.dispatchEvent(event);
-    };
-
-    return {
-      selectedCategory,
-      sortOrder,
-      categoryOptions,
-      sortOptions,
-      filteredBenefits,
-      formatDate,
-      openWebsite,
-      showOnMap,
-      router,
-    };
-  }
+const props = withDefaults(defineProps<{
+  userBenefits?: UserBenefit[];
+  loading?: boolean;
+}>(), {
+  userBenefits: () => [],
+  loading: false,
 });
+
+const selectedCategory = ref('');
+const sortOrder = ref('name');
+
+const categoryOptions = computed(() => {
+  if (!props.userBenefits) return [];
+  const categories = [...new Set(props.userBenefits.map(b => b.category))];
+  return [
+    { label: 'すべて', value: '' },
+    ...categories.map(cat => ({ label: cat, value: cat }))
+  ];
+});
+
+const sortOptions = [
+  { label: '名前順', value: 'name' },
+  { label: 'カテゴリー順', value: 'category' },
+  { label: '有効期限順', value: 'validPeriod' }
+];
+
+const filteredBenefits = computed(() => {
+  if (!props.userBenefits) return [];
+
+  let benefits = [...props.userBenefits];
+
+  // フィルター
+  if (selectedCategory.value) {
+    benefits = benefits.filter(b => b.category === selectedCategory.value);
+  }
+
+  // ソート
+  benefits.sort((a, b) => {
+    switch (sortOrder.value) {
+      case 'category':
+        return a.category.localeCompare(b.category);
+      case 'validPeriod':
+        if (!a.validPeriod) return 1;
+        if (!b.validPeriod) return -1;
+        return new Date(a.validPeriod).getTime() - new Date(b.validPeriod).getTime();
+      default:
+        return a.name.localeCompare(b.name);
+    }
+  });
+
+  return benefits;
+});
+
+const formatDate = (dateString: string) => {
+  try {
+    return new Intl.DateTimeFormat('ja-JP').format(new Date(dateString));
+  } catch {
+    return dateString;
+  }
+};
+
+const openWebsite = (url: string) => {
+  window.open(url, '_blank', 'noopener,noreferrer');
+};
+
+const showOnMap = (benefit: UserBenefit) => {
+  // 地図にマーカーを表示し、その場所にズーム
+  // この実装は親コンポーネントのマップ制御ロジックに依存
+  const event = new CustomEvent('show-benefit-on-map', {
+    detail: benefit
+  });
+  window.dispatchEvent(event);
+};
 </script>
 
 <style scoped lang="scss">

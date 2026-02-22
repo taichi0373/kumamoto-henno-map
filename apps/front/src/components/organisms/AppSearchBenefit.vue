@@ -141,7 +141,7 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppHalfWidthField from '@/components/atoms/AppHalfWidthField.vue'
@@ -150,19 +150,11 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 
-export default {
-  name: 'SearchBenefit',
-  components: {
-    AppLabel,
-    AppHalfWidthField,
-    AppSelect,
-    AppButton,
-    AppAlert,
-    AppLink
-  },
-  emits: ['show-benefit-on-map'],
-  setup(props, { emit }) {
-    const hasSearched = ref(false)
+const emit = defineEmits<{
+  (e: 'show-benefit-on-map', benefit: unknown): void;
+}>();
+
+const hasSearched = ref(false)
     const isLoading = ref(false)
     const searchResults = ref([])
     
@@ -334,20 +326,7 @@ export default {
       saveToSession()
     })
 
-    return {
-      hasSearched,
-      isLoading,
-      searchResults,
-      searchConditions,
-      addressOptions,
-      licenseStatusOptions,
-      performSearch,
-      clearConditions,
-      getLicenseStatusText,
-      showOnMap
-    }
-  }
-}
+
 </script>
 
 <style scoped lang="scss">

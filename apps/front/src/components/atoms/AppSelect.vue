@@ -23,8 +23,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, computed, PropType } from 'vue';
+<script setup lang="ts">
+import { computed } from 'vue';
 import Dropdown from 'primevue/dropdown';
 import type { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 import AppFormError from '@/components/atoms/AppFormError.vue';
@@ -36,164 +36,94 @@ interface SelectOption {
   [key: string]: unknown;
 }
 
-export default defineComponent({
-  name: "AppSelect",
-  components: {
-    Dropdown,
-    AppFormError,
+const props = withDefaults(defineProps<{
+  modelValue?: string | number | Record<string, unknown> | null;
+  options?: SelectOption[];
+  optionLabel?: string;
+  optionValue?: string;
+  placeholder?: string;
+  filter?: boolean;
+  showClear?: boolean;
+  error?: InputFormErrorDto | InputFormErrorDto[];
+  showError?: boolean;
+  inputId?: string;
+  readonly?: boolean;
+  disabled?: boolean;
+  inputStyle?: Record<string, string> | string;
+  inputClass?: string;
+  tabindex?: number;
+}>(), {
+  modelValue: null,
+  options: () => [],
+  optionLabel: "label",
+  optionValue: "value",
+  placeholder: "",
+  filter: false,
+  showClear: false,
+  error: () => [],
+  showError: true,
+  inputId: undefined,
+  readonly: false,
+  disabled: false,
+  inputStyle: "",
+  inputClass: "",
+  tabindex: 0,
+});
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | number | Record<string, unknown> | null): void;
+  (e: 'focus', event: unknown): void;
+  (e: 'blur', event: unknown): void;
+  (e: 'change', event: unknown): void;
+}>();
+
+const computedModel = computed({
+  get: () => props.modelValue,
+  set: (value) => {
+    if (value !== props.modelValue) {
+      emit('update:modelValue', value);
+    }
   },
-  props: {
-    // バインド値
-    modelValue: {
-      type: [String, Number, Object] as PropType<string | number | Record<string, unknown> | null>,
-      default: null,
-    },
-    // オプション
-    options: {
-      type: Array as PropType<SelectOption[]>,
-      default: () => [],
-    },
-    // 表示ラベルキー
-    optionLabel: {
-      type: String,
-      default: "label",
-    },
-    // 値キー
-    optionValue: {
-      type: String,
-      default: "value",
-    },
-    // プレースホルダー
-    placeholder: {
-      type: String,
-      default: "",
-    },
-    // フィルタ表示
-    filter: {
-      type: Boolean,
-      default: false,
-    },
-    // クリアボタン
-    showClear: {
-      type: Boolean,
-      default: false,
-    },
-    // エラー情報
-    error: {
-      type: [Array, Object],
-      default: () => [],
-    },
-    // エラー表示フラグ
-    showError: {
-      type: Boolean,
-      default: true,
-    },
-    // 入力ID
-    inputId: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
-    // 読み取り専用フラグ
-    readonly: {
-      type: Boolean,
-      default: false,
-    },
-    // 無効化フラグ
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    // インプットのスタイル
-    inputStyle: {
-      type: [Object, String] as PropType<Record<string, string> | string>,
-      required: false,
-      default: "",
-    },
-    // インプットのクラス
-    inputClass: {
-      type: String,
-      required: false,
-      default: "",
-    },
-    // タブインデックス
-    tabindex: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-  },
-  emits: [
-    /** 入力時 */
-    "update:modelValue",
-    /** フォーカス時 */
-    "focus",
-    /** ブラー時 */
-    "blur",
-    /** 変更時 */
-    "change",
-  ],
-  setup(props, context) {
-    const computedModel = computed({
-      get: () => props.modelValue,
-      set: (value) => {
-        if (value !== props.modelValue) {
-          context.emit('update:modelValue', value);
-        }
-      },
-    });
+});
 
+/** フォーカス時の処理 */
+const onFocus = (e: any) => {
+  emit('focus', e);
+};
 
-    /** フォーカス時の処理 */
-    const onFocus = (e: any) => {
-      context.emit('focus', e);
-    };
+/** ブラー時の処理 */
+const onBlur = (e: any) => {
+  emit('blur', e);
+};
 
-    /** ブラー時の処理 */
-    const onBlur = (e: any) => {
-      context.emit('blur', e);
-    };
+/** 変更時の処理 */
+const onChange = (e: unknown) => {
+  emit('change', e);
+};
 
-    /** 変更時の処理 */
-    const onChange = (e: unknown) => {
-      context.emit('change', e);
-    };
+/** エラー情報 */
+const errors = computed(() => {
+  return props.error instanceof Array ? props.error : [props.error];
+}) as any;
 
-    /** エラー情報 */
-    const errors = computed(() => {
-      return props.error instanceof Array ? props.error : [props.error];
-    }) as any;
-
-    /** エラータイプ */
-    const errorType = computed(() => {
-      let type = Number.MAX_VALUE;
-      if (props.error instanceof Array) {
-        props.error.forEach((err) => {
-          const errorType = (err as InputFormErrorDto).type;
-          if (errorType != 0) {
-            type = Math.min(type, errorType);
-          }
-        });
-      } else {
-        type = props.error.type;
+/** エラータイプ */
+const errorType = computed(() => {
+  let type = Number.MAX_VALUE;
+  if (props.error instanceof Array) {
+    props.error.forEach((err) => {
+      const errorType = (err as InputFormErrorDto).type;
+      if (errorType != 0) {
+        type = Math.min(type, errorType);
       }
-      return type;
     });
-
-    const computedTabindex = computed(() => {
-      return props.disabled ? -1 : props.tabindex;
-    });
-
-    return {
-      errors,
-      errorType,
-      computedModel,
-      computedTabindex,
-      onFocus,
-      onBlur,
-      onChange,
-    };
+  } else {
+    type = (props.error as InputFormErrorDto).type;
   }
+  return type;
+});
+
+const computedTabindex = computed(() => {
+  return props.disabled ? -1 : props.tabindex;
 });
 </script>
 

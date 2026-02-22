@@ -4,33 +4,20 @@
   </pButton>
 </template>
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-
-export default defineComponent({
-  name: "AppLink",
-  props: {
-    /** タブインデックス */
-    tabindex: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-  },
-  emits: [
-    /** クリック時 */
-    "click",
-  ],
-  setup(props, context) {
-    const onClick = (e: Event) => {
-      context.emit('click', e);
-    };
-
-    return {
-      onClick,
-    };
-  }
+<script setup lang="ts">
+withDefaults(defineProps<{
+  tabindex?: number;
+}>(), {
+  tabindex: 0,
 });
+
+const emit = defineEmits<{
+  (e: 'click', event: Event): void;
+}>();
+
+const onClick = (e: Event) => {
+  emit('click', e);
+};
 </script>
 
 <style lang="scss" scoped>

@@ -14,84 +14,42 @@
   />
 </template>
 
-<script lang="ts">
-import { defineComponent, PropType } from 'vue';
+<script setup lang="ts">
 import Paginator from 'primevue/paginator';
 
-export default defineComponent({
-  name: "AppPaginator",
-  components: {
-    Paginator,
-  },
-  props: {
-    // 先頭位置
-    first: {
-      type: Number,
-      default: 0,
-    },
-    // 1ページ件数
-    rows: {
-      type: Number,
-      default: 10,
-    },
-    // 全件数
-    totalRecords: {
-      type: Number,
-      default: 0,
-    },
-    // ページサイズ候補
-    rowsPerPageOptions: {
-      type: Array as PropType<number[]>,
-      default: () => [10, 20, 50],
-    },
-    // テンプレート
-    template: {
-      type: String,
-      default: 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown',
-    },
-    // 現在ページ表示
-    showCurrentPageReport: {
-      type: Boolean,
-      default: false,
-    },
-    // 現在ページ表示テンプレート
-    currentPageReportTemplate: {
-      type: String,
-      default: '{first} - {last} / {totalRecords}',
-    },
-    // スタイル
-    inputStyle: {
-      type: [Object, String] as PropType<Record<string, string> | string>,
-      required: false,
-      default: "",
-    },
-    // クラス
-    inputClass: {
-      type: String,
-      required: false,
-      default: "",
-    },
-  },
-  emits: [
-    /** 先頭位置更新 */
-    "update:first",
-    /** 1ページ件数更新 */
-    "update:rows",
-    /** ページイベント */
-    "page",
-  ],
-  setup(props, context) {
-    const onPage = (e: { first: number; rows: number }) => {
-      context.emit('update:first', e.first);
-      context.emit('update:rows', e.rows);
-      context.emit('page', e);
-    };
-
-    return {
-      onPage,
-    };
-  }
+withDefaults(defineProps<{
+  first?: number;
+  rows?: number;
+  totalRecords?: number;
+  rowsPerPageOptions?: number[];
+  template?: string;
+  showCurrentPageReport?: boolean;
+  currentPageReportTemplate?: string;
+  inputStyle?: Record<string, string> | string;
+  inputClass?: string;
+}>(), {
+  first: 0,
+  rows: 10,
+  totalRecords: 0,
+  rowsPerPageOptions: () => [10, 20, 50],
+  template: 'PrevPageLink PageLinks NextPageLink RowsPerPageDropdown',
+  showCurrentPageReport: false,
+  currentPageReportTemplate: '{first} - {last} / {totalRecords}',
+  inputStyle: "",
+  inputClass: "",
 });
+
+const emit = defineEmits<{
+  (e: 'update:first', value: number): void;
+  (e: 'update:rows', value: number): void;
+  (e: 'page', value: { first: number; rows: number }): void;
+}>();
+
+const onPage = (e: { first: number; rows: number }) => {
+  emit('update:first', e.first);
+  emit('update:rows', e.rows);
+  emit('page', e);
+};
 </script>
 
 <style lang="scss" scoped>
