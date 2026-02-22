@@ -1,5 +1,6 @@
 import maplibregl from 'maplibre-gl'
-import type { Map, NavigationControl, GeolocateControl } from 'maplibre-gl'
+import type { Map, NavigationControl, GeolocateControl, LngLatBoundsLike, Marker } from 'maplibre-gl'
+import type { PlaceMarkerFunction, ClearMarkerFunction, ReverseGeocodingFunction } from './markerTypes'
 
 // 型定義
 export interface MapConfig {
@@ -15,15 +16,15 @@ export interface MapConfig {
 
 export interface MapClickOptions {
   onMapClick?: (e: maplibregl.MapMouseEvent, lat: number, lon: number) => void
-  ReverseGeocoding?: (lat: number, lon: number) => Promise<{ name: string } | null>
+  ReverseGeocoding?: ReverseGeocodingFunction
   isWaitingForInput_S?: boolean
   isWaitingForInput_E?: boolean
   start_location?: { value: string }
   end_location?: { value: string }
-  placeMarker?: (lat: number, lon: number, name: string, type: string) => void
-  startMarker?: any
-  endMarker?: any
-  clearMarker?: (type: string) => void
+  placeMarker?: PlaceMarkerFunction
+  startMarker?: Marker
+  endMarker?: Marker
+  clearMarker?: ClearMarkerFunction
   clearRoutes?: () => void
   searchRouteEvent?: () => void
 }
@@ -41,7 +42,7 @@ export const DEFAULT_MAP_CONFIG: MapConfig = {
 }
 
 // 熊本県の境界
-const KUMAMOTO_BOUNDS = [
+const KUMAMOTO_BOUNDS: LngLatBoundsLike = [
   [128.523336, 30.896306],
   [132.3318, 34.0596]
 ]
@@ -97,7 +98,7 @@ export const setupMapControls = (map: Map): void => {
   }
 
   // 熊本県の境界を設定
-  map.setMaxBounds(KUMAMOTO_BOUNDS as any)
+  map.setMaxBounds(KUMAMOTO_BOUNDS)
 }
 
 // 地図クリックイベント設定関数

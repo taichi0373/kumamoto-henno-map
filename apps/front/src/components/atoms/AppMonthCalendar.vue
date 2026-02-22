@@ -78,9 +78,9 @@ const onBlur = (e: DatePickerBlurEvent) => {
   emit('blur', e);
 };
 
-const errors = computed(() => {
+const errors = computed<InputFormErrorDto[]>(() => {
   return props.error instanceof Array ? props.error : [props.error];
-}) as any;
+});
 
 const errorType = computed(() => {
   let type = Number.MAX_VALUE;

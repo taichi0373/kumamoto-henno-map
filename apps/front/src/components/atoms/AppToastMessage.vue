@@ -7,7 +7,7 @@
 import { onMounted } from 'vue';
 import Toast from 'primevue/toast';
 import ToastMessageUtils from '@/utils/toastMessageUtils';
-import { useToast } from 'primevue';
+import { useToast } from 'primevue/usetoast';
 
 onMounted(() => {
   const toast = useToast();
@@ -18,27 +18,27 @@ onMounted(() => {
 @use "@/assets/scss/base";
 
 .app-modeless-toast-message-content-class {
-    .p-toast-message.ptoast-message-info {
+    :deep(.p-toast-message.p-toast-message-info) {
         background-color: base.$base-100;
         color: base.$base-700;
         border: initial;
     }
-    .p-toast-message.ptoast-message-success {
+    :deep(.p-toast-message.p-toast-message-success) {
         background-color: base.$success-200;
         color: base.$success-100;
         border: initial;
     }
-    .p-toast-message.ptoast-message-error {
+    :deep(.p-toast-message.p-toast-message-error) {
         background-color: base.$error-200;
         color: base.$error-100;
         border: initial;
     }
-    .p-toast-message.ptoast-message-warn {
+    :deep(.p-toast-message.p-toast-message-warn) {
         background-color: base.$warning-200;
         color: base.$warning-100;
         border: initial;
     }
-    .p-toast-message > .p-toast-message-content {
+    :deep(.p-toast-message > .p-toast-message-content) {
         .p-toast-message-icon.pi.pi-check {
             color: base.$success-100;
             height: 24px;

@@ -11,7 +11,7 @@
         :readonly="readonly"
         :class="inputClass"
         :style="inputStyle"
-        :tabindex="tabindex"
+        :tabindex="tabindex ?? undefined"
         :show-error="showError"
         :error="error"
         @focus="onFocus"
@@ -25,7 +25,7 @@
         :icon="buttonIcon"
         :disabled="buttonDisabled"
         :tabindex="computedTabindex"
-        @click="onButtonClick"
+        @click="() => onButtonClick"
       />
     </InputGroup>
   </div>
@@ -36,13 +36,14 @@ import { computed } from 'vue';
 import InputGroup from 'primevue/inputgroup';
 import AppTextField from '@/components/atoms/AppTextField.vue';
 import AppButton from '@/components/atoms/AppButton.vue';
+import type { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 
 const props = withDefaults(defineProps<{
   modelValue?: string | null;
   type?: string;
   placeholder?: string;
   showError?: boolean;
-  error?: unknown[] | Record<string, unknown>;
+  error?: InputFormErrorDto | InputFormErrorDto[];
   disabled?: boolean;
   readonly?: boolean;
   inputId?: string;
@@ -63,7 +64,7 @@ const props = withDefaults(defineProps<{
   type: "text",
   placeholder: "",
   showError: true,
-  error: () => ({}),
+  error: () => [],
   disabled: false,
   readonly: false,
   inputId: "",
@@ -82,11 +83,11 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string | null): void;
-  (e: 'focus', event: unknown): void;
-  (e: 'blur', event: unknown): void;
-  (e: 'input', event: unknown): void;
-  (e: 'keydown', event: unknown): void;
-  (e: 'button-click', event: unknown): void;
+  (e: 'focus', event: Event): void;
+  (e: 'blur', event: Event): void;
+  (e: 'input', event: Event): void;
+  (e: 'keydown', event: KeyboardEvent): void;
+  (e: 'button-click', event: MouseEvent): void;
 }>();
 
 const computedModel = computed({
@@ -95,33 +96,36 @@ const computedModel = computed({
 });
 
 /** フォーカス時の処理 */
-const onFocus = (e: any) => {
+const onFocus = (e: Event) => {
   emit('focus', e);
 };
 
 /** ブラー時の処理 */
-const onBlur = (e: any) => {
+const onBlur = (e: Event) => {
   emit('blur', e);
 };
 
 /** 入力イベントの処理 */
-const onInput = (e: any) => {
+const onInput = (e: unknown) => {
   emit('input', e);
 };
 
 /** キーダウンイベントの処理 */
-const onKeydown = (e: any) => {
+const onKeydown = (e: KeyboardEvent) => {
   emit('keydown', e);
 };
 
 /** ボタンクリック時の処理 */
-const onButtonClick = (e: any) => {
+const onButtonClick = (e: MouseEvent) => {
   emit('button-click', e);
 };
 
 /** タブインデックス */
 const computedTabindex = computed(() => {
-  return props.disabled ? -1 : props.tabindex;
+  if (props.disabled) {
+    return -1;
+  }
+  return props.tabindex ?? undefined;
 });
 </script>
 

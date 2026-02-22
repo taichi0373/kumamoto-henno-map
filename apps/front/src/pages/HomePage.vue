@@ -64,7 +64,26 @@ import AppIconButton from '@/components/atoms/AppIconButton.vue'
 import { useMap } from '@/utils/useMap'
 import { AuthUtils } from '@/utils/auth'
 import apiClient from '@/utils/api'
-import { createRouteMarker } from '@/utils/markerConfig'
+import { createRouteMarker, type Store, type RouteMarkerType } from '@/utils/markerConfig'
+import type { AxiosError } from 'axios'
+
+/** ユーザー特典DTO */
+interface UserBenefit {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  discountRate?: number;
+  discountAmount?: number;
+  validPeriod?: string;
+  storeName: string;
+  storeAddress?: string;
+  storePhone?: string;
+  websiteUrl?: string;
+  lat?: number;
+  lon?: number;
+  conditions?: string[];
+}
 
 /** ルーター */
 const router = useRouter()
@@ -74,7 +93,7 @@ const sidebarCollapsed = ref(false)
 const activeTab = ref('route-guidance')
 const storeMarkersVisible = ref(false)
 const isLoggedIn = ref(false)
-const userBenefits = ref<any[]>([])
+const userBenefits = ref<UserBenefit[]>([])
 const tabs = ref([
   { id: 'route-guidance', label: 'ルート案内' },
   { id: 'users-benefit', label: '利用できる特典' },
@@ -82,7 +101,7 @@ const tabs = ref([
 ])
 
 const userBenefitsLoading = ref(false)
-const supportStores = ref<any[]>([])
+const supportStores = ref<Store[]>([])
 const storesLoading = ref(false)
 const mapSelectMode = ref<string | null>(null)
 
@@ -146,9 +165,9 @@ const fetchUserBenefits = async () => {
       console.warn('特典データの取得に失敗しました:', response.data.message)
       userBenefits.value = []
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('特典データの取得中にエラーが発生しました:', error)
-    if (error.response?.status === 401) {
+    if ((error as AxiosError).response?.status === 401) {
       AuthUtils.logout()
       isLoggedIn.value = false
       userBenefits.value = []
@@ -242,7 +261,7 @@ const handleMapSelectCancel = () => {
 const handleSetMarker = ({ type, lat, lon }: { type: string; lat: number; lon: number; address: string }) => {
   if (!mapInstance.value) return
   markerManager.value.removeMarker(`route-${type}`)
-  const marker = createRouteMarker(lat, lon, type as any)
+  const marker = createRouteMarker(lat, lon, type as RouteMarkerType)
   markerManager.value.addMarker(`route-${type}`, marker, mapInstance.value)
   mapInstance.value.flyTo({ center: [lon, lat], zoom: 16 })
 }

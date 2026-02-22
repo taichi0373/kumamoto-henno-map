@@ -73,19 +73,19 @@ const computedModel = computed({
 });
 
 /** フォーカス時の処理 */
-const onFocus = (e: any) => {
+const onFocus = (e: Event) => {
   emit('focus', e);
 };
 
 /** ブラー時の処理 */
-const onBlur = (e: any) => {
+const onBlur = (e: Event) => {
   emit('blur', e);
 };
 
 /** エラー情報 */
-const errors = computed(() => {
+const errors = computed<InputFormErrorDto[]>(() => {
   return props.error instanceof Array ? props.error : [props.error];
-}) as any;
+});
 
 /** エラータイプ */
 const errorType = computed(() => {

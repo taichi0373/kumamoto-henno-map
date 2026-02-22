@@ -76,9 +76,9 @@ const onBlur = (e: Event) => {
 };
 
 /** エラー情報 */
-const errors = computed(() => {
+const errors = computed<InputFormErrorDto[]>(() => {
   return props.error instanceof Array ? props.error : [props.error];
-}) as any;
+});
 
 /** エラータイプ */
 const errorType = computed(() => {
