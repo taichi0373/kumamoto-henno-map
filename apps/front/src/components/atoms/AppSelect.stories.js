@@ -2,10 +2,10 @@ import AppSelect from './AppSelect.vue';
 import { ref } from 'vue';
 
 const options = [
-  { label: '熊本市', value: 'kumamoto' },
-  { label: '八代市', value: 'yatsushiro' },
-  { label: '天草市', value: 'amakusa' },
-  { label: '人吉市', value: 'hitoyoshi' },
+  { label: '熊本市', value: 'kumamoto', text: 'くまもとし' },
+  { label: '八代市', value: 'yatsushiro', text: 'やつしろし' },
+  { label: '天草市', value: 'amakusa', text: 'あまくさし' },
+  { label: '人吉市', value: 'hitoyoshi', text: 'ひとよしし' },
 ];
 
 export default {

@@ -1,7 +1,5 @@
 package io.github.taichi0373.benefit_map.controller;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.http.ResponseEntity;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
+import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.UsersDto;
 import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
@@ -36,68 +35,67 @@ public class UsersController {
      * ユーザー情報取得
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<Map<String, Object>> getUsersInfo(@PathVariable Long userId, HttpSession session) {
+    public ResponseEntity<ApiResponseDto<?>> getUsersInfo(@PathVariable Long userId, HttpSession session) {
         try {
             // セッション認証チェック
             Object sessionUserId = session.getAttribute("user_id");
             if (ValidateUtils.isNullOrEmpty(sessionUserId)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("認証が必要です"));
             }
-            
+
             // ユーザーIDの一致確認
             if (!userId.equals(sessionUserId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponseDto.error("アクセス権限がありません"));
             }
 
             // ユーザー情報取得
             UsersEntity user = usersService.getUsersInfo(userId);
             if (ValidateUtils.isNullOrEmpty(user)) {
-                return ResponseEntity.noContent().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.error("ユーザーが見つかりません"));
             }
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("user", user);
-            Map<String, Object> response = new HashMap<>();
-            response.put("data", data);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponseDto.success(user));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("ユーザー情報の取得に失敗しました"));
         }
-
     }
-    
+
     /**
      * ユーザー情報の更新
      */
     @PutMapping("/{userId}")
-    public ResponseEntity<Map<String, Object>> updateUserProfile(
+    public ResponseEntity<ApiResponseDto<?>> updateUserProfile(
             @RequestBody UsersDto users,
             HttpSession session) {
         try {
-            
             // セッション認証チェック
             Object sessionUserId = session.getAttribute("user_id");
             if (ValidateUtils.isNullOrEmpty(sessionUserId)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("認証が必要です"));
             }
-            
+
             // ユーザーIDの一致確認
             if (!Objects.equals(users.getUserId(), sessionUserId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponseDto.error("アクセス権限がありません"));
             }
-            
+
             // ユーザー情報更新
             Integer result = usersService.updateUsersInfo(users);
             if (ValidateUtils.isNullOrEmpty(result)) {
-                return ResponseEntity.noContent().build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.error("ユーザーが見つかりません"));
             }
-            Map<String, Object> data = new HashMap<>();
-            data.put("message", "ユーザー情報が更新されました");
-            Map<String, Object> response = new HashMap<>();
-            response.put("data", data);
-            return ResponseEntity.ok(response);
+
+            return ResponseEntity.ok(ApiResponseDto.success(null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("ユーザー情報の更新に失敗しました"));
         }
     }
 
@@ -105,26 +103,19 @@ public class UsersController {
      * ログイン
      */
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody UsersDto users, HttpSession session) {
+    public ResponseEntity<ApiResponseDto<?>> login(@RequestBody UsersDto users, HttpSession session) {
         try {
             UsersEntity usersEntity = usersService.loginUser(users.getUsername(), users.getPassword());
             if (ValidateUtils.isNullOrEmpty(usersEntity)) {
-                Map<String, Object> errorData = new HashMap<>();
-                errorData.put("error", "ユーザー名またはパスワードが正しくありません");
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("data", errorData);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-            } else {
-                session.setAttribute("user_id", usersEntity.getUserId());
-                Map<String, Object> data = new HashMap<>();
-                data.put("usersEntity", usersEntity);
-                data.put("message", "");
-                Map<String, Object> response = new HashMap<>();
-                response.put("data", data);
-                return ResponseEntity.ok(response);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("ユーザー名またはパスワードが正しくありません"));
             }
+
+            session.setAttribute("user_id", usersEntity.getUserId());
+            return ResponseEntity.ok(ApiResponseDto.success(usersEntity));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("ログイン中にエラーが発生しました"));
         }
     }
 
@@ -132,16 +123,13 @@ public class UsersController {
      * ログアウト
      */
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(HttpSession session) {
+    public ResponseEntity<ApiResponseDto<?>> logout(HttpSession session) {
         try {
             session.invalidate();
-            Map<String, Object> data = new HashMap<>();
-            data.put("message", "ログアウトしました");
-            Map<String, Object> response = new HashMap<>();
-            response.put("data", data);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponseDto.success(null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("ログアウト中にエラーが発生しました"));
         }
     }
 
@@ -149,55 +137,36 @@ public class UsersController {
      * ユーザー登録
      */
     @PostMapping("/signup")
-    public ResponseEntity<Map<String, Object>> signup(@RequestBody UsersDto users, HttpSession session) {
+    public ResponseEntity<ApiResponseDto<?>> signup(@RequestBody UsersDto users, HttpSession session) {
         try {
             // ユーザー名の重複チェック
             Boolean userExists = usersService.existsByUsername(users.getUsername());
             if (Boolean.TRUE.equals(userExists)) {
-                Map<String, Object> errorData = new HashMap<>();
-                errorData.put("error", "このユーザー名は既に使用されています");
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("data", errorData);
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("このユーザー名は既に使用されています"));
             }
 
             // ユーザー登録処理
             UsersEntity userEntity = usersService.signupUser(users);
             if (ValidateUtils.isNullOrEmpty(userEntity)) {
-                Map<String, Object> errorData = new HashMap<>();
-                errorData.put("error", "ユーザー登録に失敗しました");
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("data", errorData);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-            } else {
-                session.setAttribute("user_id", userEntity.getUserId());
-                Map<String, Object> data = new HashMap<>();
-                data.put("usersEntity", userEntity);
-                data.put("message", "ユーザー登録が完了しました");
-                Map<String, Object> response = new HashMap<>();
-                response.put("data", data);
-                return ResponseEntity.ok(response);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(ApiResponseDto.error("ユーザー登録に失敗しました"));
             }
+
+            session.setAttribute("user_id", userEntity.getUserId());
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponseDto.success(userEntity));
         } catch (DuplicateUserException e) {
             // データベース制約違反による重複エラー
-            Map<String, Object> errorData = new HashMap<>();
-            errorData.put("error", e.getMessage());
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("data", errorData);
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ApiResponseDto.error(e.getMessage()));
         } catch (RuntimeException e) {
             // ユーザー名重複チェック時のデータベースエラー等
-            Map<String, Object> errorData = new HashMap<>();
-            errorData.put("error", "データベース接続エラーが発生しました。しばらく時間をおいて再度お試しください。");
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("data", errorData);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(ApiResponseDto.error("データベース接続エラーが発生しました。しばらく時間をおいて再度お試しください。"));
         } catch (Exception e) {
-            Map<String, Object> errorData = new HashMap<>();
-            errorData.put("error", "サーバーエラーが発生しました");
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("data", errorData);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("サーバーエラーが発生しました"));
         }
     }
 
@@ -205,22 +174,19 @@ public class UsersController {
      * セッション確認
      */
     @GetMapping("/session")
-    public ResponseEntity<Map<String, Object>> getSession(HttpSession session) {
+    public ResponseEntity<ApiResponseDto<?>> getSession(HttpSession session) {
         try {
             Object userId = session.getAttribute("user_id");
             if (ValidateUtils.isNullOrEmpty(userId)) {
-                return ResponseEntity.noContent().build();
-            } else {
-                Map<String, Object> data = new HashMap<>();
-                data.put("userId", userId);
-                Map<String, Object> response = new HashMap<>();
-                response.put("data", data);
-                return ResponseEntity.ok(response);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("セッションが存在しません"));
             }
+
+            return ResponseEntity.ok(ApiResponseDto.success(userId));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("セッション確認中にエラーが発生しました"));
         }
     }
-
 }
 

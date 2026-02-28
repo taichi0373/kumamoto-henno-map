@@ -159,10 +159,10 @@ const fetchUserBenefits = async () => {
   userBenefitsLoading.value = true
   try {
     const response = await apiClient.get(`benefit/users/${userId}`)
-    if (response.data.success) {
-      userBenefits.value = response.data.benefits || []
+    if ((response.data as { success: boolean }).success) {
+      userBenefits.value = ((response.data as unknown) as { data: UserBenefit[] }).data || []
     } else {
-      console.warn('特典データの取得に失敗しました:', response.data.message)
+      console.warn('特典データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
       userBenefits.value = []
     }
   } catch (error: unknown) {
@@ -182,10 +182,10 @@ const fetchSupportStores = async () => {
   storesLoading.value = true
   try {
     const response = await apiClient.get('/support-stores')
-    if (response.data.success) {
-      supportStores.value = response.data.stores || []
+    if ((response.data as { success: boolean }).success) {
+      supportStores.value = ((response.data as unknown) as { data: Store[] }).data || []
     } else {
-      console.warn('協賛店データの取得に失敗しました:', response.data.message)
+      console.warn('協賛店データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
       supportStores.value = []
     }
   } catch (error) {

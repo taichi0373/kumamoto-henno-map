@@ -30,7 +30,7 @@ const props = withDefaults(defineProps<{
   tabindex?: number;
   rule?: string | null;
 }>(), {
-  modelValue: "",
+  modelValue: null,
   type: "text",
   placeholder: "",
   error: () => [],
@@ -71,6 +71,7 @@ const { modelValue } = toRefs(props);
 
 const handleInput = (targetValue: string) => {
   const value = inputControl(targetValue);
+  emit('update:modelValue', value);
   nextTick().then(() => {
     if (props.modelValue == model.value) {
       emit("input", value);

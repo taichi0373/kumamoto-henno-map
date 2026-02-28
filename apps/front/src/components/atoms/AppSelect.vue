@@ -1,9 +1,9 @@
 <template>
   <div class="p-field">
-    <Dropdown
+    <Select
       :id="inputId"
       v-model="computedModel"
-      :options="options"
+      :options="computedOptions"
       :optionLabel="optionLabel"
       :optionValue="optionValue"
       :placeholder="placeholder"
@@ -11,7 +11,7 @@
       :readonly="readonly"
       :showClear="showClear"
       :filter="filter"
-      class="select-field"
+      :filterFields="computedFilterFields"
       :class="[inputClass, { error: errorType == 1, warning: errorType == 2 }]"
       :style="inputStyle"
       :tabindex="computedTabindex"
@@ -25,24 +25,19 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import Dropdown from 'primevue/dropdown';
+import Select from 'primevue/select';
+import { SelectDto } from '@/dto/selectDto';
 import type { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 import AppFormError from '@/components/atoms/AppFormError.vue';
 
-interface SelectOption {
-  label?: string;
-  text?: string;
-  value?: string | number | boolean | Record<string, unknown>;
-  [key: string]: unknown;
-}
-
 const props = withDefaults(defineProps<{
-  modelValue?: string | number | Record<string, unknown> | null;
-  options?: SelectOption[];
+  modelValue?: string | number | Object | null;
+  options?: Array<SelectDto> | null;
   optionLabel?: string;
   optionValue?: string;
   placeholder?: string;
   filter?: boolean;
+  filterFields?: string[] | null;
   showClear?: boolean;
   error?: InputFormErrorDto | InputFormErrorDto[];
   showError?: boolean;
@@ -54,11 +49,12 @@ const props = withDefaults(defineProps<{
   tabindex?: number;
 }>(), {
   modelValue: null,
-  options: () => [],
+  options: null,
   optionLabel: "label",
   optionValue: "value",
   placeholder: "",
   filter: false,
+  filterFields: null,
   showClear: false,
   error: () => [],
   showError: true,
@@ -71,10 +67,10 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string | number | Record<string, unknown> | null): void;
-  (e: 'focus', event: unknown): void;
-  (e: 'blur', event: unknown): void;
   (e: 'change', event: unknown): void;
+  (e: 'update:modelValue', value: string | number | Object | null): void;
+  (e: 'focus', event: Event): void;
+  (e: 'blur', event: Event): void;
 }>();
 
 const computedModel = computed({
@@ -125,75 +121,56 @@ const errorType = computed(() => {
 const computedTabindex = computed(() => {
   return props.disabled ? -1 : props.tabindex;
 });
-</script>
+  
+/** オプションが null の場合は空配列に変換 */
+const computedOptions = computed<SelectDto[]>(() => {
+  return props.options ?? [];
+});
 
+/** フィルター対象フィールド */
+const computedFilterFields = computed<string[] | undefined>(() => {
+  if (!props.filter) {
+    return undefined;
+  }
+  return props.filterFields ?? ['label', 'text', 'value'];
+});
+</script>
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
+
+// エラー・警告
+@mixin select-state($bg, $border) {
+  background-color: $bg;
+  border: 1px solid $border;
+  &:hover {
+    background-color: $bg;
+    border-color: $border;
+  }
+  &:focus {
+    background-color: $bg;
+    border-color: $border;
+  }
+}
 
 .p-field {
   display: inline-block;
   width: 100%;
 }
 
-.select-field {
+.p-select {
   width: 100%;
   height: base.$input-height;
 }
 
-.select-field :deep(.p-dropdown) {
-  width: 100%;
-  border-color: base.$base-400;
-  border-radius: 6px;
-  color: #333;
-
-  &:hover {
-    background-color: base.$base-100;
-    border-color: base.$base-400;
-  }
-
-  &:focus {
-    background-color: base.$base-100;
-    border-color: base.$base-700;
-    box-shadow: none;
-  }
-
-  &.p-disabled {
-    background-color: base.$base-200;
-    border-color: base.$base-200;
-  }
-}
-
-.select-field :deep(.p-inputtext::placeholder) {
+.p-field :deep(.p-placeholder) {
   color: base.$placeholder-color;
 }
 
-.select-field.error :deep(.p-dropdown) {
-  background-color: base.$error-200;
-  border: 1px solid base.$error-100;
-
-  &:hover {
-    background-color: base.$error-200;
-    border-color: base.$error-100;
-  }
-
-  &:focus {
-    background-color: base.$error-200;
-    border-color: base.$error-100;
-  }
+.p-field :deep(.p-select.error) {
+  @include select-state(base.$error-200, base.$error-100);
 }
 
-.select-field.warning :deep(.p-dropdown) {
-  background-color: base.$warning-200;
-  border: 1px solid base.$warning-100;
-
-  &:hover {
-    background-color: base.$warning-200;
-    border-color: base.$warning-100;
-  }
-
-  &:focus {
-    background-color: base.$warning-200;
-    border-color: base.$warning-100;
-  }
+.p-field :deep(.p-select.warning) {
+  @include select-state(base.$warning-200, base.$warning-100);
 }
 </style>

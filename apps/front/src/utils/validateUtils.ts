@@ -20,9 +20,15 @@ class ValidateUtils {
    * オブジェクトが null または空文字かどうか
    */
   public static isNullOrEmpty(obj: unknown): boolean {
+    // null または undefined の場合は true
     if (obj === null || obj === undefined) return true
+    // 文字列の場合、空文字の場合は true
     if (typeof obj === 'string') return obj.trim().length === 0
+    // 配列の場合、要素がない場合は true
     if (Array.isArray(obj)) return obj.length === 0
+    // 日付オブジェクトの場合は false
+    if (obj instanceof Date) return false
+    // オブジェクトの場合、プロパティがない場合は true
     if (typeof obj === 'object') return Object.keys(obj as Record<string, unknown>).length === 0
     return false
   }

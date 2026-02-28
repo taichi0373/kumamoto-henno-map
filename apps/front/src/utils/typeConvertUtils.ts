@@ -99,4 +99,17 @@ export class TypeConvertUtils {
         return String(data);
     }
 
+    /**
+     * Date型をYYYY-MM-DD形式の文字列に変換する
+     * @param date Date型
+     * @returns YYYY-MM-DD形式の文字列（無効な場合はnull）
+     */
+    public static toISOStringFromDate(date: Date | null | undefined): string | null {
+        if (!(date instanceof Date) || isNaN(date.getTime())) return null;
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
 }

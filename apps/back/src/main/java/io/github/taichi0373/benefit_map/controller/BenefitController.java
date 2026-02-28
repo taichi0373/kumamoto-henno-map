@@ -1,9 +1,6 @@
 package io.github.taichi0373.benefit_map.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.benefit_map.service.BenefitService;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
@@ -24,71 +22,51 @@ import jakarta.servlet.http.HttpSession;
 @RestController
 @RequestMapping("/benefit")
 public class BenefitController {
-    
+
     /**
      * 特典情報サービス
      */
     @Autowired
     private BenefitService benefitService;
-    
+
     /**
      * 特典検索
      */
     @PostMapping("/search")
-    public ResponseEntity<Map<String, Object>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
+    public ResponseEntity<ApiResponseDto<?>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
         try {
             List<BenefitEntity> benefit = benefitService.searchBenefits(request);
-            Map<String, Object> data = new HashMap<>();
-            data.put("success", true);
-            data.put("message", "特典検索に成功しました");
-            data.put("benefits", benefit);
-            Map<String, Object> response = new HashMap<>();
-            response.put("data", data);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponseDto.success(benefit));
         } catch (Exception e) {
-            Map<String, Object> errorData = new HashMap<>();
-            errorData.put("success", false);
-            errorData.put("message", "特典検索中にエラーが発生しました");
-            errorData.put("benefits", new ArrayList<>());
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("data", errorData);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("特典検索中にエラーが発生しました"));
         }
     }
-    
+
     /**
      * ユーザー特典取得
      */
     @GetMapping("/users/{userId}")
-    public ResponseEntity<Map<String, Object>> getUsersBenefits(@PathVariable Long userId, HttpSession session) {
+    public ResponseEntity<ApiResponseDto<?>> getUsersBenefits(@PathVariable Long userId, HttpSession session) {
         try {
             // セッション認証チェック
             Object sessionUserId = session.getAttribute("user_id");
             if (ValidateUtils.isNullOrEmpty(sessionUserId)) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("認証が必要です"));
             }
-            
+
             // ユーザーIDの一致確認
             if (!userId.equals(sessionUserId)) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponseDto.error("アクセス権限がありません"));
             }
-            
+
             List<BenefitEntity> benefit = benefitService.getUsersBenefits(userId);
-            Map<String, Object> data = new HashMap<>();
-            data.put("success", true);
-            data.put("message", "ユーザー特典情報を取得しました");
-            data.put("benefits", benefit);
-            Map<String, Object> response = new HashMap<>();
-            response.put("data", data);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(ApiResponseDto.success(benefit));
         } catch (Exception e) {
-            Map<String, Object> errorData = new HashMap<>();
-            errorData.put("success", false);
-            errorData.put("message", "ユーザー特典情報の取得に失敗しました: ");
-            errorData.put("benefits", new ArrayList<>());
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("data", errorData);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("ユーザー特典情報の取得に失敗しました"));
         }
     }
 }

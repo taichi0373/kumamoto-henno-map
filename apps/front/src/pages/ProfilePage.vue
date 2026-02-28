@@ -12,7 +12,7 @@
             </div>
             <div class="form-col">
               <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
-              <AppCalendar :input-id="'birthDate'" v-model="birthDateModel" :required="true"
+              <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true"
                 :error="birthDateErrorDto" />
             </div>
           </div>
@@ -53,6 +53,8 @@ import AppCalendar from '@/components/atoms/AppCalendar.vue'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { UsersDto } from '@/dto/usersDto'
+import { SelectDto } from '@/dto/selectDto'
+import { MunicipalityDto } from '@/dto/municipalityDto'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
 
 /** ルーター */
@@ -68,7 +70,7 @@ const addressErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const licenseStatusErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 
 /** 居住地域プルダウン */
-const addressOptions = ref([])
+const addressOptions = ref([]) as Ref<SelectDto[]>
 
 /** 運転免許の所持状況のプルダウン */
 const licenseStatusLabels = {
@@ -79,12 +81,7 @@ const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.SUSPENDED]: '停止',
   [codeConstant.LICENSE_STATUS.OTHER]: 'その他',
 }
-const licenseOptions = ref(
-  Object.entries(codeConstant.LICENSE_STATUS).map(([key, value]) => ({
-    value: value.toString(),
-    label: licenseStatusLabels[value]
-  }))
-)
+const licenseOptions = ref([]) as Ref<SelectDto[]>
 
 /**
  * 初期表示
@@ -94,21 +91,34 @@ onMounted(async () => {
   await loadProfile()
   // 自治体データの取得
   await getMunicipalities()
+  // 運転免許の所持状況データの取得
+  getLicenseStatusOptions()
 })
 
 // 自治体データを取得
 const getMunicipalities = async () => {
   try {
     const response = await apiClient.get('/municipality/all')
-    if (response.status === responseStatusConstant.OK) {
-      addressOptions.value = response.data.municipalities.map(dto => ({
+    if (response.status === responseStatusConstant.OK && response.data) {
+      const municipalities = ((response.data as unknown) as { data: MunicipalityDto[] }).data
+      addressOptions.value = municipalities.map((dto) => ({
         value: dto.municipalityCd,
-        label: dto.municipalityName
+        label: dto.municipalityName,
+        text: dto.municipalityKana
       }))
     }
   } catch (error) {
     console.error('自治体データの取得に失敗しました:', error)
   }
+}
+
+// 運転免許の所持状況データを取得
+const getLicenseStatusOptions = () => {
+  licenseOptions.value = Object.entries(codeConstant.LICENSE_STATUS).map(([key, value]) => ({
+    value: value.toString(),
+    label: licenseStatusLabels[value],
+    text: licenseStatusLabels[value]
+  }));
 }
 
 /**

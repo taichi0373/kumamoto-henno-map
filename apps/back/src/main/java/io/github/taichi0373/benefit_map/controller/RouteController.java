@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.RouteRequestDto;
 import io.github.taichi0373.benefit_map.service.RouteService;
 
@@ -19,25 +20,27 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/route")
 public class RouteController {
-    
+
     /**
      * 経路情報サービス
      */
     @Autowired
     private RouteService routeService;
-    
+
     /**
      * 経路探索
      */
     @PostMapping("/search")
-    public ResponseEntity<JsonNode> searchRoutes(@RequestBody RouteRequestDto request) {
+    public ResponseEntity<ApiResponseDto<?>> searchRoutes(@RequestBody RouteRequestDto request) {
         try {
             JsonNode result = routeService.searchRoutes(request);
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (IOException | ParseException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("経路探索中にエラーが発生しました"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("経路探索中にエラーが発生しました"));
         }
     }
 }
