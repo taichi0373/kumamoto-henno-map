@@ -47,3 +47,7 @@ jobs:
     uses: ./.github/workflows/build-document.yml
     with:
       is-deploy: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
