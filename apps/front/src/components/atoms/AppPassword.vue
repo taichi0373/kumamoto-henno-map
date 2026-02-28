@@ -8,7 +8,6 @@
       :placeholder="placeholder"
       :feedback="false"
       :toggleMask="true"
-      class="password-field"
       :inputClass="['password-input', inputClass, { error: errorType == 1, warning: errorType == 2 }]"
       :inputStyle="inputStyle"
       :tabindex="computedTabindex"
@@ -33,7 +32,7 @@ const props = withDefaults(defineProps<{
   inputId?: string;
   readonly?: boolean;
   disabled?: boolean;
-  inputStyle?: object | string;
+  inputStyle?: object | undefined;
   inputClass?: string;
   tabindex?: number;
 }>(), {
@@ -44,7 +43,7 @@ const props = withDefaults(defineProps<{
   inputId: undefined,
   readonly: false,
   disabled: false,
-  inputStyle: "",
+  inputStyle: undefined,
   inputClass: "",
   tabindex: 0,
 });
@@ -105,62 +104,60 @@ const computedTabindex = computed(() => {
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
 
+// エラー・警告（入力欄の外側）
+@mixin select-state($bg, $border) {
+  background-color: $bg;
+  border: 1px solid $border;
+
+  &:hover {
+    background-color: $bg;
+    border-color: $border;
+  }
+  &:focus {
+    background-color: $bg;
+    border-color: $border;
+  }
+}
+
 .p-field {
   display: inline-block;
   width: 100%;
+}
 
-  .password-field {
-    width: 100%;
-    height: base.$input-height;
+.p-field :deep(.p-password) {
+  width: 100%;
+}
 
-    :deep(.password-input) {
-      width: 100%;
-      border-radius: 6px;
-      padding: 4px 2.5rem 4px 12px;
+.p-field :deep(.p-inputtext) {
+  width: 100%;
+  height: base.$input-height;
+  border-color: base.$base-400;
+  border-radius: 6px;
+  padding: 4px 4px 4px 12px;
 
-      &:hover {
-        background-color: base.$base-100;
-        border-color: base.$base-400;
-      }
-      &:focus {
-        background-color: base.$base-100;
-        border-color: base.$base-700;
-        box-shadow: none;
-      }
-      &.p-disabled {
-        &:hover {
-          background-color: base.$base-200;
-          border-color: base.$base-200;
-        }
-      }
-      &::placeholder {
-        color: base.$placeholder-color;
-      }
-      &.error {
-        background-color: base.$error-200;
-        border: 1px solid base.$error-100;
-        &:hover {
-          background-color: base.$error-200;
-          border-color: base.$error-100;
-        }
-        &:focus {
-          background-color: base.$error-200;
-          border-color: base.$error-100;
-        }
-      }
-      &.warning {
-        background-color: base.$warning-200;
-        border: 1px solid base.$warning-100;
-        &:hover {
-          background-color: base.$warning-200;
-          border-color: base.$warning-100;
-        }
-        &:focus {
-          background-color: base.$warning-200;
-          border-color: base.$warning-100;
-        }
-      }
-    }
+  &::placeholder {
+    color: base.$placeholder-color;
   }
+}
+
+.p-field :deep(.p-inputtext:enabled) {
+  &:hover {
+    background-color: base.$base-100;
+    border-color: base.$base-400;
+  }
+
+  &:focus {
+    background-color: base.$base-100;
+    border-color: base.$base-700;
+    box-shadow: none;
+  }
+}
+
+.p-field :deep(.p-inputtext.error) {
+  @include select-state(base.$error-200, base.$error-100);
+}
+
+.p-field :deep(.p-inputtext.warning) {
+  @include select-state(base.$warning-200, base.$warning-100);
 }
 </style>

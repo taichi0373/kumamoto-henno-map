@@ -8,17 +8,26 @@ export default {
   },
   tags: ['autodocs'],
   argTypes: {
+    to: {
+      control: 'text',
+      description: 'リンク先のURL（/始まりはVueRouter、それ以外はwindow.open）',
+    },
+    target: {
+      control: { type: 'select' },
+      options: ['_blank', '_self', '_parent', '_top'],
+      description: 'リンクを開くターゲット（外部リンクの場合に使用）',
+    },
     tabindex: {
       control: 'number',
       description: 'タブインデックス',
-      defaultValue: 0,
     },
-    onClick: { action: 'clicked' },
   },
 };
 
 export const Default = {
   args: {
+    to: '#',
+    target: '_blank',
     tabindex: 0,
   },
   render: (args) => ({
@@ -30,21 +39,10 @@ export const Default = {
   }),
 };
 
-export const TabIndex2 = {
+export const ExternalLink = {
   args: {
-    tabindex: 2,
-  },
-  render: (args) => ({
-    components: { AppLink },
-    setup() {
-      return { args };
-    },
-    template: `<AppLink v-bind="args">タブインデックス2</AppLink>`,
-  }),
-};
-
-export const CustomSlot = {
-  args: {
+    to: 'https://www.google.com/',
+    target: '_blank',
     tabindex: 0,
   },
   render: (args) => ({
@@ -52,6 +50,21 @@ export const CustomSlot = {
     setup() {
       return { args };
     },
-    template: `<AppLink v-bind="args"><span style="color: red;">カスタムスロット内容</span></AppLink>`,
+    template: `<AppLink v-bind="args">Google（外部リンク）</AppLink>`,
+  }),
+};
+
+export const TabIndex2 = {
+  args: {
+    to: 'https://www.google.com/',
+    target: '_blank',
+    tabindex: 2,
+  },
+  render: (args) => ({
+    components: { AppLink },
+    setup() {
+      return { args };
+    },
+    template: `<AppLink v-bind="args">google.com</AppLink>`,
   }),
 };

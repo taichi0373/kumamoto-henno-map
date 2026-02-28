@@ -4,7 +4,7 @@
     <div class="whole">
       <AppCard title="新規登録">
 
-        <div class="form-row">
+        <div class="form-row-2">
           <div class="form-col">
             <AppLabel :id="'username'" :required="true">ユーザー名</AppLabel>
             <AppTextField :input-id="'username'" :type="'text'" v-model="usersModel.username"
@@ -55,8 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import type { Ref } from 'vue'
+import { Ref, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'

@@ -24,6 +24,7 @@ class StringEditUtils {
         ['ぱ', 'ﾊﾟ'], ['ぴ', 'ﾋﾟ'], ['ぷ', 'ﾌﾟ'], ['ぺ', 'ﾍﾟ'], ['ぽ', 'ﾎﾟ'],
         ['ぁ', 'ｧ'], ['ぃ', 'ｨ'], ['ぅ', 'ｩ'], ['ぇ', 'ｪ'], ['ぉ', 'ｫ'],
         ['っ', 'ｯ'], ['ゃ', 'ｬ'], ['ゅ', 'ｭ'], ['ょ', 'ｮ'],
+        ['ゔ', 'ｳﾞ'],
         ['・', '･'], ['ー', 'ｰ'], ['　', ' ']
     ]);
 
@@ -58,6 +59,7 @@ class StringEditUtils {
     /**
      * 半角カタカナを全角カタカナに変換する。
      * 濁点（ﾞ）・半濁点（ﾟ）は前の文字と合わせた2文字で1エントリとして変換する。
+     * 内部でいったんひらがなに変換してから全角カタカナ（+0x60オフセット）に変換する。
      * @param input 変換対象の文字列
      * @returns 変換後の文字列
      */
@@ -68,10 +70,18 @@ class StringEditUtils {
         while (i < chars.length) {
             const twoChar = chars[i] + (chars[i + 1] ?? '');
             if (StringEditUtils.mapHalfWidthKatakanaToFullWidthHiragana.has(twoChar)) {
-                result.push(StringEditUtils.mapHalfWidthKatakanaToFullWidthHiragana.get(twoChar)!);
+                // 2文字エントリ（濁点・半濁点付き）をひらがな経由で全角カタカナに変換
+                const hiragana = StringEditUtils.mapHalfWidthKatakanaToFullWidthHiragana.get(twoChar)!;
+                result.push(hiragana.replace(/[ぁ-ゖ]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0x60)));
                 i += 2;
+            } else if (StringEditUtils.mapHalfWidthKatakanaToFullWidthHiragana.has(chars[i])) {
+                // 1文字エントリをひらがな経由で全角カタカナに変換
+                const hiragana = StringEditUtils.mapHalfWidthKatakanaToFullWidthHiragana.get(chars[i])!;
+                result.push(hiragana.replace(/[ぁ-ゖ]/g, ch => String.fromCharCode(ch.charCodeAt(0) + 0x60)));
+                i++;
             } else {
-                result.push(StringEditUtils.mapHalfWidthKatakanaToFullWidthHiragana.get(chars[i]) ?? chars[i]);
+                // 変換対象外の文字はそのまま
+                result.push(chars[i]);
                 i++;
             }
         }
@@ -80,11 +90,13 @@ class StringEditUtils {
 
     /**
      * 全角カタカナを半角カタカナに変換する。
+     * 全角カタカナ → ひらがな → 半角カタカナ の順で変換する。
      * @param input 変換対象の文字列
      * @return 変換後の文字列
      */
     public static replaceFullWidthKatakanaToHalfWidthKatakana(input: string): string {
-        return input.split('').map(char => StringEditUtils.mapFullWidthHiraganaToHalfWidthKatakana.get(char) || char).join('');
+        const hiragana = StringEditUtils.replaceFullWidthKatakanaToHiragana(input);
+        return StringEditUtils.replaceFullWidthHiraganaToHalfWidthKatakana(hiragana);
     }
 
 
@@ -132,6 +144,8 @@ class StringEditUtils {
      * */
     public static replaceFullWidthCharToHalfWidthChar(input: string): string {
         let result = input;
+        // 全角英数字 → 半角英数字 (U+FF01〜U+FF5E → U+0021〜U+007E)
+        result = result.replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
         // 全角カタカナ → ひらがな → 半角カタカナ の順で変換
         result = StringEditUtils.replaceFullWidthKatakanaToHiragana(result);
         result = StringEditUtils.replaceFullWidthHiraganaToHalfWidthKatakana(result);

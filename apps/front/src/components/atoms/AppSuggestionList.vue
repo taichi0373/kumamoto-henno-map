@@ -30,7 +30,7 @@ withDefaults(defineProps<{
   suggestions: SuggestionItem[];
   activeIndex?: number;
   inputClass?: string | string[] | Record<string, boolean>;
-  inputStyle?: string | Record<string, string>;
+  inputStyle?: Record<string, string> | string;
 }>(), {
   activeIndex: -1,
   inputClass: "",

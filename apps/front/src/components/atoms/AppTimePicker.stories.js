@@ -14,8 +14,8 @@ export default {
       description: '入力要素のid',
     },
     modelValue: {
-      control: 'text',
-      description: '入力値 (HH:mm形式)',
+      control: 'date',
+      description: '入力値（Date型）',
     },
     placeholder: {
       control: 'text',
@@ -42,6 +42,10 @@ export default {
       control: 'boolean',
       description: 'エラー表示フラグ',
     },
+    error: {
+      control: 'object',
+      description: 'エラー情報',
+    },
     inputClass: {
       control: 'text',
       description: 'インプットのクラス',
@@ -67,8 +71,8 @@ const Template = (args) => ({
     <AppTimePicker
       v-bind="args"
       v-model="value"
-      @focus="(event) => console.log('Focused:', event)"
-      @blur="(event) => console.log('Blurred:', event)"
+      @focus="() => console.log('Focused')"
+      @blur="() => console.log('Blurred')"
     />
   `,
 });
@@ -116,5 +120,13 @@ WithError.args = {
   ...Default.args,
   inputId: 'error-time-picker',
   error: [{ type: 1, message: '時刻を選択してください' }],
+  showError: true,
+};
+
+export const WithWarning = Template.bind({});
+WithWarning.args = {
+  ...Default.args,
+  inputId: 'warning-time-picker',
+  error: [{ type: 2, message: '時刻が選択されていません。よろしいですか？' }],
   showError: true,
 };

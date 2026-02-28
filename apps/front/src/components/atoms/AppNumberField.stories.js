@@ -49,6 +49,10 @@ export default {
       control: 'boolean',
       description: 'エラー表示フラグ',
     },
+    error: {
+      control: 'object',
+      description: 'エラー情報',
+    },
     inputClass: {
       control: 'text',
       description: 'インプットのクラス',
@@ -88,7 +92,7 @@ Default.args = {
   min: 0,
   max: 9999,
   step: 1,
-  useGrouping: true,
+  useGrouping: false,
   disabled: false,
   readonly: false,
   showError: true,
@@ -102,6 +106,15 @@ WithValue.args = {
   ...Default.args,
   inputId: 'value-number-field',
   modelValue: 1200,
+};
+
+export const WithGrouping = Template.bind({});
+WithGrouping.args = {
+  ...Default.args,
+  inputId: 'grouping-number-field',
+  modelValue: 1200000,
+  useGrouping: true,
+  placeholder: '3桁区切りで表示',
 };
 
 export const Disabled = Template.bind({});
@@ -128,11 +141,4 @@ WithWarning.args = {
   modelValue: 10000,
   error: [{ type: 2, message: '上限を超えています' }],
   showError: true,
-};
-
-export const NoGrouping = Template.bind({});
-NoGrouping.args = {
-  ...Default.args,
-  inputId: 'nogroup-number-field',
-  useGrouping: false,
 };

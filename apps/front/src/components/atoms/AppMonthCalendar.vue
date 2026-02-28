@@ -9,7 +9,6 @@
       :placeholder="placeholder"
       :dateFormat="dateFormat"
       :showIcon="showIcon"
-      class="calendar-field"
       :class="[inputClass, { error: errorType == 1, warning: errorType == 2 }]"
       :style="inputStyle"
       :tabindex="computedTabindex"
@@ -21,10 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import DatePicker, { DatePickerBlurEvent } from 'primevue/datepicker';
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 import AppFormError from '@/components/atoms/AppFormError.vue';
+import { usePrimeVue } from 'primevue';
 
 const props = withDefaults(defineProps<{
   modelValue?: Date | null;
@@ -36,7 +36,7 @@ const props = withDefaults(defineProps<{
   inputId?: string;
   readonly?: boolean;
   disabled?: boolean;
-  inputStyle?: object | string;
+  inputStyle?: Record<string, string> | string;
   inputClass?: string;
   tabindex?: number;
 }>(), {
@@ -55,8 +55,8 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-  (e: 'input', value: unknown): void;
   (e: 'update:modelValue', value: Date | null): void;
+  (e: 'input', value: unknown): void;
   (e: 'focus', event: Event): void;
   (e: 'blur', event: DatePickerBlurEvent): void;
 }>();
@@ -68,6 +68,20 @@ const computedModel = computed({
       emit('update:modelValue', value);
     }
   },
+});
+
+/**
+ * マウント時の処理
+ */
+onMounted(() => {
+  const primevue = usePrimeVue();
+  if (primevue && primevue.config && primevue.config.locale) {
+    primevue.config.locale.firstDayOfWeek = 0;
+    primevue.config.locale.monthNames = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    primevue.config.locale.monthNamesShort = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+    primevue.config.locale.dayNamesMin = ['日', '月', '火', '水', '木', '金', '土'];
+    primevue.config.locale.dayNamesShort = ['日', '月', '火', '水', '木', '金', '土'];
+  }
 });
 
 const onFocus = (e: Event) => {
@@ -104,71 +118,60 @@ const computedTabindex = computed(() => {
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
+
+// エラー・警告（入力欄の外側）
+@mixin select-state-out($bg, $border) {
+  background-color: $bg;
+  border: 1px solid $border;
+  border-radius: 6px;
+  &:hover {
+    background-color: $bg;
+    border-color: $border;
+  }
+  &:focus {
+    background-color: $bg;
+    border-color: $border;
+  }
+}
+
+// エラー・警告（入力欄の内側）
+@mixin select-state-in($bg, $border) {
+  background-color: $bg;
+  &:hover {
+    background-color: $bg;
+    border-color: $border;
+  }
+  &:focus {
+    background-color: $bg;
+    border-color: $border;
+  }
+}
+
 .p-field {
   display: inline-block;
   width: 100%;
 }
 
-.calendar-field {
+.p-datepicker {
   width: 100%;
+  height: base.$input-height;
 }
 
-.calendar-field :deep(.p-inputtext) {
-  width: 100%;
-  border-color: base.$base-400;
-  border-radius: 6px;
-  color: #333;
-  padding: 4px 4px 4px 12px;
-
-  &:hover {
-    background-color: base.$base-100;
-    border-color: base.$base-400;
-  }
-  &:focus {
-    background-color: base.$base-100;
-    border-color: base.$base-700;
-    box-shadow: none;
-  }
-  &.p-inputtext-disabled, &.p-inputtext-readonly {
-    &:hover {
-      background-color: base.$base-200;
-      border-color: base.$base-200;
-    }
-    &:focus {
-      background-color: base.$base-200;
-      border-color: base.$base-200;
-    }
-  }
-  &::placeholder {
-    color: base.$placeholder-color;
-  }
+.p-datepicker :deep(.p-inputtext::placeholder) {
+  color: base.$placeholder-color;
 }
 
-.calendar-field.error :deep(.p-inputtext) {
-  background-color: base.$error-200;
-  border: 1px solid base.$error-100;
-
-  &:hover {
-    background-color: base.$error-200;
-    border-color: base.$error-100;
+.p-field :deep(.p-datepicker.error) {
+  .p-inputtext, .p-datepicker-dropdown{
+    @include select-state-in(base.$error-200, base.$error-100);
   }
-  &:focus {
-    background-color: base.$error-200;
-    border-color: base.$error-100;
-  }
+  @include select-state-out(base.$error-200, base.$error-100);
 }
 
-.calendar-field.warning :deep(.p-inputtext) {
-  background-color: base.$warning-200;
-  border: 1px solid base.$warning-100;
-
-  &:hover {
-    background-color: base.$warning-200;
-    border-color: base.$warning-100;
+.p-field :deep(.p-datepicker.warning) {
+  .p-inputtext, .p-datepicker-dropdown{
+    @include select-state-in(base.$warning-200, base.$warning-100);
   }
-  &:focus {
-    background-color: base.$warning-200;
-    border-color: base.$warning-100;
-  }
+  @include select-state-out(base.$warning-200, base.$warning-100);
 }
 </style>

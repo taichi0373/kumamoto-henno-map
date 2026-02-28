@@ -3,7 +3,14 @@
  */
 
 /* フォーム行レイアウト */
-.form-row {
+.form-row-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px 20px;
+  margin-bottom: 8px;
+}
+
+.form-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px 20px;
@@ -20,6 +27,7 @@
 /* フォームボタンレイアウト */
 .form-btn {
   display: flex;
+  gap: 12px;
   justify-content: center;
   margin-top: 16px;
 }

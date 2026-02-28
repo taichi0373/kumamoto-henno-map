@@ -12,16 +12,18 @@
           ></AppMessageBar>
         </div>
 
-        <div class="form-col">
-          <AppLabel :id="'username'" :required="true">ユーザ名</AppLabel>
-          <AppTextField :input-id="'username'" :type="'text'" v-model="usersModel.username" placeholder=""
-            :required="true" :error="usernameErrorDto"/>
-        </div>
+        <div class="form-row-1">
+          <div class="form-col">
+            <AppLabel :id="'username'" :required="true">ユーザ名</AppLabel>
+            <AppTextField :input-id="'username'" :type="'text'" v-model="usersModel.username" placeholder=""
+              :required="true" :error="usernameErrorDto"/>
+          </div>
 
-        <div class="form-col">
-          <AppLabel :id="'password'" :required="true">パスワード</AppLabel>
-          <AppPassword :input-id="'password'" v-model="usersModel.password" placeholder=""
-            :error="passwordErrorDto" />
+          <div class="form-col">
+            <AppLabel :id="'password'" :required="true">パスワード</AppLabel>
+            <AppPassword :input-id="'password'" v-model="usersModel.password" placeholder=""
+              :error="passwordErrorDto" />
+          </div>
         </div>
 
         <div class="form-btn">

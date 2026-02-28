@@ -8,7 +8,6 @@
       :optionValue="optionValue"
       :placeholder="placeholder"
       :disabled="disabled"
-      :readonly="readonly"
       :showClear="showClear"
       :filter="filter"
       :filterFields="computedFilterFields"
@@ -42,11 +41,10 @@ const props = withDefaults(defineProps<{
   error?: InputFormErrorDto | InputFormErrorDto[];
   showError?: boolean;
   inputId?: string;
-  readonly?: boolean;
   disabled?: boolean;
   inputStyle?: Record<string, string> | string;
   inputClass?: string;
-  tabindex?: number;
+  tabindex?: string | number | undefined;
 }>(), {
   modelValue: null,
   options: null,
@@ -55,11 +53,10 @@ const props = withDefaults(defineProps<{
   placeholder: "",
   filter: false,
   filterFields: null,
-  showClear: false,
+  showClear: true,
   error: () => [],
   showError: true,
   inputId: undefined,
-  readonly: false,
   disabled: false,
   inputStyle: "",
   inputClass: "",
@@ -67,8 +64,8 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-  (e: 'change', event: unknown): void;
   (e: 'update:modelValue', value: string | number | Object | null): void;
+  (e: 'change', event: unknown): void;
   (e: 'focus', event: Event): void;
   (e: 'blur', event: Event): void;
 }>();

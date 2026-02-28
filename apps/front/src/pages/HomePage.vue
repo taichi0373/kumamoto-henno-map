@@ -29,6 +29,9 @@
     <AppIconButton :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'" severity="secondary"
       size="sidebarToggle" shape="rounded" tooltip="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
 
+    <!-- トーストメッセージ -->
+    <AppToastMessage />
+
     <!-- マップ -->
     <div id="map">
       <div class="map-button-container">
@@ -61,6 +64,7 @@ import AppTabView from '@/components/atoms/AppTabView.vue'
 import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppIconButton from '@/components/atoms/AppIconButton.vue'
+import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
 import { AuthUtils } from '@/utils/auth'
 import apiClient from '@/utils/api'

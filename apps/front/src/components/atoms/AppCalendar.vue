@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<{
   inputId?: string;
   readonly?: boolean;
   disabled?: boolean;
-  inputStyle?: object | string;
+  inputStyle?: Record<string, string> | string;
   inputClass?: string;
   tabindex?: number;
 }>(), {
@@ -127,6 +127,7 @@ const computedTabindex = computed(() => {
 </script>
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
+
 
 // エラー・警告（入力欄の外側）
 @mixin select-state-out($bg, $border) {

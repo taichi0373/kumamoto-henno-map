@@ -52,13 +52,13 @@ export default {
       control: 'boolean',
       description: '無効状態',
     },
-    readonly: {
-      control: 'boolean',
-      description: '読み取り専用',
-    },
     showError: {
       control: 'boolean',
       description: 'エラー表示フラグ',
+    },
+    error: {
+      control: 'object',
+      description: 'エラー情報',
     },
     inputClass: {
       control: 'text',
@@ -101,9 +101,8 @@ Default.args = {
   optionLabel: 'label',
   optionValue: 'value',
   filter: false,
-  showClear: false,
+  showClear: true,
   disabled: false,
-  readonly: false,
   showError: true,
   inputClass: '',
   inputStyle: '',

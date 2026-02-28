@@ -6,9 +6,15 @@
 
 <script setup lang="ts">
 import PButton from 'primevue/button';
-withDefaults(defineProps<{
+import { useRouter } from 'vue-router';
+
+const props = withDefaults(defineProps<{
+  to?: string;
+  target?: string;
   tabindex?: number;
 }>(), {
+  to: '',
+  target: '_blank',
   tabindex: 0,
 });
 
@@ -16,8 +22,16 @@ const emit = defineEmits<{
   (e: 'click', event: Event): void;
 }>();
 
+const router = useRouter();
+
 const onClick = (e: Event) => {
   emit('click', e);
+  if (!props.to) return;
+  if (props.to.startsWith('/')) {
+    router.push(props.to);
+  } else {
+    window.open(props.to, props.target);
+  }
 };
 </script>
 

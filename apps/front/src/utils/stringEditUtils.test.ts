@@ -60,39 +60,35 @@ describe('StringEditUtils', () => {
   describe('replaceHalfWidthKatakanaToFullWidthKatakana', () => {
     test('基本的な半角カタカナを全角カタカナに変換する', () => {
       const input = 'ｱｲｳｴｵ';
-      // 注意: 現在の実装はひらがなに変換するため、期待値をひらがなにして実装の問題を明示
-      const expected = 'あいうえお';
+      const expected = 'アイウエオ';
       const result = StringEditUtils.replaceHalfWidthKatakanaToFullWidthKatakana(input);
       expect(result).toBe(expected);
     });
 
     test('濁点付き半角カタカナを変換する', () => {
       const input = 'ｶﾞｷﾞｸﾞｹﾞｺﾞ';
-      // 注意: 現在の実装はひらがなに変換するため、期待値をひらがなにして実装の問題を明示
-      const expected = 'がぎぐげご';
+      const expected = 'ガギグゲゴ';
       const result = StringEditUtils.replaceHalfWidthKatakanaToFullWidthKatakana(input);
       expect(result).toBe(expected);
     });
 
     test('半濁点付き半角カタカナを変換する', () => {
       const input = 'ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ';
-      // 注意: 現在の実装はひらがなに変換するため、期待値をひらがなにして実装の問題を明示
-      const expected = 'ぱぴぷぺぽ';
+      const expected = 'パピプペポ';
       const result = StringEditUtils.replaceHalfWidthKatakanaToFullWidthKatakana(input);
       expect(result).toBe(expected);
     });
 
     test('小文字の半角カタカナを変換する', () => {
       const input = 'ｧｨｩｪｫｯｬｭｮ';
-      // 注意: 現在の実装はひらがなに変換するため、期待値をひらがなにして実装の問題を明示
-      const expected = 'ぁぃぅぇぉっゃゅょ';
+      const expected = 'ァィゥェォッャュョ';
       const result = StringEditUtils.replaceHalfWidthKatakanaToFullWidthKatakana(input);
       expect(result).toBe(expected);
     });
 
     test('変換対象外の文字は変換しない', () => {
       const input = 'ｱｲｳ123ABCあい漢字';
-      const expected = 'あいう123ABCあい漢字';
+      const expected = 'アイウ123ABCあい漢字';
       const result = StringEditUtils.replaceHalfWidthKatakanaToFullWidthKatakana(input);
       expect(result).toBe(expected);
     });
@@ -101,16 +97,21 @@ describe('StringEditUtils', () => {
   describe('replaceFullWidthKatakanaToHalfWidthKatakana', () => {
     test('全角カタカナを半角カタカナに変換する', () => {
       const input = 'アイウエオ';
-      // 注意: 現在の実装はひらがなを使用しているため、実際の動作に合わせる
-      // 本来は 'ｱｲｳｴｵ' になるべきだが、現在の実装では変換されない
-      const expected = 'アイウエオ';
+      const expected = 'ｱｲｳｴｵ';
       const result = StringEditUtils.replaceFullWidthKatakanaToHalfWidthKatakana(input);
       expect(result).toBe(expected);
     });
 
     test('濁点付き全角カタカナを変換する', () => {
       const input = 'ガギグゲゴ';
-      const expected = 'ガギグゲゴ';
+      const expected = 'ｶﾞｷﾞｸﾞｹﾞｺﾞ';
+      const result = StringEditUtils.replaceFullWidthKatakanaToHalfWidthKatakana(input);
+      expect(result).toBe(expected);
+    });
+
+    test('ヴを半角カタカナに変換する', () => {
+      const input = 'ヴ';
+      const expected = 'ｳﾞ';
       const result = StringEditUtils.replaceFullWidthKatakanaToHalfWidthKatakana(input);
       expect(result).toBe(expected);
     });
