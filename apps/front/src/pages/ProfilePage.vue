@@ -2,7 +2,7 @@
   <div class="page">
 
     <div class="whole">
-      <AppCard title="プロフィール編集">
+      <AppCard title="プロフィール編集" :inputStyle="{ width: '600px' }">
         <form @submit.prevent="handleUpdateProfile">
           <div class="form-row-2">
             <div class="form-col">
@@ -151,7 +151,8 @@ const handleUpdateProfile = async () => {
 
 .whole {
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
 }
 </style>

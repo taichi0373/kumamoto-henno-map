@@ -2,7 +2,7 @@
   <div class="page">
     <AppToastMessage />
     <div class="whole">
-      <AppCard title="新規登録">
+      <AppCard title="新規登録" :inputStyle="{ width: '600px' }">
 
         <div class="form-row-2">
           <div class="form-col">
@@ -257,6 +257,7 @@ function checkError(): boolean {
 
 <style scoped lang="scss">
 @use "@/assets/scss/base";
+
 .page {
   height: calc(100vh - base.$header-height);
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -268,7 +269,8 @@ function checkError(): boolean {
 
 .whole {
   width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 600px;
+  display: flex;
+  justify-content: center;
 }
 </style>
