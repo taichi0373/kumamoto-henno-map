@@ -1,6 +1,5 @@
 <template>
   <Card 
-    class="app-card"
     :class="inputClass"
     :style="inputStyle"
   >
@@ -42,4 +41,8 @@ withDefaults(defineProps<{
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
+
+:deep(.p-card-title) {
+  text-align: center;
+}
 </style>
