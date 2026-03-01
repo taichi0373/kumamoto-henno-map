@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -9,6 +11,7 @@ import io.github.taichi0373.benefit_map.dto.UserResponseDto;
 import io.github.taichi0373.benefit_map.dto.UsersDto;
 import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
+import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
@@ -69,6 +72,8 @@ public class UsersService {
             newUser.setBirthDate(users.getBirthDate());
             newUser.setMunicipalityCd(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
+            LocalDateTime now = LocalDateTime.now();
+            newUser.setSystemField(new SystemField(now, now));
 
             usersDao.insert(newUser);
             // insert後にDTOへ変換してpasswordHashを含めずに返す
