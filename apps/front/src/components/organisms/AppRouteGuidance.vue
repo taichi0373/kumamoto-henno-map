@@ -2,61 +2,65 @@
   <div class="p-2">
     <form @submit.prevent="searchRoute">
 
-      <div class="form-field">
-        <AppLabel :id="'transport-mode'" :required="true">交通手段</AppLabel>
-        <AppSelect id="transport-mode" v-model="transportMode" :options="transportOptions" optionLabel="text"
-          optionValue="value" :required="true" />
-      </div>
+      <div class="form-row-1">
+        <div class="form-col">
+          <AppLabel :id="'transport-mode'" :required="true">交通手段</AppLabel>
+          <AppSelect id="transport-mode" v-model="transportMode" :options="transportOptions" optionLabel="text"
+            optionValue="value" :required="true" />
+        </div>
 
-      <div class="form-field">
-        <AppLabel :id="'start-location'" :required="true">出発地</AppLabel>
-        <div class="autocomplete-container">
-          <AppInputGroupWithButton v-model="startLocation" :input-id="'start-location'" :type="'text'"
-            :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
-            :button-disabled="isWaitingForMapClick" @input="onStartLocationInput" @keydown="onStartLocationKeydown"
-            @button-click="toggleMapSelection('start')" />
+        <div class="form-col">
+          <AppLabel :id="'start-location'" :required="true">出発地</AppLabel>
+          <div class="autocomplete-container">
+            <AppInputGroupWithButton v-model="startLocation" :input-id="'start-location'" :type="'text'"
+              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :button-disabled="isWaitingForMapClick" @input="onStartLocationInput" @keydown="onStartLocationKeydown"
+              @button-click="toggleMapSelection('start')" />
 
-          <AppSuggestionList :suggestions="startSuggestions" :activeIndex="startSuggestionIndex"
-            @select="selectStartLocation" />
+            <AppSuggestionList :suggestions="startSuggestions" :activeIndex="startSuggestionIndex"
+              @select="selectStartLocation" />
+          </div>
+        </div>
+
+        <div class="form-col">
+          <AppLabel :id="'end-location'" :required="true">目的地</AppLabel>
+          <div class="autocomplete-container">
+            <AppInputGroupWithButton v-model="endLocation" :input-id="'end-location'" :type="'text'"
+              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :button-disabled="isWaitingForMapClick" @input="onEndLocationInput" @keydown="onEndLocationKeydown"
+              @button-click="toggleMapSelection('end')" />
+            <AppSuggestionList :suggestions="endSuggestions" :activeIndex="endSuggestionIndex"
+              @select="selectEndLocation" />
+          </div>
         </div>
       </div>
 
-      <div class="form-field">
-        <AppLabel :id="'end-location'" :required="true">目的地</AppLabel>
-        <div class="autocomplete-container">
-          <AppInputGroupWithButton v-model="endLocation" :input-id="'end-location'" :type="'text'"
-            :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
-            :button-disabled="isWaitingForMapClick" @input="onEndLocationInput" @keydown="onEndLocationKeydown"
-            @button-click="toggleMapSelection('end')" />
-          <AppSuggestionList :suggestions="endSuggestions" :activeIndex="endSuggestionIndex"
-            @select="selectEndLocation" />
-        </div>
-      </div>
-
-
-      <div class="expand-trigger" @click="toggleConditions">
+      <div class="expand-trigger mt-4" @click="toggleConditions">
         {{ showConditions ? '条件を閉じる' : '条件指定' }}
         <span :class="showConditions ? 'icon-expand-trigger rotated' : 'icon-expand-trigger'">
           {{ showConditions ? '▲' : '▼' }}
         </span>
       </div>
-      <div v-show="showConditions" class="pt-2">
-        <div class="form-field">
-          <AppLabel :id="'time-select'">時刻指定</AppLabel>
+      <div v-if="showConditions">
+        <div class="form-row-1 mt-2">
+          <AppLabel :id="'time-select'">出発/到着</AppLabel>
           <AppSelect id="time-select" v-model="routeConditions.timeSelect" :options="timeSelectOptions" optionLabel="text"
           optionValue="value" />
         </div>
-        <div class="form-field">
-          <AppLabel>時刻指定</AppLabel>
-          <div class="date-time-group">
+        <div class="form-row-2">
+          <div class="form-col">
+            <AppLabel>日付</AppLabel>
             <AppCalendar id="date" type="date" v-model="routeConditions.selectedDate" />
+          </div>
+          <div class="form-col">
+            <AppLabel>時間</AppLabel>
             <AppTimePicker id="time" type="time" v-model="routeConditions.selectedTime" />
           </div>
-
         </div>
       </div>
 
-      <div class="form-actions">
+
+      <div class="form-btn">
         <AppButton
           type="button"
           :label="'クリア'"
@@ -525,26 +529,4 @@ const emit = defineEmits<{
 
 <style scoped lang="scss">
 @use "@/assets/scss/base";
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
-}
-
-.date-time-group {
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
-  align-items: center;
-}
-
-.form-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 20px;
-  padding-top: 15px;
-}
 </style>

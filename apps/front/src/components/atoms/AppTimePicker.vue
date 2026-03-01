@@ -11,7 +11,6 @@
       :placeholder="placeholder"
       :showIcon="true"
       :icon="'pi pi-clock'"
-      class="time-picker"
       :class="[inputClass, { error: errorType == 1, warning: errorType == 2 }]"
       :style="inputStyle"
       :tabindex="computedTabindex"
@@ -38,7 +37,7 @@ const props = withDefaults(defineProps<{
   inputId?: string;
   readonly?: boolean;
   disabled?: boolean;
-  inputStyle?: object | string;
+  inputStyle?: Record<string, string> | string;
   inputClass?: string;
   tabindex?: number;
 }>(), {
@@ -110,6 +109,34 @@ const computedTabindex = computed(() => {
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
+// エラー・警告（入力欄の外側）
+@mixin select-state-out($bg, $border) {
+  background-color: $bg;
+  border: 1px solid $border;
+  border-radius: 6px;
+  &:hover {
+    background-color: $bg;
+    border-color: $border;
+  }
+  &:focus {
+    background-color: $bg;
+    border-color: $border;
+  }
+}
+
+// エラー・警告（入力欄の内側）
+@mixin select-state-in($bg, $border) {
+  background-color: $bg;
+  &:hover {
+    background-color: $bg;
+    border-color: $border;
+  }
+  &:focus {
+    background-color: $bg;
+    border-color: $border;
+  }
+}
+
 .p-field {
   display: inline-block;
   width: 100%;
@@ -120,60 +147,21 @@ const computedTabindex = computed(() => {
   height: base.$input-height;
 }
 
-.p-datepicker :deep(.p-datepicker-calendar) {
-  width: 100%;
-  border-color: base.$base-400;
-  border-radius: 6px;
-  color: #333;
-
-  &:hover {
-    background-color: base.$base-100;
-    border-color: base.$base-400;
-  }
-
-  &:focus {
-    background-color: base.$base-100;
-    border-color: base.$base-700;
-    box-shadow: none;
-  }
-
-  &.p-disabled {
-    background-color: base.$base-200;
-    border-color: base.$base-200;
-  }
-}
-
 .p-datepicker :deep(.p-inputtext::placeholder) {
   color: base.$placeholder-color;
 }
 
-.p-datepicker.error :deep(.p-datepicker-calendar) {
-  background-color: base.$error-200;
-  border: 1px solid base.$error-100;
-
-  &:hover {
-    background-color: base.$error-200;
-    border-color: base.$error-100;
+.p-field :deep(.p-datepicker.error) {
+  .p-inputtext, .p-datepicker-dropdown{
+    @include select-state-in(base.$error-200, base.$error-100);
   }
-
-  &:focus {
-    background-color: base.$error-200;
-    border-color: base.$error-100;
-  }
+  @include select-state-out(base.$error-200, base.$error-100);
 }
 
-.p-datepicker.warning :deep(.p-datepicker-calendar) {
-  background-color: base.$warning-200;
-  border: 1px solid base.$warning-100;
-
-  &:hover {
-    background-color: base.$warning-200;
-    border-color: base.$warning-100;
+.p-field :deep(.p-datepicker.warning) {
+  .p-inputtext, .p-datepicker-dropdown{
+    @include select-state-in(base.$warning-200, base.$warning-100);
   }
-
-  &:focus {
-    background-color: base.$warning-200;
-    border-color: base.$warning-100;
-  }
+  @include select-state-out(base.$warning-200, base.$warning-100);
 }
 </style>

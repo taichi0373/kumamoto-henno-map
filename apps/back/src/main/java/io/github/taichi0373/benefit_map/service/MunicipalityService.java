@@ -22,7 +22,7 @@ public class MunicipalityService {
      */
     public List<MunicipalityEntity> getMunicipality() {
         try {
-            return municipalityDao.selectAllOrderByCode();
+            return municipalityDao.selectAllOrderByCd();
         } catch (Exception e) {
             return null;
         }

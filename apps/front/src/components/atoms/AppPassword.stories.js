@@ -33,6 +33,10 @@ export default {
       control: 'boolean',
       description: 'エラー表示フラグ',
     },
+    error: {
+      control: 'object',
+      description: 'エラー情報',
+    },
     inputClass: {
       control: 'text',
       description: 'インプットのクラス',

@@ -50,8 +50,8 @@ public class UsersEntity implements Serializable {
     LocalDate birthDate;
 
     /** 自治体コード */
-    @Column(name = "municipality_code")
-    String municipalityCode;
+    @Column(name = "municipality_cd")
+    String municipalityCd;
 
     /** 運転免許所持状況 */
     @Column(name = "license_status")

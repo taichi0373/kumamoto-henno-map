@@ -60,7 +60,7 @@ public interface UserService {}
 
 ```java
 // ✅ GOOD - メソッド名
-public List<BenefitEntity> findByMunicipalityCode(String municipalityCode) {}
+public List<BenefitEntity> findByMunicipalityCd(String municipalityCd) {}
 public void updateBenefitStatus(String benefitId, String status) {}
 public boolean isEligibleForBenefit(UserEntity user, BenefitEntity benefit) {}
 
@@ -81,12 +81,12 @@ LocalDateTime created_at = LocalDateTime.now();
 
 ```java
 // ✅ GOOD
-public static final String DEFAULT_CATEGORY_CODE = "DEFAULT";
+public static final String DEFAULT_CATEGORY_CD = "DEFAULT";
 public static final int MAX_SEARCH_RESULTS = 100;
 public static final String LICENSE_STATUS_SURRENDERED = "2";
 
 // ❌ BAD
-public static final String defaultCategoryCode = "DEFAULT";
+public static final String defaultCategoryCd = "DEFAULT";
 public static final int maxSearchResults = 100;
 ```
 
@@ -121,7 +121,7 @@ public class BenefitEntity implements Serializable {
     private String benefitId;  // Javaフィールド: camelCase
     
     @Column(name = "municipality_cd")
-    private String municipalityCode;  // DBカラム: snake_case
+    private String municipalityCd;  // DBカラム: snake_case
 }
 ```
 
@@ -207,13 +207,13 @@ function search_benefits(keyword: string) {}
 interface BenefitDto {
   benefitId: string
   benefitName: string
-  municipalityCode: string
+  municipalityCd: string
 }
 
 interface SearchParams {
   keyword?: string
-  categoryCode?: string
-  municipalityCode?: string
+  categoryCd?: string
+  municipalityCd?: string
 }
 
 // ✅ GOOD - 型エイリアス
@@ -360,11 +360,11 @@ GET    /api/v1/benefit_search
 
 ```
 // ✅ GOOD
-GET /api/v1/benefits?municipalityCode=431001&categoryCode=TRANSPORT
+GET /api/v1/benefits?municipalityCd=431001&categoryCd=TRANSPORT
 GET /api/v1/benefits/search?keyword=バス&maxResults=50
 
 // ❌ BAD
-GET /api/v1/benefits?municipality_code=431001&category_code=TRANSPORT
+GET /api/v1/benefits?municipality_cd=431001&category_cd=TRANSPORT
 GET /api/v1/benefits/search?keyword=バス&max_results=50
 ```
 
@@ -377,8 +377,8 @@ GET /api/v1/benefits/search?keyword=バス&max_results=50
 {
   "benefitId": "BF001",
   "benefitName": "バス運賃割引",
-  "municipalityCode": "431001",
-  "categoryCode": "TRANSPORT",
+  "municipalityCd": "431001",
+  "categoryCd": "TRANSPORT",
   "createdAt": "2024-01-01T00:00:00Z"
 }
 
@@ -386,7 +386,7 @@ GET /api/v1/benefits/search?keyword=バス&max_results=50
 {
   "benefit_id": "BF001",
   "benefit_name": "バス運賃割引",
-  "municipality_code": "431001"
+  "municipality_cd": "431001"
 }
 ```
 
@@ -497,11 +497,11 @@ public class BenefitService {
     /**
      * 指定された自治体コードの特典一覧を取得します。
      * 
-     * @param municipalityCode 自治体コード
+     * @param municipalityCd 自治体コード
      * @return 特典エンティティのリスト
      * @throws IllegalArgumentException 自治体コードがnullまたは空文字の場合
      */
-    public List<BenefitEntity> findByMunicipalityCode(String municipalityCode) {
+    public List<BenefitEntity> findByMunicipalityCd(String municipalityCd) {
         // 実装
     }
 }
@@ -517,9 +517,9 @@ interface SearchParams {
   /** 検索キーワード */
   keyword?: string
   /** カテゴリコード */
-  categoryCode?: string
+  categoryCd?: string
   /** 自治体コード */
-  municipalityCode?: string
+  municipalityCd?: string
 }
 
 /**

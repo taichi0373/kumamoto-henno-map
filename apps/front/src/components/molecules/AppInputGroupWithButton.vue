@@ -53,7 +53,7 @@ const props = withDefaults(defineProps<{
   tabindex?: number | null;
   errorType?: number;
   inputClass?: string;
-  inputStyle?: Record<string, unknown>;
+  inputStyle?: Record<string, string> | string;
   required?: boolean;
   buttonPrimary?: boolean;
   buttonIcon: string;

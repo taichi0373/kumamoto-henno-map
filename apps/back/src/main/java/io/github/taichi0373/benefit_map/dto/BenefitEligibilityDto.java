@@ -11,14 +11,17 @@ public class BenefitEligibilityDto {
     /** 特典ID */
     private String benefitId;
 
-    /** 運転免許所持状況 */
-    private String licenseStatus;
+    /** 年齢 */
+    private Integer age;
 
     /** 最低年齢 */
     private Integer minAge;
 
     /** 最高年齢 */
     private Integer maxAge;
+
+    /** 運転免許所持状況 */
+    private String licenseStatus;
 
     /** 対象自治体コード */
     private String municipalityCd;

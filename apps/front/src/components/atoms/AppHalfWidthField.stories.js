@@ -33,9 +33,21 @@ export default {
       control: 'boolean',
       description: '読み取り専用',
     },
+    halfWidthKana: {
+      control: 'boolean',
+      description: '半角カタカナのみ許容（trueの場合、半角カタカナ以外を削除）',
+    },
+    rule: {
+      control: 'text',
+      description: '許容文字の正規表現パターン',
+    },
     showError: {
       control: 'boolean',
       description: 'エラー表示フラグ',
+    },
+    error: {
+      control: 'object',
+      description: 'エラー情報',
     },
     inputClass: {
       control: 'text',
@@ -76,6 +88,8 @@ Default.args = {
   maxlength: null,
   disabled: false,
   readonly: false,
+  halfWidthKana: false,
+  rule: null,
   showError: true,
   inputClass: '',
   inputStyle: '',
@@ -86,14 +100,22 @@ export const WithValue = Template.bind({});
 WithValue.args = {
   ...Default.args,
   inputId: 'value-half-width-field',
-  modelValue: '入力済み',
+  modelValue: 'ABC123',
+};
+
+export const HalfWidthKana = Template.bind({});
+HalfWidthKana.args = {
+  ...Default.args,
+  inputId: 'kana-half-width-field',
+  halfWidthKana: true,
+  placeholder: '半角カタカナのみ入力可',
 };
 
 export const Disabled = Template.bind({});
 Disabled.args = {
   ...Default.args,
   inputId: 'disabled-half-width-field',
-  modelValue: '無効な入力フィールド',
+  modelValue: 'ABC123',
   disabled: true,
 };
 
@@ -101,7 +123,7 @@ export const Readonly = Template.bind({});
 Readonly.args = {
   ...Default.args,
   inputId: 'readonly-half-width-field',
-  modelValue: '読み取り専用の値',
+  modelValue: 'ABC123',
   readonly: true,
 };
 
@@ -109,8 +131,7 @@ export const WithError = Template.bind({});
 WithError.args = {
   ...Default.args,
   inputId: 'error-half-width-field',
-  modelValue: '入力内容に問題があります',
-  rule: 'required',
+  error: [{ type: 1, message: '○○が入力されていません。' }],
   showError: true,
 };
 
@@ -118,7 +139,7 @@ export const WithWarning = Template.bind({});
 WithWarning.args = {
   ...Default.args,
   inputId: 'warning-half-width-field',
-  modelValue: '注意が必要です',
+  error: [{ type: 2, message: '○○が入力されていません。よろしいですか？' }],
   showError: true,
 };
 

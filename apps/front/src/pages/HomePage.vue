@@ -29,6 +29,9 @@
     <AppIconButton :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'" severity="secondary"
       size="sidebarToggle" shape="rounded" tooltip="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
 
+    <!-- トーストメッセージ -->
+    <AppToastMessage />
+
     <!-- マップ -->
     <div id="map">
       <div class="map-button-container">
@@ -61,6 +64,7 @@ import AppTabView from '@/components/atoms/AppTabView.vue'
 import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppIconButton from '@/components/atoms/AppIconButton.vue'
+import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
 import { AuthUtils } from '@/utils/auth'
 import apiClient from '@/utils/api'
@@ -158,11 +162,11 @@ const fetchUserBenefits = async () => {
   }
   userBenefitsLoading.value = true
   try {
-    const response = await apiClient.get(`benefit/users/${userId}`)
-    if (response.data.success) {
-      userBenefits.value = response.data.benefits || []
+    const response = await apiClient.get(`benefit/users`)
+    if ((response.data as { success: boolean }).success) {
+      userBenefits.value = ((response.data as unknown) as { data: UserBenefit[] }).data || []
     } else {
-      console.warn('特典データの取得に失敗しました:', response.data.message)
+      console.warn('特典データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
       userBenefits.value = []
     }
   } catch (error: unknown) {
@@ -182,10 +186,10 @@ const fetchSupportStores = async () => {
   storesLoading.value = true
   try {
     const response = await apiClient.get('/support-stores')
-    if (response.data.success) {
-      supportStores.value = response.data.stores || []
+    if ((response.data as { success: boolean }).success) {
+      supportStores.value = ((response.data as unknown) as { data: Store[] }).data || []
     } else {
-      console.warn('協賛店データの取得に失敗しました:', response.data.message)
+      console.warn('協賛店データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
       supportStores.value = []
     }
   } catch (error) {

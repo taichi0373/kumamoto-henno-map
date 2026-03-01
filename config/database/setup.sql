@@ -7,6 +7,7 @@
 \i '/docker-entrypoint-initdb.d/DDL/TABLE/FARE_DISCOUNT.SQL';
 \i '/docker-entrypoint-initdb.d/DDL/TABLE/COMMUNITY_BUS.SQL';
 \i '/docker-entrypoint-initdb.d/DDL/TABLE/USERS.SQL';
+\i '/docker-entrypoint-initdb.d/DDL/VIEW/V_BENEFIT_DETAIL.SQL';
 
 -- 2. DML
 \i '/docker-entrypoint-initdb.d/DML/TABLE/AGENCY.SQL';

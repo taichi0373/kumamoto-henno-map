@@ -11,6 +11,7 @@
     :maxlength="maxlength"
     :tabindex="tabindex"
     :rule="rule"
+    :error="error"
     :show-error="showError"
     @input="onInput"
     @focus="onFocus"
@@ -23,38 +24,41 @@ import { computed } from 'vue';
 import AppTextField from './AppTextField.vue';
 import { StringEditUtils } from '@/utils/stringEditUtils';
 import { TypeConvertUtils } from '@/utils/typeConvertUtils';
+import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 
 const props = withDefaults(defineProps<{
   modelValue?: string;
-  disabled?: boolean;
-  readonly?: boolean;
   placeholder?: string;
+  error?: InputFormErrorDto | InputFormErrorDto[];
+  showError?: boolean;
   inputId?: string;
+  readonly?: boolean;
+  disabled?: boolean;
   halfWidthKana?: boolean;
-  inputStyle?: object | string;
-  inputClass?: string;
-  tabindex?: number;
   maxlength?: number | null;
   rule?: string | null;
-  showError?: boolean;
+  inputStyle?: Record<string, string> | string;
+  inputClass?: string;
+  tabindex?: number;
 }>(), {
   modelValue: "",
-  disabled: false,
-  readonly: false,
   placeholder: "",
+  error: () => [],
+  showError: true,
   inputId: undefined,
+  readonly: false,
+  disabled: false,
   halfWidthKana: false,
+  maxlength: null,
+  rule: null,
   inputStyle: "",
   inputClass: "",
   tabindex: 0,
-  maxlength: null,
-  rule: null,
-  showError: true,
 });
 
 const emit = defineEmits<{
-  (e: 'input', value: string): void;
   (e: 'update:modelValue', value: string): void;
+  (e: 'input', value: string): void;
   (e: 'focus', event: Event): void;
   (e: 'blur', event: Event): void;
 }>();
@@ -62,8 +66,10 @@ const emit = defineEmits<{
 const computedModel = computed({
   get: () => props.modelValue,
   set: (value) => {
-    if (value !== props.modelValue) {
-      emit('update:modelValue', value);
+    const strValue = typeof value === 'string' ? value : String(value ?? '');
+    const formatted = format(strValue);
+    if (formatted !== props.modelValue) {
+      emit('update:modelValue', formatted);
     }
   },
 });
@@ -97,80 +103,16 @@ const onBlur = (e: Event) => {
   emit('blur', e);
 };
 
-const onInput = (value: string) => {
-  emit('update:modelValue', format(value));
-  emit('input', format(value));
+/**
+ * 入力イベントハンドラ
+ * @param value 入力値
+ */
+const onInput = (value: unknown) => {
+  const strValue = typeof value === 'string' ? value : String(value ?? '');
+  emit('input', format(strValue));
 };
 </script>
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
-.p-field {
-  display: inline-block;
-}
-
-.half-width-field {
-  width: 50%;
-}
-
-.text-field {
-  width: 100%;
-  border-color: base.$base-400;
-  border-radius: 6px;
-  color: #333;
-  padding: 4px 4px 4px 12px;
-
-  &:hover {
-    background-color: base.$base-100;
-    border-color: base.$base-400;
-  }
-  &:focus {
-    background-color: base.$base-100;
-    border-color: base.$base-700;
-    box-shadow: none;
-  }
-  &.p-inputtext-disabled, &.p-inputtext-readonly {
-    &:hover {
-      background-color: base.$base-200;
-      border-color: base.$base-200;
-    }
-    &:focus {
-      background-color: base.$base-200;
-      border-color: base.$base-200;
-    }
-  }
-  &::placeholder {
-    color: base.$placeholder-color;
-  }
-  &.error {
-    background-color: base.$error-200;
-    border: 1px solid base.$error-100;
-    &:hover {
-      background-color: base.$error-200;
-      border-color: base.$error-100;
-    }
-    &:focus {
-      background-color: base.$error-200;
-      border-color: base.$error-100;
-    }
-  }
-  &.warning {
-    background-color: base.$warning-200;
-    border: 1px solid base.$warning-100;
-    &:hover {
-      background-color: base.$warning-200;
-      border-color: base.$warning-100;
-    }
-    &:focus {
-      background-color: base.$warning-200;
-      border-color: base.$warning-100;
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .half-width-field {
-    width: 100%;
-  }
-}
 </style>
