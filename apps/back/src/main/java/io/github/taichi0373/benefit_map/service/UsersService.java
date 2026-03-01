@@ -72,7 +72,8 @@ public class UsersService {
             newUser.setBirthDate(users.getBirthDate());
             newUser.setMunicipalityCd(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
-            newUser.setSystemField(new SystemField(LocalDateTime.now(), LocalDateTime.now()));
+            LocalDateTime now = LocalDateTime.now();
+            newUser.setSystemField(new SystemField(now, now));
 
             usersDao.insert(newUser);
             // insert後にDTOへ変換してpasswordHashを含めずに返す

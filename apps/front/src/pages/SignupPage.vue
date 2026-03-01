@@ -2,7 +2,7 @@
   <div class="page">
     <AppToastMessage />
     <div class="whole">
-      <AppCard title="新規登録" :inputStyle="{ width: '600px' }">
+      <AppCard title="新規登録" :inputStyle="{ width: '100%', maxWidth: '600px' }">
 
         <div class="form-row-2">
           <div class="form-col">

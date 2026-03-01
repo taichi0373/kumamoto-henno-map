@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="whole">
-      <AppCard title="ログイン" :inputStyle="{ width: '600px' }">
+      <AppCard title="ログイン" :inputStyle="{ width: '100%', maxWidth: '600px' }">
 
         <div class="form-col">
           <AppMessageBar
@@ -173,6 +173,5 @@ function checkError(): boolean {
   max-width: 600px;
   display: flex;
   justify-content: center;
-  
 }
 </style>
