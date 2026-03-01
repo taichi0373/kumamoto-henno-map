@@ -156,7 +156,7 @@ const onClick = () => {
       username: usersModel.value.username,
       password: usersModel.value.password,
       confirmPassword: usersModel.value.confirmPassword,
-      birthDate: TypeConvertUtils.toISOStringFromDate(usersModel.value.birthDate),
+      birthDate: TypeConvertUtils.toStringFromDate(usersModel.value.birthDate),
       address: usersModel.value.address,
       licenseStatus: usersModel.value.licenseStatus
     }

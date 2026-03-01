@@ -104,7 +104,7 @@ export class TypeConvertUtils {
      * @param date Date型
      * @returns YYYY-MM-DD形式の文字列（無効な場合はnull）
      */
-    public static toISOStringFromDate(date: Date | null | undefined): string | null {
+    public static toStringFromDate(date: Date | null | undefined): string | null {
         if (!(date instanceof Date) || isNaN(date.getTime())) return null;
         const year = date.getFullYear();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
