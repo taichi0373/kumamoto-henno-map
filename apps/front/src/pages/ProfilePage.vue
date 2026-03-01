@@ -4,7 +4,7 @@
     <div class="whole">
       <AppCard title="プロフィール編集">
         <form @submit.prevent="handleUpdateProfile">
-          <div class="form-row">
+          <div class="form-row-2">
             <div class="form-col">
               <AppLabel :required="true">ユーザー名</AppLabel>
               <AppTextField :input-id="'username'" type="text" v-model="usersModel.username"
@@ -17,7 +17,7 @@
             </div>
           </div>
 
-          <div class="form-row">
+          <div class="form-row-2">
             <div class="form-col">
               <AppLabel :required="true">居住地域</AppLabel>
               <AppSelect :input-id="'address'" v-model="usersModel.address" placeholder="選択してください"

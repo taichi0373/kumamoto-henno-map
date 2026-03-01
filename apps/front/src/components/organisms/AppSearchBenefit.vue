@@ -173,7 +173,7 @@ const getLicenseStatusName = (code: string) => {
 const searchBenefits = async (conditions) => {
   isLoading.value = true
   const requestData = {
-    age: TypeConvertUtils.toNumberNullToZero(conditions.age),
+    age: conditions.age,
     licenseStatus: conditions.licenseStatus,
     municipalityCd: conditions.address,
   }

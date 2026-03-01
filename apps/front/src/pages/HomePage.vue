@@ -162,7 +162,7 @@ const fetchUserBenefits = async () => {
   }
   userBenefitsLoading.value = true
   try {
-    const response = await apiClient.get(`benefit/users/${userId}`)
+    const response = await apiClient.get(`benefit/users`)
     if ((response.data as { success: boolean }).success) {
       userBenefits.value = ((response.data as unknown) as { data: UserBenefit[] }).data || []
     } else {
