@@ -35,7 +35,7 @@
     </div>
 
     <div class="results-list" v-if="!isLoading">
-      <div v-for="benefit in benefitResults" :key="benefit.eligibilityId" class="benefit-card">
+      <div v-for="benefit in benefitResults" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`" class="benefit-card">
         <div class="benefit-header">
           <h5 class="benefit-name">{{ benefit.benefitName }}</h5>
           <span class="benefit-category">{{ benefit.categoryCd }}</span>
