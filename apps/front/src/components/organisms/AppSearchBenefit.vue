@@ -86,7 +86,8 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import type { Ref } from 'vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppButton from '@/components/atoms/AppButton.vue'

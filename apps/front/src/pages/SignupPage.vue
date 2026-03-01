@@ -55,7 +55,8 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'

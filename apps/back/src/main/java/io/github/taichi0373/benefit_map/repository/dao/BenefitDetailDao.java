@@ -25,9 +25,9 @@ public interface BenefitDetailDao {
      */
     default List<BenefitDetailEntity> selectAll() {
         Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ v = new BenefitDetailEntity_();
+        BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(v).fetch();
+        return entityql.from(e).fetch();
     }
 
     /**
@@ -37,10 +37,10 @@ public interface BenefitDetailDao {
      */
     default List<BenefitDetailEntity> selectByBenefitId(String benefitId) {
         Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ v = new BenefitDetailEntity_();
+        BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(v)
-                       .where(c -> c.eq(v.benefitId, benefitId))
+        return entityql.from(e)
+                       .where(c -> c.eq(e.benefitId, benefitId))
                        .fetch();
     }
 
@@ -51,10 +51,10 @@ public interface BenefitDetailDao {
      */
     default List<BenefitDetailEntity> selectByCategoryCd(String categoryCd) {
         Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ v = new BenefitDetailEntity_();
+        BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(v)
-                       .where(c -> c.eq(v.categoryCd, categoryCd))
+        return entityql.from(e)
+                       .where(c -> c.eq(e.categoryCd, categoryCd))
                        .fetch();
     }
 
@@ -65,10 +65,10 @@ public interface BenefitDetailDao {
      */
     default List<BenefitDetailEntity> selectByMunicipalityCd(String municipalityCd) {
         Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ v = new BenefitDetailEntity_();
+        BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(v)
-                       .where(c -> c.eq(v.municipalityCd, municipalityCd))
+        return entityql.from(e)
+                       .where(c -> c.eq(e.municipalityCd, municipalityCd))
                        .fetch();
     }
 
@@ -82,22 +82,32 @@ public interface BenefitDetailDao {
     default List<BenefitDetailEntity> selectEligible(
             Integer age, String licenseStatus, String municipalityCd) {
         Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ v = new BenefitDetailEntity_();
+        BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(v)
+        return entityql.from(e)
                        .where(c -> {
-                           // MIN_AGE IS NULL または MIN_AGE <= age（最低年齢未満は除外）
-                           c.or(() -> {
-                               c.isNull(v.minAge);
-                               c.le(v.minAge, age);
-                           });
-                           // MAX_AGE IS NULL または MAX_AGE >= age（最高年齢超過は除外）
-                           c.or(() -> {
-                               c.isNull(v.maxAge);
-                               c.ge(v.maxAge, age);
-                           });
-                           c.eq(v.licenseStatus, licenseStatus);
-                           c.eq(v.eligibilityMunicipalityCd, municipalityCd);
+                          if (age != null) {
+                            // MIN_AGE IS NULL または MIN_AGE <= age（最低年齢未満は除外）
+                            c.or(() -> {
+                                c.isNull(e.minAge);
+                                c.le(e.minAge, age);
+                            });
+                            // MAX_AGE IS NULL または MAX_AGE >= age（最高年齢超過は除外）
+                            c.or(() -> {
+                                c.isNull(e.maxAge);
+                                c.ge(e.maxAge, age);
+                            });
+                          }
+                          // LICENSE_STATUS が NULL（制約なし）または パラメータと一致
+                          c.or(() -> {
+                              c.isNull(e.licenseStatus);
+                              c.eq(e.licenseStatus, licenseStatus);
+                          });
+                          // MUNICIPALITY_CD が NULL（制約なし）または パラメータと一致
+                          c.or(() -> {
+                              c.isNull(e.municipalityCd);
+                              c.eq(e.municipalityCd, municipalityCd);
+                          });
                        })
                        .fetch();
     }
