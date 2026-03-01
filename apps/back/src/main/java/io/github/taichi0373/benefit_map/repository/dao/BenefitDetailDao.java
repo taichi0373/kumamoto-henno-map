@@ -89,13 +89,13 @@ public interface BenefitDetailDao {
         return entityql.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(age)) {
-                        c.and(() -> {
+                        c.or(() -> {
                             c.isNull(e.minAge);
-                            c.or(() -> c.le(e.minAge, age));
+                            c.le(e.minAge, age);
                         });
-                        c.and(() -> {
+                        c.or(() -> {
                             c.isNull(e.maxAge);
-                            c.or(() -> c.ge(e.maxAge, age));
+                            c.ge(e.maxAge, age);
                         });
                     }
                     if (!ValidateUtils.isNullOrEmpty(licenseStatus)) {
