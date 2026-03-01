@@ -33,15 +33,19 @@ public interface BenefitEligibilityDao {
 
     /**
      * 検索条件に一致する特典IDを検索
+     * @param age 年齢
+     * @param licenseStatus 運転免許の所持状況
+     * @param municipalityCd 市区町村コード
+     * @return 特典IDのリスト
      */
-    default List<BenefitEligibilityEntity> selectEligibleBenefitIds(Integer minAge, Integer maxAge, String licenseStatus, String municipalityCd) {
+    default List<BenefitEligibilityEntity> selectEligibleBenefitIds(Integer age, String licenseStatus, String municipalityCd) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
         return entityql.from(e)
                       .where(c -> {
-                          c.ge(e.minAge, minAge);
-                          c.le(e.maxAge, maxAge);
+                          c.ge(e.minAge, age);
+                          c.le(e.maxAge, age);
                           c.eq(e.licenseStatus, licenseStatus);
                           c.eq(e.municipalityCd, municipalityCd);
                       })

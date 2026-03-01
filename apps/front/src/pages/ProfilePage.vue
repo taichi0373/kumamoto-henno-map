@@ -8,7 +8,7 @@
             <div class="form-col">
               <AppLabel :required="true">ユーザー名</AppLabel>
               <AppTextField :input-id="'username'" type="text" v-model="usersModel.username"
-                placeholder="ユーザー名を入力してください" :required="true" :error-message="usernameErrorDto" />
+                placeholder="ユーザー名を入力してください" :required="true" :error="usernameErrorDto" />
             </div>
             <div class="form-col">
               <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
@@ -21,12 +21,12 @@
             <div class="form-col">
               <AppLabel :required="true">居住地域</AppLabel>
               <AppSelect :input-id="'address'" v-model="usersModel.address" placeholder="選択してください"
-                :options="addressOptions" :required="true" :error-message="addressErrorDto" />
+                :options="addressOptions" :required="true" :error="addressErrorDto" />
             </div>
             <div class="form-col">
               <AppLabel :required="true">運転免許の所持状況</AppLabel>
               <AppSelect :input-id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
-                :options="licenseOptions" :required="true" :error-message="licenseStatusErrorDto" />
+                :options="licenseOptions" :required="true" :error="licenseStatusErrorDto" />
             </div>
           </div>
           <div class="form-btn">

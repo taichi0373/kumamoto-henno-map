@@ -26,8 +26,8 @@ class ValidateUtils {
     if (typeof obj === 'string') return obj.trim().length === 0
     // 配列の場合、要素がない場合は true
     if (Array.isArray(obj)) return obj.length === 0
-    // 日付オブジェクトの場合は false
-    if (obj instanceof Date) return false
+    // 日付オブジェクトの場合は、有効日付でない場合は true
+    if (obj instanceof Date) return isNaN(obj.getTime())
     // オブジェクトの場合、プロパティがない場合は true
     if (typeof obj === 'object') return Object.keys(obj as Record<string, unknown>).length === 0
     return false

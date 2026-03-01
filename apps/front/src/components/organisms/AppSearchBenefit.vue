@@ -172,9 +172,9 @@ const getLicenseStatusName = (code: string) => {
 const searchBenefits = async (conditions) => {
   isLoading.value = true
   const requestData = {
-    municipalityCode: conditions.address,
+    age: TypeConvertUtils.toNumberNullToZero(conditions.age),
     licenseStatus: conditions.licenseStatus,
-    age: TypeConvertUtils.toNumberNullToZero(conditions.age)
+    municipalityCode: conditions.address,
   }
 
   apiClient.post('/benefit/search', requestData)

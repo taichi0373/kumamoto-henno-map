@@ -14,7 +14,7 @@ interface SearchBenefitInterface {
  * 特典検索DTO
 */
 class SearchBenefitDto {
-        /** 居住地域 */
+    /** 居住地域 */
     address: string | null;
     /** 運転免許の所持状況 */
     licenseStatus: string | null;

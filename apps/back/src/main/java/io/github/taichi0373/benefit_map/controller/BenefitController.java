@@ -16,7 +16,7 @@ import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.benefit_map.service.BenefitService;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
-import io.github.taichi0373.benefit_map.repository.entity.BenefitEntity;
+import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import jakarta.servlet.http.HttpSession;
 
 @RestController
@@ -30,13 +30,13 @@ public class BenefitController {
     private BenefitService benefitService;
 
     /**
-     * 特典検索
+     * 検索条件（年齢・運転免許所持状況・自治体コード）から特典を検索
      */
     @PostMapping("/search")
     public ResponseEntity<ApiResponseDto<?>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
         try {
-            List<BenefitEntity> benefit = benefitService.searchBenefits(request);
-            return ResponseEntity.ok(ApiResponseDto.success(benefit));
+            List<BenefitDetailEntity> benefits = benefitService.searchBenefits(request);
+            return ResponseEntity.ok(ApiResponseDto.success(benefits));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("特典検索中にエラーが発生しました"));
@@ -44,7 +44,7 @@ public class BenefitController {
     }
 
     /**
-     * ユーザー特典取得
+     * ユーザーIDからユーザーが受けられる特典を検索
      */
     @GetMapping("/users/{userId}")
     public ResponseEntity<ApiResponseDto<?>> getUsersBenefits(@PathVariable Long userId, HttpSession session) {
@@ -62,8 +62,8 @@ public class BenefitController {
                         .body(ApiResponseDto.error("アクセス権限がありません"));
             }
 
-            List<BenefitEntity> benefit = benefitService.getUsersBenefits(userId);
-            return ResponseEntity.ok(ApiResponseDto.success(benefit));
+            List<BenefitDetailEntity> benefits = benefitService.getUsersBenefits(userId);
+            return ResponseEntity.ok(ApiResponseDto.success(benefits));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("ユーザー特典情報の取得に失敗しました"));

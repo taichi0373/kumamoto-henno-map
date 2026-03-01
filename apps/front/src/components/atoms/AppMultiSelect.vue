@@ -39,7 +39,7 @@ import { SelectDto } from '@/dto/selectDto';
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 
 const props = withDefaults(defineProps<{
-  modelValue?: string | number | Object | null;
+  modelValue?: Array<string | number | object>;
   options?: Array<SelectDto> | null;
   optionLabel?: string;
   optionValue?: string;
@@ -80,7 +80,6 @@ const props = withDefaults(defineProps<{
   selectionLimit: undefined,
   error: () => [],
   showError: true,
-  readonly: false,
   inputId: undefined,
   disabled: false,
   inputStyle: "",
@@ -89,7 +88,7 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string | number | Object | null): void;
+  (e: 'update:modelValue', value: Array<string | number | object>): void;
   (e: 'change', event: MultiSelectChangeEvent): void;
   (e: 'filterChange', event: MultiSelectFilterEvent): void;
   (e: 'focus', event: unknown): void;

@@ -4,46 +4,46 @@
 interface BenefitInterface {
 
     /** 特典ID */
-    benefitId : string | null;
+    benefitId: string | null;
 
     /** 自治体コード */
-    municipalityCd : string | null;
+    municipalityCd: string | null;
 
     /** 自治体名称 */
-    municipalityName : string | null;
+    municipalityName: string | null;
 
     /** カテゴリコード */
-    categoryCd : string | null;
+    categoryCd: string | null;
 
     /** 特典名称 */
-    benefitName : string | null;
+    benefitName: string | null;
 
     /** 特典短縮名称 */
-    benefitShortName : string | null;
+    benefitShortName: string | null;
 
     /** 特典内容 */
-    benefitDetail : string | null;
+    benefitDetail: string | null;
 
     /** 有効期限 */
-    expDetail : string | null;
+    expDetail: string | null;
 
     /** 問い合わせ電話番号 */
-    phoneNumber : string | null;
+    phoneNumber: string | null;
 
     /** 特典URL */
-    benefitUrl : string | null;
+    benefitUrl: string | null;
 
     /** 運転免許所持状況 */
-    licenseStatus : string | null;
+    licenseStatus: string | null;
 
     /** 最低年齢 */
-    minAge : number | null;
+    minAge: number | null;
 
     /** 最高年齢 */
-    maxAge : number | null;
+    maxAge: number | null;
 
     /** 備考 */
-    note : string | null;
+    note: string | null;
 }
 
 /** 
@@ -51,46 +51,46 @@ interface BenefitInterface {
 */
 class BenefitDto {
     /** 特典ID */
-    benefitId : string | null;
+    benefitId: string | null;
 
     /** 自治体コード */
-    municipalityCd : string | null;
+    municipalityCd: string | null;
 
     /** 自治体名称 */
-    municipalityName : string | null;
+    municipalityName: string | null;
 
     /** カテゴリコード */
-    categoryCd : string | null;
+    categoryCd: string | null;
 
     /** 特典名称 */
-    benefitName : string | null;
+    benefitName: string | null;
 
     /** 特典短縮名称 */
-    benefitShortName : string | null;
+    benefitShortName: string | null;
 
     /** 特典内容 */
-    benefitDetail : string | null;
+    benefitDetail: string | null;
 
     /** 有効期限 */
-    expDetail : string | null;
+    expDetail: string | null;
 
     /** 問い合わせ電話番号 */
-    phoneNumber : string | null;
+    phoneNumber: string | null;
 
     /** 特典URL */
-    benefitUrl : string | null;
+    benefitUrl: string | null;
 
     /** 運転免許所持状況 */
-    licenseStatus : string | null;
+    licenseStatus: string | null;
 
     /** 最低年齢 */
-    minAge : number | null;
+    minAge: number | null;
 
     /** 最高年齢 */
-    maxAge : number | null;
+    maxAge: number | null;
 
     /** 備考 */
-    note : string | null;
+    note: string | null;
 
     /**
      * コンストラクタ
