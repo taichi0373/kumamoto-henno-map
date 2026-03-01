@@ -67,7 +67,7 @@ public class UsersController {
     /**
      * ユーザー情報の更新
      */
-    @PutMapping("/{userId}")
+    @PutMapping
     public ResponseEntity<ApiResponseDto<?>> updateUserProfile(
             @RequestBody UsersDto users,
             HttpSession session) {

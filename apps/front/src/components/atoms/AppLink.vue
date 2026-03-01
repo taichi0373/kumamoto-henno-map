@@ -30,7 +30,7 @@ const onClick = (e: Event) => {
   if (props.to.startsWith('/')) {
     router.push(props.to);
   } else {
-    window.open(props.to, props.target);
+    window.open(props.to, props.target, 'noopener,noreferrer');
   }
 };
 </script>

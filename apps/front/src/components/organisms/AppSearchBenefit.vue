@@ -35,7 +35,7 @@
     </div>
 
     <div class="results-list" v-if="!isLoading">
-      <div v-for="benefit in benefitResults" :key="benefit.benefitId" class="benefit-card">
+      <div v-for="benefit in benefitResults" :key="benefit.eligibilityId" class="benefit-card">
         <div class="benefit-header">
           <h5 class="benefit-name">{{ benefit.benefitName }}</h5>
           <span class="benefit-category">{{ benefit.categoryCd }}</span>
@@ -70,8 +70,8 @@
             </div>
           </div>
 
-          <div class="benefit-note" v-if="benefit.note">
-            <small>{{ benefit.note }}</small>
+          <div class="benefit-note" v-if="benefit.eligibilityNote">
+            <small>{{ benefit.eligibilityNote }}</small>
           </div>
         </div>
 
@@ -105,10 +105,10 @@ import { SelectDto } from '@/dto/selectDto'
 import { MunicipalityDto } from '@/dto/municipalityDto'
 import { MessageUtils } from '@/utils/messageUtils'
 import { SearchBenefitDto } from '@/dto/searchBenefitDto'
-import { BenefitDto } from '@/dto/benefitDto'
+import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 
 const emit = defineEmits<{
-  (e: 'show-benefit-on-map', benefit: unknown): void;
+  (e: 'show-benefit-on-map', benefit: BenefitDetailDto): void;
 }>();
 
 /** 検索結果があるかどうか */
@@ -120,7 +120,7 @@ const isLoading = ref(false)
 /** 検索条件 */
 const searchConditions =  ref<SearchBenefitDto>(new SearchBenefitDto())
 /** 検索結果 */
-const benefitResults = ref([]) as Ref<BenefitDto[]>
+const benefitResults = ref([]) as Ref<BenefitDetailDto[]>
 
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
@@ -180,7 +180,7 @@ const searchBenefits = async (conditions) => {
   apiClient.post('/benefit/search', requestData)
     .then((response) => {
       if (response.status === responseStatusConstant.OK) {
-        const data = ((response.data as unknown) as { data: BenefitDto[] }).data
+        const data = ((response.data as unknown) as { data: BenefitDetailDto[] }).data
         benefitResults.value = data || []
         hasSearched.value = true
       } else {

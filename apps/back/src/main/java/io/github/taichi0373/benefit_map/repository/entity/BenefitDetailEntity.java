@@ -111,7 +111,7 @@ public class BenefitDetailEntity implements Serializable {
     @Column(name = "max_age")
     private Integer maxAge;
 
-    /** 対象自治体コード */
+    /** 利用可能な自治体コード */
     @Column(name = "eligibility_municipality_cd")
     private String eligibilityMunicipalityCd;
 
