@@ -1,8 +1,8 @@
 import { MessageUtils } from './messageUtils';
-import { messageDto } from '@/dto/messageDto';
+import { MessageDto } from '@/dto/messageDto';
 
 /** テスト用メッセージリスト */
-const TEST_MESSAGE_LIST: messageDto[] = [
+const TEST_MESSAGE_LIST: MessageDto[] = [
     { messageNo: 1, messageType: 1, messageContent: "{0}を入力してください。" },
     { messageNo: 2, messageType: 1, messageContent: "{0}は{1}文字以上で入力してください。" },
     { messageNo: 3, messageType: 2, messageContent: "{0}は{1}文字以下で入力してください。" },

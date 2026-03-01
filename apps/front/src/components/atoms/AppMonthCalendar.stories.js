@@ -14,8 +14,8 @@ export default {
       description: '入力要素のid',
     },
     modelValue: {
-      control: 'text',
-      description: '入力値 (YYYYMM形式)',
+      control: 'date',
+      description: '入力値（Date型）',
     },
     placeholder: {
       control: 'text',
@@ -40,6 +40,10 @@ export default {
     showError: {
       control: 'boolean',
       description: 'エラー表示フラグ',
+    },
+    error: {
+      control: 'object',
+      description: 'エラー情報',
     },
     inputClass: {
       control: 'text',
@@ -76,7 +80,7 @@ export const Default = Template.bind({});
 Default.args = {
   inputId: 'default-month-calendar',
   modelValue: null,
-  placeholder: '月を選択してください',
+  placeholder: '年月を選択してください',
   dateFormat: 'yy-mm',
   showIcon: true,
   disabled: false,
@@ -106,6 +110,14 @@ export const WithError = Template.bind({});
 WithError.args = {
   ...Default.args,
   inputId: 'error-month-calendar',
-  error: [{ type: 1, message: '月を選択してください' }],
+  error: [{ type: 1, message: '年月を選択してください' }],
+  showError: true,
+};
+
+export const WithWarning = Template.bind({});
+WithWarning.args = {
+  ...Default.args,
+  inputId: 'warning-month-calendar',
+  error: [{ type: 2, message: '年月が選択されていません。よろしいですか？' }],
   showError: true,
 };

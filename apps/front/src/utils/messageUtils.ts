@@ -1,6 +1,6 @@
 import { InputFormErrorDto } from "@/dto/InputFormErrorDto";
 import { TypeConvertUtils } from "./typeConvertUtils";
-import { messageDto } from "@/dto/messageDto";
+import { MessageDto } from "@/dto/messageDto";
 
 class MessageUtils {
     /**
@@ -24,7 +24,7 @@ class MessageUtils {
      * @returns InputFormErrorDto メッセージDTO
      */
     public static getMessageDto(
-        messageList: Array<messageDto>,
+        messageList: Array<MessageDto>,
         messageNo: number,
         ...messageString: string[]
     ): InputFormErrorDto {
@@ -48,7 +48,7 @@ class MessageUtils {
      * @param messageNo メッセージ番号
      * @return number エラータイプ
      */
-    public static getMessageType(messageList: Array<messageDto>, messageNo: number): number {
+    public static getMessageType(messageList: Array<MessageDto>, messageNo: number): number {
         let type = 0;
         for (const data of messageList) {
             if (data.messageNo === messageNo) {
@@ -66,7 +66,7 @@ class MessageUtils {
      * @returns フォーマット済みメッセージ文字列
      */
     public static getFormatMessage(
-        messageList: Array<messageDto>,
+        messageList: Array<MessageDto>,
         messageNo: number,
         ...messageString: string[]
     ): string {

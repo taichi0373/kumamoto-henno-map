@@ -113,7 +113,7 @@
 | PASSWORD_HASH | VARCHAR(200) | ✓ | | | パスワード |
 | EMAIL | VARCHAR(200) | | | | メールアドレス |
 | BIRTH_DATE | DATE | | | | 生年月日 |
-| MUNICIPALITY_CODE | VARCHAR(6) | | | ✓ | 自治体コード |
+| MUNICIPALITY_CD | VARCHAR(6) | | | ✓ | 自治体コード |
 | LICENSE_STATUS | VARCHAR(1) | | | | 運転免許所持状況 |
 | LICENSE_SURRENDERED_AT | DATE | | | | 運転免許返納日 |
 | SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
@@ -121,7 +121,7 @@
 
 **制約**:
 - 主キー制約: `USERS_PK` (USER_ID)
-- 外部キー制約: `USERS_FK` (MUNICIPALITY_CODE → MUNICIPALITY.MUNICIPALITY_CD)
+- 外部キー制約: `USERS_FK` (MUNICIPALITY_CD → MUNICIPALITY.MUNICIPALITY_CD)
 
 **LICENSE_STATUS値**:
 - 0: 未所持

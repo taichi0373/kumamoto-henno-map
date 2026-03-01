@@ -36,9 +36,9 @@ const props = withDefaults(defineProps<{
   disabled?: boolean;
   cols?: number;
   rows?: number;
-  inputStyle?: object | string;
-  inputClass?: string;
   maxlength?: number | null;
+  inputStyle?: Record<string, string> | string;
+  inputClass?: string;
   tabindex?: number;
 }>(), {
   modelValue: "",
@@ -50,15 +50,15 @@ const props = withDefaults(defineProps<{
   disabled: false,
   cols: 30,
   rows: 5,
+  maxlength: null,
   inputStyle: "",
   inputClass: "",
-  maxlength: null,
   tabindex: 0,
 });
 
 const emit = defineEmits<{
-  (e: 'input', value: unknown): void;
   (e: 'update:modelValue', value: string): void;
+  (e: 'input', value: unknown): void;
   (e: 'focus', event: unknown): void;
   (e: 'blur', event: unknown): void;
 }>();

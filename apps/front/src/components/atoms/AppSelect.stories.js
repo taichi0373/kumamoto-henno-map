@@ -2,10 +2,10 @@ import AppSelect from './AppSelect.vue';
 import { ref } from 'vue';
 
 const options = [
-  { label: '熊本市', value: 'kumamoto' },
-  { label: '八代市', value: 'yatsushiro' },
-  { label: '天草市', value: 'amakusa' },
-  { label: '人吉市', value: 'hitoyoshi' },
+  { label: '熊本市', value: 'kumamoto', text: 'くまもとし' },
+  { label: '八代市', value: 'yatsushiro', text: 'やつしろし' },
+  { label: '天草市', value: 'amakusa', text: 'あまくさし' },
+  { label: '人吉市', value: 'hitoyoshi', text: 'ひとよしし' },
 ];
 
 export default {
@@ -52,13 +52,13 @@ export default {
       control: 'boolean',
       description: '無効状態',
     },
-    readonly: {
-      control: 'boolean',
-      description: '読み取り専用',
-    },
     showError: {
       control: 'boolean',
       description: 'エラー表示フラグ',
+    },
+    error: {
+      control: 'object',
+      description: 'エラー情報',
     },
     inputClass: {
       control: 'text',
@@ -101,9 +101,8 @@ Default.args = {
   optionLabel: 'label',
   optionValue: 'value',
   filter: false,
-  showClear: false,
+  showClear: true,
   disabled: false,
-  readonly: false,
   showError: true,
   inputClass: '',
   inputStyle: '',

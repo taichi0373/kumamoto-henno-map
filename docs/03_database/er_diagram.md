@@ -66,7 +66,7 @@ erDiagram
         string PASSWORD_HASH
         string EMAIL
         date BIRTH_DATE
-        string MUNICIPALITY_CODE FK
+        string MUNICIPALITY_CD FK
         string LICENSE_STATUS
         date LICENSE_SURRENDERED_AT
         timestamp SYS_CREATED_AT
@@ -136,7 +136,7 @@ erDiagram
    - `BENEFIT_ID` → `BENEFIT.BENEFIT_ID`
 
 3. **USERS テーブル**
-   - `MUNICIPALITY_CODE` → `MUNICIPALITY.MUNICIPALITY_CD`
+   - `MUNICIPALITY_CD` → `MUNICIPALITY.MUNICIPALITY_CD`
 
 4. **COMMUNITY_BUS テーブル**
    - `COMMUNITY_BUS_ID` → `AGENCY.AGENCY_ID`

@@ -1,4 +1,4 @@
-import { messageDto } from "@/dto/messageDto";
+import { MessageDto } from "@/dto/messageDto";
 
 /** メッセージ番号定数 */
 const MESSAGE_NO = {
@@ -13,7 +13,7 @@ const MESSAGE_NO = {
 } as const;
 
 /** メッセージリスト（message形式） */
-const MESSAGE_LIST: messageDto[] = [
+const MESSAGE_LIST: MessageDto[] = [
     { messageNo: 1, messageType: 1, messageContent: "{0}を入力してください。" },
     { messageNo: 2, messageType: 1, messageContent: "{0}は{1}文字以上で入力してください。" },
     { messageNo: 3, messageType: 1, messageContent: "{0}は{1}文字以下で入力してください。" },
@@ -31,4 +31,13 @@ const ErrorMessageKbn = {
     INFO: 4,
 } as const;
 
-export { MESSAGE_LIST, MESSAGE_NO, ErrorMessageKbn };
+const API_RESPONSE_MESSAGE = {
+    CREATE_FAILED: '登録に失敗しました',
+    READ_FAILED: '取得に失敗しました',
+    UPDATE_FAILED: '更新に失敗しました',
+    DELETE_FAILED: '削除に失敗しました',
+    LOGIN_FAILED: 'ログインに失敗しました',
+    API_ERROR: 'APIエラーが発生しました'
+}
+
+export { MESSAGE_LIST, MESSAGE_NO, ErrorMessageKbn, API_RESPONSE_MESSAGE };

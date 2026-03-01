@@ -1,6 +1,6 @@
 <template>
   <header>
-    <Menubar :model="menuItems" class="custom-menubar">
+    <Menubar :model="menuItems">
       <!--  -->
       <template #start>
         <router-link to="/" class="brand-link">
@@ -25,6 +25,7 @@ import { AuthUtils } from '@/utils/auth'
 import Menubar from 'primevue/menubar'
 
 const router = useRouter()
+const route = useRoute()
 
 /** ログイン状態 */
 const isLoggedIn = ref(false)
@@ -101,9 +102,6 @@ const menuItems = computed(() => [
           command: () => navigateTo('/settings')
         },
         {
-          separator: true
-        },
-        {
           label: 'ログアウト',
           icon: 'pi pi-sign-out',
           command: handleLogout
@@ -125,7 +123,7 @@ const menuItems = computed(() => [
 ])
 
 /** ルートが変更されるたびに認証状態をチェック */
-watch(router, () => {
+watch(route, () => {
   checkLoginStatus()
   loadUserInfo()
 })
@@ -150,6 +148,20 @@ onBeforeUnmount(() => {
   color: base.$base-100;
   background-color: base.$header-background-color;
   border-radius: none;
+  position: relative;
+  z-index: 1000;
+
+  :deep(.p-menubar-root-list) {
+    border: 1px solid base.$header-border-color;
+    background-color: base.$header-background-color;
+    z-index: 1001;
+  }
+
+  :deep(.p-menubar-submenu) {
+    border: 1px solid base.$header-border-color;
+    background-color: base.$header-background-color;
+    z-index: 1001;
+  }
 
   :deep(.p-menubar-start) {
     .brand-link {
@@ -169,6 +181,10 @@ onBeforeUnmount(() => {
     &:hover, &:focus, &.p-highlight {
       color: base.$base-200;
     }
+  }
+
+  :deep(.user-name) {
+    margin-right: 12px;
   }
 }
 

@@ -1,14 +1,10 @@
 <template>
   <div class="page">
+    <AppToastMessage />
     <div class="whole">
       <AppCard title="新規登録">
 
-        <div class="form-col">
-          <AppMessageBar v-if="barErrMode != ''" :mode="barErrMode" :message="barErrMsg" style="width: 100%;">
-          </AppMessageBar>
-        </div>
-
-        <div class="form-row">
+        <div class="form-row-2">
           <div class="form-col">
             <AppLabel :id="'username'" :required="true">ユーザー名</AppLabel>
             <AppTextField :input-id="'username'" :type="'text'" v-model="usersModel.username"
@@ -35,7 +31,7 @@
           <div class="form-col">
             <AppLabel :id="'address'" :required="true">居住地域</AppLabel>
             <AppSelect id="address" v-model="usersModel.address" placeholder="選択してください" :options="addressOptions"
-              :required="true" :error="addressErrorDto" />
+              :filter="true" :required="true" :error="addressErrorDto" />
           </div>
 
           <div class="form-col">
@@ -64,7 +60,7 @@ import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
-import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
+import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppCalendar from '@/components/atoms/AppCalendar.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppCard from '@/components/atoms/AppCard.vue'
@@ -72,12 +68,16 @@ import AppLink from '@/components/atoms/AppLink.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppPassword from '@/components/atoms/AppPassword.vue'
 import apiClient from '@/utils/api'
+import ToastMessageUtils from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
-import { ErrorMessageKbn, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
+import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
 import { ValidateUtils } from '@/utils/validateUtils'
 import { UsersDto } from '@/dto/usersDto'
+import { TypeConvertUtils } from '@/utils/typeConvertUtils'
+import { SelectDto } from '@/dto/selectDto'
+import { MunicipalityDto } from '@/dto/municipalityDto'
 import { MessageUtils } from '@/utils/messageUtils'
 
 /** ルーター */
@@ -94,13 +94,8 @@ const birthDateErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const addressErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const licenseStatusErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 
-/** エラーバー */
-const warningMsgList = ref([]) as Ref<InputFormErrorDto[]>
-const barErrMode = ref('') as Ref<string>
-const barErrMsg = ref('') as Ref<string>
-
 /** 居住地域プルダウン */
-const addressOptions = ref([])
+const addressOptions = ref([]) as Ref<SelectDto[]>
 
 /** 運転免許の所持状況のプルダウン */
 const licenseStatusLabels = {
@@ -111,27 +106,28 @@ const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.SUSPENDED]: '停止',
   [codeConstant.LICENSE_STATUS.OTHER]: 'その他',
 }
-const licenseOptions = ref(
-  Object.entries(codeConstant.LICENSE_STATUS).map(([key, value]) => ({
-    value: value.toString(),
-    label: licenseStatusLabels[value]
-  }))
-)
+const licenseOptions = ref([]) as Ref<SelectDto[]>
+
 
 // 初期表示
 onMounted(() => {
   // 自治体データの取得
   getMunicipalities()
+  // 運転免許の所持状況データの取得
+  getLicenseStatusOptions()
 })
 
 // 自治体データを取得
 const getMunicipalities = async () => {
   try {
     const response = await apiClient.get('/municipality/all')
-    if (response.status === responseStatusConstant.OK) {
-      addressOptions.value = response.data.municipalities.map(dto => ({
+    if (response.status === responseStatusConstant.OK && response.data) {
+      console.log('自治体データの取得に成功しました:', response.data)
+      const municipalities = ((response.data as unknown) as { data: MunicipalityDto[] }).data
+      addressOptions.value = municipalities.map((dto) => ({
         value: dto.municipalityCd,
-        label: dto.municipalityName
+        label: dto.municipalityName,
+        text: dto.municipalityKana
       }))
     }
   } catch (error) {
@@ -139,15 +135,47 @@ const getMunicipalities = async () => {
   }
 }
 
+// 運転免許の所持状況データを取得
+const getLicenseStatusOptions = () => {
+  licenseOptions.value = Object.entries(codeConstant.LICENSE_STATUS).map(([key, value]) => ({
+    value: value.toString(),
+    label: licenseStatusLabels[value],
+    text: licenseStatusLabels[value]
+  }));
+}
+
 /**
  * 新規登録処理
   */
 const onClick = () => {
-  console.log('登録ボタンがクリックされました')
   // エラーチェック
-  checkError()
-}
+  const hasError = checkError()
+  // エラーがない場合はAPIを呼び出す
+  if (!hasError) {
+    // APIリクエスト用データの作成
+    const requestData = {
+      username: usersModel.value.username,
+      password: usersModel.value.password,
+      confirmPassword: usersModel.value.confirmPassword,
+      birthDate: TypeConvertUtils.toStringFromDate(usersModel.value.birthDate),
+      address: usersModel.value.address,
+      licenseStatus: usersModel.value.licenseStatus
+    }
 
+    apiClient.post('/users/signup', requestData)
+      .then((response) => {
+        if (response.status === responseStatusConstant.CREATED) {
+          // ToastMessageUtils.success('新規登録が完了しました')
+          router.push('/login')
+        } else {
+          ToastMessageUtils.error(API_RESPONSE_MESSAGE.CREATE_FAILED)
+        }
+      })
+      .catch(() => {
+        ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    });
+  }
+}
 /**
  * エラークリア
   */
@@ -162,24 +190,19 @@ const clearError = () => {
 
 /**
  * エラーチェック
+ * @returns {boolean} エラーがある場合はtrue
   */
-async function checkError() {
-  // 初期値
-  let result = ErrorMessageKbn.SUCCESS as number;
+function checkError(): boolean {
   // エラー初期化
   clearError()
+  let hasError = false
 
   // ユーザ名が未入力の場合はエラー
   if (ValidateUtils.isNullOrEmpty(usersModel.value.username)) {
     usernameErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "ユーザ名")
     );
-    if (result !== ErrorMessageKbn.ERROR) {
-      result = MessageUtils.getMessageType(MESSAGE_LIST, MESSAGE_NO.MSG_001);
-      warningMsgList.value.push(
-        MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "ユーザ名")
-      );
-    }
+    hasError = true
   }
 
   // パスワードが未入力の場合はエラー
@@ -187,25 +210,14 @@ async function checkError() {
     passwordErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "パスワード")
     );
-    if (result !== ErrorMessageKbn.ERROR) {
-      result = MessageUtils.getMessageType(MESSAGE_LIST, MESSAGE_NO.MSG_001);
-      warningMsgList.value.push(
-        MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "パスワード")
-      );
-    }
+    hasError = true
   }
   // パスワード確認が未入力の場合はエラー
   if (ValidateUtils.isNullOrEmpty(usersModel.value.confirmPassword)) {
     confirmPasswordErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "パスワード確認")
     );
-    if (result !== ErrorMessageKbn.ERROR) {
-      result = MessageUtils.getMessageType(MESSAGE_LIST, MESSAGE_NO.MSG_001);
-      warningMsgList.value.push(
-        MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "パスワード確認")
-      );
-    }
-
+    hasError = true
   }
   // パスワードとパスワード確認が一致しない場合はエラー
   if (!ValidateUtils.isNullOrEmpty(usersModel.value.password) &&
@@ -214,49 +226,31 @@ async function checkError() {
     confirmPasswordErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_008, "パスワード", "パスワード確認")
     );
-    if (result !== ErrorMessageKbn.ERROR) {
-      result = MessageUtils.getMessageType(MESSAGE_LIST, MESSAGE_NO.MSG_008);
-      warningMsgList.value.push(
-        MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_008, "パスワード", "パスワード確認")
-      );
-    }
+    hasError = true
   }
   // 生年月日が未入力の場合はエラー
   if (ValidateUtils.isNullOrEmpty(usersModel.value.birthDate)) {
     birthDateErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "生年月日")
     );
-    if (result !== ErrorMessageKbn.ERROR) {
-      result = MessageUtils.getMessageType(MESSAGE_LIST, MESSAGE_NO.MSG_001);
-      warningMsgList.value.push(
-        MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "生年月日")
-      );
-    }
+    hasError = true
   }
   // 居住地域が未入力の場合はエラー
   if (ValidateUtils.isNullOrEmpty(usersModel.value.address)) {
     addressErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "居住地域")
     );
-    if (result !== ErrorMessageKbn.ERROR) {
-      result = MessageUtils.getMessageType(MESSAGE_LIST, MESSAGE_NO.MSG_001);
-      warningMsgList.value.push(
-        MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "居住地域")
-      );
-    }
+    hasError = true
   }
   // 運転免許の所持状況が未入力の場合はエラー
   if (ValidateUtils.isNullOrEmpty(usersModel.value.licenseStatus)) {
     licenseStatusErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "運転免許の所持状況")
     );
-    if (result !== ErrorMessageKbn.ERROR) {
-      result = MessageUtils.getMessageType(MESSAGE_LIST, MESSAGE_NO.MSG_001);
-      warningMsgList.value.push(
-        MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "運転免許の所持状況")
-      );
-    }
+    hasError = true
   }
+
+  return hasError
 }
 
 </script>

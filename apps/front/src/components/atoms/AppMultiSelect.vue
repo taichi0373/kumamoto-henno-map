@@ -1,10 +1,9 @@
 <template>
   <div class="p-field">
     <MultiSelect
-      v-if="!readonly"
       v-model="computedModel"
       :input-id="inputId"
-      :options="options"
+      :options="computedOptions"
       :option-label="optionLabel"
       :option-value="optionValue"
       :option-group-label="optionGroupLabel"
@@ -16,11 +15,10 @@
       :virtual-scroller-options="virtualScrollerOptions"
       :reset-filter-on-hide="true"
       :disabled="disabled"
-      class="multi-select-field"
       :class="[inputClass, { error: errorType == 1, warning: errorType == 2 }]"
       :style="inputStyle"
       :tabindex="tabindex"
-      :filter-fields="filterFields"
+      :filter-fields="computedFilterFields"
       :max-selected-labels="maxSelectedLabels"
       :selection-limit="selectionLimit"
       selected-items-label="{0}個選択中"
@@ -28,39 +26,6 @@
       @change="onChange"
       @focus="onFocus"
       @blur="onBlur"
-    >
-        <template v-if="$slots.option" #option="slotProps">
-            <slot name="option" v-bind="slotProps || {}"></slot>
-            <slot name="optiongroup" v-bind="slotProps || {}"></slot>
-        </template>
-        <template v-if="$slots.value" #value="slotProps">
-            <slot name="value" v-bind="slotProps || {}"></slot>
-        </template>
-        <template v-if="$slots.header" #header="slotProps">
-            <slot name="header" v-bind="slotProps || {}"></slot>
-        </template>
-        <template v-if="$slots.footer" #footer="slotProps">
-            <slot name="footer" v-bind="slotProps || {}"></slot>
-        </template>
-        <template v-if="$slots.emptyfilter" #emptyfilter>
-            <slot name="emptyfilter"></slot>
-        </template>
-        <template v-if="$slots.empty" #empty>
-            <slot name="empty"></slot>
-        </template>
-        <template v-if="$slots.loader" #loader="slotProps">
-            <slot name="loader" v-bind="slotProps || {}"></slot>
-        </template>
-    </MultiSelect>
-    <AppTextField
-        v-if="readonly"
-        v-model="readonlyValue"
-        class="app-multiselect-readonly"
-        :class="[inputClass, {error: errorType == 1, warning: errorType == 2}]"
-        readonly
-        :tabindex="-1"
-        :style="inputStyle"
-        :input-id="inputId"
     />
     <AppFormError v-if="showError" :error="errors" />
   </div>
@@ -70,61 +35,60 @@
 import { computed } from 'vue';
 import MultiSelect, { MultiSelectChangeEvent, MultiSelectFilterEvent } from 'primevue/multiselect';
 import AppFormError from '@/components/atoms/AppFormError.vue';
-import AppTextField from './AppTextField.vue';
+import { SelectDto } from '@/dto/selectDto';
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 
 const props = withDefaults(defineProps<{
-  modelValue?: unknown[];
-  options?: unknown[] | null;
-  optionLabel?: string | ((data: unknown) => string) | null;
-  optionValue?: string | ((data: unknown) => unknown) | null;
-  optionGroupLabel?: string | ((data: unknown) => string) | null;
-  optionGroupChildren?: string | ((data: unknown) => unknown[]) | null;
-  tabindex?: number;
+  modelValue?: Array<string | number | object>;
+  options?: Array<SelectDto> | null;
+  optionLabel?: string;
+  optionValue?: string;
+  optionGroupLabel?: string;
+  optionGroupChildren?: string;
   placeholder?: string;
   filter?: boolean;
+  filterFields?: string[] | undefined;
   filterPlaceholder?: string;
   scrollHeight?: string;
-  virtualScrollerOptions?: object | null;
-  readonly?: boolean;
-  disabled?: boolean;
+  virtualScrollerOptions?: object | undefined;
+  maxSelectedLabels?: number | undefined;
+  minOptionsForFilter?: number;
+  selectionLimit?: number | undefined;
+  showClear?: boolean;
   error?: InputFormErrorDto | InputFormErrorDto[];
   showError?: boolean;
   inputId?: string;
-  filterFields?: string[] | null;
-  maxSelectedLabels?: number | null;
-  inputStyle?: object | string;
+  disabled?: boolean;
+  inputStyle?: Record<string, string> | string;
   inputClass?: string;
-  minOptionsForFilter?: number;
-  selectionLimit?: number | null;
+  tabindex?: string | number | undefined;
 }>(), {
   modelValue: () => [],
   options: null,
-  optionLabel: null,
-  optionValue: null,
-  optionGroupLabel: null,
-  optionGroupChildren: null,
-  tabindex: 0,
+  optionLabel: "label",
+  optionValue: "value",
+  optionGroupLabel: undefined,
+  optionGroupChildren: undefined,
   placeholder: "",
   filter: false,
+  filterFields: undefined,
   filterPlaceholder: "",
   scrollHeight: "200",
-  virtualScrollerOptions: null,
-  readonly: false,
-  disabled: false,
+  virtualScrollerOptions: undefined,
+  maxSelectedLabels: undefined,
+  minOptionsForFilter: 10,
+  selectionLimit: undefined,
   error: () => [],
   showError: true,
   inputId: undefined,
-  filterFields: null,
-  maxSelectedLabels: null,
+  disabled: false,
   inputStyle: "",
   inputClass: "",
-  minOptionsForFilter: 10,
-  selectionLimit: null,
+  tabindex: 0,
 });
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: unknown[]): void;
+  (e: 'update:modelValue', value: Array<string | number | object>): void;
   (e: 'change', event: MultiSelectChangeEvent): void;
   (e: 'filterChange', event: MultiSelectFilterEvent): void;
   (e: 'focus', event: unknown): void;
@@ -140,84 +104,17 @@ const computedModel = computed({
   },
 });
 
-const computedFilter = computed(() => {
-  if (props.minOptionsForFilter == 0) {
-    return props.filter;
-  }
-  const optionCount = Array.isArray(props.options) ? props.options.length : 0;
-  return optionCount >= props.minOptionsForFilter ? props.filter : false;
+/** オプションが null の場合は空配列に変換 */
+const computedOptions = computed<SelectDto[]>(() => {
+  return props.options ?? [];
 });
 
-/** フィールドの値を解決する関数 */
-const resolveField = (data: unknown, field: unknown): unknown => {
-  let result: unknown = null;
-  if (data && typeof data === 'object' && Object.keys(data as Record<string, unknown>).length && field) {
-    if (typeof field === 'function') {
-      result = field(data);
-    } else if (typeof field === 'string' && field.indexOf('.') === -1) {
-      result = (data as Record<string, unknown>)[field];
-    } else if (typeof field === 'string') {
-      const fields = field.split('.');
-      let value: unknown = data;
-      for (let i = 0, len = fields.length; i < len; i++) {
-        if (value == null || typeof value !== 'object') {
-          return null;
-        }
-        value = (value as Record<string, unknown>)[fields[i]];
-      }
-      result = value;
-    }
+/** フィルター対象フィールド */
+const computedFilterFields = computed<string[] | undefined>(() => {
+  if (!props.filter) {
+    return undefined;
   }
-  return result;
-};
-
-const isObjectLike = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
-const readonlyValue = computed(() => {
-  const labels: string[] = [];
-
-  let options: unknown[] = [];
-  if (Array.isArray(props.options)) {
-    if (props.optionGroupLabel) {
-      for (const optionGroup of props.options) {
-        const children = resolveField(optionGroup, props.optionGroupChildren);
-        if (Array.isArray(children)) {
-          options = [...options, ...children];
-        }
-      }
-    } else {
-      options = props.options;
-    }
-  }
-
-  if (Array.isArray(props.modelValue) && props.modelValue.length > 0) {
-    for (const element of props.modelValue) {
-      const val = element;
-      for (const option of options) {
-        const optionValue = props.optionValue ? resolveField(option, props.optionValue) : option;
-        const optionLabel = props.optionLabel ? resolveField(option, props.optionLabel) : JSON.stringify(option);
-        const labelText = optionLabel == null ? '' : String(optionLabel);
-        if (typeof val === "number") {
-          if (Number(val) === Number(optionValue)) {
-            if (labelText) {
-              labels.push(labelText);
-            }
-          }
-        } else if (
-          isObjectLike(val) &&
-          isObjectLike(optionValue) &&
-          JSON.stringify(Object.entries(val).sort()) === JSON.stringify(Object.entries(optionValue).sort())
-        ) {
-          if (labelText) {
-            labels.push(labelText);
-          }
-        }
-      }
-    }
-  }
-  return labels.join(', ');
+  return props.filterFields ?? ['label', 'text', 'value'];
 });
 
 /** フォーカス時の処理 */
@@ -265,42 +162,39 @@ const errorType = computed(() => {
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
 
+// エラー・警告
+@mixin select-state($bg, $border) {
+  background-color: $bg;
+  border: 1px solid $border;
+  &:hover {
+    background-color: $bg;
+    border-color: $border;
+  }
+  &:focus {
+    background-color: $bg;
+    border-color: $border;
+  }
+}
+
 .p-field {
   display: inline-block;
   width: 100%;
 }
 
-.multi-select-field {
+.p-multiselect {
   width: 100%;
   height: base.$input-height;
 }
 
-.p-multiselect-panel {
-    .p-multiselect-filter.p-inputtext {
-        border-color: base.$base-400;
-        border-radius: 6px;
-        padding: 4px 1.5rem 4px 12px;
-        &:focus {
-            border-color: base.$base-700;
-            box-shadow: none;
-        }
-    }
-    .p-multiselect-items {
-        .p-multiselect-item.p-highlight {
-            background-color: base.$base-300;
-        }
+.p-field :deep(.p-placeholder) {
+  color: base.$placeholder-color;
+}
 
-        .p-multiselect-item:not(.p-highlight):not(.p-disabled):hover {
-            background-color: base.$base-300;
-        }
+.p-field :deep(.p-multiselect.error) {
+  @include select-state(base.$error-200, base.$error-100);
+}
 
-        .p-multiselect-item,
-        .p-multiselect-item.p-highlight,
-        .p-multiselect-item:not(.p-highlight):not(.p-disabled):hover,
-        .p-multiselect-item:not(.p-highlight):not(.p-disabled).p-focus,
-        .p-multiselect-item-group {
-            color: base.$base-700;
-        }
-    }
+.p-field :deep(.p-multiselect.warning) {
+  @include select-state(base.$warning-200, base.$warning-100);
 }
 </style>

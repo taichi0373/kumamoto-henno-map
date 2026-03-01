@@ -1,7 +1,9 @@
-@forward "variable";
+/**
+ * 全画面共通
+ */
+
 @use "variable";
 
-/* 全画面共通 */
 :root {
     --base-100: #{variable.$base-100};
     --base-200: #{variable.$base-200};

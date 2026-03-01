@@ -33,7 +33,7 @@ public interface MunicipalityDao {
     /**
      * 全件取得（コード順）
      */
-    default List<MunicipalityEntity> selectAllOrderByCode() {
+    default List<MunicipalityEntity> selectAllOrderByCd() {
         Entityql entityql = new Entityql(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
