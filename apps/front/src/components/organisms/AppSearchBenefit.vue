@@ -174,7 +174,7 @@ const searchBenefits = async (conditions) => {
   const requestData = {
     age: TypeConvertUtils.toNumberNullToZero(conditions.age),
     licenseStatus: conditions.licenseStatus,
-    municipalityCode: conditions.address,
+    municipalityCd: conditions.address,
   }
 
   apiClient.post('/benefit/search', requestData)

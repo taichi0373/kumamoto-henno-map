@@ -58,7 +58,7 @@ public class BenefitService {
         BenefitEligibilityDto benefitEligibilityDto = new BenefitEligibilityDto();
         benefitEligibilityDto.setAge(age);
         benefitEligibilityDto.setLicenseStatus(user.getLicenseStatus());
-        benefitEligibilityDto.setMunicipalityCd(user.getMunicipalityCode());
+        benefitEligibilityDto.setMunicipalityCd(user.getMunicipalityCd());
         return searchBenefits(benefitEligibilityDto);
     }
 }

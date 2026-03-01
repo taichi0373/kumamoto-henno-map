@@ -67,7 +67,7 @@ public class UsersService {
             newUser.setPasswordHash(hashedPassword);
             newUser.setEmail(users.getEmail());
             newUser.setBirthDate(users.getBirthDate());
-            newUser.setMunicipalityCode(users.getAddress());
+            newUser.setMunicipalityCd(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
 
             usersDao.insert(newUser);
@@ -99,23 +99,6 @@ public class UsersService {
     }
 
     /**
-     * UsersEntity を UserResponseDto に変換する（機微情報を除外）
-     * @param entity ユーザーエンティティ
-     * @return ユーザー情報DTO
-     */
-    private UserResponseDto toUserResponseDto(UsersEntity entity) {
-        UserResponseDto dto = new UserResponseDto();
-        dto.setUserId(entity.getUserId());
-        dto.setUsername(entity.getUsername());
-        dto.setEmail(entity.getEmail());
-        dto.setBirthDate(entity.getBirthDate());
-        dto.setMunicipalityCode(entity.getMunicipalityCode());
-        dto.setLicenseStatus(entity.getLicenseStatus());
-        dto.setLicenseSurrenderedAt(entity.getLicenseSurrenderedAt());
-        return dto;
-    }
-
-    /**
      * ユーザー名によるユーザーの存在確認
      * @param username ユーザー名
      * @return 存在する場合はtrue、存在しない場合はfalse
@@ -129,6 +112,23 @@ public class UsersService {
     }
     
     /**
+     * UsersEntityをUserResponseDtoに変換する
+     * @param user 変換元エンティティ
+     * @return ユーザー情報DTO（機微情報を含まない）
+     */
+    private UserResponseDto toUserResponseDto(UsersEntity user) {
+        UserResponseDto dto = new UserResponseDto();
+        dto.setUserId(user.getUserId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setBirthDate(user.getBirthDate());
+        dto.setMunicipalityCd(user.getMunicipalityCd());
+        dto.setLicenseStatus(user.getLicenseStatus());
+        dto.setLicenseSurrenderedAt(user.getLicenseSurrenderedAt());
+        return dto;
+    }
+
+    /**
      * ユーザー情報の更新
      */
     public Integer updateUsersInfo(UsersDto users) {
@@ -141,7 +141,7 @@ public class UsersService {
             // ユーザー情報を更新
             existingUser.setEmail(users.getEmail());
             existingUser.setBirthDate(users.getBirthDate());
-            existingUser.setMunicipalityCode(users.getAddress());
+            existingUser.setMunicipalityCd(users.getAddress());
             existingUser.setLicenseStatus(users.getLicenseStatus());
             
             // データベースに更新を保存
