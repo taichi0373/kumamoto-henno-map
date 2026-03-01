@@ -23,6 +23,7 @@ public interface BenefitDetailDao {
 
     /**
      * 全件取得
+     * 
      * @return 特典詳細一覧
      */
     default List<BenefitDetailEntity> selectAll() {
@@ -34,6 +35,7 @@ public interface BenefitDetailDao {
 
     /**
      * 特典IDで検索
+     * 
      * @param benefitId 特典ID
      * @return 特典詳細一覧
      */
@@ -48,6 +50,7 @@ public interface BenefitDetailDao {
 
     /**
      * カテゴリコードで検索
+     * 
      * @param categoryCd カテゴリコード
      * @return 特典詳細一覧
      */
@@ -62,6 +65,7 @@ public interface BenefitDetailDao {
 
     /**
      * 自治体コードで検索
+     * 
      * @param municipalityCd 自治体コード
      * @return 特典詳細一覧
      */
@@ -76,6 +80,7 @@ public interface BenefitDetailDao {
 
     /**
      * 利用資格条件で検索（年齢・運転免許所持状況・自治体コード）
+     * 
      * @param age            年齢
      * @param licenseStatus  運転免許所持状況
      * @param municipalityCd 対象自治体コード
@@ -89,13 +94,13 @@ public interface BenefitDetailDao {
         return entityql.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(age)) {
-                        c.or(() -> {
+                        c.and(() -> {
                             c.isNull(e.minAge);
-                            c.le(e.minAge, age);
+                            c.or(() -> c.le(e.minAge, age));
                         });
-                        c.or(() -> {
+                        c.and(() -> {
                             c.isNull(e.maxAge);
-                            c.ge(e.maxAge, age);
+                            c.or(() -> c.ge(e.maxAge, age));
                         });
                     }
                     if (!ValidateUtils.isNullOrEmpty(licenseStatus)) {
