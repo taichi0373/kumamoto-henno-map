@@ -86,8 +86,16 @@ public interface BenefitDetailDao {
 
         return entityql.from(v)
                        .where(c -> {
-                           c.ge(v.minAge, age);
-                           c.le(v.maxAge, age);
+                           // MIN_AGE IS NULL または MIN_AGE <= age（最低年齢未満は除外）
+                           c.or(() -> {
+                               c.isNull(v.minAge);
+                               c.le(v.minAge, age);
+                           });
+                           // MAX_AGE IS NULL または MAX_AGE >= age（最高年齢超過は除外）
+                           c.or(() -> {
+                               c.isNull(v.maxAge);
+                               c.ge(v.maxAge, age);
+                           });
                            c.eq(v.licenseStatus, licenseStatus);
                            c.eq(v.eligibilityMunicipalityCd, municipalityCd);
                        })

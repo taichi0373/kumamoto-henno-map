@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import io.github.taichi0373.benefit_map.dto.UserResponseDto;
 import io.github.taichi0373.benefit_map.dto.UsersDto;
 import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
@@ -30,9 +31,9 @@ public class UsersService {
      * ログイン
      * @param username ユーザー名
      * @param password パスワード
-     * @return ログイン成功時はユーザー情報（パスワードは含まない）、ログイン失敗時はnull
+     * @return ログイン成功時はユーザー情報DTO（機微情報を含まない）、ログイン失敗時はnull
      */
-    public UsersEntity loginUser(String username, String password) {
+    public UserResponseDto loginUser(String username, String password) {
         try {
             UsersEntity user = usersDao.selectByUsername(username);
             if (ValidateUtils.isNullOrEmpty(user)) {
@@ -40,15 +41,7 @@ public class UsersService {
             }
             // パスワードの照合
             if (passwordEncoder.matches(password, user.getPasswordHash())) {
-                // パスワード以外のユーザー情報を返す
-                 UsersEntity usersEntity = new UsersEntity();
-                 usersEntity.setUserId(user.getUserId());
-                 usersEntity.setUsername(user.getUsername());
-                 usersEntity.setEmail(user.getEmail());
-                 usersEntity.setBirthDate(user.getBirthDate());
-                 usersEntity.setMunicipalityCode(user.getMunicipalityCode());
-                 usersEntity.setLicenseStatus(user.getLicenseStatus());
-                return usersEntity;
+                return toUserResponseDto(user);
             } else {
                 return null;
             }
@@ -61,9 +54,9 @@ public class UsersService {
     /**
      * 新規登録
      * @param users ユーザ情報
-     * @return 登録されたユーザ情報（パスワードは含まない）
+     * @return 登録されたユーザー情報DTO（機微情報を含まない）
      */
-    public UsersEntity signupUser(UsersDto users) {
+    public UserResponseDto signupUser(UsersDto users) {
         try {
             // パスワードをハッシュ化
             String hashedPassword = passwordEncoder.encode(users.getPassword());
@@ -76,9 +69,10 @@ public class UsersService {
             newUser.setBirthDate(users.getBirthDate());
             newUser.setMunicipalityCode(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
-            
+
             usersDao.insert(newUser);
-            return newUser;
+            // insert後にDTOへ変換してpasswordHashを含めずに返す
+            return toUserResponseDto(newUser);
         } catch (DataIntegrityViolationException e) {
             // 一意制約違反（ユーザー名重複）の場合は DuplicateUserException に変換してスローする
             throw new DuplicateUserException("このユーザー名は既に使用されています", e);
@@ -90,29 +84,37 @@ public class UsersService {
     /**
      * ユーザー情報の取得
      * @param userId ユーザーID
-     * @return ユーザー情報（パスワードは含まない）
+     * @return ユーザー情報DTO（機微情報を含まない）
      */
-    public UsersEntity getUsersInfo(Long userId) {
+    public UserResponseDto getUsersInfo(Long userId) {
         try {
             UsersEntity user = usersDao.selectById(userId);
             if (ValidateUtils.isNullOrEmpty(user)) {
                 return null;
             }
-            
-            // パスワード以外のユーザー情報を返す
-            UsersEntity usersEntity = new UsersEntity();
-            usersEntity.setUserId(user.getUserId());
-            usersEntity.setUsername(user.getUsername());
-            usersEntity.setEmail(user.getEmail());
-            usersEntity.setBirthDate(user.getBirthDate());
-            usersEntity.setMunicipalityCode(user.getMunicipalityCode());
-            usersEntity.setLicenseStatus(user.getLicenseStatus());
-            return usersEntity;
+            return toUserResponseDto(user);
         } catch (Exception e) {
             return null;
         }
     }
-    
+
+    /**
+     * UsersEntity を UserResponseDto に変換する（機微情報を除外）
+     * @param entity ユーザーエンティティ
+     * @return ユーザー情報DTO
+     */
+    private UserResponseDto toUserResponseDto(UsersEntity entity) {
+        UserResponseDto dto = new UserResponseDto();
+        dto.setUserId(entity.getUserId());
+        dto.setUsername(entity.getUsername());
+        dto.setEmail(entity.getEmail());
+        dto.setBirthDate(entity.getBirthDate());
+        dto.setMunicipalityCode(entity.getMunicipalityCode());
+        dto.setLicenseStatus(entity.getLicenseStatus());
+        dto.setLicenseSurrenderedAt(entity.getLicenseSurrenderedAt());
+        return dto;
+    }
+
     /**
      * ユーザー名によるユーザーの存在確認
      * @param username ユーザー名

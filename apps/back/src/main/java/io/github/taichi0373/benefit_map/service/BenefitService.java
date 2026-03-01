@@ -32,42 +32,33 @@ public class BenefitService {
      * 検索条件に一致する特典を検索
      */
     public List<BenefitDetailEntity> searchBenefits(BenefitEligibilityDto request) {
-        try {
-            // 特典適用条件に一致する特典を取得
-            List<BenefitDetailEntity> benefits = benefitDetailDao.selectEligible(
-                request.getAge(),
-                request.getLicenseStatus(),
-                request.getMunicipalityCd()
-                );
-            return benefits;
-        } catch (Exception e) {
-            return null;
-        }
+        // 特典適用条件に一致する特典を取得
+        return benefitDetailDao.selectEligible(
+            request.getAge(),
+            request.getLicenseStatus(),
+            request.getMunicipalityCd()
+        );
     }
-    
+
     /**
      * ユーザーIDからユーザーが受けられる特典を検索
      */
     public List<BenefitDetailEntity> getUsersBenefits(Long userId) {
-        try {
-            // ユーザー情報を取得
-            UsersEntity user = usersDao.selectById(userId);
-            if (ValidateUtils.isNullOrEmpty(user)) {
-                return null;
-            }
-
-            // 年齢を計算
-            Integer age = AgeUtils.calculateAge(user.getBirthDate());
-
-            // 特典適用条件に一致する特典を取得
-            BenefitEligibilityDto benefitEligibilityDto = new BenefitEligibilityDto();
-            benefitEligibilityDto.setAge(age);
-            benefitEligibilityDto.setLicenseStatus(user.getLicenseStatus());
-            benefitEligibilityDto.setMunicipalityCd(user.getMunicipalityCode());
-            List<BenefitDetailEntity> benefits = searchBenefits(benefitEligibilityDto);
-            return benefits;
-        } catch (Exception e) {
-            return null;
+        // ユーザー情報を取得
+        UsersEntity user = usersDao.selectById(userId);
+        if (ValidateUtils.isNullOrEmpty(user)) {
+            // ユーザーが存在しない場合は空リストを返す
+            return List.of();
         }
+
+        // 年齢を計算
+        Integer age = AgeUtils.calculateAge(user.getBirthDate());
+
+        // 特典適用条件に一致する特典を取得
+        BenefitEligibilityDto benefitEligibilityDto = new BenefitEligibilityDto();
+        benefitEligibilityDto.setAge(age);
+        benefitEligibilityDto.setLicenseStatus(user.getLicenseStatus());
+        benefitEligibilityDto.setMunicipalityCd(user.getMunicipalityCode());
+        return searchBenefits(benefitEligibilityDto);
     }
 }

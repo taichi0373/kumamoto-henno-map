@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.UserResponseDto;
 import io.github.taichi0373.benefit_map.dto.UsersDto;
 import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
-import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.service.UsersService;
 import jakarta.servlet.http.HttpSession;
 
@@ -51,7 +51,7 @@ public class UsersController {
             }
 
             // ユーザー情報取得
-            UsersEntity user = usersService.getUsersInfo(userId);
+            UserResponseDto user = usersService.getUsersInfo(userId);
             if (ValidateUtils.isNullOrEmpty(user)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponseDto.error("ユーザーが見つかりません"));
@@ -105,7 +105,7 @@ public class UsersController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponseDto<?>> login(@RequestBody UsersDto users, HttpSession session) {
         try {
-            UsersEntity usersEntity = usersService.loginUser(users.getUsername(), users.getPassword());
+            UserResponseDto usersEntity = usersService.loginUser(users.getUsername(), users.getPassword());
             if (ValidateUtils.isNullOrEmpty(usersEntity)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponseDto.error("ユーザー名またはパスワードが正しくありません"));
@@ -147,7 +147,7 @@ public class UsersController {
             }
 
             // ユーザー登録処理
-            UsersEntity userEntity = usersService.signupUser(users);
+            UserResponseDto userEntity = usersService.signupUser(users);
             if (ValidateUtils.isNullOrEmpty(userEntity)) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(ApiResponseDto.error("ユーザー登録に失敗しました"));
