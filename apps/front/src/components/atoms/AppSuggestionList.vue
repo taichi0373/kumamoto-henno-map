@@ -1,116 +1,85 @@
 <template>
   <ul 
-    v-show="suggestions.length > 0"
+    v-show="modelValue && modelValue.length > 0"
     class="app-suggestion-list"
     :class="inputClass"
     :style="inputStyle"
   >
     <li 
-      v-for="(suggestion, index) in suggestions" 
-      :key="suggestion.id"
-      :class="['app-suggestion-item', { 'active': index === activeIndex }]"
-      @click="onSelect(suggestion)"
+      v-for="(item, index) in modelValue" 
+      :key="item.id ?? index"
+      :class="['item', { 'active': index === tabindex }]"
+      @click="onSelect(item)"
       @mousedown.prevent
     >
-      <div class="app-suggestion-name">{{ suggestion.name }}</div>
-      <div class="app-suggestion-address">{{ suggestion.formattedAddress }}</div>
+      <div class="name">{{ item.name }}</div>
+      <div class="address">{{ item.address }}</div>
     </li>
   </ul>
 </template>
 
 <script setup lang="ts">
-interface SuggestionItem {
-  id: string | number;
-  name: string;
-  formattedAddress?: string;
-  [key: string]: unknown;
-}
+import { SuggestionDto } from '@/dto/suggestionDto';
 
 withDefaults(defineProps<{
-  suggestions: SuggestionItem[];
-  activeIndex?: number;
+  modelValue?: SuggestionDto[];
+  tabindex?: number;
   inputClass?: string | string[] | Record<string, boolean>;
   inputStyle?: Record<string, string> | string;
 }>(), {
-  activeIndex: -1,
+  tabindex: -1,
   inputClass: "",
   inputStyle: "",
 });
 
 const emit = defineEmits<{
-  (e: 'select', suggestion: SuggestionItem): void;
+  (e: 'select', modelValue: SuggestionDto): void;
 }>();
 
 /**
  * 提案アイテム選択ハンドラ
- * @param suggestion 選択された提案アイテム
+ * @param item 選択された提案アイテム
  */
-const onSelect = (suggestion: SuggestionItem): void => {
-  emit('select', suggestion);
+const onSelect = (item: SuggestionDto): void => {
+  emit('select', item);
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@use "@/assets/scss/base";
+
 .app-suggestion-list {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  background: linear-gradient(180deg, #ffffff 0%, #f8f8f8 100%);
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  max-height: 250px;
+  background: base.$base-100;
+  border: 1px solid base.$base-400;
+  border-radius: 4px;
+  overflow-x: hidden;
   overflow-y: auto;
-  margin: 4px 0 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.app-suggestion-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f1f3f4;
+.item {
+  padding: 8px 12px;
+  border-bottom: 1px solid base.$base-400;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
-  line-height: 1.4;
 }
 
-.app-suggestion-item:last-child {
+.item:last-child {
   border-bottom: none;
 }
 
-.app-suggestion-item:hover {
-  background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
-  transform: translateX(2px);
+.item:hover {
+  background: base.$base-200;
 }
 
-.app-suggestion-item.active {
-  background: linear-gradient(90deg, #333333 0%, #555555 100%);
-  color: white;
-  border-color: #333;
-}
-
-.app-suggestion-name {
-  font-weight: 600;
-  font-size: 14px;
-  color: #333;
+.name {
+  color: base.$base-700;
   margin-bottom: 4px;
 }
 
-.app-suggestion-address {
+.address {
+  color: base.$base-600;
   font-size: 12px;
-  color: #666;
-  opacity: 0.8;
-  line-height: 1.3;
-}
-
-.app-suggestion-item.active .app-suggestion-name {
-  color: white;
-}
-
-.app-suggestion-item.active .app-suggestion-address {
-  color: rgba(255, 255, 255, 0.9);
 }
 </style>

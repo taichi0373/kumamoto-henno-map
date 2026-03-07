@@ -36,9 +36,11 @@ public class RouteController {
             JsonNode result = routeService.searchRoutes(request);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (IOException | ParseException e) {
+            System.out.println(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("経路探索中にエラーが発生しました"));
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("経路探索中にエラーが発生しました"));
         }

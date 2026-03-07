@@ -18,8 +18,9 @@ class ValidateUtils {
 
   /**
    * オブジェクトが null または空文字かどうか
+   * 型ガードとして機能し、false の場合は null / undefined でないことを保証する
    */
-  public static isNullOrEmpty(obj: unknown): boolean {
+  public static isNullOrEmpty(obj: unknown): obj is null | undefined {
     // null または undefined の場合は true
     if (obj === null || obj === undefined) return true
     // 文字列の場合、空文字の場合は true

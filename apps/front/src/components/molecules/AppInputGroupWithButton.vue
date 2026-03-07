@@ -17,7 +17,6 @@
         @focus="onFocus"
         @blur="onBlur"
         @input="onInput"
-        @keydown="onKeydown"
         />
       <AppButton
         :primary="buttonPrimary"
@@ -88,7 +87,6 @@ const emit = defineEmits<{
   (e: 'focus', event: Event): void;
   (e: 'blur', event: Event): void;
   (e: 'input', event: unknown): void;
-  (e: 'keydown', event: KeyboardEvent): void;
   (e: 'button-click', event: unknown): void;
 }>();
 
@@ -110,11 +108,6 @@ const onBlur = (e: Event) => {
 /** 入力イベントの処理 */
 const onInput = (e: unknown) => {
   emit('input', e);
-};
-
-/** キーダウンイベントの処理 */
-const onKeydown = (e: KeyboardEvent) => {
-  emit('keydown', e);
 };
 
 /** ボタンクリック時の処理 */

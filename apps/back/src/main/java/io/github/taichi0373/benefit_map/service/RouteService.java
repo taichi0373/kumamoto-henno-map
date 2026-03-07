@@ -61,6 +61,9 @@ public class RouteService {
             
             JsonNode otpResponse = objectMapper.readTree(responseBody);
             return processOtpResponse(otpResponse, request);
+        } catch (IOException | ParseException e) {
+            System.err.println(e.getMessage());
+            throw new RuntimeException("経路探索のリクエストに失敗しました", e);
         }
     }
     
@@ -69,8 +72,10 @@ public class RouteService {
      */
     private String buildOtpUrl(RouteRequestDto request) {
         StringBuilder url = new StringBuilder(otpApiUrl);
-        url.append("?fromPlace=").append(encodeParam(request.getStartLocation()));
-        url.append("&toPlace=").append(encodeParam(request.getEndLocation()));
+        String fromPlace = buildPlaceParam(request.getStartLocation(), request.getStartLat(), request.getStartLon());
+        String toPlace = buildPlaceParam(request.getEndLocation(), request.getEndLat(), request.getEndLon());
+        url.append("?fromPlace=").append(encodeParam(fromPlace));
+        url.append("&toPlace=").append(encodeParam(toPlace));
         
         if (!ValidateUtils.isNullOrEmpty(request.getTime())) {
             url.append("&time=").append(encodeParam(request.getTime()));
@@ -92,6 +97,16 @@ public class RouteService {
     }
     
     /**
+     * OTP用の地点パラメータを構築（座標がある場合はname::lat,lon形式）
+     */
+    private String buildPlaceParam(String name, Double lat, Double lon) {
+        if (lat != null && lon != null) {
+            return (name != null ? name : "") + "::" + lat + "," + lon;
+        }
+        return name != null ? name : "";
+    }
+
+    /**
      * パラメータをエンコード
      */
     private String encodeParam(String param) {
@@ -110,11 +125,19 @@ public class RouteService {
             
             JsonNode itineraries = planNode.get("itineraries");
             List<Map<String, Object>> processedItineraries = new ArrayList<>();
-            
-            // 最大3つの結果を処理
-            int maxResults = Math.min(3, itineraries.size());
+
+            // 到着時刻の昇順にソートして最大3つを処理
+            List<JsonNode> sortedItineraries = new ArrayList<>();
+            itineraries.forEach(sortedItineraries::add);
+            sortedItineraries.sort((a, b) -> {
+                long endTimeA = a.has("endTime") ? a.get("endTime").asLong() : Long.MAX_VALUE;
+                long endTimeB = b.has("endTime") ? b.get("endTime").asLong() : Long.MAX_VALUE;
+                return Long.compare(endTimeA, endTimeB);
+            });
+
+            int maxResults = Math.min(3, sortedItineraries.size());
             for (int i = 0; i < maxResults; i++) {
-                JsonNode itinerary = itineraries.get(i);
+                JsonNode itinerary = sortedItineraries.get(i);
                 Map<String, Object> processedItinerary = processItinerary(itinerary);
                 processedItineraries.add(processedItinerary);
             }

@@ -7,12 +7,23 @@
 
         <!-- 経路案内ページ -->
         <div class="sidebar-page" v-show="activeTab === 'route-guidance'">
-          <AppRouteGuidance @set-marker="handleSetMarker" @select-on-map="handleSelectOnMap" />
+          <AppRouteGuidance
+            :startSuggestions="startSuggestions"
+            :endSuggestions="endSuggestions"
+            :routes="routeResults"
+            :isLoading="routeSearchLoading"
+            :mapSelectedLocation="mapSelectedLocation"
+            @set-marker="setMarker"
+            @select-on-map="selectOnMap"
+            @search-route="handleSearchRoute"
+            @fetch-suggestions="fetchSuggestions"
+            @clear-suggestions="clearSuggestions"
+          />
         </div>
 
         <!-- 利用できる特典ページ -->
         <div class="sidebar-page" v-show="activeTab === 'users-benefit'">
-          <AppUsersBenefit :user-benefits="userBenefits" :loading="userBenefitsLoading" />
+          <AppUsersBenefit :user-benefits="usersBenefits"/>
         </div>
 
         <!-- 特典を探すページ -->
@@ -43,11 +54,11 @@
           size="medium" icon="pi pi-info-circle" class="map-button" @click="router.push('/support_info')" />
       </div>
       <!-- クロスヘア -->
-      <div v-if="showMapSelectUI" class="map-select-ui">
+      <div v-if="showCrossHair" class="map-select-ui">
         <div class="crosshair"></div>
         <div class="map-select-controls">
-          <AppButton type="button" label="戻る" size="small" severity="secondary" @click="handleMapSelectCancel" />
-          <AppButton type="button" label="選択" size="small" severity="primary" @click="handleMapSelectConfirm" />
+          <AppButton :label="'戻る'" :primary="false" @click="clearMapSelect" />
+          <AppButton :label="'選択'" :primary="true" @click="clickMapSelect" />
         </div>
       </div>
     </div>
@@ -55,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
@@ -69,51 +80,66 @@ import { useMap } from '@/utils/useMap'
 import { AuthUtils } from '@/utils/auth'
 import apiClient from '@/utils/api'
 import { createRouteMarker, type Store, type RouteMarkerType } from '@/utils/markerConfig'
+import { ValidateUtils } from '@/utils/validateUtils'
 import type { AxiosError } from 'axios'
-
-/** ユーザー特典DTO */
-interface UserBenefit {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  discountRate?: number;
-  discountAmount?: number;
-  validPeriod?: string;
-  storeName: string;
-  storeAddress?: string;
-  storePhone?: string;
-  websiteUrl?: string;
-  lat?: number;
-  lon?: number;
-  conditions?: string[];
-}
+import { RouteRequestDto } from '@/dto/routeRequestDto'
+import { BenefitDto } from '@/dto/benefitDto'
+import { MarkerDto } from '@/dto/markerDto'
+import { SuggestionDto } from '@/dto/suggestionDto'
+import { RouteDto } from '@/dto/routeDto'
+import { codeConstant } from '@/utils/codeConstant'
+import { TypeConvertUtils } from '@/utils/typeConvertUtils'
+import { responseStatusConstant } from '@/utils/responseStatusConstant'
 
 /** ルーター */
 const router = useRouter()
 
-/** サイドバー関連の状態 */
+/** nominatim api url */
+const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org'
+
+/** サイドバー表示フラグ */
 const sidebarCollapsed = ref(false)
+/** アクティブタブ */
 const activeTab = ref('route-guidance')
+/** 店舗のマーカー表示フラグ */
 const storeMarkersVisible = ref(false)
+/** ログイン状態 */
 const isLoggedIn = ref(false)
-const userBenefits = ref<UserBenefit[]>([])
+
+/** ユーザー特典データ */
+const usersBenefits = ref<BenefitDto[]>([])
+
+// タブ
 const tabs = ref([
   { id: 'route-guidance', label: 'ルート案内' },
   { id: 'users-benefit', label: '利用できる特典' },
   { id: 'search-benefit', label: '特典を探す' },
 ])
 
-const userBenefitsLoading = ref(false)
 const supportStores = ref<Store[]>([])
 const storesLoading = ref(false)
+
+// マップ選択モードのタイプ（'start' or 'end'）
 const mapSelectMode = ref<string | null>(null)
 
-/** マップ */
-const { mapInstance, markerManager, initializeMap, addStoreMarkers, removeStoreMarkers, cleanup } = useMap()
+// --- 経路案内関連ステート ---
 
-// --- computed ---
-const showMapSelectUI = computed(() => !!mapSelectMode.value)
+/** 出発地の候補リスト */
+const startSuggestions = ref<SuggestionDto[]>([])
+/** 目的地の候補リスト */
+const endSuggestions = ref<SuggestionDto[]>([])
+/** 経路検索結果 */
+const routeResults = ref<RouteDto[]>([])
+/** 経路検索ローディング状態 */
+const routeSearchLoading = ref(false)
+/** マップ上から選択された地点 */
+const mapSelectedLocation = ref<MarkerDto | null>(null)
+
+/** マップ */
+const { mapInstance, markerManager, initializeMap, addStoreMarkers, removeStoreMarkers, addRouteLines, removeRouteLines, cleanup } = useMap()
+
+// クロスヘア表示フラグ
+const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
 
 /** AppTabView用のタブ配列 */
 const tabsForView = computed(() =>
@@ -125,59 +151,173 @@ const activeTabIndex = computed(() =>
   tabs.value.findIndex(tab => tab.id === activeTab.value)
 )
 
-// --- ヘルパー ---
+
+// 初期表示
+onMounted(() => {
+  // ログイン状態の確認
+  checkLoginStatus()
+  // マップの初期化
+  const map = initializeMap('map')
+  if (map) {
+    map.on('load', () => console.log('Map loaded successfully'))
+    map.on('click', async (e) => {
+      // 
+    })
+  }
+})
 
 /** マップ中心座標を取得 */
-const getMapCenter = () => {
-  if (mapInstance.value) {
-    const center = mapInstance.value.getCenter()
-    return { lat: center.lat, lon: center.lng }
-  }
-  return { lat: 0, lon: 0 }
+const getMapCenter = (): { lat: number; lon: number } | null => {
+  if (!mapInstance.value) return null
+  const center = mapInstance.value.getCenter()
+  return { lat: center.lat, lon: center.lng }
 }
 
 /** 逆ジオコーディング */
-const reverseGeocode = async (lat: number, lon: number) => {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=ja&addressdetails=1`
+const reverseGeocoding = async (marker: MarkerDto): Promise<MarkerDto | null> => {
+  const url = `${NOMINATIM_API_URL}/reverse?format=json&lat=${marker.lat}&lon=${marker.lon}&accept-language=ja&addressdetails=1`
   const res = await fetch(url, { headers: { 'User-Agent': 'benefit_map/1.0' } })
   if (!res.ok) return null
-  const data = await res.json()
-  return {
-    name: data.display_name || '',
-    lat,
-    lon,
-    address: data.address || {},
+  const data = await res.json();
+  const name = data.name || data.display_name?.split(',')[0]?.trim() || null
+  const address = formatAddress(data.display_name || '')
+  return new MarkerDto({ type: marker.type, name, address, lat: marker.lat, lon: marker.lon });
+}
+
+/** ジオコーディング */
+const geocoding = async (marker: MarkerDto) => {
+  // 未入力の場合
+  if (ValidateUtils.isNullOrEmpty(marker.name)) {
+    clearSuggestions();
+    return
+  }
+  try {
+    const url = `${NOMINATIM_API_URL}/search?format=json&addressdetails=1&limit=5&countrycodes=jp&q=${encodeURIComponent(marker.name + ' 熊本県')}`
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'benefit_map/1.0' }
+    })
+    const data = await response.json()
+    // 検索結果を候補リストに格納
+    const suggestions = data.map((item: { name: string; display_name: string; lat: string; lon: string }, index: number) =>
+      new SuggestionDto({
+        id: index,
+        name: item.name || formatPlace(item.display_name),
+        address: formatAddress(item.display_name),
+        lat: parseFloat(item.lat),
+        lon: parseFloat(item.lon),
+      })
+    );
+    // 入力欄を更新
+    if (marker.type === codeConstant.SEARCH_TYPE.START) {
+      startSuggestions.value = suggestions
+    } else {
+      endSuggestions.value = suggestions
+    }
+  } catch (error) {
+    console.error('Nominatim location search error:', error)
   }
 }
 
-// --- API ---
+/** 表示用に地点名を変換 */
+const formatPlace = (name: string) => {
+  if (!name) return ''
+  const parts = name.split(',')
+  return parts[0].trim()
+}
+
+/** 表示用に住所を変換 */
+const formatAddress = (address: string) => {
+  if (!address) return ''
+
+  const parts = address.split(',').map(part => part.trim())
+  if (parts[parts.length - 1] === '日本') {
+    parts.pop()
+  }
+  const postalCodeRegex = /^\d{3}-\d{4}$/
+  let postalCodeIndex = -1
+  for (let i = 0; i < parts.length; i++) {
+    if (postalCodeRegex.test(parts[i])) {
+      postalCodeIndex = i
+      break
+    }
+  }
+
+  let formattedParts: string[] = []
+  if (postalCodeIndex >= 0) {
+    formattedParts.push(`〒${parts[postalCodeIndex]}`)
+    parts.splice(postalCodeIndex, 1)
+  }
+  const reversedParts = parts.reverse()
+  formattedParts = formattedParts.concat(reversedParts)
+
+  return formattedParts.join(', ')
+}
+
+/** 経路検索 */
+const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
+  routeSearchLoading.value = true
+  removeRouteLines()
+  try {
+    const response = await apiClient.post('/route/search', {
+      startLocation: routeRequest.startLocation,
+      startLat: routeRequest.startLat,
+      startLon: routeRequest.startLon,
+      endLocation: routeRequest.endLocation,
+      endLat: routeRequest.endLat,
+      endLon: routeRequest.endLon,
+      transportMode: routeRequest.transport,
+      timeSelect: routeRequest.departureArrival,
+      date: routeRequest.date instanceof Date
+        ? routeRequest.date.toISOString().split('T')[0]
+        : '',
+      time: routeRequest.time instanceof Date
+        ? routeRequest.time.toTimeString().split(' ')[0].slice(0, 5)
+        : '',
+      arriveBy: routeRequest.departureArrival === codeConstant.DEPARTURE_ARRIVAL.ARRIVAL ? true : false,
+    })
+    if (response.status === responseStatusConstant.OK) {
+      const routes = (response.data as { data: any[] }).data || []
+      routeResults.value = routes
+      // 全経路を色分けして地図に描画
+      const routeLegs = routes.map((r: any) => r.legs ?? [])
+      if (routeLegs.length > 0) {
+        addRouteLines(routeLegs)
+      }
+    } else {
+      console.error('Route search failed:', response.statusText)
+      alert('経路検索に失敗しました')
+    }
+  } catch (error) {
+    console.error('Route search error:', error)
+    alert('経路検索に失敗しました')
+  } finally {
+    routeSearchLoading.value = false
+  }
+}
 
 /** ユーザー特典データを取得 */
 const fetchUserBenefits = async () => {
-  if (!isLoggedIn.value) return
-  const userId = AuthUtils.getUser()?.id
-  if (!userId) {
-    console.warn('User ID not found')
+  const userId = AuthUtils.getUser()?.id;
+  // ログイン状態でない、またはユーザーIDが取得できない場合は処理しない
+  if (ValidateUtils.isNullOrEmpty(isLoggedIn.value) || ValidateUtils.isNullOrEmpty(userId)) {
     return
   }
-  userBenefitsLoading.value = true
+
   try {
     const response = await apiClient.get(`benefit/users`)
     if ((response.data as { success: boolean }).success) {
-      userBenefits.value = ((response.data as unknown) as { data: UserBenefit[] }).data || []
+      usersBenefits.value = ((response.data as unknown) as { data: BenefitDto[] }).data || []
     } else {
       console.warn('特典データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
-      userBenefits.value = []
+      usersBenefits.value = []
     }
   } catch (error: unknown) {
     console.error('特典データの取得中にエラーが発生しました:', error)
     if ((error as AxiosError).response?.status === 401) {
       AuthUtils.logout()
       isLoggedIn.value = false
-      userBenefits.value = []
+      usersBenefits.value = []
     }
-  } finally {
-    userBenefitsLoading.value = false
   }
 }
 
@@ -200,7 +340,6 @@ const fetchSupportStores = async () => {
   }
 }
 
-// --- イベントハンドラ ---
 
 /** サイドバーの表示/非表示切替 */
 const toggleSidebar = () => {
@@ -210,7 +349,7 @@ const toggleSidebar = () => {
 /** アクティブタブの設定 */
 const setActiveTab = (tab: string) => {
   activeTab.value = tab
-  if (tab === 'users-benefit' && isLoggedIn.value && userBenefits.value.length === 0) {
+  if (tab === 'users-benefit' && isLoggedIn.value && usersBenefits.value.length === 0) {
     fetchUserBenefits()
   }
 }
@@ -246,33 +385,52 @@ const toggleStoreDisplay = async () => {
   }
 }
 
-/** マップ選択確定 */
-const handleMapSelectConfirm = async () => {
-  const { lat, lon } = getMapCenter()
-  const result = await reverseGeocode(lat, lon)
-  if (result) {
-    window.dispatchEvent(new CustomEvent('map-selected-location', { detail: { type: mapSelectMode.value, ...result } }))
-    mapSelectMode.value = null
+/** マップ：「選択」ボタン押下時 */
+const clickMapSelect = async () => {
+  // マップの中心座標を取得
+  const center = getMapCenter()
+  // 中心座標が取得できない場合
+  if (ValidateUtils.isNullOrEmpty(center)) {
+    return
   }
+  // 逆ジオコーディングで地点情報を取得
+  const result = await reverseGeocoding(new MarkerDto({ name: null, address: null, lat: TypeConvertUtils.toNumberNullorEmptyToZero(center.lat), lon: TypeConvertUtils.toNumberNullorEmptyToZero(center.lon), type: mapSelectMode.value }));
+  if (!ValidateUtils.isNullOrEmpty(result)) {
+    result.type = mapSelectMode.value
+    mapSelectedLocation.value = result
+  }
+  // マップ選択モード終了
+  clearMapSelect();
 }
 
-/** マップ選択キャンセル */
-const handleMapSelectCancel = () => {
+/** マップ：「戻る」ボタン押下時 */
+const clearMapSelect = () => {
   mapSelectMode.value = null
 }
 
-/** 経路案内マーカーの設置 */
-const handleSetMarker = ({ type, lat, lon }: { type: string; lat: number; lon: number; address: string }) => {
+/** マーカー設置 */
+const setMarker = (marker: MarkerDto) => {
   if (!mapInstance.value) return
-  markerManager.value.removeMarker(`route-${type}`)
-  const marker = createRouteMarker(lat, lon, type as RouteMarkerType)
-  markerManager.value.addMarker(`route-${type}`, marker, mapInstance.value)
-  mapInstance.value.flyTo({ center: [lon, lat], zoom: 16 })
+  markerManager.value.removeMarker(`route-${marker.type}`)
+  const newMarker = createRouteMarker(marker.lat!, marker.lon!, marker.type as RouteMarkerType)
+  markerManager.value.addMarker(`route-${marker.type}`, newMarker, mapInstance.value)
+  mapInstance.value.flyTo({ center: [marker.lon!, marker.lat!], zoom: 16 })
 }
 
 /** マップ選択モード開始 */
-const handleSelectOnMap = (type: string) => {
+const selectOnMap = (type: string) => {
   mapSelectMode.value = type
+}
+
+/** 候補リストの取得（ジオコーディング） */
+const fetchSuggestions = (marker: MarkerDto) => {
+  geocoding(new MarkerDto({ name: marker.name, type: marker.type, lat: null, lon: null, address: null }))
+}
+
+/** 候補リストのクリア */
+const clearSuggestions = () => {
+  startSuggestions.value = []
+  endSuggestions.value = []
 }
 
 /** ログイン状態の確認・更新 */
@@ -283,39 +441,9 @@ const checkLoginStatus = () => {
   if (isLoggedIn.value) {
     fetchUserBenefits()
   } else {
-    userBenefits.value = []
+    usersBenefits.value = []
   }
 }
-
-// --- ライフサイクル ---
-
-onMounted(() => {
-  checkLoginStatus()
-
-  const map = initializeMap('map')
-  if (map) {
-    map.on('load', () => console.log('Map loaded successfully'))
-    map.on('click', async (e) => {
-      if (!mapSelectMode.value) return
-      const { lat, lng: lon } = e.lngLat
-      const result = await reverseGeocode(lat, lon)
-      if (result) {
-        window.dispatchEvent(new CustomEvent('map-selected-location', { detail: { type: mapSelectMode.value, ...result } }))
-        mapSelectMode.value = null
-      }
-    })
-  }
-
-  window.addEventListener('storage', checkLoginStatus)
-  window.addEventListener('auth-status-changed', checkLoginStatus)
-})
-
-onUnmounted(() => {
-  cleanup()
-  window.removeEventListener('storage', checkLoginStatus)
-  window.removeEventListener('auth-status-changed', checkLoginStatus)
-})
-
 
 </script>
 
