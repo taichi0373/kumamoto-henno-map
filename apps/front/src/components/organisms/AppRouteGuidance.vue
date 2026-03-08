@@ -64,17 +64,21 @@
   </div>
 
   <!-- 経路探索結果 -->
-  <div v-if="routes.length > 0" class="route-results">
-    <h4 class="section-title">検索結果</h4>
-
-    <div class="route-list">
-      <div v-for="(route, index) in routes" :key="index" class="route-item">
-        <div class="route-summary">
-          <span class="route-time">{{ route.totalDuration }}</span>
-          <span class="route-cost">{{ route.totalCost }}円</span>
-        </div>
+  <div v-if="routes.length > 0" class="p-2">
+    <template v-for="(route, index) in routes" :key="index" >
+      <div :class="['route-card', { 'route-card--active': props.activeRouteIndex === index }]" @click="emit('select-route', index)">
+        <AppCard class="mb-3">
+          <!-- <template #title>{{ route.routeName }}</template> -->
+          <p>
+            <span class="route-number" :style="{ backgroundColor: props.activeRouteIndex === index ? ROUTE_ACTIVE_COLORS[index] : '#757575' }">{{ index + 1 }}</span>
+            {{ formatJapaneseTime(route.startTime) }}～{{ formatJapaneseTime(route.endTime) }} ({{ route.duration }}分)
+          </p>
+          <p>
+            {{ route.totalFare }}円<span v-if="route.totalDiscountFare"> → {{ route.totalDiscountFare }}円</span> / 乗り換え：{{ route.transfers }}回
+          </p>
+        </AppCard>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
@@ -84,6 +88,7 @@ import type { Ref } from 'vue'
 import AppLabel from '../atoms/AppLabel.vue'
 import AppSelect from '../atoms/AppSelect.vue'
 import AppButton from '../atoms/AppButton.vue'
+import AppCard from '../atoms/AppCard.vue'
 import AppInputGroupWithButton from '../molecules/AppInputGroupWithButton.vue'
 import AppSuggestionList from '../atoms/AppSuggestionList.vue'
 import AppCalendar from '../atoms/AppCalendar.vue'
@@ -98,6 +103,7 @@ import { ValidateUtils } from '@/utils/validateUtils'
 import { MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
 import { InputFormErrorDto } from "@/dto/InputFormErrorDto";
 import { MessageUtils } from '@/utils/messageUtils'
+import { ROUTE_ACTIVE_COLORS } from '@/utils/useMap'
 
 const props = withDefaults(defineProps<{
   /** 出発地候補リスト */
@@ -110,12 +116,15 @@ const props = withDefaults(defineProps<{
   isLoading?: boolean;
   /** マップ選択結果 */
   mapSelectedLocation?: MarkerDto | null;
+  /** マップでアクティブな経路インデックス */
+  activeRouteIndex?: number;
 }>(), {
   startSuggestions: () => [],
   endSuggestions: () => [],
   routes: () => [],
   isLoading: false,
   mapSelectedLocation: null,
+  activeRouteIndex: 0,
 });
 
 const emit = defineEmits<{
@@ -125,10 +134,14 @@ const emit = defineEmits<{
   (e: 'select-on-map', type: string): void;
   /** マーカー設置 */
   (e: 'set-marker', marker: MarkerDto): void;
+  /** マーカー削除 */
+  (e: 'remove-marker', type: string): void;
   /** 候補リストの取得（ジオコーディング） */
   (e: 'fetch-suggestions', marker: MarkerDto): void;
   /** 候補リストのクリア */
   (e: 'clear-suggestions'): void;
+  /** 経路カード選択 */
+  (e: 'select-route', index: number): void;
 }>();
 
 /** エラーオブジェクト */
@@ -247,8 +260,11 @@ const debounceSearch = (callback: () => void, delay: number) => {
   debounceTimer = setTimeout(callback, delay)
 }
 
-// 入力時の処理：HomePageにジオコーディングをリクエスト
+// 入力時の処理
 const onInput = (type: string) => {
+  // マーカー削除
+  emit('remove-marker', type)
+  // 入力値からジオコーディング
   debounceSearch(() => {
     const input = type === codeConstant.SEARCH_TYPE.START
       ? searchRoute.value.startLocation
@@ -257,8 +273,9 @@ const onInput = (type: string) => {
   }, 500)
 }
 
-// フォーカス時の処理：HomePageにジオコーディングをリクエスト
+// フォーカス時の処理
 const onFocus = (type: string) => {
+  // 入力値からジオコーディング
   debounceSearch(() => {
     const input = type === codeConstant.SEARCH_TYPE.START
       ? searchRoute.value.startLocation
@@ -313,6 +330,14 @@ const handleOutsideClick = (event: MouseEvent) => {
   }
 }
 
+
+/** "HH:mm" 形式を "HH時mm分" 形式に変換 */
+const formatJapaneseTime = (time: string | null): string => {
+  if (!time) return ''
+  const [hour, minute] = time.split(':')
+  return `${hour}時${minute}分`
+}
+
 // 経路検索
 const handleSearchRoute = (route: RouteRequestDto) => {
   // エラーチェック
@@ -363,4 +388,30 @@ function checkError(): boolean {
 
 <style scoped lang="scss">
 @use "@/assets/scss/base";
+
+.route-card {
+  cursor: pointer;
+  border-radius: 8px;
+
+  &--active {
+    outline: 2px solid #1A74FD;
+    border-radius: 8px;
+  }
+}
+
+.route-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #3b82f6);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  margin-right: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
 </style>

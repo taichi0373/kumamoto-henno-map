@@ -1,8 +1,7 @@
-import { ref, type Ref } from 'vue'
-import type { Map, Marker } from 'maplibre-gl'
+import { ref, shallowRef, type Ref } from 'vue'
+import maplibregl, { type Map, type Marker } from 'maplibre-gl'
 import {
   createMapInstance,
-  setupMapLibre,
   setupMapControls,
   setupMapClickEvents,
   type MapConfig,
@@ -17,60 +16,90 @@ export interface RouteLeg {
 }
 
 export interface UseMapReturn {
+  /* マップインスタンス */
   mapInstance: Ref<Map | null>
+  /* 店舗マーカーのリスト */
   storeMarkers: Ref<Marker[]>
-  markerManager: any
+  /* マーカー管理クラスのインスタンス */
+  markerManager: Ref<MarkerManager>
+  /* アクティブな経路インデックス */
+  activeRouteIndex: Ref<number>
+  /* マップ初期化関数 */
   initializeMap: (containerId: string, config?: Partial<MapConfig>, clickEventOptions?: MapClickOptions | null) => Map
+  /* 店舗マーカー追加関数 */
   addStoreMarkers: (stores: Store[]) => void
+  /* 店舗マーカー削除関数 */
   removeStoreMarkers: () => void
+  /* ルートライン追加関数 */
   addRouteLines: (routes: RouteLeg[][]) => void
-  removeRouteLines: () => void
+  /* ルートライン削除関数 */
+  removeRouteLines: (layerId: string) => void
+  /* アクティブ経路を切り替える関数 */
+  setActiveRoute: (routeIndex: number) => void
+  /* クリーンアップ関数 */
   cleanup: () => void
 }
 
-/** 経路番号別カラー（1件目・2件目・3件目） */
-const ROUTE_COLORS = ['#2196F3', '#FF9800', '#4CAF50']
+/** 経路番号別アクティブカラー（各経路固有色） */
+export const ROUTE_ACTIVE_COLORS = ['#1A74FD', '#1A74FD', '#1A74FD']
+/** 非アクティブ経路のカラー */
+const ROUTE_INACTIVE_COLOR = '#757575'
 
-/** Googleエンコードポリラインをデコードして[lon, lat]座標配列を返す */
+/** ポリラインデコード関数 */
 const decodePolyline = (encoded: string): [number, number][] => {
-  const result: [number, number][] = []
-  let index = 0
-  let lat = 0
-  let lng = 0
-  while (index < encoded.length) {
-    let shift = 0; let b = 0; let byte: number
-    do { byte = encoded.charCodeAt(index++) - 63; b |= (byte & 0x1f) << shift; shift += 5 } while (byte >= 0x20)
-    lat += (b & 1) !== 0 ? ~(b >> 1) : b >> 1
-    shift = 0; b = 0
-    do { byte = encoded.charCodeAt(index++) - 63; b |= (byte & 0x1f) << shift; shift += 5 } while (byte >= 0x20)
-    lng += (b & 1) !== 0 ? ~(b >> 1) : b >> 1
-    result.push([lng / 1e5, lat / 1e5])
+  let points: [number, number][] = [];
+  let index = 0, len = encoded.length;
+  let lat = 0, lng = 0;
+
+  while (index < len) {
+    let b: number, shift: number = 0, result: number = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+    lng += dlng;
+
+    points.push([lat / 1e5, lng / 1e5]);
   }
-  return result
+  return points;
 }
 
 export const useMap = (): UseMapReturn => {
   const mapInstance: Ref<Map | null> = ref(null)
   const storeMarkers: Ref<Marker[]> = ref([])
-  const markerManager = ref(new MarkerManager())
+  const markerManager = shallowRef(new MarkerManager())
+  const activeRouteIndex: Ref<number> = ref(0)
+  /** 経路インデックスとレイヤーIDのマッピング */
+  const routeLayerMap: Ref<Record<number, string[]>> = ref({})
 
   const initializeMap = (
-    containerId: string, 
-    config: Partial<MapConfig> = {}, 
+    containerId: string,
+    config: Partial<MapConfig> = {},
     clickEventOptions: MapClickOptions | null = null
   ): Map => {
-    setupMapLibre()
     const map = createMapInstance(containerId, config)
     mapInstance.value = map
-    
+
     // 基本的なマップコントロールを設定
     setupMapControls(map)
-    
+
     // クリックイベントが必要な場合は設定
     if (clickEventOptions) {
       setupMapClickEvents(map, clickEventOptions)
     }
-    
+
     return map
   }
 
@@ -98,69 +127,123 @@ export const useMap = (): UseMapReturn => {
     markerManager.value.removeMarkersByType('store')
   }
 
-  /** ルートラインを地図に追加（経路ごとに色分けして全件表示） */
+  /** ルートラインを地図に追加 */
   const addRouteLines = (routes: RouteLeg[][]): void => {
     const map = mapInstance.value
     if (!map) return
-    removeRouteLines()
 
-    console.log('[addRouteLines] routes:', routes.length)
-    routes.slice(0, ROUTE_COLORS.length).forEach((legs, routeIndex) => {
-      const features = legs
-        .filter(leg => leg.legGeometry?.points)
-        .map(leg => ({
-          type: 'Feature' as const,
-          properties: {},
-          geometry: {
-            type: 'LineString' as const,
-            coordinates: decodePolyline(leg.legGeometry!.points!)
+    let allCoordinates: [number, number][] = []
+    routeLayerMap.value = {}
+    activeRouteIndex.value = 0
+
+    routes.forEach((routeLegs, routeIndex) => {
+      routeLayerMap.value[routeIndex] = []
+      routeLegs.forEach((leg, legIndex) => {
+        if (leg.legGeometry?.points) {
+          const latlngs = decodePolyline(leg.legGeometry.points)
+          if (latlngs.length > 0) {
+            const coordinates = latlngs.map(point => [point[1], point[0]] as [number, number]);
+            coordinates.forEach(coord =>
+              allCoordinates.push(coord)
+            );
+            const layerId = addRouteLayer(routeIndex, legIndex, coordinates);
+            routeLayerMap.value[routeIndex].push(layerId)
           }
-        }))
+        }
+      })
+      const bounds = new maplibregl.LngLatBounds();
+      allCoordinates.forEach(coord => bounds.extend(coord));
+      map.fitBounds(bounds, { padding: 50 });
+    })
 
-      console.log(`[addRouteLines] route ${routeIndex}: ${legs.length} legs, ${features.length} features`)
-      if (features.length === 0) return
+    // 1件目の経路レイヤーを最前面に移動
+    const firstLayerIds = routeLayerMap.value[0] || []
+    firstLayerIds.forEach(id => {
+      if (map.getLayer(id)) map.moveLayer(id)
+    })
 
-      const sourceId = `route-source-${routeIndex}`
-      const layerId = `route-layer-${routeIndex}`
-      try {
-        map.addSource(sourceId, {
-          type: 'geojson',
-          data: { type: 'FeatureCollection', features }
+    // 全経路にクリックイベントを登録（選択中の経路を切り替え）
+    routes.forEach((_, routeIndex) => {
+      const layerIds = routeLayerMap.value[routeIndex] || []
+      layerIds.forEach(layerId => {
+        map.on('click', layerId, () => {
+          setActiveRoute(routeIndex)
         })
-        map.addLayer({
-          id: layerId,
-          type: 'line',
-          source: sourceId,
-          layout: { 'line-join': 'round', 'line-cap': 'round' },
-          paint: {
-            'line-color': ROUTE_COLORS[routeIndex],
-            'line-width': 5,
-            'line-opacity': 0.85
-          }
-        })
-        console.log(`[addRouteLines] layer ${layerId} added`)
-      } catch (e) {
-        console.error(`[addRouteLines] layer ${layerId} 追加エラー:`, e)
+      })
+    })
+  }
+
+  /** アクティブ経路を切り替え、地図上の色を更新する */
+  const setActiveRoute = (routeIndex: number): void => {
+    const map = mapInstance.value
+    if (!map || activeRouteIndex.value === routeIndex) return
+    // 現在アクティブな経路をグレーに戻す
+    const prevLayerIds = routeLayerMap.value[activeRouteIndex.value] || []
+    prevLayerIds.forEach((id: string) => {
+      if (map.getLayer(id)) map.setPaintProperty(id, 'line-color', ROUTE_INACTIVE_COLOR)
+    })
+    // 新しい経路を固有カラーにして最前面へ
+    const nextLayerIds = routeLayerMap.value[routeIndex] || []
+    nextLayerIds.forEach(id => {
+      if (map.getLayer(id)) {
+        map.setPaintProperty(id, 'line-color', ROUTE_ACTIVE_COLORS[routeIndex])
+        map.moveLayer(id)
       }
     })
+    activeRouteIndex.value = routeIndex
+  }
+
+
+  // 地図のルート追加
+  function addRouteLayer(routeIndex: number, legIndex: number, coordinates: [number, number][]): string {
+    const map = mapInstance.value
+    const layerId: string = 'route-' + routeIndex + '-' + legIndex
+    if (!map) return layerId
+    const color: string = routeIndex === 0 ? ROUTE_ACTIVE_COLORS[routeIndex] : ROUTE_INACTIVE_COLOR;
+
+    // レイヤー初期化
+    removeRouteLines(layerId)
+
+    // レイヤー追加
+    map.addLayer({
+      id: layerId,
+      type: 'line',
+      source: {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          properties: null, // ルートの属性を必要に応じて追加（路線名、交通手段種別など）
+          geometry: {
+            type: 'LineString',
+            coordinates: coordinates
+          }
+        }
+      },
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      },
+      paint: {
+        'line-color': color,
+        'line-width': 5
+      }
+    });
+    return layerId
   }
 
   /** ルートラインを地図から削除 */
-  const removeRouteLines = (): void => {
+  const removeRouteLines = (layerId: string): void => {
     const map = mapInstance.value
     if (!map) return
-    ROUTE_COLORS.forEach((_, i) => {
-      const layerId = `route-layer-${i}`
-      const sourceId = `route-source-${i}`
-      try {
-        if (map.getLayer(layerId)) map.removeLayer(layerId)
-        if (map.getSource(sourceId)) map.removeSource(sourceId)
-      } catch (e) {
-        console.error(`[removeRouteLines] ${i} 削除エラー:`, e)
-      }
-    })
+    if (map.getLayer(layerId)) {
+      map.removeLayer(layerId);
+    }
+    if (map.getSource(layerId)) {
+      map.removeSource(layerId);
+    }
   }
 
+  /** マップ上のすべてのリソースを初期化 */
   const cleanup = (): void => {
     if (mapInstance.value) {
       markerManager.value.clearAllMarkers()
@@ -173,11 +256,13 @@ export const useMap = (): UseMapReturn => {
     mapInstance,
     storeMarkers,
     markerManager,
+    activeRouteIndex,
     initializeMap,
     addStoreMarkers,
     removeStoreMarkers,
     addRouteLines,
     removeRouteLines,
+    setActiveRoute,
     cleanup
   }
 }

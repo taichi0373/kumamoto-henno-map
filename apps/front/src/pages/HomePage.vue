@@ -13,11 +13,14 @@
             :routes="routeResults"
             :isLoading="routeSearchLoading"
             :mapSelectedLocation="mapSelectedLocation"
+            :activeRouteIndex="activeRouteIndex"
             @set-marker="setMarker"
+            @remove-marker="removeMarker"
             @select-on-map="selectOnMap"
             @search-route="handleSearchRoute"
             @fetch-suggestions="fetchSuggestions"
             @clear-suggestions="clearSuggestions"
+            @select-route="setActiveRoute"
           />
         </div>
 
@@ -136,7 +139,7 @@ const routeSearchLoading = ref(false)
 const mapSelectedLocation = ref<MarkerDto | null>(null)
 
 /** マップ */
-const { mapInstance, markerManager, initializeMap, addStoreMarkers, removeStoreMarkers, addRouteLines, removeRouteLines, cleanup } = useMap()
+const { mapInstance, markerManager, activeRouteIndex, initializeMap, addStoreMarkers, removeStoreMarkers, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
 
 // クロスヘア表示フラグ
 const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
@@ -256,7 +259,6 @@ const formatAddress = (address: string) => {
 /** 経路検索 */
 const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
   routeSearchLoading.value = true
-  removeRouteLines()
   try {
     const response = await apiClient.post('/route/search', {
       startLocation: routeRequest.startLocation,
@@ -277,7 +279,9 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
     })
     if (response.status === responseStatusConstant.OK) {
       const routes = (response.data as { data: any[] }).data || []
+      // 経路探索結果（サイドバー表示用）
       routeResults.value = routes
+      console.log(routeResults.value);
       // 全経路を色分けして地図に描画
       const routeLegs = routes.map((r: any) => r.legs ?? [])
       if (routeLegs.length > 0) {
@@ -411,10 +415,16 @@ const clearMapSelect = () => {
 /** マーカー設置 */
 const setMarker = (marker: MarkerDto) => {
   if (!mapInstance.value) return
-  markerManager.value.removeMarker(`route-${marker.type}`)
-  const newMarker = createRouteMarker(marker.lat!, marker.lon!, marker.type as RouteMarkerType)
+  markerManager.value.removeMarker(`route-${marker.type}`);
+  const newMarker = createRouteMarker(marker.lat!, marker.lon!, marker.type as RouteMarkerType);
   markerManager.value.addMarker(`route-${marker.type}`, newMarker, mapInstance.value)
   mapInstance.value.flyTo({ center: [marker.lon!, marker.lat!], zoom: 16 })
+}
+
+
+/** マーカー削除 */
+const removeMarker = (type: string) => {
+  markerManager.value.removeMarker(`route-${type}`)
 }
 
 /** マップ選択モード開始 */

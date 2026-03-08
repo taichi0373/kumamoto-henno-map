@@ -1,6 +1,11 @@
 const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
-  transpileDependencies: true, 
+  transpileDependencies: true,
+
+  chainWebpack: (config) => {
+    // maplibre-gl v5はESMバンドル済みファイルのため、Babelによる再トランスパイルを除外する
+    config.module.rule('js').exclude.add(/node_modules[\\/]maplibre-gl/)
+  },
   
   // 開発サーバーの設定
   devServer: {
