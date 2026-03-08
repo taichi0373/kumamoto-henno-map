@@ -11,6 +11,7 @@
       :style="inputStyle"
       :maxlength="maxlength ?? undefined"
       :tabindex="computedTabindex"
+      :autocomplete="autocomplete"
       @input="onInput"
       @focus="onFocus"
       @blur="onBlur"
@@ -42,6 +43,7 @@ const props = withDefaults(defineProps<{
   inputStyle?: Record<string, string> | string;
   inputClass?: string;
   tabindex?: number;
+  autocomplete?: string;
 }>(), {
   modelValue: null,
   type: "text",
@@ -56,6 +58,7 @@ const props = withDefaults(defineProps<{
   inputStyle: "",
   inputClass: "",
   tabindex: 0,
+  autocomplete: "off",
 });
 
 const emit = defineEmits<{

@@ -2,6 +2,8 @@ import maplibregl from 'maplibre-gl'
 import type { Map, Marker, Popup } from 'maplibre-gl'
 import type { MarkerType, RouteMarkerType, MarkerOptions } from './markerTypes'
 
+export { MarkerType, RouteMarkerType } from './markerTypes'
+
 // 型定義
 export interface Store {
   latitude?: number
@@ -54,12 +56,6 @@ export const createRouteMarker = (lat: number, lon: number, type: RouteMarkerTyp
     start: '#4CAF50',
     end: '#F44336',
     stop: '#FF9800'
-  }
-
-  const icons: Record<RouteMarkerType, string> = {
-    start: 'S',
-    end: 'E',
-    stop: 'P'
   }
 
   const color = colors[type] || '#3FB1CE'
