@@ -28,11 +28,11 @@
     <!-- 特典リスト -->
     <div v-else class="benefits-list">
       <div class="benefits-summary">
-        <span class="benefits-count">{{ usersBenefits.length }}件の特典が利用可能です</span>
+        <span class="benefits-count">{{ filteredBenefits.length }}件の特典が利用可能です</span>
       </div>
 
       <div
-        v-for="benefit in usersBenefits"
+        v-for="benefit in filteredBenefits"
         :key="benefit.benefitId"
         :data-benefit-id="benefit.benefitId"
         class="benefit-card"
@@ -132,6 +132,28 @@ const sortOptions = [
   { label: 'カテゴリー順', text: 'categoryCd', value: 'categoryCd' },
   { label: '有効期限順', text: 'validPeriod', value: 'validPeriod' }
 ];
+
+/** フィルター・ソート済み特典リスト */
+const filteredBenefits = computed(() => {
+  let result = [...(props.usersBenefits ?? [])]
+
+  // カテゴリーフィルター
+  if (selectedCategory.value) {
+    result = result.filter(b => b.categoryCd === selectedCategory.value)
+  }
+
+  // ソート
+  result.sort((a, b) => {
+    if (sortOrder.value === 'categoryCd') {
+      return (a.categoryCd ?? '').localeCompare(b.categoryCd ?? '')
+    } else if (sortOrder.value === 'validPeriod') {
+      return (a.expDetail ?? '').localeCompare(b.expDetail ?? '')
+    }
+    return (a.benefitName ?? '').localeCompare(b.benefitName ?? '')
+  })
+
+  return result
+});
 
 const formatDate = (dateString: string) => {
   try {

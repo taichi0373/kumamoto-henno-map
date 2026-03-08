@@ -303,7 +303,7 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
 const fetchUserBenefits = async () => {
   const userId = AuthUtils.getUser()?.id;
   // ログイン状態でない、またはユーザーIDが取得できない場合は処理しない
-  if (ValidateUtils.isNullOrEmpty(isLoggedIn.value) || ValidateUtils.isNullOrEmpty(userId)) {
+  if (!isLoggedIn.value || ValidateUtils.isNullOrEmpty(userId)) {
     return
   }
 
