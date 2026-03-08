@@ -17,10 +17,10 @@ export interface MapConfig {
 export interface MapClickOptions {
   onMapClick?: (e: maplibregl.MapMouseEvent, lat: number, lon: number) => void
   ReverseGeocoding?: ReverseGeocodingFunction
-  isWaitingForInput_S?: boolean
-  isWaitingForInput_E?: boolean
-  start_location?: { value: string }
-  end_location?: { value: string }
+  isWaitingForInputStart?: boolean
+  isWaitingForInputEnd?: boolean
+  startLocation?: { value: string }
+  endLocation?: { value: string }
   placeMarker?: PlaceMarkerFunction
   startMarker?: Marker
   endMarker?: Marker
@@ -46,11 +46,6 @@ const KUMAMOTO_BOUNDS: LngLatBoundsLike = [
   [128.523336, 30.896306],
   [132.3318, 34.0596]
 ]
-
-// MapLibre GL JSの設定
-export const setupMapLibre = (): void => {
-  // 必要に応じて追加の設定
-}
 
 // マップ初期化関数
 export const createMapInstance = (containerId: string, config: Partial<MapConfig> = {}): Map => {
@@ -106,10 +101,10 @@ export const setupMapClickEvents = (map: Map, options: MapClickOptions = {}): vo
   const {
     onMapClick,
     ReverseGeocoding,
-    isWaitingForInput_S,
-    isWaitingForInput_E,
-    start_location,
-    end_location,
+    isWaitingForInputStart,
+    isWaitingForInputEnd,
+    startLocation,
+    endLocation,
     placeMarker,
     startMarker,
     endMarker,
@@ -121,16 +116,16 @@ export const setupMapClickEvents = (map: Map, options: MapClickOptions = {}): vo
   map.on('click', async function (e: maplibregl.MapMouseEvent) {
     const lat: number = e.lngLat.lat
     const lon: number = e.lngLat.lng
-    
+
     if (onMapClick) {
       onMapClick(e, lat, lon)
       return
     }
 
-    if (isWaitingForInput_S && ReverseGeocoding && start_location && placeMarker) {
+    if (isWaitingForInputStart && ReverseGeocoding && startLocation && placeMarker) {
       const locationData = await ReverseGeocoding(lat, lon)
       if (locationData) {
-        start_location.value = locationData.name
+        startLocation.value = locationData.name
         placeMarker(lat, lon, locationData.name, 'start')
         if (startMarker && endMarker && clearMarker && clearRoutes && searchRouteEvent) {
           clearMarker('stop')
@@ -140,10 +135,10 @@ export const setupMapClickEvents = (map: Map, options: MapClickOptions = {}): vo
       } else {
         alert('位置情報データが見つかりませんでした')
       }
-    } else if (isWaitingForInput_E && ReverseGeocoding && end_location && placeMarker) {
+    } else if (isWaitingForInputEnd && ReverseGeocoding && endLocation && placeMarker) {
       const locationData = await ReverseGeocoding(lat, lon)
       if (locationData) {
-        end_location.value = locationData.name
+        endLocation.value = locationData.name
         placeMarker(lat, lon, locationData.name, 'end')
         if (startMarker && endMarker && clearMarker && clearRoutes && searchRouteEvent) {
           clearMarker('stop')
@@ -162,45 +157,5 @@ export const zoomToLocation = (map: Map, lat: number, lon: number): void => {
   map.flyTo({
     center: [lon, lat],
     zoom: 16
-  })
-}
-
-// 地図のルート追加関数
-export const addRouteLayer = (map: Map, routeNumber: number, index: number, coordinates: number[][]): void => {
-  const layerId: string = 'route-' + routeNumber + '-' + index
-  const colors: string[] = ['#1A74FD', '#757575', '#757575']
-  const color: string = colors[routeNumber] || '#757575'
-  
-  // 既存のレイヤーとソースを削除
-  if (map.getLayer(layerId)) {
-    map.removeLayer(layerId)
-  }
-  if (map.getSource(layerId)) {
-    map.removeSource(layerId)
-  }
-  
-  // 新しいレイヤーを追加
-  map.addLayer({
-    id: layerId,
-    type: 'line',
-    source: {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: coordinates
-        }
-      }
-    },
-    layout: {
-      'line-join': 'round',
-      'line-cap': 'round'
-    },
-    paint: {
-      'line-color': color,
-      'line-width': 5
-    }
   })
 }

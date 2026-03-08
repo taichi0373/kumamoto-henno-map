@@ -10,14 +10,8 @@
       </p>
     </div>
 
-    <!-- ローディング -->
-    <div v-if="loading" class="loading-container">
-      <i class="pi pi-spin pi-spinner"></i>
-      <span>特典情報を読み込み中...</span>
-    </div>
-
     <!-- 特典がない場合 -->
-    <div v-else-if="!loading && (!userBenefits || userBenefits.length === 0)" class="no-benefits">
+    <div v-if="!usersBenefits || usersBenefits.length === 0" class="no-benefits">
       <i class="pi pi-info-circle"></i>
       <p>現在利用できる特典がありません。</p>
       <p class="suggestion">プロフィールを更新すると、より多くの特典が表示される場合があります。</p>
@@ -34,96 +28,52 @@
     <!-- 特典リスト -->
     <div v-else class="benefits-list">
       <div class="benefits-summary">
-        <span class="benefits-count">{{ userBenefits.length }}件の特典が利用可能です</span>
+        <span class="benefits-count">{{ filteredBenefits.length }}件の特典が利用可能です</span>
       </div>
 
       <div
-        v-for="benefit in userBenefits"
-        :key="benefit.id"
-        :data-benefit-id="benefit.id"
+        v-for="benefit in filteredBenefits"
+        :key="benefit.benefitId"
+        :data-benefit-id="benefit.benefitId"
         class="benefit-card"
       >
         <div class="benefit-header">
-          <h4 class="benefit-title">{{ benefit.name }}</h4>
-          <span class="benefit-category">{{ benefit.category }}</span>
+          <h4 class="benefit-title">{{ benefit.benefitName }}</h4>
+          <span class="benefit-category">{{ benefit.categoryCd }}</span>
         </div>
 
         <div class="benefit-content">
           <div class="benefit-description">
-            {{ benefit.description }}
+            {{ benefit.benefitDetail }}
           </div>
 
           <!-- 特典詳細 -->
           <div class="benefit-details">
-            <div v-if="benefit.discountRate" class="detail-item">
-              <i class="pi pi-percentage"></i>
-              <span>{{ benefit.discountRate }}% 割引</span>
-            </div>
-            <div v-if="benefit.discountAmount" class="detail-item">
-              <i class="pi pi-money-bill"></i>
-              <span>{{ benefit.discountAmount }}円 割引</span>
-            </div>
-            <div v-if="benefit.validPeriod" class="detail-item">
+            <div v-if="benefit.expDetail" class="detail-item">
               <i class="pi pi-calendar"></i>
-              <span>有効期限: {{ formatDate(benefit.validPeriod) }}</span>
+              <span>有効期限: {{ formatDate(benefit.expDetail) }}</span>
             </div>
           </div>
 
-          <!-- 店舗情報 -->
-          <div class="store-info">
-            <h5 class="store-name">
-              <i class="pi pi-shop"></i>
-              {{ benefit.storeName }}
-            </h5>
-            <div v-if="benefit.storeAddress" class="store-address">
-              <i class="pi pi-map-marker"></i>
-              <span>{{ benefit.storeAddress }}</span>
-            </div>
-            <div v-if="benefit.storePhone" class="store-contact">
-              <i class="pi pi-phone"></i>
-              <a :href="`tel:${benefit.storePhone}`">{{ benefit.storePhone }}</a>
-            </div>
+          <!-- アクション -->
+          <div class="benefit-actions">
+            <AppButton
+              v-if="benefit.benefitUrl"
+              type="button"
+              label="詳細を見る"
+              severity="primary"
+              outlined
+              size="small"
+              icon="pi pi-external-link"
+              @click="openWebsite(benefit.benefitUrl)"
+            />
           </div>
-
-          <!-- 利用条件 -->
-          <div v-if="benefit.conditions" class="benefit-conditions">
-            <h6 class="conditions-title">利用条件</h6>
-            <ul class="conditions-list">
-              <li v-for="(condition, index) in benefit.conditions" :key="index">
-                {{ condition }}
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- アクション -->
-        <div class="benefit-actions">
-          <AppButton
-            v-if="benefit.websiteUrl"
-            type="button"
-            label="詳細を見る"
-            severity="primary"
-            outlined
-            size="small"
-            icon="pi pi-external-link"
-            @click="openWebsite(benefit.websiteUrl)"
-          />
-          <AppButton
-            v-if="benefit.lat && benefit.lon"
-            type="button"
-            label="地図で見る"
-            severity="secondary"
-            outlined
-            size="small"
-            icon="pi pi-map"
-            @click="showOnMap(benefit)"
-          />
         </div>
       </div>
     </div>
 
     <!-- フィルター・ソート -->
-    <div v-if="userBenefits && userBenefits.length > 0" class="benefits-controls">
+    <div v-if="usersBenefits && usersBenefits.length > 0" class="benefits-controls">
       <div class="controls-row">
         <div class="filter-group">
           <AppLabel text="カテゴリー" size="small" />
@@ -153,75 +103,56 @@ import { computed, ref } from 'vue';
 import AppButton from '../atoms/AppButton.vue';
 import AppLabel from '../atoms/AppLabel.vue';
 import AppSelect from '../atoms/AppSelect.vue';
+import { BenefitDto } from '@/dto/benefitDto'
 
-interface UserBenefit {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  discountRate?: number;
-  discountAmount?: number;
-  validPeriod?: string;
-  storeName: string;
-  storeAddress?: string;
-  storePhone?: string;
-  websiteUrl?: string;
-  lat?: number;
-  lon?: number;
-  conditions?: string[];
-}
+const emit = defineEmits<{
+  (e: 'show-benefit-on-map', benefit: BenefitDto): void;
+}>();
 
 const props = withDefaults(defineProps<{
-  userBenefits?: UserBenefit[];
-  loading?: boolean;
+  usersBenefits?: BenefitDto[];
 }>(), {
-  userBenefits: () => [],
-  loading: false,
+  usersBenefits: () => [],
 });
 
 const selectedCategory = ref('');
 const sortOrder = ref('name');
 
 const categoryOptions = computed(() => {
-  if (!props.userBenefits) return [];
-  const categories = [...new Set(props.userBenefits.map(b => b.category))];
+  if (!props.usersBenefits) return [];
+  const categories = [...new Set(props.usersBenefits.map(b => b.categoryCd))];
   return [
-    { label: 'すべて', value: '' },
-    ...categories.map(cat => ({ label: cat, value: cat }))
+    { label: 'すべて', text: 'すべて', value: '' },
+    ...categories.map(cat => ({ label: cat, text: cat, value: cat }))
   ];
 });
 
 const sortOptions = [
-  { label: '名前順', value: 'name' },
-  { label: 'カテゴリー順', value: 'category' },
-  { label: '有効期限順', value: 'validPeriod' }
+  { label: '名前順', text: 'name', value: 'name' },
+  { label: 'カテゴリー順', text: 'categoryCd', value: 'categoryCd' },
+  { label: '有効期限順', text: 'validPeriod', value: 'validPeriod' }
 ];
 
+/** フィルター・ソート済み特典リスト */
 const filteredBenefits = computed(() => {
-  if (!props.userBenefits) return [];
+  let result = [...(props.usersBenefits ?? [])]
 
-  let benefits = [...props.userBenefits];
-
-  // フィルター
+  // カテゴリーフィルター
   if (selectedCategory.value) {
-    benefits = benefits.filter(b => b.category === selectedCategory.value);
+    result = result.filter(b => b.categoryCd === selectedCategory.value)
   }
 
   // ソート
-  benefits.sort((a, b) => {
-    switch (sortOrder.value) {
-      case 'category':
-        return a.category.localeCompare(b.category);
-      case 'validPeriod':
-        if (!a.validPeriod) return 1;
-        if (!b.validPeriod) return -1;
-        return new Date(a.validPeriod).getTime() - new Date(b.validPeriod).getTime();
-      default:
-        return a.name.localeCompare(b.name);
+  result.sort((a, b) => {
+    if (sortOrder.value === 'categoryCd') {
+      return (a.categoryCd ?? '').localeCompare(b.categoryCd ?? '')
+    } else if (sortOrder.value === 'validPeriod') {
+      return (a.expDetail ?? '').localeCompare(b.expDetail ?? '')
     }
-  });
+    return (a.benefitName ?? '').localeCompare(b.benefitName ?? '')
+  })
 
-  return benefits;
+  return result
 });
 
 const formatDate = (dateString: string) => {
@@ -234,15 +165,6 @@ const formatDate = (dateString: string) => {
 
 const openWebsite = (url: string) => {
   window.open(url, '_blank', 'noopener,noreferrer');
-};
-
-const showOnMap = (benefit: UserBenefit) => {
-  // 地図にマーカーを表示し、その場所にズーム
-  // この実装は親コンポーネントのマップ制御ロジックに依存
-  const event = new CustomEvent('show-benefit-on-map', {
-    detail: benefit
-  });
-  window.dispatchEvent(event);
 };
 </script>
 

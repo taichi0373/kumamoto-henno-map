@@ -42,7 +42,7 @@ const props = withDefaults(defineProps<{
   tabindex?: number;
 }>(), {
   modelValue: null,
-  placeholder: "",
+  placeholder: "時刻を選択してください",
   hourFormat: "24",
   showSeconds: false,
   error: () => [],

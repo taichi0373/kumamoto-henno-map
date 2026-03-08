@@ -1,86 +1,74 @@
 <template>
   <div class="p-2">
-    <form @submit.prevent="searchBenefits(searchConditions)">
+    <form @submit.prevent="searchBenefits(searchBenefit)">
 
       <div class="form-row-1">
         <div class="form-col">
           <AppLabel :id="'address'">居住地域</AppLabel>
-          <AppSelect id="address" v-model="searchConditions.address" :options="addressOptions" :filter="true" :placeholder="'選択してください'" />
+          <AppSelect id="address" v-model="searchBenefit.address" :options="addressOptions" :filter="true"
+            :placeholder="'選択してください'" />
         </div>
         <div class="form-col">
           <AppLabel :id="'license-status'">運転免許の所持状況</AppLabel>
-          <AppSelect id="license-status" v-model="searchConditions.licenseStatus" :options="licenseOptions" :optionValue="'value'" :placeholder="'選択してください'" />
+          <AppSelect id="license-status" v-model="searchBenefit.licenseStatus" :options="licenseOptions"
+            :optionValue="'value'" :placeholder="'選択してください'" />
         </div>
         <div class="form-col">
           <AppLabel :id="'age'">年齢</AppLabel>
-          <AppNumberField id="age" v-model="searchConditions.age" placeholder="年齢を入力してください" />
+          <AppNumberField id="age" v-model="searchBenefit.age" :max="999" :placeholder="'年齢を入力してください'" />
         </div>
       </div>
 
       <div class="form-btn">
         <AppButton type="button" :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
-        <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
+        <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :loading="isLoading"
+          :disabled="isLoading" />
       </div>
 
     </form>
   </div>
 
-  <div class="results-section" v-if="hasSearched">
-    <AppAlert v-if="benefitResults.length === 0 && !isLoading" type="info" title="検索結果なし"
-      message="条件に一致する特典が見つかりませんでした。検索条件を変更してお試しください。" :dismissible="false" />
+  <div class="p-2" v-if="hasSearched">
+    <AppAlert v-if="benefitResults.length === 0 && !isLoading" :variant="'error'"
+      :message="'条件に一致する特典がありません'" />
 
-    <div v-if="isLoading" class="loading-indicator">
-      <i class="pi pi-spin pi-spinner"></i>
-      検索中...
-    </div>
-
-    <div class="results-list" v-if="!isLoading">
-      <div v-for="benefit in benefitResults" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`" class="benefit-card">
-        <div class="benefit-header">
-          <h5 class="benefit-name">{{ benefit.benefitName }}</h5>
-          <span class="benefit-category">{{ benefit.categoryCd }}</span>
-        </div>
-
-        <div class="benefit-content">
-          <p class="benefit-description">{{ benefit.benefitDetail }}</p>
-
-          <div class="benefit-conditions">
-            <span class="condition-tag" v-if="benefit.minAge">
+    <div v-if="!isLoading">
+      <template v-for="benefit in benefitResults" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`">
+        <AppCard class="mb-3">
+          <template #title>{{ benefit.benefitName }}</template>
+          <!-- 特典内容： -->
+          <p>特典内容：{{ benefit.benefitDetail }}</p>
+          <!-- 条件 -->
+          <ul style="list-style: none; padding-left: 0;">
+            <!-- 対象年齢 -->
+            <li v-if="benefit.minAge || benefit.maxAge">
               <i class="pi pi-user"></i>
-              最低年齢: {{ benefit.minAge }}歳以上
-            </span>
-            <span class="condition-tag" v-if="benefit.maxAge">
-              <i class="pi pi-user"></i>
-              最高年齢: {{ benefit.maxAge }}歳以下
-            </span>
-            <span class="condition-tag" v-if="benefit.licenseStatus">
-              <i class="pi pi-id-card"></i>
-              {{ getLicenseStatusName(benefit.licenseStatus) }}
-            </span>
-          </div>
-
-          <div class="benefit-info">
-            <div class="benefit-location">
+              対象年齢：{{
+                benefit.minAge ? `${benefit.minAge}歳以上` : '' }} ～ {{ benefit.maxAge ? `${benefit.maxAge}歳以下` : '' }}
+            </li>
+            <!-- 自治体名 -->
+            <li v-if="benefit.municipalityName">
               <i class="pi pi-map-marker"></i>
-              {{ benefit.municipalityName }}
-            </div>
-            <div class="benefit-contact" v-if="benefit.phoneNumber">
+              対象地域：{{ benefit.municipalityName }}
+            </li>
+            <!-- 運転免許の所持状況 -->
+            <li v-if="benefit.licenseStatus">
+              <i class="pi pi-id-card"></i>
+              運転免許の所持状況：{{ getLicenseStatusName(benefit.licenseStatus) }}
+            </li>
+            <!-- 電話番号 -->
+            <li v-if="benefit.phoneNumber">
               <i class="pi pi-phone"></i>
-              {{ benefit.phoneNumber }}
-            </div>
-          </div>
-
-          <div class="benefit-note" v-if="benefit.eligibilityNote">
-            <small>{{ benefit.eligibilityNote }}</small>
-          </div>
-        </div>
-
-        <div class="benefit-actions">
-          <AppButton type="button" label="地図で確認" :primary="false" size="small" icon="pi pi-map-marker"
-            @click="showOnMap(benefit)" />
-          <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl" target="_blank">詳細を見る</AppLink>
-        </div>
-      </div>
+              電話番号：{{ benefit.phoneNumber }}
+            </li>
+            <!-- 備考 -->
+            <li v-if="benefit.eligibilityNote">
+              <small>※{{ benefit.eligibilityNote }}</small>
+            </li>
+          </ul>
+          <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+        </AppCard>
+      </template>
     </div>
   </div>
 </template>
@@ -91,6 +79,7 @@ import type { Ref } from 'vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
+import AppCard from '@/components/atoms/AppCard.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
@@ -98,13 +87,9 @@ import apiClient from '@/utils/api'
 import ToastMessageUtils from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
-import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
-import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
-import { ValidateUtils } from '@/utils/validateUtils'
-import { TypeConvertUtils } from '@/utils/typeConvertUtils'
+import { API_RESPONSE_MESSAGE } from '@/utils/messageConstant'
 import { SelectDto } from '@/dto/selectDto'
 import { MunicipalityDto } from '@/dto/municipalityDto'
-import { MessageUtils } from '@/utils/messageUtils'
 import { SearchBenefitDto } from '@/dto/searchBenefitDto'
 import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 
@@ -119,7 +104,7 @@ const hasSearched = ref(false)
 const isLoading = ref(false)
 
 /** 検索条件 */
-const searchConditions =  ref<SearchBenefitDto>(new SearchBenefitDto())
+const searchBenefit = ref<SearchBenefitDto>(new SearchBenefitDto())
 /** 検索結果 */
 const benefitResults = ref([]) as Ref<BenefitDetailDto[]>
 
@@ -190,20 +175,15 @@ const searchBenefits = async (conditions) => {
     })
     .catch(() => {
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
-  })
-  .finally(() => {
-    isLoading.value = false
-  });
+    })
+    .finally(() => {
+      isLoading.value = false
+    });
 }
 
 // 条件クリア
 const clearConditions = () => {
-  searchConditions.value = new SearchBenefitDto()
-}
-
-// 地図表示
-const showOnMap = (benefit) => {
-  emit('show-benefit-on-map', benefit)
+  searchBenefit.value = new SearchBenefitDto()
 }
 
 // 初期表示

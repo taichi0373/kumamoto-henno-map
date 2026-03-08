@@ -1,0 +1,51 @@
+{
+    plan(
+        # 熊本駅
+        from: { lat: 32.790376234130534, lon: 130.68850455702827 }
+        # 熊本城
+        to: { lat: 32.8068718147896, lon: 130.7055834269623 }
+        # 出発時刻
+        date: "2026-03-15",
+        time: "11:37",
+        # 交通手段
+        transportModes: [
+            {
+                mode: WALK
+            },
+            {
+                mode: TRANSIT
+            },
+        ]) {
+        itineraries {
+            startTime
+            endTime
+            legs {
+                mode
+                startTime
+                endTime
+                from {
+                    name
+                    lat
+                    lon
+                    departureTime
+                    arrivalTime
+                }
+                to {
+                    name
+                    lat
+                    lon
+                    departureTime
+                    arrivalTime
+                }
+                route {
+                    gtfsId
+                    longName
+                    shortName
+                }
+                legGeometry {
+                    points
+                }
+            }
+        }
+    }
+}

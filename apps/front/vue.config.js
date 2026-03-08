@@ -1,6 +1,11 @@
 const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
   transpileDependencies: true,
+
+  chainWebpack: (config) => {
+    // maplibre-gl v5はESMバンドル済みファイルのため、Babelによる再トランスパイルを除外する
+    config.module.rule('js').exclude.add(/node_modules[\\/]maplibre-gl/)
+  },
   
   // 開発サーバーの設定
   devServer: {
@@ -9,12 +14,6 @@ module.exports = defineConfig({
       // Spring Bootバックエンドへのプロキシ設定（ローカル開発用）
       '/api': {
         target: 'http://localhost:8081',
-        changeOrigin: true,
-        secure: false
-      },
-      // 既存のPHPバックエンドとの互換性のため（移行期間中）
-      '/navi_project': {
-        target: 'http://localhost', // XAMPPやMAMPのポートに合わせて調整
         changeOrigin: true,
         secure: false
       }

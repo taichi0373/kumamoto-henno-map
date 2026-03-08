@@ -3,6 +3,9 @@ package io.github.taichi0373.benefit_map.service;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +32,10 @@ public class RouteService {
     @Value("${otp.api.url}")
     private String otpApiUrl;
     
+    // 日本標準時タイムゾーン
+    private static final ZoneId JST = ZoneId.of("Asia/Tokyo");
+    // 時刻フォーマット
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm").withZone(JST);
     // 最大徒歩距離
     private static final int MAX_WALK_DISTANCE = 1000;
     // 取得経路数
@@ -61,6 +68,8 @@ public class RouteService {
             
             JsonNode otpResponse = objectMapper.readTree(responseBody);
             return processOtpResponse(otpResponse, request);
+        } catch (IOException | ParseException e) {
+            throw new RuntimeException("経路探索のリクエストに失敗しました", e);
         }
     }
     
@@ -69,8 +78,10 @@ public class RouteService {
      */
     private String buildOtpUrl(RouteRequestDto request) {
         StringBuilder url = new StringBuilder(otpApiUrl);
-        url.append("?fromPlace=").append(encodeParam(request.getStartLocation()));
-        url.append("&toPlace=").append(encodeParam(request.getEndLocation()));
+        String fromPlace = buildPlaceParam(request.getStartLocation(), request.getStartLat(), request.getStartLon());
+        String toPlace = buildPlaceParam(request.getEndLocation(), request.getEndLat(), request.getEndLon());
+        url.append("?fromPlace=").append(encodeParam(fromPlace));
+        url.append("&toPlace=").append(encodeParam(toPlace));
         
         if (!ValidateUtils.isNullOrEmpty(request.getTime())) {
             url.append("&time=").append(encodeParam(request.getTime()));
@@ -92,6 +103,16 @@ public class RouteService {
     }
     
     /**
+     * OTP用の地点パラメータを構築（座標がある場合はname::lat,lon形式）
+     */
+    private String buildPlaceParam(String name, Double lat, Double lon) {
+        if (lat != null && lon != null) {
+            return (name != null ? name : "") + "::" + lat + "," + lon;
+        }
+        return name != null ? name : "";
+    }
+
+    /**
      * パラメータをエンコード
      */
     private String encodeParam(String param) {
@@ -111,10 +132,18 @@ public class RouteService {
             JsonNode itineraries = planNode.get("itineraries");
             List<Map<String, Object>> processedItineraries = new ArrayList<>();
             
-            // 最大3つの結果を処理
-            int maxResults = Math.min(3, itineraries.size());
+            // 到着時刻の昇順にソートして最大3つを処理
+            List<JsonNode> sortedItineraries = new ArrayList<>();
+            itineraries.forEach(sortedItineraries::add);
+            sortedItineraries.sort((a, b) -> {
+                long endTimeA = a.has("endTime") ? a.get("endTime").asLong() : Long.MAX_VALUE;
+                long endTimeB = b.has("endTime") ? b.get("endTime").asLong() : Long.MAX_VALUE;
+                return Long.compare(endTimeA, endTimeB);
+            });
+
+            int maxResults = Math.min(3, sortedItineraries.size());
             for (int i = 0; i < maxResults; i++) {
-                JsonNode itinerary = itineraries.get(i);
+                JsonNode itinerary = sortedItineraries.get(i);
                 Map<String, Object> processedItinerary = processItinerary(itinerary);
                 processedItineraries.add(processedItinerary);
             }
@@ -155,9 +184,9 @@ public class RouteService {
         }
         
         result.put("legs", legs);
-        result.put("startTime", itinerary.has("startTime") ? itinerary.get("startTime").asText() : "");
-        result.put("endTime", itinerary.has("endTime") ? itinerary.get("endTime").asText() : "");
-        result.put("duration", itinerary.has("duration") ? itinerary.get("duration").asInt() : 0);
+        result.put("startTime", itinerary.has("startTime") ? formatTime(itinerary.get("startTime").asLong()) : "");
+        result.put("endTime", itinerary.has("endTime") ? formatTime(itinerary.get("endTime").asLong()) : "");
+        result.put("duration", itinerary.has("duration") ? toMinutes(itinerary.get("duration").asInt()) : 0);
         result.put("totalFare", totalFare);
         result.put("totalDiscountFare", null);
         result.put("transfers", itinerary.has("transfers") ? itinerary.get("transfers").asInt() : 0);
@@ -212,9 +241,9 @@ public class RouteService {
         
         legData.put("mode", mode);
         legData.put("icon", icon);
-        legData.put("startTime", leg.has("startTime") ? leg.get("startTime").asText() : "");
-        legData.put("endTime", leg.has("endTime") ? leg.get("endTime").asText() : "");
-        legData.put("duration", leg.has("duration") ? leg.get("duration").asInt() : 0);
+        legData.put("startTime", leg.has("startTime") ? formatTime(leg.get("startTime").asLong()) : "");
+        legData.put("endTime", leg.has("endTime") ? formatTime(leg.get("endTime").asLong()) : "");
+        legData.put("duration", leg.has("duration") ? toMinutes(leg.get("duration").asInt()) : 0);
         
         JsonNode fromNode = leg.get("from");
         if (fromNode != null) {
@@ -244,5 +273,19 @@ public class RouteService {
         legData.put("free_pass", "");
         
         return legData;
+    }
+
+    /**
+     * Unixミリ秒をJST "HH:mm" 形式に変換
+     */
+    private String formatTime(long epochMillis) {
+        return TIME_FORMATTER.format(Instant.ofEpochMilli(epochMillis));
+    }
+
+    /**
+     * 秒を分（切り上げ）に変換
+     */
+    private int toMinutes(int seconds) {
+        return (int) Math.ceil(seconds / 60.0);
     }
 }

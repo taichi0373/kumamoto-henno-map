@@ -1,36 +1,34 @@
 <template>
   <div class="p-2">
-    <form @submit.prevent="searchRoute">
+    <form @submit.prevent="handleSearchRoute(searchRoute)">
 
       <div class="form-row-1">
         <div class="form-col">
-          <AppLabel :id="'transport-mode'" :required="true">交通手段</AppLabel>
-          <AppSelect id="transport-mode" v-model="transportMode" :options="transportOptions" optionLabel="text"
-            optionValue="value" :required="true" />
+          <AppLabel :required="true">交通手段</AppLabel>
+          <AppSelect v-model="searchRoute.transport" :options="transportOptions" :required="true" :show-clear="false" />
         </div>
 
         <div class="form-col">
-          <AppLabel :id="'start-location'" :required="true">出発地</AppLabel>
-          <div class="autocomplete-container">
-            <AppInputGroupWithButton v-model="startLocation" :input-id="'start-location'" :type="'text'"
-              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
-              :button-disabled="isWaitingForMapClick" @input="onStartLocationInput" @keydown="onStartLocationKeydown"
-              @button-click="toggleMapSelection('start')" />
-
-            <AppSuggestionList :suggestions="startSuggestions" :activeIndex="startSuggestionIndex"
-              @select="selectStartLocation" />
+          <AppLabel :required="true">出発地</AppLabel>
+          <div class="search-input-container">
+            <AppInputGroupWithButton v-model="searchRoute.startLocation" :input-id="'start-location'" :type="'text'"
+              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'" :error="startLocationErrorDto"
+              @input="onInput('start')" @focus="onFocus('start')"
+              @button-click="emit('select-on-map', 'start')" />
+            <!-- 検索候補 -->
+            <AppSuggestionList :modelValue="startSuggestions" @select="selectStartLocation" />
           </div>
         </div>
 
         <div class="form-col">
           <AppLabel :id="'end-location'" :required="true">目的地</AppLabel>
-          <div class="autocomplete-container">
-            <AppInputGroupWithButton v-model="endLocation" :input-id="'end-location'" :type="'text'"
-              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
-              :button-disabled="isWaitingForMapClick" @input="onEndLocationInput" @keydown="onEndLocationKeydown"
-              @button-click="toggleMapSelection('end')" />
-            <AppSuggestionList :suggestions="endSuggestions" :activeIndex="endSuggestionIndex"
-              @select="selectEndLocation" />
+          <div class="search-input-container">
+            <AppInputGroupWithButton v-model="searchRoute.endLocation" :input-id="'end-location'" :type="'text'"
+              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'" :error="endLocationErrorDto"
+              @input="onInput('end')" @focus="onFocus('end')"
+              @button-click="emit('select-on-map', 'end')" />
+            <!-- 検索候補 -->
+            <AppSuggestionList :modelValue="endSuggestions" @select="selectEndLocation" />
           </div>
         </div>
       </div>
@@ -43,490 +41,377 @@
       </div>
       <div v-if="showConditions">
         <div class="form-row-1 mt-2">
-          <AppLabel :id="'time-select'">出発/到着</AppLabel>
-          <AppSelect id="time-select" v-model="routeConditions.timeSelect" :options="timeSelectOptions" optionLabel="text"
-          optionValue="value" />
+          <AppLabel>出発/到着</AppLabel>
+          <AppSelect v-model="searchRoute.departureArrival" :options="departureArrivalOptions" :show-clear="false" />
         </div>
         <div class="form-row-2">
           <div class="form-col">
             <AppLabel>日付</AppLabel>
-            <AppCalendar id="date" type="date" v-model="routeConditions.selectedDate" />
+            <AppCalendar id="date" type="date" v-model="searchRoute.date" :placeholder="''" />
           </div>
           <div class="form-col">
             <AppLabel>時間</AppLabel>
-            <AppTimePicker id="time" type="time" v-model="routeConditions.selectedTime" />
+            <AppTimePicker id="time" type="time" v-model="searchRoute.time" :placeholder="''" />
           </div>
         </div>
       </div>
 
-
       <div class="form-btn">
-        <AppButton
-          type="button"
-          :label="'クリア'"
-          :primary="false"
-          :icon="'pi pi-trash'"
-          @click="clearConditions"
-        />
-        <AppButton
-          type="submit"
-          :label="'経路を検索'"
-          :primary="true"
-          :icon="'pi pi-search'"
-          :disabled="isLoading"
-        />
+        <AppButton type="button" :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
+        <AppButton type="submit" :label="'経路を検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
       </div>
     </form>
   </div>
 
   <!-- 経路探索結果 -->
-  <div v-if="routes.length > 0" class="route-results">
-    <h4 class="section-title">検索結果</h4>
-
-    <div class="route-list">
-      <div v-for="(route, index) in routes" :key="index" class="route-item">
-        <div class="route-summary">
-          <span class="route-time">{{ route.duration }}</span>
-          <span class="route-cost">{{ route.cost }}円</span>
-        </div>
-        <div class="route-details">
-          {{ route.summary }}
-        </div>
+  <div v-if="routes.length > 0" class="p-2">
+    <template v-for="(route, index) in routes" :key="index" >
+      <div :class="['route-card', { 'route-card--active': props.activeRouteIndex === index }]" @click="emit('select-route', index)">
+        <AppCard class="mb-3">
+          <!-- <template #title>{{ route.routeName }}</template> -->
+          <p>
+            <span class="route-number" :style="{ backgroundColor: props.activeRouteIndex === index ? ROUTE_ACTIVE_COLORS[index] : '#757575' }">{{ index + 1 }}</span>
+            {{ formatJapaneseTime(route.startTime) }}～{{ formatJapaneseTime(route.endTime) }} ({{ route.duration }}分)
+          </p>
+          <p>
+            {{ route.totalFare }}円<span v-if="route.totalDiscountFare"> → {{ route.totalDiscountFare }}円</span> / 乗り換え：{{ route.transfers }}回
+          </p>
+        </AppCard>
       </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import type { Ref } from 'vue'
 import AppLabel from '../atoms/AppLabel.vue'
 import AppSelect from '../atoms/AppSelect.vue'
 import AppButton from '../atoms/AppButton.vue'
+import AppCard from '../atoms/AppCard.vue'
 import AppInputGroupWithButton from '../molecules/AppInputGroupWithButton.vue'
 import AppSuggestionList from '../atoms/AppSuggestionList.vue'
 import AppCalendar from '../atoms/AppCalendar.vue'
 import AppTimePicker from '../atoms/AppTimePicker.vue'
+import { codeConstant } from '@/utils/codeConstant'
+import { RouteRequestDto } from '@/dto/routeRequestDto'
+import { SelectDto } from '@/dto/selectDto'
+import { RouteDto } from '@/dto/routeDto'
+import { MarkerDto } from '@/dto/markerDto'
+import { SuggestionDto } from '@/dto/suggestionDto'
+import { ValidateUtils } from '@/utils/validateUtils'
+import { MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
+import { InputFormErrorDto } from "@/dto/InputFormErrorDto";
+import { MessageUtils } from '@/utils/messageUtils'
+import { ROUTE_ACTIVE_COLORS } from '@/utils/useMap'
+
+const props = withDefaults(defineProps<{
+  /** 出発地候補リスト */
+  startSuggestions?: SuggestionDto[];
+  /** 目的地候補リスト */
+  endSuggestions?: SuggestionDto[];
+  /** 経路検索結果 */
+  routes?: RouteDto[];
+  /** 経路検索ローディング状態 */
+  isLoading?: boolean;
+  /** マップ選択結果 */
+  mapSelectedLocation?: MarkerDto | null;
+  /** マップでアクティブな経路インデックス */
+  activeRouteIndex?: number;
+}>(), {
+  startSuggestions: () => [],
+  endSuggestions: () => [],
+  routes: () => [],
+  isLoading: false,
+  mapSelectedLocation: null,
+  activeRouteIndex: 0,
+});
 
 const emit = defineEmits<{
-  (e: 'set-marker', payload: { type: string; lat: number; lon: number; address: unknown }): void;
+  /** 経路探索 */
+  (e: 'search-route', routeRequest: RouteRequestDto): void;
+  /** マップ選択モードの切り替え */
   (e: 'select-on-map', type: string): void;
+  /** マーカー設置 */
+  (e: 'set-marker', marker: MarkerDto): void;
+  /** マーカー削除 */
+  (e: 'remove-marker', type: string): void;
+  /** 候補リストの取得（ジオコーディング） */
+  (e: 'fetch-suggestions', marker: MarkerDto): void;
+  /** 候補リストのクリア */
+  (e: 'clear-suggestions'): void;
+  /** 経路カード選択 */
+  (e: 'select-route', index: number): void;
 }>();
 
+/** エラーオブジェクト */
+const startLocationErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+const endLocationErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 
-    // リアクティブデータ
-    const showConditions = ref(false)
-    const startSuggestions = ref([])
-    const endSuggestions = ref([])
-    const startSuggestionIndex = ref(-1)
-    const endSuggestionIndex = ref(-1)
-    const isWaitingForMapClick = ref(false)
+/** 検索条件 */
+const searchRoute = ref<RouteRequestDto>(new RouteRequestDto())
 
-    // 経路データ
-    const transportMode = ref('TRANSIT, WALK')
-    const startLocation = ref('')
-    const endLocation = ref('')
-    const routes = ref([])
+/** 条件表示フラグ */
+const showConditions = ref(false)
 
-    // 経路条件
-    const routeConditions = reactive({
-      timeSelect: 'departure',
-      selectedDate: null,  // Date | null
-      selectedTime: null   // Date | null
-    })
+/** 交通手段のプルダウン */
+const transportOptions = ref([]) as Ref<SelectDto[]>
+const transportLabels = {
+  [codeConstant.TRANSPORTATION.TRANSIT]: '公共交通機関',
+  [codeConstant.TRANSPORTATION.RAIL]: '電車',
+  [codeConstant.TRANSPORTATION.BUS]: 'バス',
+  [codeConstant.TRANSPORTATION.WALK]: '徒歩',
+  [codeConstant.TRANSPORTATION.BICYCLE]: '自転車',
+}
 
-    // 座標情報
-    const startCoordinates = ref(null)
-    const endCoordinates = ref(null)
+/** 出発/到着のプルダウン */
+const departureArrivalOptions = ref([]) as Ref<SelectDto[]>
+const departureArrivalLabels = {
+  [codeConstant.DEPARTURE_ARRIVAL.DEPARTURE]: '出発',
+  [codeConstant.DEPARTURE_ARRIVAL.ARRIVAL]: '到着',
+}
 
-    // セレクトボックスのオプション
-    const transportOptions = [
-      { value: 'TRANSIT, WALK', text: '公共交通機関' },
-      { value: 'RAIL, TRAM, WALK', text: '電車' },
-      { value: 'BUS, WALK', text: 'バス' },
-      { value: 'WALK', text: '徒歩' },
-      { value: 'BICYCLE', text: '自転車' }
-    ]
+// コンポーネントアンマウント時にイベントリスナーをクリーンアップ
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
 
-    const timeSelectOptions = [
-      { value: 'departure', text: '出発' },
-      { value: 'arrival', text: '到着' }
-    ]
+// 初期表示
+onMounted(() => {
+  // 交通手段オプションの取得
+  getTransportOptions()
+  // 出発/到着オプションの取得
+  getDepartureArrivalOptions()
 
-    // セッションストレージからデータを読み込み
-    const loadFromSession = () => {
-      const savedTransportMode = sessionStorage.getItem('routeTransportMode')
-      const savedStartLocation = sessionStorage.getItem('routeStartLocation')
-      const savedEndLocation = sessionStorage.getItem('routeEndLocation')
-      const savedConditions = sessionStorage.getItem('routeConditions')
-      const savedRoutes = sessionStorage.getItem('routeResults')
+  // 外部クリック時、候補リストをクリア
+  document.addEventListener('click', handleOutsideClick)
+})
 
-      if (savedTransportMode) {
-        transportMode.value = savedTransportMode
-      }
-      if (savedStartLocation) {
-        startLocation.value = savedStartLocation
-      }
-      if (savedEndLocation) {
-        endLocation.value = savedEndLocation
-      }
-      if (savedConditions) {
-        try {
-          const conditions = JSON.parse(savedConditions)
-          // 日付文字列をDateオブジェクトに変換
-          if (conditions.selectedDate) {
-            conditions.selectedDate = new Date(conditions.selectedDate)
-          }
-          if (conditions.selectedTime) {
-            conditions.selectedTime = new Date(conditions.selectedTime)
-          }
-          Object.assign(routeConditions, conditions)
-        } catch (error) {
-          console.warn('Failed to parse saved route conditions:', error)
-          // 破損したデータを削除
-          sessionStorage.removeItem('routeConditions')
-        }
-      }
-      if (savedRoutes) {
-        try {
-          routes.value = JSON.parse(savedRoutes)
-        } catch (error) {
-          console.warn('Failed to parse saved route results:', error)
-          // 破損したデータを削除
-          sessionStorage.removeItem('routeResults')
-        }
-      }
-    }
+/** マップ選択結果の監視 */
+watch(() => props.mapSelectedLocation, (location) => {
+  if (ValidateUtils.isNullOrEmpty(location)) {
+    return;
+  }
+  const displayName = location.name || location.address || null
+  if (location.type === codeConstant.SEARCH_TYPE.START) {
+    // 出発地に設定
+    searchRoute.value.startLocation = displayName;
+    searchRoute.value.startLat = location.lat;
+    searchRoute.value.startLon = location.lon;
+    // マーカー設置
+    const marker = new MarkerDto({
+      type: 'start',
+      name: location.name,
+      address: location.address,
+      lat: location.lat,
+      lon: location.lon
+    });
+    emit('set-marker', marker);
+  } else if (location.type === codeConstant.SEARCH_TYPE.END) {
+    // 目的地に設定
+    searchRoute.value.endLocation = displayName;
+    searchRoute.value.endLat = location.lat;
+    searchRoute.value.endLon = location.lon;
+    // マーカー設置
+    const marker = new MarkerDto({
+      type: 'end',
+      name: location.name,
+      address: location.address,
+      lat: location.lat,
+      lon: location.lon
+    });
+    emit('set-marker', marker);
+  }
+})
 
-    // セッションストレージにデータを保存
-    const saveToSession = () => {
-      try {
-        sessionStorage.setItem('routeTransportMode', transportMode.value)
-        sessionStorage.setItem('routeStartLocation', startLocation.value)
-        sessionStorage.setItem('routeEndLocation', endLocation.value)
-        sessionStorage.setItem('routeConditions', JSON.stringify(routeConditions))
-        sessionStorage.setItem('routeResults', JSON.stringify(routes.value))
-      } catch (error) {
-        console.warn('Failed to save route data to session storage:', error)
-      }
-    }
+// 交通手段オプションを取得
+const getTransportOptions = () => {
+  transportOptions.value = Object.entries(codeConstant.TRANSPORTATION).map(([key, value]) => ({
+    value: value.toString(),
+    label: transportLabels[value],
+    text: transportLabels[value]
+  }));
+}
 
-    const toggleConditions = () => {
-      showConditions.value = !showConditions.value
-    }
+// 出発/到着オプションを取得
+const getDepartureArrivalOptions = () => {
+  departureArrivalOptions.value = Object.entries(codeConstant.DEPARTURE_ARRIVAL).map(([key, value]) => ({
+    value: value.toString(),
+    label: departureArrivalLabels[value],
+    text: departureArrivalLabels[value]
+  }));
+}
 
-    // デバウンス用タイマー
-    let debounceTimer = null
+// 条件クリア
+const clearConditions = () => {
+  searchRoute.value = new RouteRequestDto()
+}
 
-    const debounceSearch = (callback, delay) => {
-      if (debounceTimer) clearTimeout(debounceTimer)
-      debounceTimer = setTimeout(callback, delay)
-    }
+// 条件の表示/非表示切り替え
+const toggleConditions = () => {
+  showConditions.value = !showConditions.value
+}
 
-    const onStartLocationInput = () => {
-      saveToSession()
-      debounceSearch(() => {
-        searchLocationSuggestions(startLocation.value, 'start')
-      }, 500)
-    }
+// デバウンス用タイマー
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
-    const onEndLocationInput = () => {
-      saveToSession()
-      debounceSearch(() => {
-        searchLocationSuggestions(endLocation.value, 'end')
-      }, 500)
-    }
+const debounceSearch = (callback: () => void, delay: number) => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(callback, delay)
+}
 
-    const searchLocationSuggestions = async (query, type) => {
-      if (query.length < 2) {
-        if (type === 'start') startSuggestions.value = []
-        else endSuggestions.value = []
-        return
-      }
+// 入力時の処理
+const onInput = (type: string) => {
+  // マーカー削除
+  emit('remove-marker', type)
+  // 入力値からジオコーディング
+  debounceSearch(() => {
+    const input = type === codeConstant.SEARCH_TYPE.START
+      ? searchRoute.value.startLocation
+      : searchRoute.value.endLocation
+    emit('fetch-suggestions', new MarkerDto({ name: input || '', type: type, lat: null, lon: null, address: null }))
+  }, 500)
+}
 
-      try {
-        // Nominatim APIを使用した地点検索（熊本県内を優先）
-        const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=10&countrycodes=jp&q=${encodeURIComponent(query + ' 熊本県')}`
+// フォーカス時の処理
+const onFocus = (type: string) => {
+  // 入力値からジオコーディング
+  debounceSearch(() => {
+    const input = type === codeConstant.SEARCH_TYPE.START
+      ? searchRoute.value.startLocation
+      : searchRoute.value.endLocation
+    emit('fetch-suggestions', new MarkerDto({ name: input || '', type: type, lat: null, lon: null, address: null }))
+  }, 500)
+}
 
-        const response = await fetch(nominatimUrl, {
-          headers: {
-            'User-Agent': 'benefit_map/1.0'
-          }
-        })
+// 出発地が選択されたときの処理
+const selectStartLocation = (item: SuggestionDto) => {
+  if (item.lat == null || item.lon == null) return
+  searchRoute.value.startLocation = item.name;
+  searchRoute.value.startLat = item.lat;
+  searchRoute.value.startLon = item.lon;
+  // リスト初期化
+  emit('clear-suggestions');
+  // マーカー設置
+  const marker = new MarkerDto({
+    type: 'start',
+    name: item.name,
+    address: item.address ?? null,
+    lat: item.lat,
+    lon: item.lon
+  });
+  emit('set-marker', marker);
+}
 
-        const data = await response.json()
-        console.log(`Nominatim API response for "${query}":`, data)
+// 目的地が選択されたときの処理
+const selectEndLocation = (item: SuggestionDto) => {
+  if (item.lat == null || item.lon == null) return
+  searchRoute.value.endLocation = item.name;
+  searchRoute.value.endLat = item.lat;
+  searchRoute.value.endLon = item.lon;
+  // リスト初期化
+  emit('clear-suggestions');
+  // マーカー設置
+  const marker = new MarkerDto({
+    type: 'end',
+    name: item.name,
+    address: item.address ?? null,
+    lat: item.lat,
+    lon: item.lon
+  });
+  emit('set-marker', marker);
+}
 
-        // レスポンスを候補リスト形式に変換
-        const suggestions = data.map((item, index) => ({
-          id: index,
-          name: item.name || extractMainName(item.display_name),
-          formattedAddress: formatDisplayName(item.display_name),
-          lat: parseFloat(item.lat),
-          lon: parseFloat(item.lon),
-          address: item.address || {},
-          originalDisplayName: item.display_name
-        }))
+// 外部クリック時、候補リストをクリア
+const handleOutsideClick = (event: MouseEvent) => {
+  const startContainer = (event.target as HTMLElement).closest('.search-input-container')
+  if (!startContainer) {
+    emit('clear-suggestions')
+  }
+}
 
-        if (type === 'start') {
-          startSuggestions.value = suggestions
-          startSuggestionIndex.value = -1
-        } else {
-          endSuggestions.value = suggestions
-          endSuggestionIndex.value = -1
-        }
-      } catch (error) {
-        console.error('Nominatim location search error:', error)
-        if (type === 'start') startSuggestions.value = []
-        else endSuggestions.value = []
-      }
-    }
 
-    // display_nameから主要な名前を抽出
-    const extractMainName = (displayName) => {
-      if (!displayName) return ''
-      const parts = displayName.split(',')
-      return parts[0].trim()
-    }
+/** "HH:mm" 形式を "HH時mm分" 形式に変換 */
+const formatJapaneseTime = (time: string | null): string => {
+  if (!time) return ''
+  const [hour, minute] = time.split(':')
+  return `${hour}時${minute}分`
+}
 
-    // display_nameを逆順にして郵便番号を先頭に表示
-    const formatDisplayName = (displayName) => {
-      if (!displayName) return ''
+// 経路検索
+const handleSearchRoute = (route: RouteRequestDto) => {
+  // エラーチェック
+  const hasError = checkError()
+  if (!hasError) {
+    emit('search-route', route)
+  }
+}
 
-      // カンマで分割
-      const parts = displayName.split(',').map(part => part.trim())
+/**
+ * エラークリア
+ */
+const clearError = () => {
+  startLocationErrorDto.value.splice(0)
+  endLocationErrorDto.value.splice(0)
+}
 
-      // 最後の「日本」を除外
-      if (parts[parts.length - 1] === '日本') {
-        parts.pop()
-      }
 
-      // 郵便番号パターンをチェック（###-####形式）
-      const postalCodeRegex = /^\d{3}-\d{4}$/
-      let postalCodeIndex = -1
+/**
+ * エラーチェック
+ * @returns {boolean} エラーがある場合はtrue
+ */
+function checkError(): boolean {
+  // エラー初期化
+  clearError()
+  let hasError = false
 
-      for (let i = 0; i < parts.length; i++) {
-        if (postalCodeRegex.test(parts[i])) {
-          postalCodeIndex = i
-          break
-        }
-      }
+  // 出発地が未入力の場合はエラー
+  if (ValidateUtils.isNullOrEmpty(searchRoute.value.startLocation)) {
+    startLocationErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "出発地")
+    )
+    hasError = true
+  }
 
-      let formattedParts = []
+  // 目的地が未入力の場合はエラー
+  if (ValidateUtils.isNullOrEmpty(searchRoute.value.endLocation)) {
+    endLocationErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "目的地")
+    )
+    hasError = true
+  }
 
-      // 郵便番号がある場合は先頭に配置
-      if (postalCodeIndex >= 0) {
-        formattedParts.push(`〒${parts[postalCodeIndex]}`)
-        // 郵便番号を元の配列から削除
-        parts.splice(postalCodeIndex, 1)
-      }
-
-      // 残りの部分を逆順にして追加
-      const reversedParts = parts.reverse()
-      formattedParts = formattedParts.concat(reversedParts)
-
-      return formattedParts.join(', ')
-    }
-
-    const selectStartLocation = (suggestion) => {
-      startLocation.value = suggestion.name
-      startCoordinates.value = {
-        lat: suggestion.lat,
-        lon: suggestion.lon,
-        address: suggestion.address
-      }
-      // セッションストレージに保存
-      sessionStorage.setItem('routeStartCoordinates', JSON.stringify(startCoordinates.value))
-      startSuggestions.value = []
-      startSuggestionIndex.value = -1
-      saveToSession()
-      emit('set-marker', { type: 'start', ...startCoordinates.value })
-    }
-
-    const selectEndLocation = (suggestion) => {
-      endLocation.value = suggestion.name
-      endCoordinates.value = {
-        lat: suggestion.lat,
-        lon: suggestion.lon,
-        address: suggestion.address
-      }
-      // セッションストレージに保存
-      sessionStorage.setItem('routeEndCoordinates', JSON.stringify(endCoordinates.value))
-      endSuggestions.value = []
-      endSuggestionIndex.value = -1
-      saveToSession()
-      emit('set-marker', { type: 'end', ...endCoordinates.value })
-    }
-
-    const handleOutsideClick = (event) => {
-      // 候補リストまたは入力欄をクリックした場合は何もしない
-      const startContainer = event.target.closest('.autocomplete-container')
-      if (!startContainer) {
-        startSuggestions.value = []
-        endSuggestions.value = []
-      }
-    }
-
-    const onStartLocationKeydown = (event) => {
-      if (startSuggestions.value.length === 0) return
-
-      if (event.key === 'ArrowDown') {
-        event.preventDefault()
-        startSuggestionIndex.value = Math.min(startSuggestionIndex.value + 1, startSuggestions.value.length - 1)
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault()
-        startSuggestionIndex.value = Math.max(startSuggestionIndex.value - 1, -1)
-      } else if (event.key === 'Enter') {
-        event.preventDefault()
-        if (startSuggestionIndex.value >= 0) {
-          selectStartLocation(startSuggestions.value[startSuggestionIndex.value])
-        }
-      } else if (event.key === 'Escape') {
-        startSuggestions.value = []
-        startSuggestionIndex.value = -1
-      }
-    }
-
-    const onEndLocationKeydown = (event) => {
-      if (endSuggestions.value.length === 0) return
-
-      if (event.key === 'ArrowDown') {
-        event.preventDefault()
-        endSuggestionIndex.value = Math.min(endSuggestionIndex.value + 1, endSuggestions.value.length - 1)
-      } else if (event.key === 'ArrowUp') {
-        event.preventDefault()
-        endSuggestionIndex.value = Math.max(endSuggestionIndex.value - 1, -1)
-      } else if (event.key === 'Enter') {
-        event.preventDefault()
-        if (endSuggestionIndex.value >= 0) {
-          selectEndLocation(endSuggestions.value[endSuggestionIndex.value])
-        }
-      } else if (event.key === 'Escape') {
-        endSuggestions.value = []
-        endSuggestionIndex.value = -1
-      }
-    }
-
-    const toggleMapSelection = (type) => {
-      emit('select-on-map', type)
-    }
-
-    // マップ選択のイベントハンドラ
-    const handleMapSelection = (e) => {
-      const { type, name, lat, lon, address } = e.detail || {};
-      if (type === 'start') {
-        startLocation.value = name;
-        startCoordinates.value = { lat, lon, address };
-        sessionStorage.setItem('routeStartCoordinates', JSON.stringify(startCoordinates.value));
-        saveToSession();
-        emit('set-marker', { type: 'start', lat, lon, address });
-      } else if (type === 'end') {
-        endLocation.value = name;
-        endCoordinates.value = { lat, lon, address };
-        sessionStorage.setItem('routeEndCoordinates', JSON.stringify(endCoordinates.value));
-        saveToSession();
-        emit('set-marker', { type: 'end', lat, lon, address });
-      }
-    };
-
-    const searchRoute = async () => {
-      if (!startLocation.value || !endLocation.value) {
-        alert('出発地と目的地を入力してください')
-        return
-      }
-
-      try {
-        const requestData = {
-          startLocation: startLocation.value,
-          endLocation: endLocation.value,
-          transportMode: transportMode.value,
-          timeSelect: routeConditions.timeSelect,
-          date: routeConditions.selectedDate instanceof Date
-            ? routeConditions.selectedDate.toISOString().split('T')[0]
-            : '',
-          time: routeConditions.selectedTime instanceof Date
-            ? routeConditions.selectedTime.toTimeString().split(' ')[0].slice(0, 5)
-            : '',
-          arriveBy: routeConditions.timeSelect === 'arrival'
-        }
-
-        // Spring Boot バックエンドを使用した経路検索
-        const response = await fetch('/api/route/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
-          credentials: 'include'
-        })
-
-        if (response.ok) {
-          const routeResults = await response.json()
-          routes.value = routeResults
-          saveToSession()
-        } else {
-          console.error('Route search failed:', response.statusText)
-          alert('経路検索に失敗しました')
-        }
-
-      } catch (error) {
-        console.error('Route search error:', error)
-        alert('経路検索に失敗しました')
-      }
-    }
-
-    // 監視関数でセッションストレージに自動保存
-    const watchAndSave = () => {
-      // transportModeの変更を監視
-      const stopWatchTransport = computed(() => transportMode.value)
-      const stopWatchConditions = computed(() => routeConditions)
-
-      // 変更があったら保存
-      const saveData = () => {
-        saveToSession()
-      }
-
-      return { stopWatchTransport, stopWatchConditions, saveData }
-    }
-
-    onMounted(() => {
-      // セッションストレージからデータを読み込み
-      loadFromSession()
-
-      // 現在日時をデフォルト値として設定（DatePickerはDateオブジェクトを期待する）
-      const now = new Date()
-
-      if (!routeConditions.selectedDate) {
-        routeConditions.selectedDate = now
-      }
-      if (!routeConditions.selectedTime) {
-        routeConditions.selectedTime = now
-      }
-
-      // 外部クリックで候補リストを閉じる
-      document.addEventListener('click', handleOutsideClick)
-
-      // マップからの選択結果を受け取る
-      window.addEventListener('map-selected-location', handleMapSelection);
-    })
-
-    onUnmounted(() => {
-      try {
-        if (typeof document !== 'undefined') {
-          document.removeEventListener('click', handleOutsideClick)
-        }
-        if (typeof window !== 'undefined') {
-          window.removeEventListener('map-selected-location', handleMapSelection)
-        }
-        // アンマウント時にセッションストレージに保存
-        saveToSession()
-      } catch (error) {
-        console.warn('Error during component cleanup:', error)
-      }
-    })
-
+  return hasError
+}
 
 </script>
 
 <style scoped lang="scss">
 @use "@/assets/scss/base";
+
+.route-card {
+  cursor: pointer;
+  border-radius: 8px;
+
+  &--active {
+    outline: 2px solid #1A74FD;
+    border-radius: 8px;
+  }
+}
+
+.route-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #3b82f6);
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  margin-right: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
 </style>
