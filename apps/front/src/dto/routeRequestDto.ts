@@ -1,3 +1,5 @@
+import { codeConstant } from '@/utils/codeConstant'
+
 /**
  * 経路検索インタフェース
 */
@@ -66,7 +68,7 @@ class RouteRequestDto {
             this.time = routeRequestInterface.time != null ? routeRequestInterface.time : null;
             this.departureArrival = routeRequestInterface.departureArrival != null ? routeRequestInterface.departureArrival : null;
         } else {
-            this.transport = null;
+            this.transport = codeConstant.TRANSPORTATION.TRANSIT;
             this.startLocation = null;
             this.startLat = null;
             this.startLon = null;
@@ -75,7 +77,7 @@ class RouteRequestDto {
             this.endLon = null;
             this.date = null;
             this.time = null;
-            this.departureArrival = null;
+            this.departureArrival = codeConstant.DEPARTURE_ARRIVAL.DEPARTURE;
         }
     }
 }

@@ -26,7 +26,7 @@
 
         <!-- 利用できる特典ページ -->
         <div class="sidebar-page" v-show="activeTab === 'users-benefit'">
-          <AppUsersBenefit :user-benefits="usersBenefits"/>
+          <AppUsersBenefit :users-benefits="usersBenefits" />
         </div>
 
         <!-- 特典を探すページ -->
@@ -90,6 +90,7 @@ import { BenefitDto } from '@/dto/benefitDto'
 import { MarkerDto } from '@/dto/markerDto'
 import { SuggestionDto } from '@/dto/suggestionDto'
 import { RouteDto } from '@/dto/routeDto'
+import type { RouteInterface } from '@/dto/routeDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { TypeConvertUtils } from '@/utils/typeConvertUtils'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
@@ -163,9 +164,6 @@ onMounted(() => {
   const map = initializeMap('map')
   if (map) {
     map.on('load', () => console.log('Map loaded successfully'))
-    map.on('click', async (e) => {
-      // 
-    })
   }
 })
 
@@ -268,7 +266,6 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       endLat: routeRequest.endLat,
       endLon: routeRequest.endLon,
       transportMode: routeRequest.transport,
-      timeSelect: routeRequest.departureArrival,
       date: routeRequest.date instanceof Date
         ? routeRequest.date.toISOString().split('T')[0]
         : '',
@@ -278,12 +275,12 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       arriveBy: routeRequest.departureArrival === codeConstant.DEPARTURE_ARRIVAL.ARRIVAL ? true : false,
     })
     if (response.status === responseStatusConstant.OK) {
-      const routes = (response.data as { data: any[] }).data || []
+      const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
       // 経路探索結果（サイドバー表示用）
       routeResults.value = routes
       console.log(routeResults.value);
       // 全経路を色分けして地図に描画
-      const routeLegs = routes.map((r: any) => r.legs ?? [])
+      const routeLegs = routes.map(r => r.legs ?? [])
       if (routeLegs.length > 0) {
         addRouteLines(routeLegs)
       }

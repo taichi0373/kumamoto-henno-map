@@ -8,12 +8,8 @@ import {
   type MapClickOptions
 } from '../utils/mapConfig'
 import { createStoreMarker, MarkerManager, type Store } from '../utils/markerConfig'
+import type { RouteLeg } from '../dto/routeDto'
 
-/** ルート描画に必要な区間の最小型 */
-export interface RouteLeg {
-  mode?: string | null
-  legGeometry?: { points?: string | null } | null
-}
 
 export interface UseMapReturn {
   /* マップインスタンス */
@@ -83,6 +79,8 @@ export const useMap = (): UseMapReturn => {
   const activeRouteIndex: Ref<number> = ref(0)
   /** 経路インデックスとレイヤーIDのマッピング */
   const routeLayerMap: Ref<Record<number, string[]>> = ref({})
+  /** レイヤーIDごとのクリックハンドラ参照（map.off で解除するために保持） */
+  const layerClickHandlers: Ref<Record<string, (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => void>> = ref({})
 
   const initializeMap = (
     containerId: string,
@@ -133,6 +131,8 @@ export const useMap = (): UseMapReturn => {
     if (!map) return
 
     let allCoordinates: [number, number][] = []
+    // 既存レイヤーのクリックハンドラをすべて解除してからリセット
+    Object.keys(layerClickHandlers.value).forEach(layerId => removeRouteLines(layerId))
     routeLayerMap.value = {}
     activeRouteIndex.value = 0
 
@@ -142,19 +142,24 @@ export const useMap = (): UseMapReturn => {
         if (leg.legGeometry?.points) {
           const latlngs = decodePolyline(leg.legGeometry.points)
           if (latlngs.length > 0) {
-            const coordinates = latlngs.map(point => [point[1], point[0]] as [number, number]);
-            coordinates.forEach(coord =>
+            const coordinates = latlngs.map(
+              (point) => [point[1], point[0]] as [number, number]
+            )
+            coordinates.forEach((coord) => {
               allCoordinates.push(coord)
-            );
-            const layerId = addRouteLayer(routeIndex, legIndex, coordinates);
+            })
+            const layerId = addRouteLayer(routeIndex, legIndex, coordinates)
             routeLayerMap.value[routeIndex].push(layerId)
           }
         }
       })
-      const bounds = new maplibregl.LngLatBounds();
-      allCoordinates.forEach(coord => bounds.extend(coord));
-      map.fitBounds(bounds, { padding: 50 });
     })
+    // すべての経路の座標を含むバウンディングボックスを計算してマップの表示範囲を調整
+    if (allCoordinates.length > 0) {
+      const bounds = new maplibregl.LngLatBounds()
+      allCoordinates.forEach((coord) => bounds.extend(coord))
+      map.fitBounds(bounds, { padding: 50 })
+    }
 
     // 1件目の経路レイヤーを最前面に移動
     const firstLayerIds = routeLayerMap.value[0] || []
@@ -166,9 +171,9 @@ export const useMap = (): UseMapReturn => {
     routes.forEach((_, routeIndex) => {
       const layerIds = routeLayerMap.value[routeIndex] || []
       layerIds.forEach(layerId => {
-        map.on('click', layerId, () => {
-          setActiveRoute(routeIndex)
-        })
+        const handler = () => { setActiveRoute(routeIndex) }
+        layerClickHandlers.value[layerId] = handler
+        map.on('click', layerId, handler)
       })
     })
   }
@@ -235,6 +240,12 @@ export const useMap = (): UseMapReturn => {
   const removeRouteLines = (layerId: string): void => {
     const map = mapInstance.value
     if (!map) return
+    // クリックハンドラを解除
+    const handler = layerClickHandlers.value[layerId]
+    if (handler) {
+      map.off('click', layerId, handler)
+      delete layerClickHandlers.value[layerId]
+    }
     if (map.getLayer(layerId)) {
       map.removeLayer(layerId);
     }

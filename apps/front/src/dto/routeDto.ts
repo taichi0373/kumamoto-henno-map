@@ -1,4 +1,14 @@
 /**
+ * 経路区間（leg）インタフェース
+ */
+export interface RouteLeg {
+    /** 交通手段 */
+    mode?: string | null;
+    /** ポリライン形状 */
+    legGeometry?: { points?: string | null } | null;
+}
+
+/**
  * 経路情報インタフェース
  */
 interface RouteInterface {
@@ -14,6 +24,8 @@ interface RouteInterface {
     totalFare: number | null;
     /** 乗り換え回数 */
     transfers: number | null;
+    /** 経路区間リスト */
+    legs: RouteLeg[];
 }
 
 /**
@@ -32,6 +44,8 @@ class RouteDto {
     totalFare: number | null;
     /** 乗り換え回数 */
     transfers: number | null;
+    /** 経路区間リスト */
+    legs: RouteLeg[];
 
     /**
      * コンストラクタ
@@ -45,6 +59,7 @@ class RouteDto {
             this.totalDiscountFare = routeInterface.totalDiscountFare;
             this.totalFare = routeInterface.totalFare;
             this.transfers = routeInterface.transfers;
+            this.legs = routeInterface.legs ?? [];
         } else {
             this.duration = null;
             this.startTime = null;
@@ -52,6 +67,7 @@ class RouteDto {
             this.totalDiscountFare = null;
             this.totalFare = null;
             this.transfers = null;
+            this.legs = [];
         }
     }
 }

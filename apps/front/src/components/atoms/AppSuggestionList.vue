@@ -6,9 +6,9 @@
     :style="inputStyle"
   >
     <li 
-      v-for="(item, index) in modelValue" 
-      :key="item.id ?? index"
-      :class="['item', { 'active': index === tabindex }]"
+      v-for="(item, index) in modelValue"
+      class="item"
+      :key="item.id || index"
       @click="onSelect(item)"
       @mousedown.prevent
     >
@@ -23,11 +23,9 @@ import { SuggestionDto } from '@/dto/suggestionDto';
 
 withDefaults(defineProps<{
   modelValue?: SuggestionDto[];
-  tabindex?: number;
   inputClass?: string | string[] | Record<string, boolean>;
   inputStyle?: Record<string, string> | string;
 }>(), {
-  tabindex: -1,
   inputClass: "",
   inputStyle: "",
 });

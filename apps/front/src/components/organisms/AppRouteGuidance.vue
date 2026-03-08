@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import type { Ref } from 'vue'
 import AppLabel from '../atoms/AppLabel.vue'
 import AppSelect from '../atoms/AppSelect.vue'
@@ -171,17 +171,17 @@ const departureArrivalLabels = {
   [codeConstant.DEPARTURE_ARRIVAL.ARRIVAL]: '到着',
 }
 
+// コンポーネントアンマウント時にイベントリスナーをクリーンアップ
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick)
+})
+
 // 初期表示
 onMounted(() => {
   // 交通手段オプションの取得
   getTransportOptions()
   // 出発/到着オプションの取得
   getDepartureArrivalOptions()
-
-  // 交通手段のデフォルト：「公共交通機関」
-  searchRoute.value.transport = codeConstant.TRANSPORTATION.TRANSIT;
-  // 出発/到着のデフォルト：「出発」
-  searchRoute.value.departureArrival = codeConstant.DEPARTURE_ARRIVAL.DEPARTURE;
 
   // 外部クリック時、候補リストをクリア
   document.addEventListener('click', handleOutsideClick)
