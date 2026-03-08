@@ -177,7 +177,7 @@ const getMapCenter = (): { lat: number; lon: number } | null => {
 /** 逆ジオコーディング */
 const reverseGeocoding = async (marker: MarkerDto): Promise<MarkerDto | null> => {
   const url = `${NOMINATIM_API_URL}/reverse?format=json&lat=${marker.lat}&lon=${marker.lon}&accept-language=ja&addressdetails=1`
-  const res = await fetch(url, { headers: { 'User-Agent': 'benefit_map/1.0' } })
+  const res = await fetch(url)
   if (!res.ok) return null
   const data = await res.json();
   const name = data.name || data.display_name?.split(',')[0]?.trim() || null
@@ -194,9 +194,7 @@ const geocoding = async (marker: MarkerDto) => {
   }
   try {
     const url = `${NOMINATIM_API_URL}/search?format=json&addressdetails=1&limit=5&countrycodes=jp&q=${encodeURIComponent(marker.name + ' 熊本県')}`
-    const response = await fetch(url, {
-      headers: { 'User-Agent': 'benefit_map/1.0' }
-    })
+    const response = await fetch(url)
     const data = await response.json()
     // 検索結果を候補リストに格納
     const suggestions = data.map((item: { name: string; display_name: string; lat: string; lon: string }, index: number) =>

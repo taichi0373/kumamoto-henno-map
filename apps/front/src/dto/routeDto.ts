@@ -13,7 +13,7 @@ export interface RouteLeg {
  */
 interface RouteInterface {
     /** 所要時間 */
-    duration: string | null;
+    duration: number | null;
     /** 出発時刻 */
     startTime: string | null;
     /** 到着時刻 */
@@ -33,7 +33,7 @@ interface RouteInterface {
  */
 class RouteDto {
     /** 所要時間 */
-    duration: string | null;
+    duration: number | null;
     /** 出発時刻 */
     startTime: string | null;
     /** 到着時刻 */

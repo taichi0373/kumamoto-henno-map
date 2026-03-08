@@ -69,7 +69,6 @@ public class RouteService {
             JsonNode otpResponse = objectMapper.readTree(responseBody);
             return processOtpResponse(otpResponse, request);
         } catch (IOException | ParseException e) {
-            System.err.println(e.getMessage());
             throw new RuntimeException("経路探索のリクエストに失敗しました", e);
         }
     }

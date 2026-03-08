@@ -166,10 +166,6 @@ const formatDate = (dateString: string) => {
 const openWebsite = (url: string) => {
   window.open(url, '_blank', 'noopener,noreferrer');
 };
-  
-const showOnMap = (benefit: BenefitDto) => {
-  emit('show-benefit-on-map', benefit);
-};
 </script>
 
 <style scoped lang="scss">
