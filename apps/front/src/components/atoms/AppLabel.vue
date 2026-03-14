@@ -29,5 +29,6 @@ const onClick = () => {
 .app-label {
   display: inline-block;
   padding-left: 12px;
+  color: base.$text-primary;
 }
 </style>

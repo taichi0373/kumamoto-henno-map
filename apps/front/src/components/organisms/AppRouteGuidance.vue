@@ -33,18 +33,18 @@
         </div>
       </div>
 
-      <div class="expand-trigger mt-4" @click="toggleConditions">
+      <div class="expand-trigger" @click="toggleConditions">
         {{ showConditions ? '条件を閉じる' : '条件指定' }}
         <span :class="showConditions ? 'icon-expand-trigger rotated' : 'icon-expand-trigger'">
           {{ showConditions ? '▲' : '▼' }}
         </span>
       </div>
       <div v-if="showConditions">
-        <div class="form-row-1 mt-2">
+        <div class="form-col">
           <AppLabel>出発/到着</AppLabel>
           <AppSelect v-model="searchRoute.departureArrival" :options="departureArrivalOptions" :show-clear="false" />
         </div>
-        <div class="form-row-2">
+        <div class="form-row-2 mt-4">
           <div class="form-col">
             <AppLabel>日付</AppLabel>
             <AppCalendar id="date" type="date" v-model="searchRoute.date" :placeholder="''" />
@@ -64,22 +64,7 @@
   </div>
 
   <!-- 経路探索結果 -->
-  <div v-if="routes.length > 0" class="p-2">
-    <template v-for="(route, index) in routes" :key="index" >
-      <div :class="['route-card', { 'route-card--active': props.activeRouteIndex === index }]" @click="emit('select-route', index)">
-        <AppCard class="mb-3">
-          <!-- <template #title>{{ route.routeName }}</template> -->
-          <p>
-            <span class="route-number" :style="{ backgroundColor: props.activeRouteIndex === index ? ROUTE_ACTIVE_COLORS[index] : '#757575' }">{{ index + 1 }}</span>
-            {{ formatJapaneseTime(route.startTime) }}～{{ formatJapaneseTime(route.endTime) }} ({{ route.duration }}分)
-          </p>
-          <p>
-            {{ route.totalFare }}円<span v-if="route.totalDiscountFare"> → {{ route.totalDiscountFare }}円</span> / 乗り換え：{{ route.transfers }}回
-          </p>
-        </AppCard>
-      </div>
-    </template>
-  </div>
+  <AppRouteResultList :routes="routes" :active-route-index="props.activeRouteIndex" @select-route="emit('select-route', $event)" />
 </template>
 
 <script setup lang="ts">
@@ -88,8 +73,8 @@ import type { Ref } from 'vue'
 import AppLabel from '../atoms/AppLabel.vue'
 import AppSelect from '../atoms/AppSelect.vue'
 import AppButton from '../atoms/AppButton.vue'
-import AppCard from '../atoms/AppCard.vue'
 import AppInputGroupWithButton from '../molecules/AppInputGroupWithButton.vue'
+import AppRouteResultList from './AppRouteResultList.vue'
 import AppSuggestionList from '../atoms/AppSuggestionList.vue'
 import AppCalendar from '../atoms/AppCalendar.vue'
 import AppTimePicker from '../atoms/AppTimePicker.vue'
@@ -103,7 +88,6 @@ import { ValidateUtils } from '@/utils/validateUtils'
 import { MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
 import { InputFormErrorDto } from "@/dto/InputFormErrorDto";
 import { MessageUtils } from '@/utils/messageUtils'
-import { ROUTE_ACTIVE_COLORS } from '@/utils/useMap'
 
 const props = withDefaults(defineProps<{
   /** 出発地候補リスト */
@@ -330,14 +314,6 @@ const handleOutsideClick = (event: MouseEvent) => {
   }
 }
 
-
-/** "HH:mm" 形式を "HH時mm分" 形式に変換 */
-const formatJapaneseTime = (time: string | null): string => {
-  if (!time) return ''
-  const [hour, minute] = time.split(':')
-  return `${hour}時${minute}分`
-}
-
 // 経路検索
 const handleSearchRoute = (route: RouteRequestDto) => {
   // エラーチェック
@@ -389,29 +365,13 @@ function checkError(): boolean {
 <style scoped lang="scss">
 @use "@/assets/scss/base";
 
-.route-card {
+// 条件指定 / 閉じる
+.expand-trigger {
+  color: base.$text-primary;
   cursor: pointer;
-  border-radius: 8px;
-
-  &--active {
-    outline: 2px solid #1A74FD;
-    border-radius: 8px;
-  }
-}
-
-.route-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background-color: var(--primary-color, #3b82f6);
-  color: #fff;
-  font-size: 12px;
-  font-weight: bold;
-  margin-right: 6px;
-  vertical-align: middle;
-  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 12px;
+  margin: 12px 0px;
 }
 </style>

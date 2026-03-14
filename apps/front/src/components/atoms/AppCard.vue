@@ -1,6 +1,6 @@
 <template>
-  <Card 
-    :class="inputClass"
+  <Card
+    :class="computedClass"
     :style="inputStyle"
   >
     <template #header v-if="header || $slots.header">
@@ -23,20 +23,28 @@
 
 <script setup lang="ts">
 import Card from 'primevue/card';
+import { computed } from 'vue';
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   title?: string;
   subtitle?: string;
   header?: string;
   inputStyle?: Record<string, string> | string;
   inputClass?: string;
+  hoverable?: boolean;
 }>(), {
   title: "",
   subtitle: "",
   header: "",
   inputStyle: "",
   inputClass: "",
+  hoverable: false,
 });
+
+const computedClass = computed(() => [
+  props.inputClass,
+  { 'app-card--hoverable': props.hoverable },
+]);
 </script>
 
 <style lang="scss" scoped>
@@ -44,5 +52,15 @@ withDefaults(defineProps<{
 
 :deep(.p-card-title) {
   text-align: center;
+}
+
+.app-card--hoverable {
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+    transform: translateY(-1px);
+  }
 }
 </style>
