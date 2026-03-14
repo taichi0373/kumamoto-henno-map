@@ -36,7 +36,7 @@ export interface UseMapReturn {
   cleanup: () => void
 }
 
-/** 経路番号別アクティブカラー（各経路固有色） */
+/** 経路番号別アクティブカラー */
 export const ROUTE_ACTIVE_COLORS = ['#1A74FD', '#1A74FD', '#1A74FD']
 /** 非アクティブ経路のカラー */
 const ROUTE_INACTIVE_COLOR = '#757575'

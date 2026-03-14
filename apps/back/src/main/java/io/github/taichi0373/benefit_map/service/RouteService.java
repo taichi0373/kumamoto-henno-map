@@ -200,17 +200,7 @@ public class RouteService {
     private Map<String, Object> processLeg(JsonNode leg, JsonNode fareNode, int legIndex) {
         Map<String, Object> legData = new HashMap<>();
         
-        // アイコンのマッピング
-        Map<String, String> iconTranslations = Map.of(
-            "WALK", "🚶",
-            "BICYCLE", "🚲",
-            "RAIL", "🚆",
-            "BUS", "🚌",
-            "TRAM", "🚋"
-        );
-        
         String mode = leg.has("mode") ? leg.get("mode").asText() : "";
-        String icon = iconTranslations.getOrDefault(mode, mode);
         
         // 運賃情報の取得
         int legFare = 0;
@@ -240,7 +230,6 @@ public class RouteService {
         }
         
         legData.put("mode", mode);
-        legData.put("icon", icon);
         legData.put("startTime", leg.has("startTime") ? formatTime(leg.get("startTime").asLong()) : "");
         legData.put("endTime", leg.has("endTime") ? formatTime(leg.get("endTime").asLong()) : "");
         legData.put("duration", leg.has("duration") ? toMinutes(leg.get("duration").asInt()) : 0);

@@ -33,6 +33,10 @@ const items = ref([
 ]);
 </script>
 
-<style scoped>
-/* スタイルをここに追加できます */
+<style scoped lang="scss">
+@use "@/assets/scss/base";
+.p-menubar {
+  border-radius: 0px;
+  z-index: 1000;
+}
 </style>

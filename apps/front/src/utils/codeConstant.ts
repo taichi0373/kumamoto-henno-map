@@ -10,13 +10,37 @@ const codeConstant = {
         OTHER: 5,      // その他
     },
 
-    // 交通手段
+    // 交通手段（経路検索用）
     TRANSPORTATION: {
         TRANSIT: 'TRANSIT, WALK', // 公共交通機関
         RAIL: 'RAIL, TRAM, WALK', // 電車
         BUS: 'BUS, WALK',         // バス
         BICYCLE: 'BICYCLE',       // 自転車
         WALK: 'WALK',             // 徒歩
+    },
+
+    // 交通手段アイコン
+    MODE_ICON: {
+        WALK: '🚶',
+        BUS: '🚌',
+        RAIL: '🚆',
+        TRAM: '🚋',
+        SUBWAY: '🚇',
+        FERRY: '⛴️',
+        BICYCLE: '🚲',
+        CAR: '🚗',
+    },
+
+    // 交通手段ラベル
+    MODE_LABEL: {
+        WALK: '徒歩',
+        BUS: 'バス',
+        RAIL: '電車',
+        TRAM: '路面電車',
+        SUBWAY: '地下鉄',
+        FERRY: 'フェリー',
+        BICYCLE: '自転車',
+        CAR: '車',
     },
 
     // 出発/到着
