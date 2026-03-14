@@ -34,7 +34,7 @@
 
     <div v-if="!isLoading">
       <template v-for="benefit in benefitResults" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`">
-        <AppCard class="mb-3">
+        <AppCard class="mb-3" :hoverable="true">
           <template #title>{{ benefit.benefitName }}</template>
           <!-- 特典内容： -->
           <p>特典内容：{{ benefit.benefitDetail }}</p>

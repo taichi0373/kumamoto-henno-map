@@ -28,6 +28,10 @@ export default {
       control: 'text',
       description: 'カスタムクラス',
     },
+    hoverable: {
+      control: 'boolean',
+      description: 'ホバー時にCSSを変更するかのフラグ',
+    },
   },
 };
 
@@ -116,6 +120,25 @@ export const WithSlots = {
             </button>
           </div>
         </template>
+      </AppCard>
+    `,
+  }),
+};
+
+export const Hoverable = {
+  args: {
+    title: 'ホバー対応カード',
+    subtitle: 'カードにホバーすると見た目が変わります',
+    hoverable: true,
+  },
+  render: (args) => ({
+    components: { AppCard },
+    setup() {
+      return { args };
+    },
+    template: `
+      <AppCard v-bind="args" style="width: 400px;">
+        <p>hoverable を true にするとホバー時にシャドウとトランスフォームが適用されます。</p>
       </AppCard>
     `,
   }),
