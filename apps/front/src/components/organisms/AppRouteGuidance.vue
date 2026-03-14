@@ -44,7 +44,7 @@
           <AppLabel>出発/到着</AppLabel>
           <AppSelect v-model="searchRoute.departureArrival" :options="departureArrivalOptions" :show-clear="false" />
         </div>
-        <div class="form-row-2" style="margin-top:20px;">
+        <div class="form-row-2 mt-4">
           <div class="form-col">
             <AppLabel>日付</AppLabel>
             <AppCalendar id="date" type="date" v-model="searchRoute.date" :placeholder="''" />

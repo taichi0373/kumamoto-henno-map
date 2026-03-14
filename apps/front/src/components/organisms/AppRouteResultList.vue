@@ -132,7 +132,7 @@ const getModeIcon = (mode: string | null | undefined): string => {
 
 /** 徒歩モードかどうかの判定 */
 const isWalkingMode = (mode: string | null | undefined): boolean => {
-  return mode === 'WALK' || mode === 'walk' || mode === 'walking'
+  return mode === 'WALK'
 }
 
 /** "HH:mm" 形式を "HH時mm分" 形式に変換 */

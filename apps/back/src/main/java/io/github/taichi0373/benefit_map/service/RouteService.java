@@ -251,15 +251,15 @@ public class RouteService {
         legData.put("fare", legFare);
         legData.put("discountFare", null);
         legData.put("agencyName", leg.has("agencyName") ? leg.get("agencyName").asText() : "");
-        legData.put("agencyID", agencyId);
-        legData.put("communitybusID", "");
+        legData.put("agencyId", agencyId);
+        legData.put("communityBusId", "");
         legData.put("agencyUrl", leg.has("agencyUrl") ? leg.get("agencyUrl").asText() : "");
         legData.put("routeId", leg.has("routeId") ? leg.get("routeId").asText() : "");
         legData.put("legGeometry", leg.has("legGeometry") ? leg.get("legGeometry") : null);
         legData.put("transitLeg", leg.has("transitLeg") ? leg.get("transitLeg").asBoolean() : false);
-        legData.put("benefitURL", "");
-        legData.put("benefitID", "");
-        legData.put("free_pass", "");
+        legData.put("benefitUrl", "");
+        legData.put("benefitId", "");
+        legData.put("freePass", "");
         
         return legData;
     }

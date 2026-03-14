@@ -17,7 +17,7 @@ const codeConstant = {
         BUS: 'BUS, WALK',         // バス
         BICYCLE: 'BICYCLE',       // 自転車
         WALK: 'WALK',             // 徒歩
-    },
+    } as Record<string, string>,
 
     // 交通手段アイコン
     MODE_ICON: {
@@ -29,7 +29,7 @@ const codeConstant = {
         FERRY: '⛴️',
         BICYCLE: '🚲',
         CAR: '🚗',
-    },
+    } as Record<string, string>,
 
     // 交通手段ラベル
     MODE_LABEL: {

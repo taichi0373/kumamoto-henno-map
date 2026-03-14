@@ -6,7 +6,7 @@ export interface RouteLeg {
     mode?: string | null;
     /** ポリライン形状 */
     legGeometry?: { points?: string | null } | null;
-    /** アイコン */
+    /** 表示用アイコン（バックエンドのレスポンスには含まれない） */
     icon?: string | null;
     /** 出発地名 */
     from?: string | null;
@@ -31,19 +31,19 @@ export interface RouteLeg {
     /** 割引運賃 */
     discountFare?: number | null;
     /** 事業者ID */
-    agencyID?: string | null;
+    agencyId?: string | null;
     /** 事業者名 */
     agencyName?: string | null;
     /** 事業者URL */
     agencyUrl?: string | null;
     /** 特典ID */
-    benefitID?: string | null;
+    benefitId?: string | null;
     /** 特典URL */
-    benefitURL?: string | null;
+    benefitUrl?: string | null;
     /** コミュニティバスID */
-    communitybusID?: string | null;
+    communityBusId?: string | null;
     /** フリーパス */
-    free_pass?: string | null;
+    freePass?: string | null;
     /** 路線ID */
     routeId?: string | null;
     /** 交通機関フラグ */
