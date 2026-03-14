@@ -10,15 +10,15 @@ export interface RouteLeg {
     icon?: string | null;
     /** 出発地名 */
     from?: string | null;
-    /** 到着地名 */
+    /** 目的地名 */
     to?: string | null;
     /** 出発地緯度 */
     fromLat?: number | null;
     /** 出発地経度 */
     fromLon?: number | null;
-    /** 到着地緯度 */
+    /** 目的地緯度 */
     toLat?: number | null;
-    /** 到着地経度 */
+    /** 目的地経度 */
     toLon?: number | null;
     /** 出発時刻 */
     startTime?: string | null;

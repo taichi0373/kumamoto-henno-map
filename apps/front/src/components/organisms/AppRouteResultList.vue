@@ -1,14 +1,20 @@
 <template>
   <div v-if="routes.length > 0" class="p-2">
     <template v-for="(route, index) in routes" :key="index">
-      <div class="route-card" @click="handleCardClick(index)">
+       <div
+         class="route-card"
+         role="button"
+         tabindex="0"
+         @click="handleCardClick(index)"
+         @keydown.enter.space="handleCardClick(index)"
+       >
         <AppCard class="mb-3" :hoverable="true">
           <div class="route-summary">
             <div class="route-summary__time">
               <!-- ルート番号 -->
               <span 
                 class="route-number" 
-                :style="{ backgroundColor: activeRouteIndex === index ? ROUTE_ACTIVE_COLORS[index] : '#757575' }"
+                :style="{ backgroundColor: ROUTE_ACTIVE_COLORS[index] }"
               >
                 {{ index + 1 }}
               </span>
