@@ -32,12 +32,18 @@ const ErrorMessageKbn = {
 } as const;
 
 const API_RESPONSE_MESSAGE = {
+    CREATE_SUCCESS: '登録しました',
+    READ_SUCCESS: '取得しました',
+    UPDATE_SUCCESS: '更新しました',
+    DELETE_SUCCESS: '削除しました',
+    LOGIN_SUCCESS: 'ログインしました',
     CREATE_FAILED: '登録に失敗しました',
     READ_FAILED: '取得に失敗しました',
     UPDATE_FAILED: '更新に失敗しました',
     DELETE_FAILED: '削除に失敗しました',
     LOGIN_FAILED: 'ログインに失敗しました',
-    API_ERROR: 'APIエラーが発生しました'
+    API_ERROR: 'APIエラーが発生しました',
+    DATA_NOT_FOUND: '該当データが存在しません',
 }
 
 export { MESSAGE_LIST, MESSAGE_NO, ErrorMessageKbn, API_RESPONSE_MESSAGE };

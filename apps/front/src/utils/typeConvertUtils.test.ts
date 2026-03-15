@@ -162,33 +162,29 @@ describe('TypeConvertUtils', () => {
 
         describe('正常系', () => {
 
-            test('和暦7桁（数値）をDate型に変換する', () => {
-                // 5060101 = 令和6年1月1日 = 2024/01/01
-                const result = TypeConvertUtils.toDateFromNum(5060101);
+            test('西暦8桁（数値）をDate型に変換する', () => {
+                const result = TypeConvertUtils.toDateFromNum(20240101);
                 expect(result.getFullYear()).toBe(2024);
                 expect(result.getMonth() + 1).toBe(1);
                 expect(result.getDate()).toBe(1);
             });
 
-            test('和暦7桁（文字列）をDate型に変換する', () => {
-                // '5060101' = 令和6年1月1日 = 2024/01/01
-                const result = TypeConvertUtils.toDateFromNum('5060101');
+            test('西暦8桁（文字列）をDate型に変換する', () => {
+                const result = TypeConvertUtils.toDateFromNum('20240101');
                 expect(result.getFullYear()).toBe(2024);
                 expect(result.getMonth() + 1).toBe(1);
                 expect(result.getDate()).toBe(1);
             });
 
-            test('和暦7桁の末日をDate型に変換する', () => {
-                // 5061231 = 令和6年12月31日 = 2024/12/31
-                const result = TypeConvertUtils.toDateFromNum(5061231);
+            test('西暦8桁の末日をDate型に変換する', () => {
+                const result = TypeConvertUtils.toDateFromNum(20241231);
                 expect(result.getFullYear()).toBe(2024);
                 expect(result.getMonth() + 1).toBe(12);
                 expect(result.getDate()).toBe(31);
             });
 
-            test('昭和の和暦7桁をDate型に変換する', () => {
-                // 3640101 = 昭和64年1月1日 = 1989/01/01
-                const result = TypeConvertUtils.toDateFromNum(3640101);
+            test('過去の西暦8桁をDate型に変換する', () => {
+                const result = TypeConvertUtils.toDateFromNum(19890101);
                 expect(result.getFullYear()).toBe(1989);
                 expect(result.getMonth() + 1).toBe(1);
                 expect(result.getDate()).toBe(1);
@@ -197,22 +193,78 @@ describe('TypeConvertUtils', () => {
 
         describe('異常系', () => {
 
-            test('7桁未満の値を渡すとエラーをスローする', () => {
-                expect(() => TypeConvertUtils.toDateFromNum(123456)).toThrow();
+            test('8桁未満の値を渡すとエラーをスローする', () => {
+                expect(() => TypeConvertUtils.toDateFromNum(1234567)).toThrow();
             });
 
-            test('存在しない日付（2月30日）を渡すとエラーをスローする', () => {
-                // 5060230 = 令和6年2月30日（存在しない）
-                expect(() => TypeConvertUtils.toDateFromNum(5060230)).toThrow();
-            });
-
-            test('不正な元号番号を持つ和暦を渡すとエラーをスローする', () => {
-                // 9010101 = 元号番号9（存在しない）
-                expect(() => TypeConvertUtils.toDateFromNum(9010101)).toThrow();
+            test('9桁以上の値を渡すとエラーをスローする', () => {
+                expect(() => TypeConvertUtils.toDateFromNum(202401011)).toThrow();
             });
 
             test('数字以外の文字列を渡すとエラーをスローする', () => {
                 expect(() => TypeConvertUtils.toDateFromNum('abc')).toThrow();
+            });
+        });
+    });
+
+    // ----------------------------------------------------------------
+    // toDateFromString
+    // ----------------------------------------------------------------
+    describe('toDateFromString', () => {
+
+        describe('正常系', () => {
+
+            test('YYYY-MM-DD形式の文字列をローカル日付として変換する', () => {
+                const result = TypeConvertUtils.toDateFromString('2024-03-15');
+                expect(result).not.toBeNull();
+                expect(result!.getFullYear()).toBe(2024);
+                expect(result!.getMonth() + 1).toBe(3);
+                expect(result!.getDate()).toBe(15);
+            });
+
+            test('月末日（YYYY-MM-DD）を正しく変換する', () => {
+                const result = TypeConvertUtils.toDateFromString('2024-12-31');
+                expect(result).not.toBeNull();
+                expect(result!.getFullYear()).toBe(2024);
+                expect(result!.getMonth() + 1).toBe(12);
+                expect(result!.getDate()).toBe(31);
+            });
+
+            test('うるう年の2月29日を正しく変換する', () => {
+                const result = TypeConvertUtils.toDateFromString('2024-02-29');
+                expect(result).not.toBeNull();
+                expect(result!.getFullYear()).toBe(2024);
+                expect(result!.getMonth() + 1).toBe(2);
+                expect(result!.getDate()).toBe(29);
+            });
+
+            test('有効なDateオブジェクトを渡すとそのまま返す', () => {
+                const date = new Date(2024, 2, 15); // 2024-03-15
+                const result = TypeConvertUtils.toDateFromString(date);
+                expect(result).toBe(date);
+            });
+        });
+
+        describe('異常系', () => {
+
+            test('nullを渡すとnullを返す', () => {
+                expect(TypeConvertUtils.toDateFromString(null)).toBeNull();
+            });
+
+            test('undefinedを渡すとnullを返す', () => {
+                expect(TypeConvertUtils.toDateFromString(undefined)).toBeNull();
+            });
+
+            test('不正な文字列を渡すとnullを返す', () => {
+                expect(TypeConvertUtils.toDateFromString('abc')).toBeNull();
+            });
+
+            test('無効なDateオブジェクト（Invalid Date）を渡すとnullを返す', () => {
+                expect(TypeConvertUtils.toDateFromString(new Date('invalid'))).toBeNull();
+            });
+
+            test('存在しない日付（2月30日）を渡すとnullを返す', () => {
+                expect(TypeConvertUtils.toDateFromString('2024-02-30')).toBeNull();
             });
         });
     });

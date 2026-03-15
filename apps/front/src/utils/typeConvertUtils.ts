@@ -1,24 +1,18 @@
-import { DateUtils } from '@/utils/dateUtils';
-
 /**
  * 型変換ユーティリティクラス
  */
 export class TypeConvertUtils {
     /**
-     * 西暦8桁、和暦7桁mp数値または文字列をDate型に変換する
-    * @param data 西暦8桁または和暦7桁の数値または文字列
-    * @returns 変換したDateオブジェクト
-    * @throws 引数の日付が不正な場合エラーをスローする
-    */
+     * 西暦8桁の数値または文字列をDate型に変換する
+     * @param data 西暦8桁の数値または文字列
+     * @returns 変換したDateオブジェクト
+     * @throws 引数の日付が不正な場合エラーをスローする
+     */
     static toDateFromNum(data: string | number): Date {
-        if (!DateUtils.checkDate(data) || String(data).length < 7) {
-            throw new Error("引数に渡された値が西暦8桁、和暦7桁ではありません。");
+        if (String(data).length < 8) {
+            throw new Error("引数に渡された値が西暦8桁ではありません。");
         }
         let strDate = String(data);
-        // 和暦→西暦
-        if (strDate.length === 7) {
-            strDate = DateUtils.convertWarekiDateToSeirekiDate(strDate).toString();
-        }
         // 年月日を分割（YYYYMMDD形式）
         if (strDate.length !== 8) {
             throw new Error("引数に渡された値が正しい日付形式ではありません。");
@@ -104,12 +98,43 @@ export class TypeConvertUtils {
      * @param date Date型
      * @returns YYYY-MM-DD形式の文字列（無効な場合はnull）
      */
-    public static toStringFromDate(date: Date | null | undefined): string | null {
+    public static toStringFromDate(date: Date | string | null | undefined): string | null {
+        if (typeof date === "string") {
+            date = TypeConvertUtils.toDateFromString(date);
+        }
         if (!(date instanceof Date) || isNaN(date.getTime())) return null;
         const year = date.getFullYear();
         const month = (date.getMonth() + 1).toString().padStart(2, '0');
         const day = date.getDate().toString().padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
-    
+
+    /**
+     * 文字列・Date・null・undefinedをDate型に変換する
+     * 引数がDate型の場合はそのまま返す。
+     * 引数が文字列の場合はDate型に変換して返す（無効な日付文字列の場合はnullを返す）。
+     * 引数がnullまたはundefinedの場合はnullを返す。
+     * @param data 変換対象
+     * @returns 変換したDateオブジェクト（変換できない場合はnull）
+     */
+    public static toDateFromString(data: string | Date | null | undefined): Date | null {
+        if (data == null) return null;
+        if (data instanceof Date) return isNaN(data.getTime()) ? null : data;
+        // YYYY-MM-DD 形式はUTC解釈を避けるためローカル日付として構築する
+        const match = data.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (match) {
+            const year = Number(match[1]);
+            const month = Number(match[2]) - 1;
+            const day = Number(match[3]);
+            const date = new Date(year, month, day);
+            // 桁あふれ補正を検出するため、生成したDateの年月日が入力と一致するか検証する
+            if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+                return null;
+            }
+            return date;
+        }
+        const date = new Date(data);
+        return isNaN(date.getTime()) ? null : date;
+    }
+
 }
