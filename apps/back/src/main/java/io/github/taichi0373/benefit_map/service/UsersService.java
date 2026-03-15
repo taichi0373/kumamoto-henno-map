@@ -127,7 +127,7 @@ public class UsersService {
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setBirthDate(user.getBirthDate());
-        dto.setMunicipalityCd(user.getMunicipalityCd());
+        dto.setAddress(user.getMunicipalityCd());
         dto.setLicenseStatus(user.getLicenseStatus());
         dto.setLicenseSurrenderedAt(user.getLicenseSurrenderedAt());
         return dto;

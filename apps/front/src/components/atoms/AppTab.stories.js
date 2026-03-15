@@ -1,15 +1,15 @@
-import AppTabView from './AppTabView.vue';
+import AppTab from './AppTab.vue';
 import { ref } from 'vue';
 
 const tabs = [
-  { label: '概要', content: 'アプリの概要を表示します。' },
-  { label: '特典', content: '特典一覧を表示します。' },
-  { label: '設定', content: '設定画面を表示します。' },
+  { id: 'overview', label: '概要', title: '概要' },
+  { id: 'benefit', label: '特典', title: '特典' },
+  { id: 'settings', label: '設定', title: '設定' },
 ];
 
 export default {
-  title: 'Design System/Atoms/AppTabView',
-  component: AppTabView,
+  title: 'Design System/Atoms/AppTab',
+  component: AppTab,
   parameters: {
     layout: 'centered',
   },
@@ -17,7 +17,7 @@ export default {
   argTypes: {
     modelValue: {
       control: { type: 'number', min: 0, max: 10, step: 1 },
-      description: 'アクティブタブ',
+      description: 'アクティブタブのインデックス',
     },
     tabs: {
       control: 'object',
@@ -25,28 +25,28 @@ export default {
     },
     scrollable: {
       control: 'boolean',
-      description: 'スクロール',
+      description: 'スクロール有効',
     },
     inputClass: {
       control: 'text',
-      description: 'クラス',
+      description: '追加クラス',
     },
     inputStyle: {
       control: 'object',
-      description: 'スタイル',
+      description: '追加スタイル',
     },
   },
 };
 
 const Template = (args) => ({
-  components: { AppTabView },
+  components: { AppTab },
   setup() {
     const activeIndex = ref(args.modelValue);
     return { args, activeIndex };
   },
   template: `
     <div style="width: 480px;">
-      <AppTabView v-bind="args" v-model="activeIndex" />
+      <AppTab v-bind="args" v-model="activeIndex" />
     </div>
   `,
 });
@@ -64,11 +64,17 @@ export const Scrollable = Template.bind({});
 Scrollable.args = {
   ...Default.args,
   tabs: [
-    { label: 'タブ1', content: 'コンテンツ1' },
-    { label: 'タブ2', content: 'コンテンツ2' },
-    { label: 'タブ3', content: 'コンテンツ3' },
-    { label: 'タブ4', content: 'コンテンツ4' },
-    { label: 'タブ5', content: 'コンテンツ5' },
+    { id: 'tab1', label: 'タブ1', title: 'タブ1' },
+    { id: 'tab2', label: 'タブ2', title: 'タブ2' },
+    { id: 'tab3', label: 'タブ3', title: 'タブ3' },
+    { id: 'tab4', label: 'タブ4', title: 'タブ4' },
+    { id: 'tab5', label: 'タブ5', title: 'タブ5' },
   ],
   scrollable: true,
+};
+
+export const WithActiveTab = Template.bind({});
+WithActiveTab.args = {
+  ...Default.args,
+  modelValue: 1,
 };

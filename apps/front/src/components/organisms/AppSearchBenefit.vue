@@ -1,7 +1,6 @@
 <template>
   <div class="p-2">
-    <form @submit.prevent="searchBenefits(searchBenefit)">
-
+   <form class="p-2" @submit.prevent="searchBenefits(searchBenefit)">
       <div class="form-row-1">
         <div class="form-col">
           <AppLabel :id="'address'">居住地域</AppLabel>
@@ -18,13 +17,11 @@
           <AppNumberField id="age" v-model="searchBenefit.age" :max="999" :placeholder="'年齢を入力してください'" />
         </div>
       </div>
-
       <div class="form-btn">
-        <AppButton type="button" :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
+        <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
         <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :loading="isLoading"
           :disabled="isLoading" />
       </div>
-
     </form>
   </div>
 
@@ -41,10 +38,9 @@
           <!-- 条件 -->
           <ul style="list-style: none; padding-left: 0;">
             <!-- 対象年齢 -->
-            <li v-if="benefit.minAge || benefit.maxAge">
+            <li v-if="benefit.minAge != null || benefit.maxAge != null">
               <i class="pi pi-user"></i>
-              対象年齢：{{
-                benefit.minAge ? `${benefit.minAge}歳以上` : '' }} ～ {{ benefit.maxAge ? `${benefit.maxAge}歳以下` : '' }}
+              対象年齢：{{ formatAgeRange(benefit.minAge, benefit.maxAge) }}
             </li>
             <!-- 自治体名 -->
             <li v-if="benefit.municipalityName">
@@ -84,7 +80,7 @@ import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
 import apiClient from '@/utils/api'
-import ToastMessageUtils from '@/utils/toastMessageUtils'
+import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
 import { API_RESPONSE_MESSAGE } from '@/utils/messageConstant'
@@ -185,6 +181,22 @@ const searchBenefits = async (conditions) => {
 const clearConditions = () => {
   searchBenefit.value = new SearchBenefitDto()
 }
+
+ /** 対象年齢の表示用文言を組み立て */
+ const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string => {
+   const hasMin = minAge != null
+   const hasMax = maxAge != null
+   if (hasMin && hasMax) {
+     return `${minAge}歳以上～${maxAge}歳以下`
+   }
+   if (hasMin) {
+     return `${minAge}歳以上`
+   }
+   if (hasMax) {
+     return `${maxAge}歳以下`
+   }
+   return ''
+ }
 
 // 初期表示
 onMounted(() => {

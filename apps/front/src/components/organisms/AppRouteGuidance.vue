@@ -1,7 +1,6 @@
 <template>
   <div class="p-2">
     <form @submit.prevent="handleSearchRoute(searchRoute)">
-
       <div class="form-row-1">
         <div class="form-col">
           <AppLabel :required="true">交通手段</AppLabel>
@@ -12,8 +11,8 @@
           <AppLabel :required="true">出発地</AppLabel>
           <div class="search-input-container">
             <AppInputGroupWithButton v-model="searchRoute.startLocation" :input-id="'start-location'" :type="'text'"
-              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'" :error="startLocationErrorDto"
-              @input="onInput('start')" @focus="onFocus('start')"
+              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :error="startLocationErrorDto" @input="onInput('start')" @focus="onFocus('start')"
               @button-click="emit('select-on-map', 'start')" />
             <!-- 検索候補 -->
             <AppSuggestionList :modelValue="startSuggestions" @select="selectStartLocation" />
@@ -24,8 +23,8 @@
           <AppLabel :id="'end-location'" :required="true">目的地</AppLabel>
           <div class="search-input-container">
             <AppInputGroupWithButton v-model="searchRoute.endLocation" :input-id="'end-location'" :type="'text'"
-              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'" :error="endLocationErrorDto"
-              @input="onInput('end')" @focus="onFocus('end')"
+              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :error="endLocationErrorDto" @input="onInput('end')" @focus="onFocus('end')"
               @button-click="emit('select-on-map', 'end')" />
             <!-- 検索候補 -->
             <AppSuggestionList :modelValue="endSuggestions" @select="selectEndLocation" />
@@ -57,19 +56,24 @@
       </div>
 
       <div class="form-btn">
-        <AppButton type="button" :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
-        <AppButton type="submit" :label="'経路を検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
+        <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
+        <AppButton type="submit" :label="'経路を検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading"/>
       </div>
     </form>
   </div>
 
   <!-- 経路探索結果 -->
-  <AppRouteResultList :routes="routes" :active-route-index="props.activeRouteIndex" @select-route="emit('select-route', $event)" />
+  <AppRouteResultList :routes="routes" :active-route-index="props.activeRouteIndex"
+    @select-route="emit('select-route', $event)" />
+  <AppAlert v-if="hasSearched && !isLoading && routes.length === 0" :variant="'error'" :message="'経路が見つかりませんでした'"
+    class="mt-2" />
+
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import type { Ref } from 'vue'
+import AppAlert from '../atoms/AppAlert.vue'
 import AppLabel from '../atoms/AppLabel.vue'
 import AppSelect from '../atoms/AppSelect.vue'
 import AppButton from '../atoms/AppButton.vue'
@@ -137,6 +141,9 @@ const searchRoute = ref<RouteRequestDto>(new RouteRequestDto())
 
 /** 条件表示フラグ */
 const showConditions = ref(false)
+
+/** 検索実行済みフラグ */
+const hasSearched = ref(false)
 
 /** 交通手段のプルダウン */
 const transportOptions = ref([]) as Ref<SelectDto[]>
@@ -229,6 +236,7 @@ const getDepartureArrivalOptions = () => {
 // 条件クリア
 const clearConditions = () => {
   searchRoute.value = new RouteRequestDto()
+  hasSearched.value = false
 }
 
 // 条件の表示/非表示切り替え
@@ -319,6 +327,7 @@ const handleSearchRoute = (route: RouteRequestDto) => {
   // エラーチェック
   const hasError = checkError()
   if (!hasError) {
+    hasSearched.value = true
     emit('search-route', route)
   }
 }

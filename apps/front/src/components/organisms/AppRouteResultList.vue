@@ -12,9 +12,9 @@
           <div class="route-summary">
             <div class="route-summary__time">
               <!-- ルート番号 -->
-              <span 
-                class="route-number" 
-                :style="{ backgroundColor: ROUTE_ACTIVE_COLORS[index] }"
+              <span
+                class="route-number"
+                :class="index === props.activeRouteIndex ? 'route-number--active' : 'route-number--inactive'"
               >
                 {{ index + 1 }}
               </span>
@@ -105,7 +105,6 @@ import { ref } from 'vue'
 import AppCard from '../atoms/AppCard.vue'
 import { codeConstant } from '@/utils/codeConstant'
 import { RouteDto } from '@/dto/routeDto'
-import { ROUTE_ACTIVE_COLORS } from '@/utils/useMap'
 
 const props = withDefaults(defineProps<{
   /** 経路検索結果 */
@@ -186,6 +185,14 @@ const formatJapaneseTime = (time: string | null | undefined): string => {
   font-weight: bold;
   margin-right: 8px;
   flex-shrink: 0;
+
+  &--active {
+    background-color: base.$route-active-color;
+  }
+
+  &--inactive {
+    background-color: base.$route-inactive-color;
+  }
 }
 
 // 詳細/閉じるトグル
