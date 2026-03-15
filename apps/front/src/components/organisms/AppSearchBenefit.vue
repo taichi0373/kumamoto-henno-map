@@ -38,10 +38,9 @@
           <!-- 条件 -->
           <ul style="list-style: none; padding-left: 0;">
             <!-- 対象年齢 -->
-            <li v-if="benefit.minAge || benefit.maxAge">
+            <li v-if="benefit.minAge != null || benefit.maxAge != null">
               <i class="pi pi-user"></i>
-              対象年齢：{{
-                benefit.minAge ? `${benefit.minAge}歳以上` : '' }} ～ {{ benefit.maxAge ? `${benefit.maxAge}歳以下` : '' }}
+              対象年齢：{{ formatAgeRange(benefit.minAge, benefit.maxAge) }}
             </li>
             <!-- 自治体名 -->
             <li v-if="benefit.municipalityName">
@@ -182,6 +181,22 @@ const searchBenefits = async (conditions) => {
 const clearConditions = () => {
   searchBenefit.value = new SearchBenefitDto()
 }
+
+ /** 対象年齢の表示用文言を組み立て */
+ const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string => {
+   const hasMin = minAge != null
+   const hasMax = maxAge != null
+   if (hasMin && hasMax) {
+     return `${minAge}歳以上～${maxAge}歳以下`
+   }
+   if (hasMin) {
+     return `${minAge}歳以上`
+   }
+   if (hasMax) {
+     return `${maxAge}歳以下`
+   }
+   return ''
+ }
 
 // 初期表示
 onMounted(() => {

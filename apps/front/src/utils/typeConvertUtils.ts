@@ -100,7 +100,7 @@ export class TypeConvertUtils {
      */
     public static toStringFromDate(date: Date | string | null | undefined): string | null {
         if (typeof date === "string") {
-            date = new Date(date);
+            date = TypeConvertUtils.toDateFromString(date);
         }
         if (!(date instanceof Date) || isNaN(date.getTime())) return null;
         const year = date.getFullYear();
@@ -123,8 +123,15 @@ export class TypeConvertUtils {
         // YYYY-MM-DD 形式はUTC解釈を避けるためローカル日付として構築する
         const match = data.match(/^(\d{4})-(\d{2})-(\d{2})$/);
         if (match) {
-            const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
-            return isNaN(date.getTime()) ? null : date;
+            const year = Number(match[1]);
+            const month = Number(match[2]) - 1;
+            const day = Number(match[3]);
+            const date = new Date(year, month, day);
+            // 桁あふれ補正を検出するため、生成したDateの年月日が入力と一致するか検証する
+            if (date.getFullYear() !== year || date.getMonth() !== month || date.getDate() !== day) {
+                return null;
+            }
+            return date;
         }
         const date = new Date(data);
         return isNaN(date.getTime()) ? null : date;

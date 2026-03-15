@@ -264,11 +264,7 @@ describe('TypeConvertUtils', () => {
             });
 
             test('存在しない日付（2月30日）を渡すとnullを返す', () => {
-                // Dateコンストラクタは桁あふれを許容するため、ここでは変換結果の日付がずれることを確認する
-                const result = TypeConvertUtils.toDateFromString('2024-02-30');
-                // new Date(2024, 1, 30) は 3月1日に繰り上がるためnullにはならないが日付がズレる
-                expect(result).not.toBeNull();
-                expect(result!.getDate()).not.toBe(30);
+                expect(TypeConvertUtils.toDateFromString('2024-02-30')).toBeNull();
             });
         });
     });

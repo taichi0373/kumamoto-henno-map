@@ -56,7 +56,7 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: Date | null): void;
+  (e: 'update:modelValue', value: string | Date | null): void;
   (e: 'input', value: unknown): void;
   (e: 'focus', event: Event): void;
   (e: 'blur', event: DatePickerBlurEvent): void;
