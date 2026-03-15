@@ -1,5 +1,6 @@
 <template>
   <div class="p-2">
+   <form class="p-2" @submit.prevent="searchBenefits(searchBenefit)">
       <div class="form-row-1">
         <div class="form-col">
           <AppLabel :id="'address'">居住地域</AppLabel>
@@ -16,13 +17,12 @@
           <AppNumberField id="age" v-model="searchBenefit.age" :max="999" :placeholder="'年齢を入力してください'" />
         </div>
       </div>
-
       <div class="form-btn">
         <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
-        <AppButton :label="'検索'" :primary="true" :icon="'pi pi-search'" :loading="isLoading"
-          :disabled="isLoading" @click="searchBenefits(searchBenefit)" />
+        <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :loading="isLoading"
+          :disabled="isLoading" />
       </div>
-
+    </form>
   </div>
 
   <div class="p-2" v-if="hasSearched">

@@ -140,7 +140,6 @@ const getUsersInfo = async () => {
   try {
     const response = await apiClient.get(`/users/${userId}`)
     if (response.status === responseStatusConstant.OK && response.data) {
-      console.log(response.data)
       usersModel.value = (response.data as unknown as { data: UsersDto }).data
     } else {
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.DATA_NOT_FOUND)

@@ -1,64 +1,65 @@
 <template>
   <div class="p-2">
-    <div class="form-row-1">
-      <div class="form-col">
-        <AppLabel :required="true">交通手段</AppLabel>
-        <AppSelect v-model="searchRoute.transport" :options="transportOptions" :required="true" :show-clear="false" />
-      </div>
-
-      <div class="form-col">
-        <AppLabel :required="true">出発地</AppLabel>
-        <div class="search-input-container">
-          <AppInputGroupWithButton v-model="searchRoute.startLocation" :input-id="'start-location'" :type="'text'"
-            :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
-            :error="startLocationErrorDto" @input="onInput('start')" @focus="onFocus('start')"
-            @button-click="emit('select-on-map', 'start')" />
-          <!-- 検索候補 -->
-          <AppSuggestionList :modelValue="startSuggestions" @select="selectStartLocation" />
-        </div>
-      </div>
-
-      <div class="form-col">
-        <AppLabel :id="'end-location'" :required="true">目的地</AppLabel>
-        <div class="search-input-container">
-          <AppInputGroupWithButton v-model="searchRoute.endLocation" :input-id="'end-location'" :type="'text'"
-            :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
-            :error="endLocationErrorDto" @input="onInput('end')" @focus="onFocus('end')"
-            @button-click="emit('select-on-map', 'end')" />
-          <!-- 検索候補 -->
-          <AppSuggestionList :modelValue="endSuggestions" @select="selectEndLocation" />
-        </div>
-      </div>
-    </div>
-
-    <div class="expand-trigger" @click="toggleConditions">
-      {{ showConditions ? '条件を閉じる' : '条件指定' }}
-      <span :class="showConditions ? 'icon-expand-trigger rotated' : 'icon-expand-trigger'">
-        {{ showConditions ? '▲' : '▼' }}
-      </span>
-    </div>
-    <div v-if="showConditions">
-      <div class="form-col">
-        <AppLabel>出発/到着</AppLabel>
-        <AppSelect v-model="searchRoute.departureArrival" :options="departureArrivalOptions" :show-clear="false" />
-      </div>
-      <div class="form-row-2 mt-4">
+    <form @submit.prevent="handleSearchRoute(searchRoute)">
+      <div class="form-row-1">
         <div class="form-col">
-          <AppLabel>日付</AppLabel>
-          <AppCalendar id="date" type="date" v-model="searchRoute.date" :placeholder="''" />
+          <AppLabel :required="true">交通手段</AppLabel>
+          <AppSelect v-model="searchRoute.transport" :options="transportOptions" :required="true" :show-clear="false" />
         </div>
+
         <div class="form-col">
-          <AppLabel>時間</AppLabel>
-          <AppTimePicker id="time" type="time" v-model="searchRoute.time" :placeholder="''" />
+          <AppLabel :required="true">出発地</AppLabel>
+          <div class="search-input-container">
+            <AppInputGroupWithButton v-model="searchRoute.startLocation" :input-id="'start-location'" :type="'text'"
+              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :error="startLocationErrorDto" @input="onInput('start')" @focus="onFocus('start')"
+              @button-click="emit('select-on-map', 'start')" />
+            <!-- 検索候補 -->
+            <AppSuggestionList :modelValue="startSuggestions" @select="selectStartLocation" />
+          </div>
+        </div>
+
+        <div class="form-col">
+          <AppLabel :id="'end-location'" :required="true">目的地</AppLabel>
+          <div class="search-input-container">
+            <AppInputGroupWithButton v-model="searchRoute.endLocation" :input-id="'end-location'" :type="'text'"
+              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :error="endLocationErrorDto" @input="onInput('end')" @focus="onFocus('end')"
+              @button-click="emit('select-on-map', 'end')" />
+            <!-- 検索候補 -->
+            <AppSuggestionList :modelValue="endSuggestions" @select="selectEndLocation" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="form-btn">
-      <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
-      <AppButton :label="'経路を検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading"
-        @click="handleSearchRoute(searchRoute)" />
-    </div>
+      <div class="expand-trigger" @click="toggleConditions">
+        {{ showConditions ? '条件を閉じる' : '条件指定' }}
+        <span :class="showConditions ? 'icon-expand-trigger rotated' : 'icon-expand-trigger'">
+          {{ showConditions ? '▲' : '▼' }}
+        </span>
+      </div>
+      <div v-if="showConditions">
+        <div class="form-col">
+          <AppLabel>出発/到着</AppLabel>
+          <AppSelect v-model="searchRoute.departureArrival" :options="departureArrivalOptions" :show-clear="false" />
+        </div>
+        <div class="form-row-2 mt-4">
+          <div class="form-col">
+            <AppLabel>日付</AppLabel>
+            <AppCalendar id="date" type="date" v-model="searchRoute.date" :placeholder="''" />
+          </div>
+          <div class="form-col">
+            <AppLabel>時間</AppLabel>
+            <AppTimePicker id="time" type="time" v-model="searchRoute.time" :placeholder="''" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-btn">
+        <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
+        <AppButton type="submit" :label="'経路を検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading"/>
+      </div>
+    </form>
   </div>
 
   <!-- 経路探索結果 -->
@@ -326,6 +327,7 @@ const handleSearchRoute = (route: RouteRequestDto) => {
   // エラーチェック
   const hasError = checkError()
   if (!hasError) {
+    hasSearched.value = true
     emit('search-route', route)
   }
 }

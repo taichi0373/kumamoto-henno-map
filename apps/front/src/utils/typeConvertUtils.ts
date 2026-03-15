@@ -4,10 +4,10 @@
 export class TypeConvertUtils {
     /**
      * 西暦8桁の数値または文字列をDate型に変換する
-    * @param data 西暦8桁または和暦7桁の数値または文字列
-    * @returns 変換したDateオブジェクト
-    * @throws 引数の日付が不正な場合エラーをスローする
-    */
+     * @param data 西暦8桁の数値または文字列
+     * @returns 変換したDateオブジェクト
+     * @throws 引数の日付が不正な場合エラーをスローする
+     */
     static toDateFromNum(data: string | number): Date {
         if (String(data).length < 8) {
             throw new Error("引数に渡された値が西暦8桁ではありません。");
@@ -120,6 +120,12 @@ export class TypeConvertUtils {
     public static toDateFromString(data: string | Date | null | undefined): Date | null {
         if (data == null) return null;
         if (data instanceof Date) return isNaN(data.getTime()) ? null : data;
+        // YYYY-MM-DD 形式はUTC解釈を避けるためローカル日付として構築する
+        const match = data.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (match) {
+            const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+            return isNaN(date.getTime()) ? null : date;
+        }
         const date = new Date(data);
         return isNaN(date.getTime()) ? null : date;
     }

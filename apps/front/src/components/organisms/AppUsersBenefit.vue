@@ -3,7 +3,7 @@
     <AppAlert v-if="usersBenefits.length === 0" :variant="'error'" :message="'現在利用できる特典がありません'" />
 
     <div v-else>
-      <template v-for="benefit in filteredBenefits" :key="benefit.benefitId ?? undefined">
+      <template v-for="(benefit, index) in filteredBenefits" :key="benefit.benefitId ?? `benefit-${index}`">
         <AppCard class="mb-3" :hoverable="true">
           <template #title>{{ benefit.benefitName }}</template>
           <!-- 特典内容 -->
@@ -50,7 +50,6 @@ import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import { BenefitDto } from '@/dto/benefitDto'
 import { codeConstant } from '@/utils/codeConstant'
-import AppTitle from '../atoms/AppTitle.vue'
 
 const props = withDefaults(defineProps<{
   usersBenefits?: BenefitDto[];

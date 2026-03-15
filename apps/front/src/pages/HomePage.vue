@@ -49,8 +49,9 @@
     <!-- マップ -->
     <div id="map">
       <div class="map-button-container">
-        <AppButton :label="''" :icon="'pi pi-shop'" title="支援協賛店" @click="toggleStoreDisplay" />
-        <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" @click="router.push('/support_info')" />
+        <AppButton :label="''" :icon="'pi pi-shop'" title="支援協賛店" aria-label="支援協賛店" @click="toggleStoreDisplay" />
+        <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" aria-label="自主返納支援制度とは"
+          @click="router.push('/support_info')" />
       </div>
       <!-- クロスヘア -->
       <div v-if="showCrossHair" class="map-select-ui">
@@ -136,9 +137,9 @@ const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.
 
 /** タブ */
 const tabs = ref<TabDto[]>([
-  { id: 'route-guidance', label: 'ルート案内'},
-  { id: 'users-benefit', label: '利用できる特典'},
-  { id: 'search-benefit', label: '特典を探す'},
+  { id: 'route-guidance', label: 'ルート案内' },
+  { id: 'users-benefit', label: '利用できる特典' },
+  { id: 'search-benefit', label: '特典を探す' },
 ])
 
 /** タブのインデックス */
