@@ -1,7 +1,5 @@
 <template>
   <div class="p-2">
-    <form @submit.prevent="searchBenefits(searchBenefit)">
-
       <div class="form-row-1">
         <div class="form-col">
           <AppLabel :id="'address'">居住地域</AppLabel>
@@ -20,12 +18,11 @@
       </div>
 
       <div class="form-btn">
-        <AppButton type="button" :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
-        <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :loading="isLoading"
-          :disabled="isLoading" />
+        <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
+        <AppButton :label="'検索'" :primary="true" :icon="'pi pi-search'" :loading="isLoading"
+          :disabled="isLoading" @click="searchBenefits(searchBenefit)" />
       </div>
 
-    </form>
   </div>
 
   <div class="p-2" v-if="hasSearched">
@@ -84,7 +81,7 @@ import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
 import apiClient from '@/utils/api'
-import ToastMessageUtils from '@/utils/toastMessageUtils'
+import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
 import { API_RESPONSE_MESSAGE } from '@/utils/messageConstant'

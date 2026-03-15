@@ -3,7 +3,7 @@
     <!-- サイドバー -->
     <div class="sidebar" id="sidebar" :class="{ collapsed: sidebarCollapsed }">
       <template v-if="!sidebarCollapsed">
-        <AppTabView :tabs="tabsForView" :modelValue="activeTabIndex" @update:modelValue="handleTabChange" />
+        <AppTab :tabs="tabs" :modelValue="activeTabIndex" @update:modelValue="handleTabChange" />
 
         <!-- 経路案内ページ -->
         <div class="sidebar-page" v-show="activeTab === 'route-guidance'">
@@ -49,12 +49,8 @@
     <!-- マップ -->
     <div id="map">
       <div class="map-button-container">
-        <AppButton type="button" :label="storesLoading ? '読み込み中...' : '支援協賛店'"
-          :tooltip="storesLoading ? '読み込み中...' : '支援協賛店'" :show-label="false" severity="primary"
-          :disabled="storesLoading" :loading="storesLoading" icon="pi pi-shop" class="map-button"
-          @click="toggleStoreDisplay" />
-        <AppButton type="button" label="自主返納支援制度とは" tooltip="自主返納支援制度とは" :show-label="false" severity="primary"
-          size="medium" icon="pi pi-info-circle" class="map-button" @click="router.push('/support_info')" />
+        <AppButton :label="''" :icon="'pi pi-shop'" title="支援協賛店" @click="toggleStoreDisplay" />
+        <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" @click="router.push('/support_info')" />
       </div>
       <!-- クロスヘア -->
       <div v-if="showCrossHair" class="map-select-ui">
@@ -74,7 +70,7 @@ import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
 import AppSearchBenefit from '@/components/organisms/AppSearchBenefit.vue'
-import AppTabView from '@/components/atoms/AppTabView.vue'
+import AppTab from '@/components/atoms/AppTab.vue'
 import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppIconButton from '@/components/atoms/AppIconButton.vue'
@@ -94,6 +90,7 @@ import type { RouteInterface } from '@/dto/routeDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { TypeConvertUtils } from '@/utils/typeConvertUtils'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
+import { TabDto } from '@/dto/tabDto'
 
 /** ルーター */
 const router = useRouter()
@@ -113,20 +110,11 @@ const isLoggedIn = ref(false)
 /** ユーザー特典データ */
 const usersBenefits = ref<BenefitDto[]>([])
 
-// タブ
-const tabs = ref([
-  { id: 'route-guidance', label: 'ルート案内' },
-  { id: 'users-benefit', label: '利用できる特典' },
-  { id: 'search-benefit', label: '特典を探す' },
-])
-
 const supportStores = ref<Store[]>([])
 const storesLoading = ref(false)
 
 // マップ選択モードのタイプ（'start' or 'end'）
 const mapSelectMode = ref<string | null>(null)
-
-// --- 経路案内関連ステート ---
 
 /** 出発地の候補リスト */
 const startSuggestions = ref<SuggestionDto[]>([])
@@ -145,16 +133,18 @@ const { mapInstance, markerManager, activeRouteIndex, initializeMap, addStoreMar
 // クロスヘア表示フラグ
 const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
 
-/** AppTabView用のタブ配列 */
-const tabsForView = computed(() =>
-  tabs.value.map(tab => ({ label: tab.label }))
-)
 
-/** アクティブタブのインデックス */
+/** タブ */
+const tabs = ref<TabDto[]>([
+  { id: 'route-guidance', label: 'ルート案内'},
+  { id: 'users-benefit', label: '利用できる特典'},
+  { id: 'search-benefit', label: '特典を探す'},
+])
+
+/** タブのインデックス */
 const activeTabIndex = computed(() =>
   tabs.value.findIndex(tab => tab.id === activeTab.value)
 )
-
 
 // 初期表示
 onMounted(() => {
@@ -303,7 +293,7 @@ const fetchUserBenefits = async () => {
   }
 
   try {
-    const response = await apiClient.get(`benefit/users`)
+    const response = await apiClient.get(`/benefit/users/${userId}`)
     if ((response.data as { success: boolean }).success) {
       usersBenefits.value = ((response.data as unknown) as { data: BenefitDto[] }).data || []
     } else {
@@ -353,7 +343,7 @@ const setActiveTab = (tab: string) => {
   }
 }
 
-/** AppTabViewからのタブ変更ハンドラ */
+/** AppTabからのタブ変更ハンドラ */
 const handleTabChange = (index: number) => {
   const tab = tabs.value[index]
   if (tab) {

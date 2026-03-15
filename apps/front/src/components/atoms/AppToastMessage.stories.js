@@ -1,6 +1,6 @@
 import PButton from 'primevue/button';
 import AppToastMessage from './AppToastMessage.vue';
-import ToastMessageUtils from '@/utils/toastMessageUtils';
+import { ToastMessageUtils } from '@/utils/toastMessageUtils';
 
 export default {
   title: 'Design System/Atoms/AppToastMessage',

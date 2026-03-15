@@ -27,9 +27,10 @@ import DatePicker from 'primevue/datepicker';
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 import AppFormError from '@/components/atoms/AppFormError.vue';
 import { usePrimeVue } from 'primevue';
+import { TypeConvertUtils } from '@/utils/typeConvertUtils';
 
 const props = withDefaults(defineProps<{
-  modelValue?: Date | null;
+  modelValue?: string | Date | null;
   placeholder?: string;
   format?: string;
   error?: InputFormErrorDto | InputFormErrorDto[];
@@ -55,7 +56,7 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: Date | null): void;
+  (e: 'update:modelValue', value: string | Date | null): void;
   (e: 'focus'): void;
   (e: 'blur'): void;
 }>();
@@ -64,8 +65,8 @@ const emit = defineEmits<{
  * 双方向バインディングのための計算プロパティ
  */
 const computedModel = computed({
-  // DatePickerはDate | undefinedを期待するため、nullをundefinedに変換する
-  get: () => props.modelValue ?? undefined,
+  // DatePickerはDate | undefinedを期待するため、string/nullはDateまたはundefinedに変換する
+  get: () => TypeConvertUtils.toDateFromString(props.modelValue) ?? undefined,
   set: (value: Date | string | null | undefined) => {
     // DatePickerからはDate以外が渡される場合があるため、Date以外はnullに変換する
     const newValue = value instanceof Date ? value : null;

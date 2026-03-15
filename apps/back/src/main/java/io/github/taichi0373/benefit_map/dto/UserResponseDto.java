@@ -26,8 +26,8 @@ public class UserResponseDto {
     /** 生年月日 */
     private LocalDate birthDate;
 
-    /** 自治体コード */
-    private String municipalityCd;
+    /** 居住地域 */
+    private String address;
 
     /** 運転免許所持状況 */
     private String licenseStatus;
