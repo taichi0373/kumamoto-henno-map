@@ -58,51 +58,6 @@ public interface BenefitDetailDao {
     }
 
     /**
-     * ユーザーの利用資格条件に一致する運賃割引特典を取得
-     * @param age            年齢
-     * @param licenseStatus  運転免許所持状況
-     * @param municipalityCd 対象自治体コード
-     * @return 利用可能な運賃割引特典一覧
-     */
-    default List<BenefitDetailEntity> selectFareDiscountsEligibleForUser(
-            Integer age, String licenseStatus, String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ e = new BenefitDetailEntity_();
-
-        return entityql.from(e)
-                .where(c -> {
-                    c.isNotNull(e.agencyId);
-                    // 年齢条件
-                    if (!ValidateUtils.isNullOrEmpty(age)) {
-                        c.and(() -> {
-                            c.isNull(e.minAge);
-                            c.or(() -> c.le(e.minAge, age));
-                        });
-                        c.and(() -> {
-                            c.isNull(e.maxAge);
-                            c.or(() -> c.ge(e.maxAge, age));
-                        });
-                    }
-                    // 免許状況
-                    if (!ValidateUtils.isNullOrEmpty(licenseStatus)) {
-                        c.and(() -> {
-                            c.isNull(e.licenseStatus);
-                            c.or(() -> c.eq(e.licenseStatus, licenseStatus));
-                        });
-                    }
-                    // 自治体コード
-                    if (!ValidateUtils.isNullOrEmpty(municipalityCd) && municipalityCd.length() >= 2) {
-                        c.and(() -> {
-                            c.isNull(e.eligibilityMunicipalityCd);
-                            c.or(() -> c.eq(e.eligibilityMunicipalityCd, municipalityCd));
-                            c.or(() -> c.eq(e.eligibilityMunicipalityCd, municipalityCd.substring(0, 2)));
-                        });
-                    }
-                })
-                .fetch();
-    }
-
-    /**
      * 利用資格条件で検索（年齢・運転免許所持状況・自治体コード）
      * @param age            年齢
      * @param licenseStatus  運転免許所持状況

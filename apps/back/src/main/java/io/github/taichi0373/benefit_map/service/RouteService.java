@@ -28,9 +28,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.dto.RouteRequestDto;
-import io.github.taichi0373.benefit_map.repository.dao.BenefitDetailDao;
+import io.github.taichi0373.benefit_map.repository.dao.FareDiscountEligibilityDao;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
-import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
+import io.github.taichi0373.benefit_map.repository.entity.FareDiscountEligibilityEntity;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.util.AgeUtils;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
@@ -48,10 +48,10 @@ public class RouteService {
     private UsersDao usersDao;
 
     /**
-     * 特典情報取得DAO
+     * 運賃割引条件取得DAO
      */
     @Autowired
-    private BenefitDetailDao benefitDetailDao;
+    private FareDiscountEligibilityDao fareDiscountEligibilityDao;
 
     // 日本標準時タイムゾーン
     private static final ZoneId JST = ZoneId.of("Asia/Tokyo");
@@ -72,8 +72,10 @@ public class RouteService {
 
     /**
      * 経路探索を実行
+     * @param request 経路探索リクエスト
+     * @param userId  セッションから取得したユーザーID
      */
-    public JsonNode searchRoutes(RouteRequestDto request) throws IOException, ParseException {
+    public JsonNode searchRoutes(RouteRequestDto request, Long userId) throws IOException, ParseException {
         String otpUrl = buildOtpUrl(request);
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
@@ -89,8 +91,8 @@ public class RouteService {
 
             JsonNode otpResponse = objectMapper.readTree(responseBody);
 
-            // ユーザーの割引情報を取得
-            Map<String, BenefitDetailEntity> discountMap = buildDiscountMap(request.getUserId());
+            // セッションのユーザーIDから割引情報を取得
+            Map<String, FareDiscountEligibilityEntity> discountMap = buildDiscountMap(userId);
 
             return processOtpResponse(otpResponse, discountMap);
         } catch (IOException | ParseException e) {
@@ -151,7 +153,7 @@ public class RouteService {
      * @param discountMap ユーザーの割引情報マップ {事業者ID, 割引情報}
       * @return 処理済み経路情報
      */
-    private JsonNode processOtpResponse(JsonNode otpResponse, Map<String, BenefitDetailEntity> discountMap) {
+    private JsonNode processOtpResponse(JsonNode otpResponse, Map<String, FareDiscountEligibilityEntity> discountMap) {
         try {
             JsonNode planNode = otpResponse.get("plan");
             if (ValidateUtils.isNullOrEmpty(planNode) || !planNode.has("itineraries")) {
@@ -189,7 +191,7 @@ public class RouteService {
      * @param discountMap ユーザーの割引情報マップ {事業者ID, 割引情報}
      * @return 処理済み経路情報
      */
-    private Map<String, Object> processItinerary(JsonNode itinerary, Map<String, BenefitDetailEntity> discountMap) {
+    private Map<String, Object> processItinerary(JsonNode itinerary, Map<String, FareDiscountEligibilityEntity> discountMap) {
         Map<String, Object> result = new HashMap<>();
         List<Map<String, Object>> legs = new ArrayList<>();
         // 合計料金
@@ -250,7 +252,7 @@ public class RouteService {
       * @return 処理済み区間情報
      */
     private Map<String, Object> processLeg(JsonNode leg, JsonNode fareNode, int legIndex,
-            Map<String, BenefitDetailEntity> discountMap) {
+            Map<String, FareDiscountEligibilityEntity> discountMap) {
         Map<String, Object> legData = new HashMap<>();
 
         String mode = leg.has("mode") ? leg.get("mode").asText() : "";
@@ -285,7 +287,7 @@ public class RouteService {
         // 運賃 > 0 かつ事業者IDが存在する場合、割引運賃を計算
         Integer discountFare = null;
         if (legFare > 0 && !agencyId.isEmpty()) {
-            BenefitDetailEntity discount = discountMap.get(agencyId);
+            FareDiscountEligibilityEntity discount = discountMap.get(agencyId);
             if (!ValidateUtils.isNullOrEmpty(discount)) {
                 discountFare = applyDiscount(legFare, discount);
             }
@@ -331,7 +333,7 @@ public class RouteService {
      * @param userId ユーザーID
      * @return ユーザーの割引情報マップ {事業者ID, 割引情報}
      */
-    private Map<String, BenefitDetailEntity> buildDiscountMap(Long userId) {
+    private Map<String, FareDiscountEligibilityEntity> buildDiscountMap(Long userId) {
         if (ValidateUtils.isNullOrEmpty(userId)) {
             return Map.of();
         }
@@ -348,17 +350,17 @@ public class RouteService {
         }
 
         // ユーザーの利用資格条件に一致する運賃割引特典を取得
-        List<BenefitDetailEntity> discounts = benefitDetailDao.selectFareDiscountsEligibleForUser(
+        List<FareDiscountEligibilityEntity> discounts = fareDiscountEligibilityDao.selectEligibleForUser(
                 age, user.getLicenseStatus(), user.getMunicipalityCd());
 
         // 事業者IDごとに最大割引（割引後運賃が最安値）となるものをセット
-        Map<String, BenefitDetailEntity> discountMap = new HashMap<>();
-        for (BenefitDetailEntity discount : discounts) {
+        Map<String, FareDiscountEligibilityEntity> discountMap = new HashMap<>();
+        for (FareDiscountEligibilityEntity discount : discounts) {
             String agencyId = discount.getAgencyId();
             if (ValidateUtils.isNullOrEmpty(agencyId)) {
                 continue;
             }
-            BenefitDetailEntity existing = discountMap.get(agencyId);
+            FareDiscountEligibilityEntity existing = discountMap.get(agencyId);
             if (ValidateUtils.isNullOrEmpty(existing) || getEffectiveDiscountRate(discount) > getEffectiveDiscountRate(existing)) {
                 discountMap.put(agencyId, discount);
             }
@@ -373,7 +375,7 @@ public class RouteService {
      * @param discount 割引情報エンティティ
      * @return 割引率（0〜100）
      */
-    private int getEffectiveDiscountRate(BenefitDetailEntity discount) {
+    private int getEffectiveDiscountRate(FareDiscountEligibilityEntity discount) {
         if (CodeConstants.DiscountType.FREE.equals(discount.getDiscountType())) {
             return 100;
         }
@@ -390,7 +392,7 @@ public class RouteService {
      * @param discount 割引情報
      * @return 割引後の運賃（円）
      */
-    private Integer applyDiscount(int fare, BenefitDetailEntity discount) {
+    private Integer applyDiscount(int fare, FareDiscountEligibilityEntity discount) {
         if (CodeConstants.DiscountType.FREE.equals(discount.getDiscountType())) {
             return 0;
         }

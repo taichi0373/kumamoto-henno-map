@@ -46,7 +46,7 @@
     <div id="map">
       <!-- サイドバー開閉ボタン -->
       <AppButton :label="''" :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'"
-        tooltip="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
+        tooltip="サイドバーの表示切替" aria-label="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
       <!-- マップ上のボタン -->
       <div class="map-button-container">
         <AppButton :label="''" :icon="'pi pi-shop'" title="支援協賛店" aria-label="支援協賛店" @click="toggleStoreDisplay" />
@@ -127,10 +127,8 @@ const routeSearchLoading = ref(false)
 /** マップ上から選択された地点 */
 const mapSelectedLocation = ref<MarkerDto | null>(null)
 
-/** 現在地キャッシュ */
+/** 現在地キャッシュ（初回取得後に保持） */
 const currentUserLocation = ref<{ lat: number; lon: number } | null>(null)
-/** Geolocation watchPosition の監視ID */
-let geoWatchId: number | null = null
 
 /** マップ */
 const { mapInstance, markerManager, activeRouteIndex, initializeMap, addStoreMarkers, removeStoreMarkers, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
@@ -159,27 +157,6 @@ onMounted(() => {
   const map = initializeMap('map')
   if (map) {
     map.on('load', () => console.log('Map loaded successfully'))
-  }
-  // 現在地を継続監視してキャッシュ
-  if (navigator.geolocation) {
-    geoWatchId = navigator.geolocation.watchPosition(
-      (position) => {
-        currentUserLocation.value = {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        }
-      },
-      () => {
-        currentUserLocation.value = null
-      }
-    )
-  }
-})
-
-// アンマウント時に現在地監視を停止
-onUnmounted(() => {
-  if (geoWatchId !== null) {
-    navigator.geolocation.clearWatch(geoWatchId)
   }
 })
 
@@ -287,8 +264,6 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
         ? routeRequest.time.toTimeString().split(' ')[0].slice(0, 5)
         : '',
       arriveBy: routeRequest.departureArrival === codeConstant.DEPARTURE_ARRIVAL.ARRIVAL ? true : false,
-      // ログイン中のユーザーIDを送信（割引運賃の適用判定に使用）
-      userId: AuthUtils.isLoggedIn() ? (Number(AuthUtils.getUser()?.id) || null) : null,
     })
     if (response.status === responseStatusConstant.OK) {
       const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
@@ -445,23 +420,43 @@ const selectOnMap = (type: string) => {
   mapSelectMode.value = type
 }
 
+/** 現在地候補を表示 */
+const showCurrentLocationSuggestion = (lat: number, lon: number, type: string | null) => {
+  const suggestion = new SuggestionDto({
+    id: -1,
+    name: '現在地',
+    address: null,
+    lat,
+    lon,
+  })
+  if (type === codeConstant.SEARCH_TYPE.START) {
+    startSuggestions.value = [suggestion]
+  } else {
+    endSuggestions.value = [suggestion]
+  }
+}
+
 /** 候補リストの取得（ジオコーディング） */
 const fetchSuggestions = (marker: MarkerDto) => {
-  // 入力が空の場合は現在地キャッシュから候補を表示
+  // 入力が空の場合は現在地を候補として表示
   if (ValidateUtils.isNullOrEmpty(marker.name)) {
     if (currentUserLocation.value) {
-      const currentLocationSuggestion = new SuggestionDto({
-        id: -1,
-        name: '現在地',
-        address: null,
-        lat: currentUserLocation.value.lat,
-        lon: currentUserLocation.value.lon,
-      })
-      if (marker.type === codeConstant.SEARCH_TYPE.START) {
-        startSuggestions.value = [currentLocationSuggestion]
-      } else {
-        endSuggestions.value = [currentLocationSuggestion]
-      }
+      // キャッシュ済みの場合はそのまま表示
+      showCurrentLocationSuggestion(currentUserLocation.value.lat, currentUserLocation.value.lon, marker.type)
+    } else if (navigator.geolocation) {
+      // 必要になったタイミングで初めて位置情報を取得
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          currentUserLocation.value = {
+            lat: position.coords.latitude,
+            lon: position.coords.longitude,
+          }
+          showCurrentLocationSuggestion(currentUserLocation.value.lat, currentUserLocation.value.lon, marker.type)
+        },
+        () => {
+          clearSuggestions()
+        }
+      )
     } else {
       clearSuggestions()
     }
@@ -524,6 +519,7 @@ main {
 
 /* サイドバー開閉ボタン */
 .sidebar-toggle-btn {
+  position: absolute;
   top: 40%;
   width: 30px;
   height: 46px;

@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.RouteRequestDto;
 import io.github.taichi0373.benefit_map.service.RouteService;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -31,9 +33,13 @@ public class RouteController {
      * 経路探索
      */
     @PostMapping("/search")
-    public ResponseEntity<ApiResponseDto<?>> searchRoutes(@RequestBody RouteRequestDto request) {
+    public ResponseEntity<ApiResponseDto<?>> searchRoutes(@RequestBody RouteRequestDto request, HttpSession session) {
         try {
-            JsonNode result = routeService.searchRoutes(request);
+            // セッションからユーザーIDを取得
+            Object sessionUserId = session.getAttribute("user_id");
+            Long userId = ValidateUtils.isNullOrEmpty(sessionUserId) ? null : ((Number) sessionUserId).longValue();
+
+            JsonNode result = routeService.searchRoutes(request, userId);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (IOException | ParseException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

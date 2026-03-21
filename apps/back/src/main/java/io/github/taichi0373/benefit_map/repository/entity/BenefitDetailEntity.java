@@ -2,7 +2,6 @@ package io.github.taichi0373.benefit_map.repository.entity;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
@@ -15,7 +14,6 @@ import lombok.Setter;
 
 /**
  * 特典詳細ビューエンティティ（V_BENEFIT_DETAIL）
- * <p>特典・カテゴリ・利用条件を結合したビュー用エンティティ。読み取り専用。</p>
  */
 @Entity(metamodel = @Metamodel)
 @Table(name = "v_benefit_detail")
@@ -124,19 +122,4 @@ public class BenefitDetailEntity implements Serializable {
     @Column(name = "eligibility_note")
     private String eligibilityNote;
 
-    // -------------------------------------------------------------------------
-    // 運賃割引情報
-    // -------------------------------------------------------------------------
-
-    /** 事業者ID */
-    @Column(name = "agency_id")
-    private String agencyId;
-
-    /** 割引種別 */
-    @Column(name = "discount_type")
-    private String discountType;
-
-    /** 割引値 */
-    @Column(name = "discount_value")
-    private BigDecimal discountValue;
 }

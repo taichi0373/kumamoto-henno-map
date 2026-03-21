@@ -70,10 +70,6 @@ const onClick = () => {
     border: 1px solid;
     border-color: base.$base-400;
   }
-  &:focus {
-    outline: 0 none;
-    outline-offset: 0;
-  }
   &.p-app-button-primary {
     background-color: base.$base-700;
     color: base.$base-100;
