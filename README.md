@@ -62,5 +62,5 @@ psql -U user -d benefit_map
 | ホスト名/アドレス | db |
 | ポート番号 | 5432 |
 | 管理用データベース | benefit_map |
-| ユーザ名 | admin |
-| パスワード | admin |
+| ユーザ名 | user |
+| パスワード | pass |
