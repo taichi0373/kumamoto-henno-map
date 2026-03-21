@@ -3,8 +3,8 @@ services:
     image: postgres:15
     container_name: db
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
       POSTGRES_DB: benefit_map
     volumes:
       - ./config/database:/docker-entrypoint-initdb.d
