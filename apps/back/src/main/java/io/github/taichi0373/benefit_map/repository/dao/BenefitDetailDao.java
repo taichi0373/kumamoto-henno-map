@@ -9,7 +9,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity_;
-import io.github.taichi0373.benefit_map.constants.codeConstants;
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
@@ -75,7 +75,7 @@ public interface BenefitDetailDao {
                     if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
                         c.eq(e.municipalityCd, municipalityCd);
                     }
-                    c.eq(e.municipalityType, codeConstants.MunicipalityType.CITY);
+                    c.eq(e.municipalityType, CodeConstants.MunicipalityType.CITY);
                 })
                 .fetch();
     }

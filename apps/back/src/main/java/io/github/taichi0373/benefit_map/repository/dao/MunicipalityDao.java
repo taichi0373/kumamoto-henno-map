@@ -12,7 +12,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity;
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity_;
-import io.github.taichi0373.benefit_map.constants.codeConstants;
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 
 @Dao
 @ConfigAutowireable
@@ -39,7 +39,7 @@ public interface MunicipalityDao {
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
         return entityql.from(e)
-                      .where(c -> c.eq(e.municipalityType, codeConstants.MunicipalityType.CITY))
+                      .where(c -> c.eq(e.municipalityType, CodeConstants.MunicipalityType.CITY))
                       .orderBy(c -> c.asc(e.municipalityCd))
                       .fetch();
     }
