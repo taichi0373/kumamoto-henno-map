@@ -1,10 +1,10 @@
 package io.github.taichi0373.benefit_map.constants;
 
 /**
- * codeConstants
+ * CodeConstants
  * コード定数クラス
  */
-public class codeConstants {
+public class CodeConstants {
 
     /**
      * 自治体区分

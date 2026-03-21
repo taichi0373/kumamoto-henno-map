@@ -47,6 +47,10 @@ public class BenefitDetailEntity implements Serializable {
     @Column(name = "municipality_kana")
     private String municipalityKana;
 
+    /** 自治体区分 */
+    @Column(name = "municipality_type")
+    private String municipalityType;
+
     /** 特典名称 */
     @Column(name = "benefit_name")
     private String benefitName;
