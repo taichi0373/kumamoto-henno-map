@@ -85,7 +85,7 @@ erDiagram
         string BENEFIT_ID PK,FK
         string AGENCY_ID PK,FK
         string DISCOUNT_TYPE
-        numeric DISCOUNT_VALUE
+        integer DISCOUNT_VALUE
         timestamp SYS_CREATED_AT
         timestamp SYS_UPDATED_AT
     }
