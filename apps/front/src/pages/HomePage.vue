@@ -457,14 +457,31 @@ const setCurrentLocation = (type: string) => {
     applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
     return
   }
-  if (!navigator.geolocation) return
-  navigator.geolocation.getCurrentPosition((position) => {
-    currentUserLocation.value = {
-      lat: position.coords.latitude,
-      lon: position.coords.longitude,
-    }
-    applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
-  })
+  if (!navigator.geolocation) {
+    clearSuggestions()
+    alert('お使いのブラウザは位置情報の取得に対応していません。')
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      currentUserLocation.value = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+      }
+      applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
+    },
+    (error) => {
+      clearSuggestions()
+      if (error.code === error.PERMISSION_DENIED) {
+        alert('位置情報の取得が許可されていません。ブラウザの設定を確認してください。')
+      } else if (error.code === error.TIMEOUT) {
+        alert('現在地の取得がタイムアウトしました。再度お試しください。')
+      } else {
+        alert('現在地を取得できませんでした。再度お試しください。')
+      }
+    },
+    { timeout: 10000 }
+  )
 }
 
 /** 候補リストのクリア */

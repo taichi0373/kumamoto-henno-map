@@ -151,7 +151,7 @@ public class RouteService {
      *
      * @param otpResponse OTPレスポンス
      * @param discountMap ユーザーの割引情報マップ {事業者ID, 割引情報}
-      * @return 処理済み経路情報
+     * @return 処理済み経路情報
      */
     private JsonNode processOtpResponse(JsonNode otpResponse, Map<String, FareDiscountEligibilityEntity> discountMap) {
         try {
