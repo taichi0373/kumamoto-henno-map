@@ -42,6 +42,15 @@
         </p>
 
         <div class="license-section">
+          <h4 class="section-title section-title--privacy">位置情報の取得について</h4>
+          <p class="section-description">
+            本アプリは、経路探索および現在地表示の目的のみで、お使いのデバイスの位置情報を取得します。
+            取得した位置情報はルート計算にのみ使用し、サーバーへの保存や第三者への提供は行いません。
+            位置情報の取得はブラウザの許可設定からいつでも無効にできます。
+          </p>
+        </div>
+
+        <div class="license-section">
           <h4 class="section-title">オープンソースソフトウェア</h4>
           <ul class="license-list">
             <li class="license-item">
@@ -203,6 +212,10 @@ const openUrl = (url: string) => {
   &::before {
     content: "📋";
     font-size: 14px;
+  }
+
+  &--privacy::before {
+    content: "📍";
   }
 }
 

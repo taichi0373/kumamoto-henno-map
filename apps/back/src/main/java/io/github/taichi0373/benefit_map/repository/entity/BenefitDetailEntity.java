@@ -14,7 +14,6 @@ import lombok.Setter;
 
 /**
  * 特典詳細ビューエンティティ（V_BENEFIT_DETAIL）
- * <p>特典・カテゴリ・利用条件を結合したビュー用エンティティ。読み取り専用。</p>
  */
 @Entity(metamodel = @Metamodel)
 @Table(name = "v_benefit_detail")
@@ -122,4 +121,5 @@ public class BenefitDetailEntity implements Serializable {
     /** 備考 */
     @Column(name = "eligibility_note")
     private String eligibilityNote;
+
 }

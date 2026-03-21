@@ -2,7 +2,6 @@ package io.github.taichi0373.benefit_map.repository.entity;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
@@ -39,7 +38,7 @@ public class FareDiscountEntity implements Serializable {
 
     /** 割引値 */
     @Column(name = "discount_value")
-    private BigDecimal discountValue;
+    private Integer discountValue;
 
     /** システム共通フィールド */
     private SystemField systemField;

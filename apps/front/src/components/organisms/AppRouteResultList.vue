@@ -21,7 +21,7 @@
               {{ formatJapaneseTime(route.startTime) }}～{{ formatJapaneseTime(route.endTime) }} ({{ route.duration }}分)
             </div>
             <div class="route-summary__cost">
-              {{ route.totalFare }}円<span v-if="route.totalDiscountFare"> → {{ route.totalDiscountFare }}円</span> / 乗り換え：{{ route.transfers }}回
+              {{ route.totalFare }}円<span v-if="route.totalDiscountFare != null" class="route-summary__discount"> → {{ route.totalDiscountFare }}円</span> / 乗り換え：{{ route.transfers }}回
             </div>
           </div>
 
@@ -170,6 +170,12 @@ const formatJapaneseTime = (time: string | null | undefined): string => {
     color: base.$text-primary;
     font-size: 14px;
     margin-bottom: 4px;
+  }
+
+  &__discount {
+    color: base.$end-marker-color;
+    font-weight: 600;
+    margin-left: 6px;
   }
 }
 
