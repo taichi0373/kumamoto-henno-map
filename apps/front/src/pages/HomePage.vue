@@ -19,6 +19,7 @@
             @select-on-map="selectOnMap"
             @search-route="handleSearchRoute"
             @fetch-suggestions="fetchSuggestions"
+            @fetch-current-location="setCurrentLocation"
             @clear-suggestions="clearSuggestions"
             @select-route="setActiveRoute"
           />
@@ -39,15 +40,15 @@
       </template>
     </div>
 
-    <!-- サイドバー開閉ボタン -->
-    <AppIconButton :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'" severity="secondary"
-      size="sidebarToggle" shape="rounded" tooltip="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
-
     <!-- トーストメッセージ -->
     <AppToastMessage />
 
     <!-- マップ -->
     <div id="map">
+      <!-- サイドバー開閉ボタン -->
+      <AppButton :label="''" :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'"
+        tooltip="サイドバーの表示切替" aria-label="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
+      <!-- マップ上のボタン -->
       <div class="map-button-container">
         <AppButton :label="''" :icon="'pi pi-shop'" title="支援協賛店" aria-label="支援協賛店" @click="toggleStoreDisplay" />
         <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" aria-label="自主返納支援制度とは"
@@ -74,7 +75,6 @@ import AppSearchBenefit from '@/components/organisms/AppSearchBenefit.vue'
 import AppTab from '@/components/atoms/AppTab.vue'
 import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
-import AppIconButton from '@/components/atoms/AppIconButton.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
 import { AuthUtils } from '@/utils/auth'
@@ -127,6 +127,9 @@ const routeResults = ref<RouteDto[]>([])
 const routeSearchLoading = ref(false)
 /** マップ上から選択された地点 */
 const mapSelectedLocation = ref<MarkerDto | null>(null)
+
+/** 現在地キャッシュ（初回取得後に保持） */
+const currentUserLocation = ref<{ lat: number; lon: number } | null>(null)
 
 /** マップ */
 const { mapInstance, markerManager, activeRouteIndex, initializeMap, addStoreMarkers, removeStoreMarkers, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
@@ -420,7 +423,65 @@ const selectOnMap = (type: string) => {
 
 /** 候補リストの取得（ジオコーディング） */
 const fetchSuggestions = (marker: MarkerDto) => {
+  // 入力が空の場合は位置情報を取得せず「現在地」候補のみ表示
+  if (ValidateUtils.isNullOrEmpty(marker.name)) {
+    const suggestion = new SuggestionDto({
+      id: -1,
+      name: '現在地',
+      address: null,
+      lat: null,
+      lon: null,
+    })
+    if (marker.type === codeConstant.SEARCH_TYPE.START) {
+      startSuggestions.value = [suggestion]
+    } else {
+      endSuggestions.value = [suggestion]
+    }
+    return
+  }
   geocoding(new MarkerDto({ name: marker.name, type: marker.type, lat: null, lon: null, address: null }))
+}
+
+/** 現在地を取得してマーカーを設置 */
+const setCurrentLocation = (type: string) => {
+  const applyLocation = (lat: number, lon: number) => {
+    mapSelectedLocation.value = new MarkerDto({
+      type,
+      name: '現在地',
+      address: null,
+      lat,
+      lon,
+    })
+  }
+  if (currentUserLocation.value) {
+    applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
+    return
+  }
+  if (!navigator.geolocation) {
+    clearSuggestions()
+    alert('お使いのブラウザは位置情報の取得に対応していません。')
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      currentUserLocation.value = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+      }
+      applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
+    },
+    (error) => {
+      clearSuggestions()
+      if (error.code === error.PERMISSION_DENIED) {
+        alert('位置情報の取得が許可されていません。ブラウザの設定を確認してください。')
+      } else if (error.code === error.TIMEOUT) {
+        alert('現在地の取得がタイムアウトしました。再度お試しください。')
+      } else {
+        alert('現在地を取得できませんでした。再度お試しください。')
+      }
+    },
+    { timeout: 10000 }
+  )
 }
 
 /** 候補リストのクリア */
@@ -473,6 +534,15 @@ main {
   &.collapsed {
     width: 0;
   }
+}
+
+/* サイドバー開閉ボタン */
+.sidebar-toggle-btn {
+  position: absolute;
+  top: 40%;
+  width: 30px;
+  height: 46px;
+  z-index: 2;
 }
 
 /* サイドバー内ページ */

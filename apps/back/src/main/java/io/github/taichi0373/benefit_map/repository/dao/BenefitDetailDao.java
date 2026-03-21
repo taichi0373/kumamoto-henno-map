@@ -9,14 +9,10 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity_;
-import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * 特典詳細ビューDAO（V_BENEFIT_DETAIL）
- * <p>
- * 読み取り専用。登録・更新・削除操作は提供しない。
- * </p>
  */
 @Dao
 @ConfigAutowireable
@@ -88,8 +84,14 @@ public interface BenefitDetailDao {
                     if (!ValidateUtils.isNullOrEmpty(licenseStatus)) {
                         c.eq(e.licenseStatus, licenseStatus);
                     }
-                    if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
-                        c.eq(e.municipalityCd, municipalityCd);
+                    // 市区町村コードと都道府県コードの両方を考慮して検索
+                    if (!ValidateUtils.isNullOrEmpty(municipalityCd) && municipalityCd.length() >= 2) {
+                        c.and(() -> {
+                            // 市区町村コード
+                            c.eq(e.municipalityCd, municipalityCd);
+                            // 都道府県コード（上位2桁）
+                            c.or(() -> c.eq(e.municipalityCd, municipalityCd.substring(0, 2)));
+                        });
                     }
                 })
                 .fetch();
