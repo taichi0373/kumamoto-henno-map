@@ -12,6 +12,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity;
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity_;
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 
 @Dao
 @ConfigAutowireable
@@ -19,7 +20,7 @@ import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity_;
 public interface MunicipalityDao {
 
     /** 
-     * 主キー検索
+     * 自治体コードから市区町村を取得
      */
     default MunicipalityEntity selectById(String municipalityCd) {
         Entityql entityql = new Entityql(Config.get(this));
@@ -31,28 +32,18 @@ public interface MunicipalityDao {
     }
 
     /**
-     * 全件取得（コード順）
+     * 市町村の自治体CDを全件取得
      */
     default List<MunicipalityEntity> selectAllOrderByCd() {
         Entityql entityql = new Entityql(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
         return entityql.from(e)
+                      .where(c -> c.eq(e.municipalityType, CodeConstants.MunicipalityType.CITY))
                       .orderBy(c -> c.asc(e.municipalityCd))
                       .fetch();
     }
 
-    // /**
-    //  * 名称あいまい検索
-    //  */
-    // @Select
-    // List<MunicipalityEntity> selectByNameLike(String keyword);
-
-    // /**
-    //  * かな検索
-    //  */
-    // @Select
-    // List<MunicipalityEntity> selectByKanaLike(String keyword);
 
     /**
      * 登録

@@ -9,6 +9,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity_;
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
@@ -57,20 +58,6 @@ public interface BenefitDetailDao {
 
         return entityql.from(e)
                 .where(c -> c.eq(e.categoryCd, categoryCd))
-                .fetch();
-    }
-
-    /**
-     * 自治体コードで検索
-     * @param municipalityCd 自治体コード
-     * @return 特典詳細一覧
-     */
-    default List<BenefitDetailEntity> selectByMunicipalityCd(String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ e = new BenefitDetailEntity_();
-
-        return entityql.from(e)
-                .where(c -> c.eq(e.municipalityCd, municipalityCd))
                 .fetch();
     }
 
