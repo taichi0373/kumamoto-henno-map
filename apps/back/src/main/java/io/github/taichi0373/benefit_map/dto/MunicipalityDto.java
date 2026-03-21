@@ -14,6 +14,9 @@ public class MunicipalityDto {
     /** 自治体名称かな */
     private String municipalityKana;
 
+    /** 自治体区分 */
+    private String municipalityType;
+
     /** システム共通フィールド */
     private SystemField systemField;
 }
