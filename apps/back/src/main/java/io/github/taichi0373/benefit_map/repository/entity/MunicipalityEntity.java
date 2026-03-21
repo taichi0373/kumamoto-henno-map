@@ -35,6 +35,10 @@ public class MunicipalityEntity implements Serializable {
     @Column(name = "municipality_kana")
     private String municipalityKana;
 
+    /** 自治体区分 */
+    @Column(name = "municipality_type")
+    private String municipalityType;
+
     /** システム共通フィールド */
     private SystemField systemField;
 
