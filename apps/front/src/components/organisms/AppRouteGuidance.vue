@@ -128,6 +128,8 @@ const emit = defineEmits<{
   (e: 'fetch-suggestions', marker: MarkerDto): void;
   /** 候補リストのクリア */
   (e: 'clear-suggestions'): void;
+  /** 現在地の取得 */
+  (e: 'fetch-current-location', type: string): void;
   /** 経路カード選択 */
   (e: 'select-route', index: number): void;
 }>();
@@ -279,6 +281,12 @@ const onFocus = (type: string) => {
 
 // 出発地が選択されたときの処理
 const selectStartLocation = (item: SuggestionDto) => {
+  // 現在地が選択された場合は位置情報取得
+  if (item.id === -1) {
+    emit('clear-suggestions')
+    emit('fetch-current-location', codeConstant.SEARCH_TYPE.START)
+    return
+  }
   if (item.lat == null || item.lon == null) return
   searchRoute.value.startLocation = item.name;
   searchRoute.value.startLat = item.lat;
@@ -298,6 +306,12 @@ const selectStartLocation = (item: SuggestionDto) => {
 
 // 目的地が選択されたときの処理
 const selectEndLocation = (item: SuggestionDto) => {
+  // 現在地が選択された場合は位置情報取得
+  if (item.id === -1) {
+    emit('clear-suggestions')
+    emit('fetch-current-location', codeConstant.SEARCH_TYPE.END)
+    return
+  }
   if (item.lat == null || item.lon == null) return
   searchRoute.value.endLocation = item.name;
   searchRoute.value.endLat = item.lat;

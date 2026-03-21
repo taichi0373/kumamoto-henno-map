@@ -2,7 +2,6 @@ package io.github.taichi0373.benefit_map.repository.entity;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;

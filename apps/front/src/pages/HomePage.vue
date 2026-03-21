@@ -19,6 +19,7 @@
             @select-on-map="selectOnMap"
             @search-route="handleSearchRoute"
             @fetch-suggestions="fetchSuggestions"
+            @fetch-current-location="setCurrentLocation"
             @clear-suggestions="clearSuggestions"
             @select-route="setActiveRoute"
           />
@@ -420,49 +421,50 @@ const selectOnMap = (type: string) => {
   mapSelectMode.value = type
 }
 
-/** 現在地候補を表示 */
-const showCurrentLocationSuggestion = (lat: number, lon: number, type: string | null) => {
-  const suggestion = new SuggestionDto({
-    id: -1,
-    name: '現在地',
-    address: null,
-    lat,
-    lon,
-  })
-  if (type === codeConstant.SEARCH_TYPE.START) {
-    startSuggestions.value = [suggestion]
-  } else {
-    endSuggestions.value = [suggestion]
-  }
-}
-
 /** 候補リストの取得（ジオコーディング） */
 const fetchSuggestions = (marker: MarkerDto) => {
-  // 入力が空の場合は現在地を候補として表示
+  // 入力が空の場合は位置情報を取得せず「現在地」候補のみ表示
   if (ValidateUtils.isNullOrEmpty(marker.name)) {
-    if (currentUserLocation.value) {
-      // キャッシュ済みの場合はそのまま表示
-      showCurrentLocationSuggestion(currentUserLocation.value.lat, currentUserLocation.value.lon, marker.type)
-    } else if (navigator.geolocation) {
-      // 必要になったタイミングで初めて位置情報を取得
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          currentUserLocation.value = {
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          }
-          showCurrentLocationSuggestion(currentUserLocation.value.lat, currentUserLocation.value.lon, marker.type)
-        },
-        () => {
-          clearSuggestions()
-        }
-      )
+    const suggestion = new SuggestionDto({
+      id: -1,
+      name: '現在地',
+      address: null,
+      lat: null,
+      lon: null,
+    })
+    if (marker.type === codeConstant.SEARCH_TYPE.START) {
+      startSuggestions.value = [suggestion]
     } else {
-      clearSuggestions()
+      endSuggestions.value = [suggestion]
     }
     return
   }
   geocoding(new MarkerDto({ name: marker.name, type: marker.type, lat: null, lon: null, address: null }))
+}
+
+/** 現在地を取得してマーカーを設置 */
+const setCurrentLocation = (type: string) => {
+  const applyLocation = (lat: number, lon: number) => {
+    mapSelectedLocation.value = new MarkerDto({
+      type,
+      name: '現在地',
+      address: null,
+      lat,
+      lon,
+    })
+  }
+  if (currentUserLocation.value) {
+    applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
+    return
+  }
+  if (!navigator.geolocation) return
+  navigator.geolocation.getCurrentPosition((position) => {
+    currentUserLocation.value = {
+      lat: position.coords.latitude,
+      lon: position.coords.longitude,
+    }
+    applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
+  })
 }
 
 /** 候補リストのクリア */
