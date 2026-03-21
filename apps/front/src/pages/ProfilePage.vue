@@ -28,6 +28,7 @@
             </div>
           </div>
           <div class="form-btn">
+            <AppButton :primary="false" label="クリア" @click="clearForm" />
             <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
           </div>
 
@@ -181,6 +182,17 @@ const updateUsersInfo = async () => {
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
     }
   }
+}
+
+/**
+ * フォームのクリア
+ */
+const clearForm = () => {
+  clearError()
+  usersModel.value.username = ''
+  usersModel.value.birthDate = null
+  usersModel.value.address = ''
+  usersModel.value.licenseStatus = ''
 }
 
 /**

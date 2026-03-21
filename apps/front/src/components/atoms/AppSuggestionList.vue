@@ -5,15 +5,18 @@
     :class="inputClass"
     :style="inputStyle"
   >
-    <li 
+    <li
       v-for="(item, index) in modelValue"
       class="item"
       :key="item.id || index"
       @click="onSelect(item)"
       @mousedown.prevent
     >
-      <div class="name">{{ item.name }}</div>
-      <div class="address">{{ item.address }}</div>
+      <div class="name">
+        <i v-if="item.id === -1" class="pi pi-map-marker name__icon" />
+        {{ item.name }}
+      </div>
+      <div v-if="item.address" class="address">{{ item.address }}</div>
     </li>
   </ul>
 </template>
@@ -72,12 +75,17 @@ const onSelect = (item: SuggestionDto): void => {
 }
 
 .name {
-  color: base.$base-700;
-  margin-bottom: 4px;
+  color: base.$text-primary;
+
+  &__icon {
+    margin-right: 4px;
+    font-size: 14px;
+  }
 }
 
 .address {
-  color: base.$base-600;
+  color: base.$text-primary;
+  margin-top: 4px;
   font-size: 12px;
 }
 </style>

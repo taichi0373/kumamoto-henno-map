@@ -34,4 +34,7 @@ public class RouteRequestDto {
     /** 出発時刻 or 到着時刻を示すフラグ（true: 到着時刻, false: 出発時刻） */
     private boolean arriveBy;
 
+    /** ユーザーID */
+    private Long userId;
+
 }

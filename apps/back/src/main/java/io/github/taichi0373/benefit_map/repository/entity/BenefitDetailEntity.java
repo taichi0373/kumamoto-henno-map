@@ -2,6 +2,7 @@ package io.github.taichi0373.benefit_map.repository.entity;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
@@ -122,4 +123,20 @@ public class BenefitDetailEntity implements Serializable {
     /** 備考 */
     @Column(name = "eligibility_note")
     private String eligibilityNote;
+
+    // -------------------------------------------------------------------------
+    // 運賃割引情報
+    // -------------------------------------------------------------------------
+
+    /** 事業者ID */
+    @Column(name = "agency_id")
+    private String agencyId;
+
+    /** 割引種別 */
+    @Column(name = "discount_type")
+    private String discountType;
+
+    /** 割引値 */
+    @Column(name = "discount_value")
+    private BigDecimal discountValue;
 }

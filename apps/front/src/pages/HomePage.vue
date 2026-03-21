@@ -39,15 +39,15 @@
       </template>
     </div>
 
-    <!-- サイドバー開閉ボタン -->
-    <AppIconButton :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'" severity="secondary"
-      size="sidebarToggle" shape="rounded" tooltip="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
-
     <!-- トーストメッセージ -->
     <AppToastMessage />
 
     <!-- マップ -->
     <div id="map">
+      <!-- サイドバー開閉ボタン -->
+      <AppButton :label="''" :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'"
+        tooltip="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
+      <!-- マップ上のボタン -->
       <div class="map-button-container">
         <AppButton :label="''" :icon="'pi pi-shop'" title="支援協賛店" aria-label="支援協賛店" @click="toggleStoreDisplay" />
         <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" aria-label="自主返納支援制度とは"
@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
@@ -74,7 +74,6 @@ import AppSearchBenefit from '@/components/organisms/AppSearchBenefit.vue'
 import AppTab from '@/components/atoms/AppTab.vue'
 import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
-import AppIconButton from '@/components/atoms/AppIconButton.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
 import { AuthUtils } from '@/utils/auth'
@@ -128,6 +127,11 @@ const routeSearchLoading = ref(false)
 /** マップ上から選択された地点 */
 const mapSelectedLocation = ref<MarkerDto | null>(null)
 
+/** 現在地キャッシュ */
+const currentUserLocation = ref<{ lat: number; lon: number } | null>(null)
+/** Geolocation watchPosition の監視ID */
+let geoWatchId: number | null = null
+
 /** マップ */
 const { mapInstance, markerManager, activeRouteIndex, initializeMap, addStoreMarkers, removeStoreMarkers, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
 
@@ -155,6 +159,27 @@ onMounted(() => {
   const map = initializeMap('map')
   if (map) {
     map.on('load', () => console.log('Map loaded successfully'))
+  }
+  // 現在地を継続監視してキャッシュ
+  if (navigator.geolocation) {
+    geoWatchId = navigator.geolocation.watchPosition(
+      (position) => {
+        currentUserLocation.value = {
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        }
+      },
+      () => {
+        currentUserLocation.value = null
+      }
+    )
+  }
+})
+
+// アンマウント時に現在地監視を停止
+onUnmounted(() => {
+  if (geoWatchId !== null) {
+    navigator.geolocation.clearWatch(geoWatchId)
   }
 })
 
@@ -262,6 +287,8 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
         ? routeRequest.time.toTimeString().split(' ')[0].slice(0, 5)
         : '',
       arriveBy: routeRequest.departureArrival === codeConstant.DEPARTURE_ARRIVAL.ARRIVAL ? true : false,
+      // ログイン中のユーザーIDを送信（割引運賃の適用判定に使用）
+      userId: AuthUtils.isLoggedIn() ? (Number(AuthUtils.getUser()?.id) || null) : null,
     })
     if (response.status === responseStatusConstant.OK) {
       const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
@@ -420,6 +447,26 @@ const selectOnMap = (type: string) => {
 
 /** 候補リストの取得（ジオコーディング） */
 const fetchSuggestions = (marker: MarkerDto) => {
+  // 入力が空の場合は現在地キャッシュから候補を表示
+  if (ValidateUtils.isNullOrEmpty(marker.name)) {
+    if (currentUserLocation.value) {
+      const currentLocationSuggestion = new SuggestionDto({
+        id: -1,
+        name: '現在地',
+        address: null,
+        lat: currentUserLocation.value.lat,
+        lon: currentUserLocation.value.lon,
+      })
+      if (marker.type === codeConstant.SEARCH_TYPE.START) {
+        startSuggestions.value = [currentLocationSuggestion]
+      } else {
+        endSuggestions.value = [currentLocationSuggestion]
+      }
+    } else {
+      clearSuggestions()
+    }
+    return
+  }
   geocoding(new MarkerDto({ name: marker.name, type: marker.type, lat: null, lon: null, address: null }))
 }
 
@@ -473,6 +520,14 @@ main {
   &.collapsed {
     width: 0;
   }
+}
+
+/* サイドバー開閉ボタン */
+.sidebar-toggle-btn {
+  top: 40%;
+  width: 30px;
+  height: 46px;
+  z-index: 2;
 }
 
 /* サイドバー内ページ */

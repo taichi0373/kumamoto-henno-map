@@ -235,6 +235,7 @@ const getDepartureArrivalOptions = () => {
 
 // 条件クリア
 const clearConditions = () => {
+  clearError()
   searchRoute.value = new RouteRequestDto()
   hasSearched.value = false
 }

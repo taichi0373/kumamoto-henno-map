@@ -12,7 +12,6 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEligibilityEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEligibilityEntity_;
-import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 @Dao
 @ConfigAutowireable
@@ -28,40 +27,6 @@ public interface BenefitEligibilityDao {
 
         return entityql.from(e)
                 .where(c -> c.eq(e.benefitId, benefitId))
-                .fetch();
-    }
-
-    /**
-     * 検索条件に一致する特典IDを検索
-     * @param age            年齢
-     * @param licenseStatus  運転免許の所持状況
-     * @param municipalityCd 市区町村コード
-     * @return 特典IDのリスト
-     */
-    default List<BenefitEligibilityEntity> selectEligibleBenefitIds(Integer age, String licenseStatus,
-            String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
-        BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
-
-        return entityql.from(e)
-                .where(c -> {
-                    if (!ValidateUtils.isNullOrEmpty(age)) {
-                        c.and(() -> {
-                            c.isNull(e.minAge);
-                            c.or(() -> c.le(e.minAge, age));
-                        });
-                        c.and(() -> {
-                            c.isNull(e.maxAge);
-                            c.or(() -> c.ge(e.maxAge, age));
-                        });
-                    }
-                    if (!ValidateUtils.isNullOrEmpty(licenseStatus)) {
-                        c.eq(e.licenseStatus, licenseStatus);
-                    }
-                    if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
-                        c.eq(e.municipalityCd, municipalityCd);
-                    }
-                })
                 .fetch();
     }
 

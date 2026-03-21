@@ -16,7 +16,7 @@ import io.github.taichi0373.benefit_map.repository.entity.FareDiscountEntity_;
 @SuppressWarnings("PMD.TooManyMethods")
 public interface FareDiscountDao {
 
-    /** 
+    /**
      * 主キー検索
      */
     default FareDiscountEntity selectById(String benefit_id, String agency_id) {
@@ -28,18 +28,6 @@ public interface FareDiscountDao {
                       .where(c -> c.eq(e.agencyId, agency_id))
                       .fetchOne();
     }
-
-    // /**
-    //  * 特典IDで検索
-    //  */
-    // @Select
-    // List<FareDiscountEntity> selectByBenefitId(String benefitId);
-
-    // /**
-    //  * 事業者IDで検索
-    //  */
-    // @Select
-    // List<FareDiscountEntity> selectByAgencyId(String agencyId);
 
     /**
      * 登録
