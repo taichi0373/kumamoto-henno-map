@@ -32,6 +32,8 @@ public interface FareDiscountEligibilityDao {
 
         return entityql.from(e)
                 .where(c -> {
+                    // 年齢が設定されている場合: min_age/max_age の範囲条件
+                    // 未設定の場合: 条件なし（各カラムが null）の行のみ返す
                     if (!ValidateUtils.isNullOrEmpty(age)) {
                         c.and(() -> {
                             c.isNull(e.minAge);
@@ -41,19 +43,30 @@ public interface FareDiscountEligibilityDao {
                             c.isNull(e.maxAge);
                             c.or(() -> c.ge(e.maxAge, age));
                         });
+                    } else {
+                        c.and(() -> c.isNull(e.minAge));
+                        c.and(() -> c.isNull(e.maxAge));
                     }
+                    // 免許状態が設定されている場合: 一致条件
+                    // 未設定の場合: 条件なし（license_status が null）の行のみ返す
                     if (!ValidateUtils.isNullOrEmpty(licenseStatus)) {
                         c.and(() -> {
                             c.isNull(e.licenseStatus);
                             c.or(() -> c.eq(e.licenseStatus, licenseStatus));
                         });
+                    } else {
+                        c.and(() -> c.isNull(e.licenseStatus));
                     }
+                    // 自治体コードが設定されている場合: 完全一致または都道府県コードの前方一致
+                    // 未設定または長さ不足の場合: 条件なし（eligibility_municipality_cd が null）の行のみ返す
                     if (!ValidateUtils.isNullOrEmpty(municipalityCd) && municipalityCd.length() >= 2) {
                         c.and(() -> {
                             c.isNull(e.eligibilityMunicipalityCd);
                             c.or(() -> c.eq(e.eligibilityMunicipalityCd, municipalityCd));
                             c.or(() -> c.eq(e.eligibilityMunicipalityCd, municipalityCd.substring(0, 2)));
                         });
+                    } else {
+                        c.and(() -> c.isNull(e.eligibilityMunicipalityCd));
                     }
                 })
                 .fetch();

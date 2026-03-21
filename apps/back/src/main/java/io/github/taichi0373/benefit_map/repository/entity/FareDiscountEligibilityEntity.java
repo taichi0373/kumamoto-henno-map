@@ -45,7 +45,7 @@ public class FareDiscountEligibilityEntity implements Serializable {
 
     /** 割引値 */
     @Column(name = "discount_value")
-    private BigDecimal discountValue;
+    private Integer discountValue;
 
     // -------------------------------------------------------------------------
     // 利用条件情報（絞り込みに使用）

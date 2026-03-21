@@ -39,7 +39,7 @@ public class FareDiscountEntity implements Serializable {
 
     /** 割引値 */
     @Column(name = "discount_value")
-    private BigDecimal discountValue;
+    private Integer discountValue;
 
     /** システム共通フィールド */
     private SystemField systemField;

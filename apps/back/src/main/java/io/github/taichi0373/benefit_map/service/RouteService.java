@@ -381,7 +381,7 @@ public class RouteService {
         }
         if (CodeConstants.DiscountType.PERCENTAGE.equals(discount.getDiscountType())
                 && !ValidateUtils.isNullOrEmpty(discount.getDiscountValue())) {
-            return discount.getDiscountValue().intValue();
+            return discount.getDiscountValue();
         }
         return 0;
     }
@@ -400,7 +400,7 @@ public class RouteService {
                 && !ValidateUtils.isNullOrEmpty(discount.getDiscountValue())) {
             // 通常運賃 * (100 - 割引率) / 100 を計算し、10円未満切り上げ
             return BigDecimal.valueOf(fare)
-                    .multiply(BigDecimal.valueOf(100).subtract(discount.getDiscountValue()))
+                    .multiply(BigDecimal.valueOf(100 - discount.getDiscountValue()))
                     .divide(BigDecimal.valueOf(1000), 0, RoundingMode.CEILING)
                     .multiply(BigDecimal.TEN)
                     .intValue();
