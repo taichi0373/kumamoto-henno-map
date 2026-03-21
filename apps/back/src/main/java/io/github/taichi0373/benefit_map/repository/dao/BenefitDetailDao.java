@@ -62,25 +62,6 @@ public interface BenefitDetailDao {
     }
 
     /**
-     * 自治体コードで検索
-     * @param municipalityCd 自治体コード
-     * @return 特典詳細一覧
-     */
-    default List<BenefitDetailEntity> selectByMunicipalityCd(String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ e = new BenefitDetailEntity_();
-
-        return entityql.from(e)
-                .where(c -> {
-                    if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
-                        c.eq(e.municipalityCd, municipalityCd);
-                    }
-                    c.eq(e.municipalityType, CodeConstants.MunicipalityType.CITY);
-                })
-                .fetch();
-    }
-
-    /**
      * 利用資格条件で検索（年齢・運転免許所持状況・自治体コード）
      * @param age            年齢
      * @param licenseStatus  運転免許所持状況
