@@ -142,12 +142,12 @@ const computedTabindex = computed(() => {
   width: 100%;
 }
 
-.p-field:deep(.p-datepicker) {
+.p-field :deep(.p-datepicker) {
   width: 100%;
   height: base.$input-height;
 }
 
-.p-field:deep(.p-inputtext:enabled:focus) {
+.p-field :deep(.p-inputtext:enabled:focus) {
     border-color: base.$base-500;
 }
 

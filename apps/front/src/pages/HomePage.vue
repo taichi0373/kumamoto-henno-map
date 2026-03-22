@@ -278,9 +278,10 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       if (routeLegs.length > 0) {
         addRouteLines(routeLegs)
       }
+    } else {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
     }
   } catch (error) {
-    console.error('Route search error:', error)
     ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
   } finally {
     routeSearchLoading.value = false

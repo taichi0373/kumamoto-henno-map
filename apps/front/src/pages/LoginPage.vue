@@ -54,7 +54,7 @@ import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import { UsersDto } from '@/dto/usersDto'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
 import { AuthUtils } from '@/utils/auth'
-import { MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
+import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
 import { ValidateUtils } from '@/utils/validateUtils'
 import { MessageUtils } from '@/utils/messageUtils'
 import apiClient from '@/utils/api'
@@ -110,11 +110,12 @@ const onClick = async () => {
   } catch (error: unknown) {
     const axiosError = error as AxiosError<{ message: string }>
     if (axiosError.response?.status === responseStatusConstant.UNAUTHORIZED) {
-      barErrMode.value = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_009, "ユーザ名またはパスワード").type === 1 ? 'error' : 'warning'
-      barErrMsg.value = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_009, "ユーザ名またはパスワード").message
+      const error = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_009, "ユーザ名またはパスワード")
+      barErrMode.value = error.type === 1 ? 'error' : 'warning'
+      barErrMsg.value = error.message
     } else {
       barErrMode.value = 'error'
-      barErrMsg.value = 'ログイン中にエラーが発生しました'
+      barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR
     }
   }
 }
