@@ -1,7 +1,7 @@
 <template>
   <div class="page">
     <div class="whole">
-      <AppCard title="ログイン" :inputStyle="{ width: '100%', maxWidth: '600px' }">
+      <AppCard title="ログイン" :inputStyle="{ width: '100%', maxWidth: '600px', padding: '16px' }">
 
         <div class="form-col">
           <AppMessageBar
@@ -110,8 +110,8 @@ const onClick = async () => {
   } catch (error: unknown) {
     const axiosError = error as AxiosError<{ message: string }>
     if (axiosError.response?.status === responseStatusConstant.UNAUTHORIZED) {
-      barErrMode.value = 'error'
-      barErrMsg.value = 'ユーザー名またはパスワードが正しくありません'
+      barErrMode.value = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_009, "ユーザ名またはパスワード").type === 1 ? 'error' : 'warning'
+      barErrMsg.value = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_009, "ユーザ名またはパスワード").message
     } else {
       barErrMode.value = 'error'
       barErrMsg.value = 'ログイン中にエラーが発生しました'

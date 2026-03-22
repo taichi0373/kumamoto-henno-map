@@ -87,11 +87,13 @@ import { BenefitDto } from '@/dto/benefitDto'
 import { MarkerDto } from '@/dto/markerDto'
 import { SuggestionDto } from '@/dto/suggestionDto'
 import { RouteDto } from '@/dto/routeDto'
+import { TabDto } from '@/dto/tabDto'
 import type { RouteInterface } from '@/dto/routeDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { TypeConvertUtils } from '@/utils/typeConvertUtils'
+import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
-import { TabDto } from '@/dto/tabDto'
+import { API_RESPONSE_MESSAGE, GEOLOCATION_MESSAGE } from '@/utils/messageConstant'
 
 /** ルーター */
 const router = useRouter()
@@ -276,13 +278,10 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       if (routeLegs.length > 0) {
         addRouteLines(routeLegs)
       }
-    } else {
-      console.error('Route search failed:', response.statusText)
-      alert('経路検索に失敗しました')
     }
   } catch (error) {
     console.error('Route search error:', error)
-    alert('経路検索に失敗しました')
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
   } finally {
     routeSearchLoading.value = false
   }
@@ -301,11 +300,11 @@ const fetchUserBenefits = async () => {
     if ((response.data as { success: boolean }).success) {
       usersBenefits.value = ((response.data as unknown) as { data: BenefitDto[] }).data || []
     } else {
-      console.warn('特典データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.BENEFIT_NOT_FOUND)
       usersBenefits.value = []
     }
   } catch (error: unknown) {
-    console.error('特典データの取得中にエラーが発生しました:', error)
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
     if ((error as AxiosError).response?.status === 401) {
       AuthUtils.logout()
       isLoggedIn.value = false
@@ -459,7 +458,7 @@ const setCurrentLocation = (type: string) => {
   }
   if (!navigator.geolocation) {
     clearSuggestions()
-    alert('お使いのブラウザは位置情報の取得に対応していません。')
+    ToastMessageUtils.error(GEOLOCATION_MESSAGE.NOT_SUPPORTED);
     return
   }
   navigator.geolocation.getCurrentPosition(
@@ -473,11 +472,11 @@ const setCurrentLocation = (type: string) => {
     (error) => {
       clearSuggestions()
       if (error.code === error.PERMISSION_DENIED) {
-        alert('位置情報の取得が許可されていません。ブラウザの設定を確認してください。')
+        ToastMessageUtils.error(GEOLOCATION_MESSAGE.PERMISSION_DENIED);
       } else if (error.code === error.TIMEOUT) {
-        alert('現在地の取得がタイムアウトしました。再度お試しください。')
+        ToastMessageUtils.error(GEOLOCATION_MESSAGE.TIMEOUT);
       } else {
-        alert('現在地を取得できませんでした。再度お試しください。')
+        ToastMessageUtils.error(GEOLOCATION_MESSAGE.UNKNOWN_ERROR);
       }
     },
     { timeout: 10000 }
