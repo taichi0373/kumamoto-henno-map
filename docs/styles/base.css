@@ -2,15 +2,28 @@
    熊本県自主返納特典マップ設計書 - CSS
    ========================================================================== */
 
+:root {
+  --text-primary: #333333;
+  --text-secondary: #575757;
+}
+
 /* 基本設定 */
 body {
   font-family: 'Hiragino Sans', 'ヒラギノ角ゴシック', 'Yu Gothic Medium', '游ゴシック Medium', 'Yu Gothic', '游ゴシック', 'Noto Sans JP', 'メイリオ', sans-serif;
   line-height: 1.7;
 }
 
-/* サイドバー */
+/* サイドバー 見出し */
+.book-summary ul.summary li.header {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* サイドバー サブ見出し */
 .book-summary ul.summary li > a {
   font-weight: 600;
+  color: var(--text-secondary);
 }
 
 /* メインコンテンツ */
@@ -103,6 +116,22 @@ ul, ol {
 
 li {
   margin: 8px 0;
+}
+
+/* リンク */
+.markdown-section a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.markdown-section a:hover {
+  color: var(--text-secondary);
+  text-decoration: underline;
+}
+
+.markdown-section a:active {
+  color: var(--text-primary);
+  text-decoration: none;
 }
 
 /* 引用 */
