@@ -42,12 +42,14 @@ jobs:
     if: needs.precheck.outputs.backend-changed != ''
     uses: ./.github/workflows/build-backend.yml
 
-  # ドキュメントの変更がある場合、ビルドして公開
-  document-build:
-    name: Document Build and Deploy
+  # ドキュメントまたはコンポーネントの変更がある場合、ビルドして公開
+  deploy-pages:
+    name: Deploy Pages
     needs: precheck
-    if: needs.precheck.outputs.document-changed != ''
-    uses: ./.github/workflows/build-document.yml
+    if: >
+      needs.precheck.outputs.document-changed != '' ||
+      needs.precheck.outputs.component-changed != ''
+    uses: ./.github/workflows/deploy-pages.yml
     with:
       is-deploy: true
     permissions:

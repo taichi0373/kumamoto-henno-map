@@ -88,7 +88,7 @@ class RestApiClient {
       (error) => {
         console.error('API Response Error:', error.response?.status, error.config?.url, error.message)
         
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 && !error.config?.url?.includes('/users/login')) {
           console.warn('Unauthorized access, redirecting to login...')
           localStorage.removeItem('auth_token')
           sessionStorage.clear()

@@ -1,7 +1,7 @@
 <template>
   <header>
     <Menubar :model="menuItems">
-      <!--  -->
+      <!-- タイトル -->
       <template #start>
         <router-link to="/" class="brand-link">
           熊本県自主返納特典マップ
@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
 @use "@/assets/scss/base";
 
 .p-menubar {
-  height: 70px;
+  height: 60px;
   color: base.$base-100;
   background-color: base.$header-background-color;
   border-radius: none;
@@ -152,17 +152,28 @@ onBeforeUnmount(() => {
   z-index: 1000;
 
   :deep(.p-menubar-root-list) {
-    border: 1px solid base.$header-border-color;
+    border: none;
     background-color: base.$header-background-color;
     z-index: 1001;
   }
 
-  :deep(.p-menubar-submenu) {
-    border: 1px solid base.$header-border-color;
-    background-color: base.$header-background-color;
-    z-index: 1001;
+  // ハンバーガーアイコン
+  :deep(.p-menubar-button) {
+    order: 3;
+    width: 35px;
+    height: 35px;
+
+    svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    &:hover, &:focus {
+      background-color: transparent;
+    }
   }
 
+  // タイトル表示欄
   :deep(.p-menubar-start) {
     .brand-link {
       font-size: base.$fontsize-large;
@@ -175,14 +186,36 @@ onBeforeUnmount(() => {
     }
   }
 
+  // ユーザー名表示欄
+  :deep(.p-menubar-end) {
+    order: 2;
+    margin-left: auto;
+  }
+
+  // ドロップダウンメニュー
+  :deep(.p-menubar-submenu) {
+    border: 1px solid base.$header-border-color;
+    background-color: base.$header-background-color;
+    z-index: 1001;
+  }
+
+  // ドロップダウンのメニューアイテム
   :deep(.p-menubar-item-link) {
+    height: 32px;
     background-color: base.$header-background-color;
     color: base.$base-100;
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+
     &:hover, &:focus, &.p-highlight {
       color: base.$base-200;
     }
   }
 
+  // ユーザー名
   :deep(.user-name) {
     margin-right: 12px;
   }
