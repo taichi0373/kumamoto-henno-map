@@ -138,18 +138,9 @@ const computedTabindex = computed(() => {
   &::placeholder {
     color: base.$placeholder-color;
   }
-}
-
-.p-field :deep(.p-inputtext:enabled) {
-  &:hover {
-    background-color: base.$base-100;
-    border-color: base.$base-400;
-  }
-
   &:focus {
     background-color: base.$base-100;
-    border-color: base.$base-700;
-    box-shadow: none;
+    border-color: base.$base-500;
   }
 }
 

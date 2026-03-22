@@ -21,37 +21,3 @@ declare module './router/index.js' {
   const router: Router
   export default router
 }
-
-declare module '@/utils/auth' {
-  interface User {
-    id: string
-    username: string
-    [key: string]: unknown
-  }
-  
-  export const AuthUtils: {
-    login(user: User | null, token: string): void
-    isLoggedIn(): boolean
-    getUser(): User | null
-    getUserId(): string | null
-    getToken(): string | null
-    logout(): void
-  }
-}
-
-declare module './utils/auth' {
-  interface User {
-    id: string
-    username: string
-    [key: string]: unknown
-  }
-  
-  export const AuthUtils: {
-    login(user: User | null, token: string): void
-    isLoggedIn(): boolean
-    getUser(): User | null
-    getUserId(): string | null
-    getToken(): string | null
-    logout(): void
-  }
-}
