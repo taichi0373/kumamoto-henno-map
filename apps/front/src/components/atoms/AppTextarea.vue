@@ -120,20 +120,11 @@ const computedTabindex = computed(() => {
     color: #333;
     padding: 4px 4px 4px 12px;
 
-    &:hover {
-      background-color: base.$base-100;
-      border-color: base.$base-400;
-    }
     &:focus {
       background-color: base.$base-100;
-      border-color: base.$base-700;
-      box-shadow: none;
+      border-color: base.$base-500;
     }
     &.p-inputtext-disabled, &.p-inputtext-readonly {
-      &:hover {
-        background-color: base.$base-200;
-        border-color: base.$base-200;
-      }
       &:focus {
         background-color: base.$base-200;
         border-color: base.$base-200;

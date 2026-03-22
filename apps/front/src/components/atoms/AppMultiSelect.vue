@@ -181,13 +181,13 @@ const errorType = computed(() => {
   width: 100%;
 }
 
-.p-multiselect {
+.p-field :deep(.p-multiselect) {
   width: 100%;
   height: base.$input-height;
 }
 
-.p-field :deep(.p-placeholder) {
-  color: base.$placeholder-color;
+.p-field :deep(.p-multiselect:not(:disabled).p-focus) {
+  border-color: base.$base-500;
 }
 
 .p-field :deep(.p-multiselect.error) {

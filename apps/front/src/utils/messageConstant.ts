@@ -2,25 +2,28 @@ import { MessageDto } from "@/dto/messageDto";
 
 /** メッセージ番号定数 */
 const MESSAGE_NO = {
-    MSG_001: 1, // {0}を入力してください。
-    MSG_002: 2, // {0}は{1}文字以上で入力してください。
-    MSG_003: 3, // {0}は{1}文字以下で入力してください。
-    MSG_004: 4, // {0}の形式が正しくありません。
-    MSG_005: 5, // {0}は全角文字で入力してください。
-    MSG_006: 6, // {0}は半角文字で入力してください。
-    MSG_007: 7, // {0}は半角英数字で入力してください。
-    MSG_008: 8, // {0}と{1}が一致しません。
+    MSG_001: 1, // {0}を入力してください
+    MSG_002: 2, // {0}は{1}文字以上で入力してください
+    MSG_003: 3, // {0}は{1}文字以下で入力してください
+    MSG_004: 4, // {0}の形式が正しくありません
+    MSG_005: 5, // {0}は全角文字で入力してください
+    MSG_006: 6, // {0}は半角文字で入力してください
+    MSG_007: 7, // {0}は半角英数字で入力してください
+    MSG_008: 8, // {0}と{1}が一致しません
+    MSG_009: 9, // {0}が正しくありません
 } as const;
 
 /** メッセージリスト（message形式） */
 const MESSAGE_LIST: MessageDto[] = [
-    { messageNo: 1, messageType: 1, messageContent: "{0}を入力してください。" },
-    { messageNo: 2, messageType: 1, messageContent: "{0}は{1}文字以上で入力してください。" },
-    { messageNo: 3, messageType: 1, messageContent: "{0}は{1}文字以下で入力してください。" },
-    { messageNo: 4, messageType: 1, messageContent: "{0}の形式が正しくありません。" },
-    { messageNo: 5, messageType: 1, messageContent: "{0}は全角文字で入力してください。" },
-    { messageNo: 6, messageType: 1, messageContent: "{0}は半角文字で入力してください。" },
-    { messageNo: 7, messageType: 1, messageContent: "{0}は半角英数字で入力してください。" },
+    { messageNo: 1, messageType: 1, messageContent: "{0}を入力してください" },
+    { messageNo: 2, messageType: 1, messageContent: "{0}は{1}文字以上で入力してください" },
+    { messageNo: 3, messageType: 1, messageContent: "{0}は{1}文字以下で入力してください" },
+    { messageNo: 4, messageType: 1, messageContent: "{0}の形式が正しくありません" },
+    { messageNo: 5, messageType: 1, messageContent: "{0}は全角文字で入力してください" },
+    { messageNo: 6, messageType: 1, messageContent: "{0}は半角文字で入力してください" },
+    { messageNo: 7, messageType: 1, messageContent: "{0}は半角英数字で入力してください" },
+    { messageNo: 8, messageType: 1, messageContent: "{0}と{1}が一致しません" },
+    { messageNo: 9, messageType: 1, messageContent: "{0}が正しくありません" },
 ];
 
 /** メッセージ種別定数 */
@@ -44,6 +47,15 @@ const API_RESPONSE_MESSAGE = {
     LOGIN_FAILED: 'ログインに失敗しました',
     API_ERROR: 'APIエラーが発生しました',
     DATA_NOT_FOUND: '該当データが存在しません',
+    BENEFIT_NOT_FOUND: '特典データの取得に失敗しました',
+    ROUTE_SEARCH_FAILED: '経路の取得に失敗しました',
 }
 
-export { MESSAGE_LIST, MESSAGE_NO, ErrorMessageKbn, API_RESPONSE_MESSAGE };
+const GEOLOCATION_MESSAGE = {
+    NOT_SUPPORTED: 'お使いのブラウザは位置情報の取得に対応していません。',
+    PERMISSION_DENIED: '位置情報の取得が許可されていません。ブラウザの設定を確認してください。',
+    TIMEOUT: '現在地の取得がタイムアウトしました。再度お試しください。',
+    UNKNOWN_ERROR: '現在地を取得できませんでした。再度お試しください。',
+}
+
+export { MESSAGE_LIST, MESSAGE_NO, ErrorMessageKbn, API_RESPONSE_MESSAGE, GEOLOCATION_MESSAGE };
