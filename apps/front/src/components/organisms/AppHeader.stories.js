@@ -69,27 +69,3 @@ export const LoggedOut = {
     `,
   }),
 };
-
-export const MobileView = {
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
-  },
-  render: () => ({
-    components: { AppHeader },
-    template: `
-      <div>
-        <AppHeader />
-        <div style="padding: 20px; margin-top: 20px; background: #f8f9fa; min-height: 400px;">
-          <h2>モバイルビュー</h2>
-          <p>モバイル画面でのヘッダー表示例です。</p>
-          <p>ハンバーガーメニューが表示され、サイドメニューでナビゲーションが可能になります。</p>
-          <div style="background: #fff3cd; padding: 16px; border-radius: 8px; margin-top: 20px;">
-            <strong>ヒント:</strong> 右上のハンバーガーメニューアイコンをタップしてメニューを開いてください。
-          </div>
-        </div>
-      </div>
-    `,
-  }),
-};
