@@ -116,10 +116,39 @@ jobs:
           name: pages-storybook
           path: ${{ inputs.frontend-dir }}/storybook-static
 
-  # ドキュメントとStorybookを結合してデプロイ
+  # Javadoc のビルド処理
+  build-javadoc:
+    name: Build Javadoc
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Javadoc
+        working-directory: apps/back
+        run: ./gradlew javadoc
+
+      - name: Upload Javadoc artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-javadoc
+          path: apps/back/build/docs/javadoc
+
+  # ドキュメントとStorybookとJavadocを結合してデプロイ
   deploy:
     name: Combine and Deploy to GitHub Pages
-    needs: [build-docs, build-storybook]
+    needs: [build-docs, build-storybook, build-javadoc]
     runs-on: ubuntu-latest
     if: ${{ inputs.is-deploy }}
     environment:
@@ -143,6 +172,13 @@ jobs:
         with:
           name: pages-storybook
           path: ./site/storybook
+
+      # Javadoc を /javadoc/ サブディレクトリに配置
+      - name: Download Javadoc artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-javadoc
+          path: ./site/javadoc
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
