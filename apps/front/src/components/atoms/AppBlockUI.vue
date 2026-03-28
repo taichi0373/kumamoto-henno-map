@@ -17,13 +17,10 @@ defineProps<{
 }>();
 
 /**
- * アンマウント時に full-screen モードで body 直下に残留した
- * PrimeVue オーバーレイ (.p-blockui-document) を確実に除去する。
- * ページ遷移などで blocked=true のままコンポーネントが破棄された場合でも
- * 画面操作不能状態が残らないようにする。
+ * アンマウント時にオーバーレイを除去
  */
 onUnmounted(() => {
-  document.querySelectorAll('.p-blockui-document').forEach((el) => el.remove());
+  document.querySelectorAll('.p-blockui-mask').forEach((el) => el.remove());
 });
 </script>
 

@@ -63,8 +63,8 @@
   </div>
 
   <!-- ローディング -->
-  <div class="loading-icon">
-    <AppProgressSpinner v-if="isLoading" />
+  <div v-if="isLoading" class="loading-icon">
+    <AppProgressSpinner/>
   </div>
   <!-- 経路探索結果 -->
   <AppRouteResultList v-if="!isLoading" :routes="routes" :active-route-index="props.activeRouteIndex"

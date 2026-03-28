@@ -26,8 +26,8 @@
 
   <div class="p-2" v-if="hasSearched">
     <!-- ローディング -->
-    <div class="loading-icon">
-      <AppProgressSpinner v-if="isLoading" />
+    <div v-if="isLoading" class="loading-icon">
+      <AppProgressSpinner/>
     </div>
     <!-- 検索結果 -->
     <AppAlert v-if="benefitResults.length === 0 && !isLoading" :variant="'error'"
@@ -171,10 +171,12 @@ const searchBenefits = async (conditions: SearchBenefitDto) => {
         benefitResults.value = data || []
       } else {
         ToastMessageUtils.error(API_RESPONSE_MESSAGE.READ_FAILED)
+        hasSearched.value = false
       }
     })
     .catch(() => {
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+      hasSearched.value = false
     })
     .finally(() => {
       isLoading.value = false
