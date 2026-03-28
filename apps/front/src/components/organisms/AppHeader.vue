@@ -42,8 +42,8 @@ const navigateTo = (path: string): void => {
 /**
  * ログアウト処理
  */
-const handleLogout = (): void => {
-  auth.logout()
+const handleLogout = async (): Promise<void> => {
+  await auth.logout()
   router.push('/login')
 }
 

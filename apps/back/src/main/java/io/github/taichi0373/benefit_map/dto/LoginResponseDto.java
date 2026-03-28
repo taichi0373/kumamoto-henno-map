@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Data;
 
 /**
@@ -8,7 +10,8 @@ import lombok.Data;
 @Data
 public class LoginResponseDto {
 
-    /** JWTトークン */
+    /** JWTトークン（HttpOnly Cookie に設定するため JSON レスポンスには含めない） */
+    @JsonIgnore
     private String token;
 
     /** ユーザーID */

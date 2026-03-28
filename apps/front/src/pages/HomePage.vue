@@ -310,7 +310,7 @@ const fetchUserBenefits = async () => {
   } catch (error: unknown) {
     ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
     if ((error as AxiosError).response?.status === 401) {
-      auth.logout()
+      await auth.logout()
       usersBenefits.value = []
     }
   }

@@ -2,7 +2,8 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosR
 import { useAuthStore } from '@/stores/auth'
 
 // Vue CLI用の環境変数（VUE_APP_プレフィックスが必要）
-const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8081/benefit-map/api';
+// 開発環境では vue.config.js のプロキシ経由でバックエンドに転送される
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/benefit-map/api';
 
 /**
  * API リクエストボディの値の型
@@ -48,6 +49,7 @@ class RestApiClient {
     this.axiosInstance = axios.create({
       baseURL,
       timeout: 10000,
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -62,15 +64,10 @@ class RestApiClient {
    * リクエスト・レスポンスインターセプターの設定
    */
   private setupInterceptors(): void {
-    // リクエストインターセプター（JWT Authorization ヘッダーの追加）
+    // リクエストインターセプター（ロギング）
+    // JWT は HttpOnly Cookie に格納されるためブラウザが自動送信する
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const auth = useAuthStore()
-        const token = auth.token
-        if (token && config.headers) {
-          config.headers['Authorization'] = `Bearer ${token}`
-        }
-
         console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))
         return config
       },
@@ -92,8 +89,10 @@ class RestApiClient {
         if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
           console.warn('Unauthorized access, redirecting to login...')
           const auth = useAuthStore()
-          auth.logout()
-          window.location.href = '/login'
+          // ローカル状態を即時クリアし、Cookie クリアはバックグラウンドで実行
+          auth.logout().finally(() => {
+            window.location.href = '/login'
+          })
         }
         return Promise.reject(error)
       }
