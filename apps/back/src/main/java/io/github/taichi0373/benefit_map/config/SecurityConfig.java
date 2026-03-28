@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.InvalidCsrfTokenException;
+import org.springframework.security.web.csrf.MissingCsrfTokenException;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -94,8 +96,14 @@ public class SecurityConfig {
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->
                     writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "認証が必要です"))
-                .accessDeniedHandler((request, response, accessDeniedException) ->
-                    writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "アクセス権限がありません"))
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    if (accessDeniedException instanceof InvalidCsrfTokenException
+                            || accessDeniedException instanceof MissingCsrfTokenException) {
+                        writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "CSRFトークンが無効です");
+                    } else {
+                        writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "アクセス権限がありません");
+                    }
+                })
             )
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 

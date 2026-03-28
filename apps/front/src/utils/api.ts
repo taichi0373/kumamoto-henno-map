@@ -165,9 +165,20 @@ class RestApiClient {
         }
         
         // CSRF トークンエラー時はキャッシュクリア
-        if (error.response?.status === 403 && error.response?.data?.message?.includes('CSRF')) {
-          console.warn('CSRF token error, clearing cache')
-          this.clearCsrfToken()
+        // バックエンドが CSRF 専用メッセージを返した場合（primary）、
+        // またはCSRF保護対象の状態変更系リクエストが403を受けた場合（safety net）にクリアする
+        if (error.response?.status === 403) {
+          const isCsrfMessage = error.response?.data?.message?.includes('CSRF')
+          const isStateMutating = ['post', 'put', 'patch', 'delete'].includes(
+            error.config?.method?.toLowerCase() || ''
+          )
+          const skipCsrfPaths = ['/auth/', '/users/signup']
+          const isCsrfRequired = !skipCsrfPaths.some(path => error.config?.url?.includes(path))
+
+          if (isCsrfMessage || (isStateMutating && isCsrfRequired)) {
+            console.warn('CSRF token error or state-mutating 403, clearing token cache')
+            this.clearCsrfToken()
+          }
         }
         return Promise.reject(error)
       }
