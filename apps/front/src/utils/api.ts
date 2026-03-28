@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosR
 import { useAuthStore } from '@/stores/auth'
 
 // Vue CLI用の環境変数（VUE_APP_プレフィックスが必要）
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8081/benefit-map/api';
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || 'http://localhost:8081/benefit-map/api';
 
 /**
  * API リクエストボディの値の型

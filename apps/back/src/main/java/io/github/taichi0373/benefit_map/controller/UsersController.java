@@ -46,7 +46,7 @@ public class UsersController {
     public ResponseEntity<ApiResponseDto<?>> getUsersInfo(@PathVariable Long userId, Authentication auth) {
         try {
             // JWT認証チェック
-            if (auth == null || !auth.isAuthenticated()) {
+            if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponseDto.error("認証が必要です"));
             }
@@ -81,7 +81,7 @@ public class UsersController {
             Authentication auth) {
         try {
             // JWT認証チェック
-            if (auth == null || !auth.isAuthenticated()) {
+            if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponseDto.error("認証が必要です"));
             }
