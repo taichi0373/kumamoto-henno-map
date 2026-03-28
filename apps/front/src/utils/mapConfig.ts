@@ -31,7 +31,7 @@ export interface MapClickOptions {
 
 // デフォルト設定
 export const DEFAULT_MAP_CONFIG: MapConfig = {
-  style: 'https://tile.openstreetmap.jp/styles/osm-bright-ja/style.json',
+  style: '/tile-proxy/styles/osm-bright-ja/style.json',
   center: [130.741584, 32.7898], // 熊本市中心部
   zoom: 14,
   minZoom: 8,

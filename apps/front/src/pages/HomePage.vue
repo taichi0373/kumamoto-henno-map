@@ -18,6 +18,7 @@
             @remove-marker="removeMarker"
             @select-on-map="selectOnMap"
             @search-route="handleSearchRoute"
+            @clear-routes="handleClearRoutes"
             @fetch-suggestions="fetchSuggestions"
             @fetch-current-location="setCurrentLocation"
             @clear-suggestions="clearSuggestions"
@@ -50,7 +51,6 @@
         tooltip="サイドバーの表示切替" aria-label="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
       <!-- マップ上のボタン -->
       <div class="map-button-container">
-        <AppButton :label="''" :icon="'pi pi-shop'" title="支援協賛店" aria-label="支援協賛店" @click="toggleStoreDisplay" />
         <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" aria-label="自主返納支援制度とは"
           @click="router.push('/support_info')" />
       </div>
@@ -79,7 +79,7 @@ import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/utils/api'
-import { createRouteMarker, type Store, type RouteMarkerType } from '@/utils/markerConfig'
+import { createRouteMarker, type RouteMarkerType } from '@/utils/markerConfig'
 import { ValidateUtils } from '@/utils/validateUtils'
 import type { AxiosError } from 'axios'
 import { RouteRequestDto } from '@/dto/routeRequestDto'
@@ -105,17 +105,12 @@ const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org'
 const sidebarCollapsed = ref(false)
 /** アクティブタブ */
 const activeTab = ref('route-guidance')
-/** 店舗のマーカー表示フラグ */
-const storeMarkersVisible = ref(false)
 const auth = useAuthStore()
 /** ログイン状態（Piniaストアから導出） */
 const isLoggedIn = computed(() => auth.isLoggedIn)
 
 /** ユーザー特典データ */
 const usersBenefits = ref<BenefitDto[]>([])
-
-const supportStores = ref<Store[]>([])
-const storesLoading = ref(false)
 
 // マップ選択モードのタイプ（'start' or 'end'）
 const mapSelectMode = ref<string | null>(null)
@@ -135,7 +130,7 @@ const mapSelectedLocation = ref<MarkerDto | null>(null)
 const currentUserLocation = ref<{ lat: number; lon: number } | null>(null)
 
 /** マップ */
-const { mapInstance, markerManager, activeRouteIndex, initializeMap, addStoreMarkers, removeStoreMarkers, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
+const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
 
 // クロスヘア表示フラグ
 const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
@@ -287,6 +282,12 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
   }
 }
 
+/** 経路探索結果のクリア */
+const handleClearRoutes = () => {
+  routeResults.value = []
+  addRouteLines([])
+}
+
 /** ユーザー特典データを取得 */
 const fetchUserBenefits = async () => {
   const userId = auth.user?.id;
@@ -321,26 +322,6 @@ watch(() => auth.isLoggedIn, (newVal) => {
   }
 })
 
-/** 支援協賛店データを取得 */
-const fetchSupportStores = async () => {
-  storesLoading.value = true
-  try {
-    const response = await apiClient.get('/support-stores')
-    if ((response.data as { success: boolean }).success) {
-      supportStores.value = ((response.data as unknown) as { data: Store[] }).data || []
-    } else {
-      console.warn('協賛店データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
-      supportStores.value = []
-    }
-  } catch (error) {
-    console.error('協賛店データの取得中にエラーが発生しました:', error)
-    supportStores.value = []
-  } finally {
-    storesLoading.value = false
-  }
-}
-
-
 /** サイドバーの表示/非表示切替 */
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
@@ -359,29 +340,6 @@ const handleTabChange = (index: number) => {
   const tab = tabs.value[index]
   if (tab) {
     setActiveTab(tab.id)
-  }
-}
-
-/** 店舗マーカーの表示/非表示切替 */
-const toggleStoreDisplay = async () => {
-  try {
-    storeMarkersVisible.value = !storeMarkersVisible.value
-    if (storeMarkersVisible.value) {
-      if (supportStores.value.length === 0) {
-        await fetchSupportStores()
-      }
-      if (supportStores.value.length > 0) {
-        addStoreMarkers(supportStores.value)
-      } else {
-        console.warn('No store data available for markers')
-      }
-    } else {
-      removeStoreMarkers()
-    }
-  } catch (error) {
-    console.error('店舗マーカーの表示切替でエラーが発生しました:', error)
-    storeMarkersVisible.value = false
-    removeStoreMarkers()
   }
 }
 

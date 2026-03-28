@@ -1,5 +1,6 @@
 <template>
   <div class="page">
+    <AppBlockUI :blocked="isLoading" />
     <div class="whole">
       <AppCard title="新規登録" :inputStyle="{ width: '100%', maxWidth: '600px' }">
 
@@ -59,6 +60,7 @@
 import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
@@ -97,6 +99,9 @@ const licenseStatusErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
+
+/** ローディング */
+const isLoading = ref(false)
 
 /** 運転免許の所持状況のプルダウン */
 const licenseStatusLabels = {
@@ -164,6 +169,7 @@ const onClick = () => {
       licenseStatus: usersModel.value.licenseStatus
     }
 
+    isLoading.value = true
     apiClient.post('/users/signup', requestData)
       .then((response) => {
         if (response.status === responseStatusConstant.CREATED) {
@@ -174,7 +180,10 @@ const onClick = () => {
       })
       .catch(() => {
         ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
-    });
+      })
+      .finally(() => {
+        isLoading.value = false
+      });
   }
 }
 

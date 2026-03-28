@@ -1,5 +1,6 @@
 <template>
   <div class="page">
+    <AppBlockUI :blocked="isLoading" />
     <div class="whole">
       <AppCard title="ログイン" :inputStyle="{ width: '100%', maxWidth: '600px', padding: '16px' }">
 
@@ -44,6 +45,7 @@ import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { AxiosError } from 'axios'
+import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
@@ -76,6 +78,9 @@ const passwordErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const barErrMode = ref('') as Ref<string>
 const barErrMsg = ref('') as Ref<string>
 
+/** ローディング */
+const isLoading = ref(false)
+
 // 既にログイン済みの場合はホームにリダイレクト
 onMounted(() => {
   if (auth.isLoggedIn) {
@@ -96,6 +101,7 @@ const onClick = async () => {
   if (hasError) return
 
   // APIリクエスト
+  isLoading.value = true
   try {
     const response = await apiClient.post('/auth/login', {
       username: usersModel.value.username,
@@ -118,6 +124,8 @@ const onClick = async () => {
       barErrMode.value = 'error'
       barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR
     }
+  } finally {
+    isLoading.value = false
   }
 }
 
