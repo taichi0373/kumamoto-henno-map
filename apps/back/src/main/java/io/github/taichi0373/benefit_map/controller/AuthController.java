@@ -35,8 +35,8 @@ public class AuthController {
     @Value("${jwt.expiration:3600000}")
     private long jwtExpiration;
 
-    /** CookieのSecure属性設定 */
-    @Value("${app.security.cookie.secure:false}")
+    /** CookieのSecure属性設定（デフォルトtrue。開発環境はapplication-dev.propertiesでfalseに上書き） */
+    @Value("${app.security.cookie.secure:true}")
     private boolean cookieSecure;
 
     /**

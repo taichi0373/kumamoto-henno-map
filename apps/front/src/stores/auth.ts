@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import apiClient from '@/utils/api'
 
 /** ユーザー情報の型定義 */
 export interface User {
@@ -61,10 +62,7 @@ export const useAuthStore = defineStore('auth', {
       sessionStorage.removeItem(USER_KEY)
       sessionStorage.removeItem('username')
       try {
-        await fetch('/benefit-map/api/auth/logout', {
-          method: 'POST',
-          credentials: 'include'
-        })
+        await apiClient.post('/auth/logout')
       } catch (error) {
         console.warn('Logout API call failed:', error)
         // Cookie のクリアに失敗しても JWT 期限切れにより自動無効化される

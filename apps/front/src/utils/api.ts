@@ -1,8 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
-// Vue CLI用の環境変数（VUE_APP_プレフィックスが必要）
-// 開発環境では vue.config.js のプロキシ経由でバックエンドに転送される
+// Vue CLI用の環境変数
 const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/benefit-map/api';
 
 /**
@@ -86,7 +85,7 @@ class RestApiClient {
       (error) => {
         console.error('API Response Error:', error.response?.status, error.config?.url, error.message)
         
-        if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
+        if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login') && !error.config?.url?.includes('/auth/logout')) {
           console.warn('Unauthorized access, redirecting to login...')
           const auth = useAuthStore()
           // ローカル状態を即時クリアし、Cookie クリアはバックグラウンドで実行
