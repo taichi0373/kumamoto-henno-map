@@ -108,9 +108,10 @@ jobs:
           path: ${{ inputs.document-dir }}/_book
 
   # Storybook のビルド処理
+  # is-deploy: true の場合は常にビルド（デプロイ時に /storybook が欠落するのを防ぐ）
   build-storybook:
     name: Build Storybook
-    if: ${{ inputs.build-storybook }}
+    if: ${{ inputs.build-storybook || inputs.is-deploy }}
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
@@ -143,9 +144,10 @@ jobs:
           path: ${{ inputs.frontend-dir }}/storybook-static
 
   # Javadoc のビルド処理
+  # is-deploy: true の場合は常にビルド（デプロイ時に /javadoc が欠落するのを防ぐ）
   build-javadoc:
     name: Build Javadoc
-    if: ${{ inputs.build-javadoc }}
+    if: ${{ inputs.build-javadoc || inputs.is-deploy }}
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
@@ -202,7 +204,6 @@ jobs:
 
       # Storybook を /storybook/ サブディレクトリに配置
       - name: Download Storybook artifact
-        if: ${{ inputs.build-storybook }}
         uses: actions/download-artifact@v4
         with:
           name: pages-storybook
@@ -210,7 +211,6 @@ jobs:
 
       # Javadoc を /javadoc/ サブディレクトリに配置
       - name: Download Javadoc artifact
-        if: ${{ inputs.build-javadoc }}
         uses: actions/download-artifact@v4
         with:
           name: pages-javadoc
