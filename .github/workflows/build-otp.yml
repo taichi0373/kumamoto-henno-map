@@ -1,7 +1,7 @@
 name: Build for OTP
 on:
   push:
-    branches: [ "main", "develop", "develop-oci" ]
+    branches: ["develop", "develop-oci" ]
     paths:
       - 'docker-compose.yml'
       - 'config/otp/**'

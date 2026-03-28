@@ -2,8 +2,7 @@ name: Push Review
 
 on:
   push:
-    branches:
-      - develop-oci
+    branches: ["develop", "develop-oci" ]
     paths:
       - 'docs/**'
       - 'apps/front/**'

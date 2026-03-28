@@ -15,7 +15,7 @@ on:
       java-distribution:
         description: 'Javaディストリビューション'
         type: string
-        default: 'adopt'
+        default: 'temurin'
       java-version:
         description: 'Javaバージョン'
         type: string
@@ -47,7 +47,7 @@ jobs:
 
       # リポジトリ取得
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
@@ -63,7 +63,6 @@ jobs:
       # 実行権限
       - name: Make Gradle Wrapper executable
         run: chmod +x ./gradlew
-        working-directory: apps/back
 
       # ビルド
       - name: Compile Java
