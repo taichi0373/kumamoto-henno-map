@@ -26,11 +26,13 @@ withDefaults(defineProps<{
 <style scoped lang="scss">
 @use "@/assets/scss/base";
 
-.p-progressspinner:deep(.p-progressspinner-circle) {
-  --p-progressspinner-color-one: #{base.$text-primary};
-  --p-progressspinner-color-two: #{base.$text-primary};
-  --p-progressspinner-color-three: #{base.$text-primary};
-  --p-progressspinner-color-four: #{base.$text-primary};
+.p-progressspinner {
+  :deep(.p-progressspinner-circle) {
+    --p-progressspinner-color-one: #{base.$text-primary};
+    --p-progressspinner-color-two: #{base.$text-primary};
+    --p-progressspinner-color-three: #{base.$text-primary};
+    --p-progressspinner-color-four: #{base.$text-primary};
+  }
 }
 
 </style>

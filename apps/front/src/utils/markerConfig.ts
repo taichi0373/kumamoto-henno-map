@@ -2,7 +2,7 @@ import maplibregl from 'maplibre-gl'
 import type { Map, Marker } from 'maplibre-gl'
 import type { RouteMarkerType, MarkerOptions } from './markerTypes'
 
-export { MarkerType, RouteMarkerType } from './markerTypes'
+export type { MarkerType, RouteMarkerType } from './markerTypes'
 
 // 汎用マーカー作成関数
 export const createMarker = (lat: number, lon: number, options: MarkerOptions = {}): Marker => {
