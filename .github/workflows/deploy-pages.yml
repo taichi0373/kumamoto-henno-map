@@ -29,6 +29,21 @@ on:
         type: string
         default: '22'
 
+      backend-dir:
+        description: 'バックエンドディレクトリ'
+        type: string
+        default: 'apps/back'
+
+      java-version:
+        description: 'Javaバージョン'
+        type: string
+        default: '21'
+
+      distribution:
+        description: 'Java distribution'
+        type: string
+        default: 'temurin'
+
       is-deploy:
         description: 'デプロイ実行フラグ'
         type: boolean
@@ -129,21 +144,25 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.distribution }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Make Gradle Wrapper executable
+        working-directory: ${{ inputs.backend-dir }}
+        run: chmod +x ./gradlew
+
       - name: Build Javadoc
-        working-directory: apps/back
+        working-directory: ${{ inputs.backend-dir }}
         run: ./gradlew javadoc
 
       - name: Upload Javadoc artifact
         uses: actions/upload-artifact@v4
         with:
           name: pages-javadoc
-          path: apps/back/build/docs/javadoc
+          path: ${{ inputs.backend-dir }}/build/docs/javadoc
 
   # ドキュメントとStorybookとJavadocを結合してデプロイ
   deploy:
