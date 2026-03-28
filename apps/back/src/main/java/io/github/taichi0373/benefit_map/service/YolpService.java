@@ -23,6 +23,12 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+/**
+ * 位置情報検索サービス
+ * <p>
+ * Nominatim API（OpenStreetMap）を使用した位置情報検索機能を提供する。
+ * </p>
+ */
 @Service
 public class YolpService {
     

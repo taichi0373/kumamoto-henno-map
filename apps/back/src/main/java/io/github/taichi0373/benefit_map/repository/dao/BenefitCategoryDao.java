@@ -11,6 +11,12 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity_;
 
+/**
+ * 特典カテゴリDAOインターフェース
+ * <p>
+ * 特典カテゴリ情報の登録・更新・削除・検索操作を提供する。
+ * </p>
+ */
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")

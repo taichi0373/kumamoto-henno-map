@@ -13,6 +13,12 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEligibilityEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEligibilityEntity_;
 
+/**
+ * 特典適用条件DAOインターフェース
+ * <p>
+ * 特典の適用条件（年齢・免許状況・自治体コード）の登録・更新・削除・検索操作を提供する。
+ * </p>
+ */
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")

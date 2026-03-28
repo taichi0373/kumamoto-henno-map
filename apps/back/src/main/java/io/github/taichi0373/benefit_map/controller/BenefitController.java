@@ -19,6 +19,12 @@ import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import jakarta.servlet.http.HttpSession;
 
+/**
+ * 特典情報コントローラー
+ * <p>
+ * 特典の検索・取得に関するエンドポイントを提供する。
+ * </p>
+ */
 @RestController
 @RequestMapping("/benefit")
 public class BenefitController {

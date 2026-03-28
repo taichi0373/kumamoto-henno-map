@@ -13,6 +13,12 @@ import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.service.MunicipalityService;
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity;
 
+/**
+ * 市区町村情報コントローラー
+ * <p>
+ * 市区町村情報の取得に関するエンドポイントを提供する。
+ * </p>
+ */
 @RestController
 @RequestMapping("/municipality")
 public class MunicipalityController {

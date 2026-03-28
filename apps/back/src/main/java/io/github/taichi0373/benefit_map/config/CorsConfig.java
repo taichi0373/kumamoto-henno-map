@@ -12,6 +12,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * CORS設定クラス
+ * <p>
+ * クロスオリジンリソース共有（CORS）の許可設定を行う。
+ * application.properties の cors.* プロパティを読み込んで設定する。
+ * </p>
+ */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 

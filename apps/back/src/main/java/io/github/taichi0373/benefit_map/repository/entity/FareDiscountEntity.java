@@ -12,6 +12,12 @@ import org.seasar.doma.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 運賃割引エンティティ
+ * <p>
+ * 公共交通事業者ごとの運賃割引情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "fare_discount")
 @Getter

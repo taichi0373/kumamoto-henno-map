@@ -1,6 +1,12 @@
 package io.github.taichi0373.benefit_map.dto;
 
 import lombok.Data;
+/**
+ * 経路探索リクエストDTO
+ * <p>
+ * OTP経路探索APIへのリクエストパラメータを保持するデータ転送オブジェクト。
+ * </p>
+ */
 @Data
 public class RouteRequestDto {
 

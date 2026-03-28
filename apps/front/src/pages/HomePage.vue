@@ -77,7 +77,7 @@ import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
-import { AuthUtils } from '@/utils/auth'
+import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/utils/api'
 import { createRouteMarker, type Store, type RouteMarkerType } from '@/utils/markerConfig'
 import { ValidateUtils } from '@/utils/validateUtils'
@@ -107,8 +107,9 @@ const sidebarCollapsed = ref(false)
 const activeTab = ref('route-guidance')
 /** 店舗のマーカー表示フラグ */
 const storeMarkersVisible = ref(false)
+const auth = useAuthStore()
 /** ログイン状態 */
-const isLoggedIn = ref(false)
+const isLoggedIn = ref(auth.isLoggedIn)
 
 /** ユーザー特典データ */
 const usersBenefits = ref<BenefitDto[]>([])
@@ -290,7 +291,7 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
 
 /** ユーザー特典データを取得 */
 const fetchUserBenefits = async () => {
-  const userId = AuthUtils.getUser()?.id;
+  const userId = auth.user?.id;
   // ログイン状態でない、またはユーザーIDが取得できない場合は処理しない
   if (!isLoggedIn.value || ValidateUtils.isNullOrEmpty(userId)) {
     return
@@ -307,7 +308,7 @@ const fetchUserBenefits = async () => {
   } catch (error: unknown) {
     ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
     if ((error as AxiosError).response?.status === 401) {
-      AuthUtils.logout()
+      auth.logout()
       isLoggedIn.value = false
       usersBenefits.value = []
     }
@@ -492,7 +493,7 @@ const clearSuggestions = () => {
 
 /** ログイン状態の確認・更新 */
 const checkLoginStatus = () => {
-  const newLoginStatus = AuthUtils.isLoggedIn()
+  const newLoginStatus = auth.isLoggedIn
   if (isLoggedIn.value === newLoginStatus) return
   isLoggedIn.value = newLoginStatus
   if (isLoggedIn.value) {

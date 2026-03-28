@@ -19,6 +19,12 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
+/**
+ * 経路探索コントローラー
+ * <p>
+ * OTP（OpenTripPlanner）を使用した経路探索に関するエンドポイントを提供する。
+ * </p>
+ */
 @RestController
 @RequestMapping("/route")
 public class RouteController {

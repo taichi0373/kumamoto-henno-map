@@ -16,6 +16,12 @@ import org.seasar.doma.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * ユーザーエンティティ
+ * <p>
+ * アプリ利用者の情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "users")
 @Getter

@@ -53,7 +53,7 @@ import AppPassword from '@/components/atoms/AppPassword.vue'
 import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import { UsersDto } from '@/dto/usersDto'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
-import { AuthUtils } from '@/utils/auth'
+import { useAuthStore } from '@/stores/auth'
 import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
 import { ValidateUtils } from '@/utils/validateUtils'
 import { MessageUtils } from '@/utils/messageUtils'
@@ -63,6 +63,7 @@ import { responseStatusConstant } from '@/utils/responseStatusConstant'
 /** ルーター */
 const router = useRouter()
 const route = useRoute()
+const auth = useAuthStore()
 
 /** ユーザー情報 */
 const usersModel = ref<UsersDto>(new UsersDto())
@@ -77,7 +78,7 @@ const barErrMsg = ref('') as Ref<string>
 
 // 既にログイン済みの場合はホームにリダイレクト
 onMounted(() => {
-  if (AuthUtils.isLoggedIn()) {
+  if (auth.isLoggedIn) {
     router.push('/')
   }
 })
@@ -96,14 +97,14 @@ const onClick = async () => {
 
   // APIリクエスト
   try {
-    const response = await apiClient.post('/users/login', {
+    const response = await apiClient.post('/auth/login', {
       username: usersModel.value.username,
       password: usersModel.value.password
     })
 
     if (response.status === responseStatusConstant.OK) {
-      const userData = (response.data as { data: { username: string; userId: number } }).data
-      AuthUtils.login({ username: userData.username, id: String(userData.userId) })
+      const userData = (response.data as { data: { token: string; username: string; userId: number } }).data
+      auth.login(userData.token, { username: userData.username, id: String(userData.userId) })
       const redirect = route.query.redirect as string | undefined
       router.push(redirect || '/')
     }

@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 // Vue CLI用の環境変数（VUE_APP_プレフィックスが必要）
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8081/benefit-map/api';
@@ -62,14 +63,15 @@ class RestApiClient {
    * リクエスト・レスポンスインターセプターの設定
    */
   private setupInterceptors(): void {
-    // リクエストインターセプター（API Key の追加）
+    // リクエストインターセプター（JWT Authorization ヘッダーの追加）
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        const apiKey = localStorage.getItem('api_key')
-        if (apiKey && config.headers) {
-          config.headers['X-API-Key'] = apiKey
+        const auth = useAuthStore()
+        const token = auth.token
+        if (token && config.headers) {
+          config.headers['Authorization'] = `Bearer ${token}`
         }
-        
+
         console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))
         return config
       },
@@ -88,10 +90,10 @@ class RestApiClient {
       (error) => {
         console.error('API Response Error:', error.response?.status, error.config?.url, error.message)
         
-        if (error.response?.status === 401 && !error.config?.url?.includes('/users/login')) {
+        if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
           console.warn('Unauthorized access, redirecting to login...')
-          localStorage.removeItem('auth_token')
-          sessionStorage.clear()
+          const auth = useAuthStore()
+          auth.logout()
           window.location.href = '/login'
         }
         return Promise.reject(error)

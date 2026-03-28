@@ -57,7 +57,7 @@ import { UsersDto } from '@/dto/usersDto'
 import { SelectDto } from '@/dto/selectDto'
 import { MunicipalityDto } from '@/dto/municipalityDto'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
-import { AuthUtils } from '@/utils/auth'
+import { useAuthStore } from '@/stores/auth'
 import { ValidateUtils } from '@/utils/validateUtils'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { TypeConvertUtils } from '@/utils/typeConvertUtils'
@@ -66,6 +66,7 @@ import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageC
 
 /** ルーター */
 const router = useRouter()
+const auth = useAuthStore()
 
 /** ユーザー情報 */
 const usersModel = ref<UsersDto>(new UsersDto())
@@ -134,7 +135,7 @@ const getLicenseStatusOptions = () => {
  * ユーザー情報の取得
  */
 const getUsersInfo = async () => {
-  const userId = AuthUtils.getUser()?.id
+  const userId = auth.user?.id
   if (ValidateUtils.isNullOrEmpty(userId)) {
     return
   }
@@ -158,7 +159,7 @@ const updateUsersInfo = async () => {
   const hasError = checkError()
   // エラーがない場合はAPIを呼び出す
   if (!hasError) {
-    const userId = AuthUtils.getUser()?.id
+    const userId = auth.user?.id
     if (ValidateUtils.isNullOrEmpty(userId)) {
       return
     }
