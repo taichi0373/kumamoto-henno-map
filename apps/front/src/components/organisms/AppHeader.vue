@@ -99,7 +99,7 @@ const menuItems = computed(() => [
   height: 60px;
   color: base.$base-100;
   background-color: base.$header-background-color;
-  border-radius: none;
+  border-radius: 0px;
   position: relative;
   z-index: 1000;
 

@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-    <AppAlert v-if="usersBenefits.length === 0" :variant="'error'" :message="'現在利用できる特典がありません'" />
+    <AppAlert v-if="usersBenefits.length === 0" class="mt-2" :variant="'error'" :message="'現在利用できる特典がありません'" />
 
     <div v-else>
       <template v-for="(benefit, index) in filteredBenefits" :key="benefit.benefitId ?? `benefit-${index}`">

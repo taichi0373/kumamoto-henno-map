@@ -48,11 +48,11 @@ const Template = (args) => ({
   },
   template: `
     <div>
-      <AppButton label="ダイアログを開く" @click="open" />
+      <AppButton :label="'ダイアログを開く'" :primary="true" @click="open" />
       <AppDialog v-bind="args" v-model="visible">
         <p style="margin: 0;">ダイアログのコンテンツです。</p>
         <template #footer>
-          <AppButton label="閉じる" severity="secondary" @click="visible = false" />
+          <AppButton :label="'閉じる'" :primary="false" @click="visible = false" />
         </template>
       </AppDialog>
     </div>
