@@ -1,7 +1,7 @@
 name: Build for OTP
 on:
   push:
-    branches: ["develop", "develop-oci" ]
+    branches: ["develop", "develop-oci"]
     paths:
       - 'docker-compose.yml'
       - 'config/otp/**'
@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
