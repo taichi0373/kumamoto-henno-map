@@ -12,6 +12,12 @@ import org.seasar.doma.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 特典エンティティ
+ * <p>
+ * 運転免許自主返納者向け特典の情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "benefit")
 @Getter

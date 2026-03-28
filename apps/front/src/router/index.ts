@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { AuthUtils } from '@/utils/auth'
+import { useAuthStore } from '@/stores/auth'
 
 // コンポーネント
 import HomePage from '../pages/HomePage.vue'
@@ -44,7 +44,8 @@ const router = createRouter({
 
 // ルートガード
 router.beforeEach((to, from, next) => {
-  if (to.matched.some(record => record.meta?.requiresAuth) && !AuthUtils.isLoggedIn()) {
+  const auth = useAuthStore()
+  if (to.matched.some(record => record.meta?.requiresAuth) && !auth.isLoggedIn) {
     next({ path: '/login', query: { redirect: to.fullPath } })
   } else {
     next()

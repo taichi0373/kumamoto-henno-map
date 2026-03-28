@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
@@ -20,6 +21,8 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 // アプリケーションインスタンスの作成
 const app = createApp(App);
 
+// Piniaの使用（ルーターより先に初期化）
+app.use(createPinia());
 // ルーターの使用
 app.use(router);
 // PrimeVueのプラグイン使用
