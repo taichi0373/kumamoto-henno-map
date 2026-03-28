@@ -123,7 +123,6 @@ const getMunicipalities = async () => {
   try {
     const response = await apiClient.get('/municipality/all')
     if (response.status === responseStatusConstant.OK && response.data) {
-      console.log('自治体データの取得に成功しました:', response.data)
       const municipalities = ((response.data as unknown) as { data: MunicipalityDto[] }).data
       addressOptions.value = municipalities.map((dto) => ({
         value: dto.municipalityCd,

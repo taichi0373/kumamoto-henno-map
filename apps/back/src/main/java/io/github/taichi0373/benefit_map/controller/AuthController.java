@@ -7,9 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.LoginRequestDto;
@@ -96,5 +98,19 @@ public class AuthController {
                 .build();
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * CSRF トークン取得
+     * <p>
+     * フロントエンドが状態変更系API実行前に取得するCSRFトークンを提供する。
+     * CookieCsrfTokenRepository により自動的にXSRF-TOKENクッキーも設定される。
+     * </p>
+     * @param csrfToken Spring Security により自動注入されるCSRFトークン
+     * @return CSRFトークン文字列
+     */
+    @GetMapping("/csrf")
+    public ResponseEntity<ApiResponseDto<String>> getCsrfToken(CsrfToken csrfToken) {
+        return ResponseEntity.ok(ApiResponseDto.success(csrfToken.getToken()));
     }
 }

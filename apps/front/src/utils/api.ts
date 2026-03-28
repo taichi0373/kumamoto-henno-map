@@ -11,6 +11,9 @@ type UnauthorizedHandler = () => void
 /** 401ハンドラー（App.vue のセットアップ時に登録される） */
 let unauthorizedHandler: UnauthorizedHandler | null = null
 
+/** CSRF トークンキャッシュ */
+let csrfToken: string | null = null
+
 /**
  * 401 Unauthorized 発生時のコールバックを登録する
  * <p>
@@ -80,13 +83,58 @@ class RestApiClient {
   }
 
   /**
+   * CSRF トークンを取得してキャッシュする
+   * @returns CSRF トークン
+   */
+  private async fetchCsrfToken(): Promise<string> {
+    if (csrfToken) {
+      return csrfToken
+    }
+    try {
+      const response = await this.axiosInstance.get('/auth/csrf')
+      const token = response.data.data
+      if (!token || typeof token !== 'string') {
+        throw new Error('Invalid CSRF token received from server')
+      }
+      csrfToken = token
+      return csrfToken
+    } catch (error) {
+      console.error('Failed to fetch CSRF token:', error)
+      throw error
+    }
+  }
+
+  /**
+   * CSRF トークンキャッシュをクリア
+   */
+  private clearCsrfToken(): void {
+    csrfToken = null
+  }
+
+  /**
    * リクエスト・レスポンスインターセプターの設定
    */
   private setupInterceptors(): void {
-    // リクエストインターセプター（ロギング）
-    // JWT は HttpOnly Cookie に格納されるためブラウザが自動送信する
+    // リクエストインターセプター（CSRFトークン追加 & ロギング）
     this.axiosInstance.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
+      async (config: InternalAxiosRequestConfig) => {
+        // 状態変更系リクエストにCSRFトークンを追加
+        if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
+          // 認証不要エンドポイントは除外（SecurityConfig の ignoringRequestMatchers と一致）
+          const skipCsrfPaths = ['/auth/', '/users/signup']
+          const needsCsrf = !skipCsrfPaths.some(path => config.url?.includes(path))
+          
+          if (needsCsrf) {
+            try {
+              const token = await this.fetchCsrfToken()
+              config.headers['X-XSRF-TOKEN'] = token
+            } catch (error) {
+              console.error('Failed to add CSRF token:', error)
+              // CSRF トークン取得失敗時はリクエストを続行（サーバーエラーで判断）
+            }
+          }
+        }
+        
         console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))
         return config
       },
@@ -107,12 +155,19 @@ class RestApiClient {
         
         if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login') && !error.config?.url?.includes('/auth/logout')) {
           console.warn('Unauthorized access, redirecting to login...')
+          this.clearCsrfToken() // 認証エラー時はCSRFトークンもクリア
           if (unauthorizedHandler) {
             unauthorizedHandler()
           } else {
             // ハンドラー未登録時のフォールバック
             window.location.href = '/login'
           }
+        }
+        
+        // CSRF トークンエラー時はキャッシュクリア
+        if (error.response?.status === 403 && error.response?.data?.message?.includes('CSRF')) {
+          console.warn('CSRF token error, clearing cache')
+          this.clearCsrfToken()
         }
         return Promise.reject(error)
       }

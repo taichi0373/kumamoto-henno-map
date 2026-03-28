@@ -21,40 +21,9 @@ setUnauthorizedHandler(() => {
   })
 })
 
-const restoreUserSession = () => {
-  // サーバー側でトークンの有効性を確認
-  const userToken = sessionStorage.getItem('userToken')
-  const userId = sessionStorage.getItem('userId')
-
-  if (userToken && userId) {
-    // サーバーAPIでセッション確認
-    validateSession(userToken)
-  }
-}
-
-const validateSession = async (token: string) => {
-  try {
-    const response = await fetch('/api/validate-session', {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-
-    if (!response.ok) {
-      // トークンが無効な場合はクリア
-      clearSession()
-    }
-  } catch (error) {
-    console.error('Session validation error:', error)
-    clearSession()
-  }
-}
-
-const clearSession = () => {
-  sessionStorage.removeItem('userToken')
-  sessionStorage.removeItem('userId')
-}
+// JWT (HttpOnly Cookie) 方式のため、セッション復元ロジックは不要
+// ユーザー情報は auth store (localStorage/sessionStorage) で管理
+// JWT の有効性確認は setUnauthorizedHandler で 401 レスポンス時に自動処理
 
 /**
  * リサイズイベントハンドラ
@@ -82,12 +51,6 @@ const setupResponsiveDesign = () => {
 }
 
 onMounted(() => {
-  // ユーザートークンの確認
-  const userToken = sessionStorage.getItem('userToken')
-  if (userToken) {
-    // セッション復元のロジック
-    restoreUserSession()
-  }
   // ウィンドウリサイズイベントの設定
   setupResponsiveDesign()
 })

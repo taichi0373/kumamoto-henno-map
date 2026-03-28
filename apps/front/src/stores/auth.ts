@@ -63,6 +63,8 @@ export const useAuthStore = defineStore('auth', {
       sessionStorage.removeItem('username')
       try {
         await apiClient.post('/auth/logout')
+        // CSRFトークンキャッシュもクリア（api.tsの private メソッドのため、新しいリクエストで自動取得される）
+        console.log('Logged out successfully, CSRF token will be refreshed on next request')
       } catch (error) {
         console.warn('Logout API call failed:', error)
         // Cookie のクリアに失敗しても JWT 期限切れにより自動無効化される

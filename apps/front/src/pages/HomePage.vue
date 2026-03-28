@@ -161,9 +161,6 @@ onMounted(() => {
   }
   // マップの初期化
   const map = initializeMap('map')
-  if (map) {
-    map.on('load', () => console.log('Map loaded successfully'))
-  }
 })
 
 /** マップ中心座標を取得 */
@@ -275,7 +272,6 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
       // 経路探索結果（サイドバー表示用）
       routeResults.value = routes
-      console.log(routeResults.value);
       // 全経路を色分けして地図に描画
       const routeLegs = routes.map(r => r.legs ?? [])
       if (routeLegs.length > 0) {

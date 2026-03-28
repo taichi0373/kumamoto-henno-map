@@ -14,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +29,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * <p>
  * JWT認証を使用したステートレスセキュリティ設定を行う。
  * フォームログイン・HTTP Basicは無効化し、
+ * CSRF 保護は CookieCsrfTokenRepository で有効化する。
  * 認証エラー時は {@link ApiResponseDto} 形式のJSONを返す。
  * </p>
  */
@@ -71,7 +73,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            // CSRF保護を有効化（HttpOnly Cookie認証のため必須）
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers("/auth/**", "/users/signup")
+            )
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
