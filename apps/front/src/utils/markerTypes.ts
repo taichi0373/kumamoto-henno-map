@@ -1,7 +1,7 @@
 import type { Marker, Popup } from 'maplibre-gl'
 
 /** マーカーの種類 */
-export type MarkerType = 'start' | 'end' | 'stop' | 'store'
+export type MarkerType = 'start' | 'end' | 'stop'
 
 /** ルートマーカーの種類（経路表示用） */
 export type RouteMarkerType = 'start' | 'end' | 'stop'

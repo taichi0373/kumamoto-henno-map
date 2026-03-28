@@ -16,6 +16,12 @@ module.exports = defineConfig({
         target: 'http://localhost:8081',
         changeOrigin: true,
         secure: false
+      },
+      '/tile-proxy': {
+        target: 'https://tile.openstreetmap.jp',
+        changeOrigin: true,
+        pathRewrite: { '^/tile-proxy': '' },
+        secure: true
       }
     }
   },

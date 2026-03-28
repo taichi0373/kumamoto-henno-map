@@ -62,8 +62,12 @@
     </form>
   </div>
 
+  <!-- ローディング -->
+  <div v-if="isLoading" class="loading-icon">
+    <AppProgressSpinner/>
+  </div>
   <!-- 経路探索結果 -->
-  <AppRouteResultList :routes="routes" :active-route-index="props.activeRouteIndex"
+  <AppRouteResultList v-if="!isLoading" :routes="routes" :active-route-index="props.activeRouteIndex"
     @select-route="emit('select-route', $event)" />
   <AppAlert v-if="hasSearched && !isLoading && routes.length === 0" :variant="'error'" :message="'経路が見つかりませんでした'"
     class="mt-2" />
@@ -82,6 +86,7 @@ import AppRouteResultList from './AppRouteResultList.vue'
 import AppSuggestionList from '../atoms/AppSuggestionList.vue'
 import AppCalendar from '../atoms/AppCalendar.vue'
 import AppTimePicker from '../atoms/AppTimePicker.vue'
+import AppProgressSpinner from '../atoms/AppProgressSpinner.vue'
 import { codeConstant } from '@/utils/codeConstant'
 import { RouteRequestDto } from '@/dto/routeRequestDto'
 import { SelectDto } from '@/dto/selectDto'
@@ -128,6 +133,8 @@ const emit = defineEmits<{
   (e: 'fetch-suggestions', marker: MarkerDto): void;
   /** 候補リストのクリア */
   (e: 'clear-suggestions'): void;
+  /** 経路探索結果のクリア */
+  (e: 'clear-routes'): void;
   /** 現在地の取得 */
   (e: 'fetch-current-location', type: string): void;
   /** 経路カード選択 */
@@ -240,6 +247,7 @@ const clearConditions = () => {
   clearError()
   searchRoute.value = new RouteRequestDto()
   hasSearched.value = false
+  emit('clear-routes')
 }
 
 // 条件の表示/非表示切り替え
@@ -398,4 +406,12 @@ function checkError(): boolean {
   padding-right: 12px;
   margin: 12px 0px;
 }
+
+// ローディング
+.loading-icon {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+}
+
 </style>

@@ -1,28 +1,8 @@
 import maplibregl from 'maplibre-gl'
-import type { Map, Marker, Popup } from 'maplibre-gl'
-import type { MarkerType, RouteMarkerType, MarkerOptions } from './markerTypes'
+import type { Map, Marker } from 'maplibre-gl'
+import type { RouteMarkerType, MarkerOptions } from './markerTypes'
 
-export { MarkerType, RouteMarkerType } from './markerTypes'
-
-// 型定義
-export interface Store {
-  latitude?: number
-  longitude?: number
-  name: string
-  address: string
-}
-
-// 店舗マーカー作成関数
-export const createStoreMarker = (store: Store): Marker | null => {
-  if (!store.latitude || !store.longitude) return null
-  
-  return new maplibregl.Marker()
-    .setLngLat([store.longitude, store.latitude])
-    .setPopup(
-      new maplibregl.Popup({ offset: 25 })
-        .setHTML(`<h4>${store.name}</h4><p>${store.address}</p>`)
-    )
-}
+export type { MarkerType, RouteMarkerType } from './markerTypes'
 
 // 汎用マーカー作成関数
 export const createMarker = (lat: number, lon: number, options: MarkerOptions = {}): Marker => {
