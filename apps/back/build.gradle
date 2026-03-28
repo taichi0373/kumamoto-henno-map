@@ -48,3 +48,10 @@ sourceSets {
 compileJava {
     options.compilerArgs += ['-Adoma.resources.dir=' + file('src/main/resources')]
 }
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.charSet = 'UTF-8'
+    options.addBooleanOption('Xdoclint:none', true)
+    options.addBooleanOption('quiet', true)
+}
