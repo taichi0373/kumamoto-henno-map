@@ -82,6 +82,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users/signup").permitAll()
                 .requestMatchers("/users/**").authenticated()
+                .requestMatchers("/benefit/users/**").authenticated()
                 .anyRequest().permitAll()
             )
             .exceptionHandling(ex -> ex

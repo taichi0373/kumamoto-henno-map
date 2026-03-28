@@ -1,8 +1,28 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import { useAuthStore } from '@/stores/auth'
 
 // Vue CLI用の環境変数
 const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/benefit-map/api';
+
+/**
+ * 401 Unauthorized 発生時に呼び出されるコールバックの型
+ */
+type UnauthorizedHandler = () => void
+
+/** 401ハンドラー（App.vue のセットアップ時に登録される） */
+let unauthorizedHandler: UnauthorizedHandler | null = null
+
+/**
+ * 401 Unauthorized 発生時のコールバックを登録する
+ * <p>
+ * api.ts とストアの循環依存を避けるため、ストアへの直接依存を持たず
+ * コールバック注入でハンドリングを委譲する。
+ * App.vue の setup() トップレベルで呼び出すこと。
+ * </p>
+ * @param handler ログアウト処理とリダイレクトを行うコールバック
+ */
+export function setUnauthorizedHandler(handler: UnauthorizedHandler): void {
+  unauthorizedHandler = handler
+}
 
 /**
  * API リクエストボディの値の型
@@ -87,11 +107,12 @@ class RestApiClient {
         
         if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login') && !error.config?.url?.includes('/auth/logout')) {
           console.warn('Unauthorized access, redirecting to login...')
-          const auth = useAuthStore()
-          // ローカル状態を即時クリアし、Cookie クリアはバックグラウンドで実行
-          auth.logout().finally(() => {
+          if (unauthorizedHandler) {
+            unauthorizedHandler()
+          } else {
+            // ハンドラー未登録時のフォールバック
             window.location.href = '/login'
-          })
+          }
         }
         return Promise.reject(error)
       }

@@ -7,7 +7,19 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AppHeader from './components/organisms/AppHeader.vue'
+import { setUnauthorizedHandler } from '@/utils/api'
+import { useAuthStore } from '@/stores/auth'
+
+/** 401発生時のハンドラーを登録（setup()トップレベルで実行し未登録状態をなくす） */
+const authStore = useAuthStore()
+const router = useRouter()
+setUnauthorizedHandler(() => {
+  authStore.logout().finally(() => {
+    router.push('/login')
+  })
+})
 
 const restoreUserSession = () => {
   // サーバー側でトークンの有効性を確認
