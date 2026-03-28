@@ -184,9 +184,9 @@ jobs:
     needs: [build-docs, build-storybook, build-javadoc]
     runs-on: ubuntu-latest
     if: >-
-      ${{ inputs.is-deploy &&
-         (needs.build-storybook.result == 'success' || needs.build-storybook.result == 'skipped') &&
-         (needs.build-javadoc.result == 'success' || needs.build-javadoc.result == 'skipped') }}
+      inputs.is-deploy &&
+      (needs.build-storybook.result == 'success' || needs.build-storybook.result == 'skipped') &&
+      (needs.build-javadoc.result == 'success' || needs.build-javadoc.result == 'skipped')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

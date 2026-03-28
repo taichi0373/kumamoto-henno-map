@@ -58,11 +58,11 @@ jobs:
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
     outputs:
-      frontend-changed: ${{ steps.frontend.outputs.diff != '' }}
-      component-changed: ${{ steps.component.outputs.diff != '' }}
-      backend-changed: ${{ steps.backend.outputs.diff != '' }}
-      # openapi-changed: ${{ steps.openapi.outputs.diff != '' }}
-      document-changed: ${{ steps.document.outputs.diff != '' }}
+      frontend-changed: ${{ steps.frontend.outputs.any_changed }}
+      component-changed: ${{ steps.component.outputs.any_changed }}
+      backend-changed: ${{ steps.backend.outputs.any_changed }}
+      # openapi-changed: ${{ steps.openapi.outputs.any_changed }}
+      document-changed: ${{ steps.document.outputs.any_changed }}
     
 
     steps:
@@ -88,21 +88,21 @@ jobs:
       # 2. フロントエンド差分チェック
       - name: Frontend diff
         id: frontend
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v45
         with:
           files: ${{ env.FRONTEND_DIR }}/**
 
       # 3. コンポーネント差分チェック
       - name: Component diff
         id: component
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v45
         with:
           files: ${{ env.COMPONENT_DIR }}/**
 
       # 4. バックエンド差分チェック
       - name: Backend diff
         id: backend
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v45
         with:
           files: ${{ env.BACKEND_DIR }}/**
 
@@ -117,6 +117,6 @@ jobs:
       # 6. ドキュメント差分チェック
       - name: Document diff
         id: document
-        uses: tj-actions/changed-files@v34
+        uses: tj-actions/changed-files@v45
         with:
           files: ${{ env.DOCUMENT_DIR }}/**
