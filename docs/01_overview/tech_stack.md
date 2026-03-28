@@ -4,7 +4,7 @@
 
 ## アーキテクチャ概要
 
-```text
+```mermaid
 graph TB
     subgraph "Frontend Layer"
         A[Vue 3 + TypeScript]
@@ -12,53 +12,49 @@ graph TB
         C[MapLibre GL JS]
         D[Storybook]
     end
-    
+
     subgraph "Backend Layer"
         E[Spring Boot 3]
         F[Doma 2]
         G[JWT認証 HttpOnly Cookie]
     end
-    
+
     subgraph "Database Layer"
         H[PostgreSQL]
     end
-    
+
     subgraph "External Services"
         I[OpenTripPlanner]
         J[OpenStreetMap]
         K[GTFS Data]
     end
-    
-    A --> E
-    B --> A
-    C --> A
-    E --> F
-    F --> H
-    E --> I
-    I --> J
-    I --> K
-    
-    classDef frontend fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    classDef backend fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef database fill:#f1f8e9,stroke:#388e3c,stroke-width:2px
-    classDef external fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-    
-    class A,B,C,D frontend
-    class E,F,G backend
-    class H database
-    class I,J,K external
-    
+
     subgraph "Infrastructure"
         L[Docker]
         M[GitHub Actions]
         N[GitHub Pages]
     end
-    
+
     A --> E
+    B --> A
+    C --> A
+    E --> F
+    F --> H
     E --> H
     E --> I
-    C --> J
+    I --> J
     I --> K
+    C --> J
+
+    classDef frontend fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef backend fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef database fill:#f1f8e9,stroke:#388e3c,stroke-width:2px
+    classDef external fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class A,B,C,D frontend
+    class E,F,G backend
+    class H database
+    class I,J,K external
 ```
 
 ## フロントエンド技術スタック

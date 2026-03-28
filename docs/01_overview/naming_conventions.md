@@ -96,17 +96,17 @@ public static final int maxSearchResults = 100;
 
 ```java
 // ✅ GOOD
-package io.github.taichi0373.benefitmap.controller;
-package io.github.taichi0373.benefitmap.service;
-package io.github.taichi0373.benefitmap.repository.dao;
-package io.github.taichi0373.benefitmap.repository.entity;
-package io.github.taichi0373.benefitmap.dto;
-package io.github.taichi0373.benefitmap.config;
-package io.github.taichi0373.benefitmap.util;
+package io.github.taichi0373.benefit_map.controller;
+package io.github.taichi0373.benefit_map.service;
+package io.github.taichi0373.benefit_map.repository.dao;
+package io.github.taichi0373.benefit_map.repository.entity;
+package io.github.taichi0373.benefit_map.dto;
+package io.github.taichi0373.benefit_map.config;
+package io.github.taichi0373.benefit_map.util;
 
 // ❌ BAD
 package io.github.taichi0373.benefitMap.Controller;
-package io.github.taichi0373.benefit_map.Service;
+package io.github.taichi0373.benefitmap.Service;
 ```
 
 ### Entityクラスの特則
@@ -142,38 +142,53 @@ public class BenefitDetailRes {}
 
 ### ファイル名
 
-**形式**: `camelCase`
+**コンポーネント**: `App` プレフィックス + `PascalCase`
+**ページ**: `PascalCase` + `Page` サフィックス
+**その他（TS）**: `camelCase`
 
 ```
-// ✅ GOOD
-benefitSearch.vue
-userProfile.vue
-mapComponent.vue
-apiClient.ts
-authService.ts
+// ✅ GOOD - components/
+AppButton.vue
+AppSearchBenefit.vue
+AppRouteGuidance.vue
+
+// ✅ GOOD - pages/
+HomePage.vue
+LoginPage.vue
+ProfilePage.vue
+
+// ✅ GOOD - utils/ / stores/
+api.ts
+auth.ts
+validateUtils.ts
 
 // ❌ BAD
+benefitSearch.vue
+userProfile.vue
 benefit-search.vue
-user-profile.vue
-map-component.vue
-api-client.ts
-auth-service.ts
 ```
 
 ### コンポーネント名
 
-**Vue.js コンポーネント**: `PascalCase`
+**Vue.js コンポーネント**: `<script setup>` + `App` プレフィックス + `PascalCase`
 
 ```typescript
-// ✅ GOOD - Vueコンポーネント
+// ✅ GOOD - <script setup> を使用
+<script setup lang="ts">
+const props = defineProps<{
+  benefitId: string
+}>()
+</script>
+
+// ✅ GOOD - テンプレート内での使用
+<AppSearchBenefit />
+<AppRouteGuidance />
+<AppButton />
+
+// ❌ BAD - Options API は使用しない
 export default defineComponent({
   name: 'BenefitSearchForm'
 })
-
-// ✅ GOOD - ファイル内での使用
-<BenefitSearchForm />
-<UserProfileCard />
-<MapView />
 ```
 
 ### 変数・関数名
@@ -316,7 +331,7 @@ CONSTRAINT BENEFIT_FK_CATEGORY
   FOREIGN KEY (CATEGORY_CD) REFERENCES BENEFIT_CATEGORY (CATEGORY_CD)
 
 -- ✅ GOOD - ユニーク制約
-CONSTRAINT USERS_UK_USERNAME UNIQUE (USERNAME)
+CONSTRAINT USERS_USERNAME_UNIQUE UNIQUE (USERNAME)
 ```
 
 ### インデックス名
@@ -335,18 +350,24 @@ CREATE INDEX IX_USERS_EMAIL ON USERS (EMAIL)
 ### エンドポイント名
 
 **形式**: `kebab-case`、RESTful設計
+**ベースURL**: `http://localhost:8081/benefit-map/api`
 
 ```
 // ✅ GOOD - RESTful API
-GET    /api/v1/benefits
-GET    /api/v1/benefits/{id}
-POST   /api/v1/benefits
-PUT    /api/v1/benefits/{id}
-DELETE /api/v1/benefits/{id}
+POST   /auth/login
+POST   /auth/logout
+GET    /auth/csrf
 
-GET    /api/v1/municipalities
-GET    /api/v1/benefit-categories
-GET    /api/v1/benefits/search
+GET    /users/{userId}
+PUT    /users
+POST   /users/signup
+
+POST   /benefit/search
+GET    /benefit/users/{userId}
+
+GET    /municipality/all
+
+POST   /route/search
 
 // ❌ BAD
 GET    /api/v1/getBenefits
@@ -360,12 +381,10 @@ GET    /api/v1/benefit_search
 
 ```
 // ✅ GOOD
-GET /api/v1/benefits?municipalityCd=431001&categoryCd=TRANSPORT
-GET /api/v1/benefits/search?keyword=バス&maxResults=50
+POST /benefit/search?municipalityCd=431001&categoryCd=TRANSPORT
 
 // ❌ BAD
-GET /api/v1/benefits?municipality_cd=431001&category_cd=TRANSPORT
-GET /api/v1/benefits/search?keyword=バス&max_results=50
+POST /benefit/search?municipality_cd=431001&category_cd=TRANSPORT
 ```
 
 ### JSONフィールド名

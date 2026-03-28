@@ -4,89 +4,79 @@
 
 ## 全体画面遷移図
 
-```text
+```mermaid
 graph TD
     Start([アプリケーション開始]) --> Home[S001: ホーム画面]
-    
+
     %% メイン機能フロー
     Home --> Detail[S002: 特典詳細画面]
     Home --> Results[S003: 検索結果画面]
     Detail --> Route[S004: 経路案内画面]
     Results --> Detail
-    
+
     %% 認証フロー
     Home --> Login[S011: ログイン画面]
     Login --> Signup[S012: 会員登録画面]
     Login --> Home
     Signup --> Home
-    
+
     %% ユーザー機能
     Home --> Profile[S013: プロフィール画面]
     Profile --> PasswordChange[S014: パスワード変更画面]
     Home --> Favorites[S015: お気に入り画面]
     Favorites --> Detail
-    
+
     %% サポート機能
     Home --> SupportInfo[S021: サポート情報画面]
-    
+    SupportInfo --> Contact[S022: 問い合わせ画面]
+    SupportInfo --> FAQ[S023: FAQ画面]
+    Home --> Terms[S024: 利用規約画面]
+
+    %% 管理者フロー
+    AdminStart([管理者ログイン]) --> AdminLogin[A001: 管理者ログイン画面]
+    AdminLogin --> Dashboard[A002: ダッシュボード画面]
+
+    %% 特典管理
+    Dashboard --> BenefitList[A011: 特典一覧画面]
+    BenefitList --> BenefitCreate[A012: 特典登録画面]
+    BenefitList --> BenefitEdit[A013: 特典編集画面]
+    Dashboard --> BenefitBulk[A014: 特典一括登録画面]
+
+    %% 事業者管理
+    Dashboard --> AgencyList[A021: 事業者一覧画面]
+    AgencyList --> AgencyCreate[A022: 事業者登録画面]
+    AgencyList --> AgencyEdit[A023: 事業者編集画面]
+
+    %% ユーザー管理
+    Dashboard --> UserList[A031: ユーザー一覧画面]
+    UserList --> UserDetail[A032: ユーザー詳細画面]
+
+    %% システム管理
+    Dashboard --> LogViewer[A041: ログ確認画面]
+    Dashboard --> Statistics[A042: 統計画面]
+    Dashboard --> Settings[A043: 設定画面]
+
     %% スタイリング
     classDef startStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     classDef mainStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef authStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef userStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
     classDef supportStyle fill:#fce4ec,stroke:#880e4f,stroke-width:2px
-    
+    classDef adminStyle fill:#fff8e1,stroke:#f57f17,stroke-width:2px
+
     class Start startStyle
     class Home,Detail,Results,Route mainStyle
     class Login,Signup authStyle
     class Profile,PasswordChange,Favorites userStyle
-    class SupportInfo supportStyle
-```
-    SupportInfo --> Contact[S022: 問い合わせ画面]
-    SupportInfo --> FAQ[S023: FAQ画面]
-    Home --> Terms[S024: 利用規約画面]
-    
-    %% 管理者フロー
-    AdminStart([管理者ログイン]) --> AdminLogin[A001: 管理者ログイン画面]
-    AdminLogin --> Dashboard[A002: ダッシュボード画面]
-    
-    %% 特典管理
-    Dashboard --> BenefitList[A011: 特典一覧画面]
-    BenefitList --> BenefitCreate[A012: 特典登録画面]
-    BenefitList --> BenefitEdit[A013: 特典編集画面]
-    Dashboard --> BenefitBulk[A014: 特典一括登録画面]
-    
-    %% 事業者管理
-    Dashboard --> AgencyList[A021: 事業者一覧画面]
-    AgencyList --> AgencyCreate[A022: 事業者登録画面]
-    AgencyList --> AgencyEdit[A023: 事業者編集画面]
-    
-    %% ユーザー管理
-    Dashboard --> UserList[A031: ユーザー一覧画面]
-    UserList --> UserDetail[A032: ユーザー詳細画面]
-    
-    %% システム管理
-    Dashboard --> LogViewer[A041: ログ確認画面]
-    Dashboard --> Statistics[A042: 統計画面]
-    Dashboard --> Settings[A043: 設定画面]
-
-    %% スタイル定義
-    classDef userScreen fill:#e1f5fe
-    classDef authScreen fill:#f3e5f5
-    classDef adminScreen fill:#fff3e0
-    classDef supportScreen fill:#e8f5e8
-    
-    class Home,Detail,Results,Route userScreen
-    class Login,Signup,Profile,PasswordChange,Favorites authScreen
-    class SupportInfo,Contact,FAQ,Terms supportScreen
-    class AdminLogin,Dashboard,BenefitList,BenefitCreate,BenefitEdit,BenefitBulk,AgencyList,AgencyCreate,AgencyEdit,UserList,UserDetail,LogViewer,Statistics,Settings adminScreen
+    class SupportInfo,Contact,FAQ,Terms supportStyle
+    class AdminStart,AdminLogin,Dashboard,BenefitList,BenefitCreate,BenefitEdit,BenefitBulk,AgencyList,AgencyCreate,AgencyEdit,UserList,UserDetail,LogViewer,Statistics,Settings adminStyle
 ```
 
 ## エンドユーザー向けフロー詳細
 
 ### 1. 基本利用フロー（未登録ユーザー）
 
-```text
+```mermaid
 sequenceDiagram
     participant User as ユーザー
     participant Home as ホーム画面
@@ -105,7 +95,7 @@ sequenceDiagram
 
 ### 2. 会員登録・ログインフロー
 
-```text
+```mermaid
 stateDiagram-v2
     [*] --> ゲスト利用
     ゲスト利用 --> ログイン画面 : ログインボタン
@@ -121,7 +111,7 @@ stateDiagram-v2
 
 ### 3. 特典検索・表示フロー
 
-```text
+```mermaid
 flowchart TD
     A[ホーム画面] --> B{検索方法選択}
     B -->|キーワード検索| C[キーワード入力]
@@ -152,7 +142,7 @@ flowchart TD
 
 ### 1. 管理者認証・ダッシュボード
 
-```text
+```mermaid
 sequenceDiagram
     participant Admin as 管理者
     participant LoginPage as ログイン画面
@@ -173,7 +163,7 @@ sequenceDiagram
 
 ### 2. 特典管理フロー
 
-```text
+```mermaid
 stateDiagram-v2
     [*] --> ダッシュボード
     ダッシュボード --> 特典一覧画面 : 特典管理選択
@@ -199,7 +189,7 @@ stateDiagram-v2
 
 ### 3. 事業者管理フロー
 
-```text
+```mermaid
 flowchart LR
     A[ダッシュボード] --> B[事業者一覧画面]
     B --> C[新規事業者登録]
@@ -234,7 +224,7 @@ flowchart LR
 
 ### 認証が必要な画面
 
-```text
+```mermaid
 flowchart TD
     A[画面アクセス] --> B{認証状態確認}
     B -->|認証済み| C[画面表示]
@@ -290,7 +280,7 @@ const router = createRouter({
 
 ### エラーハンドリングフロー
 
-```text
+```mermaid
 flowchart TD
     A[画面操作実行] --> B{エラー発生?}
     B -->|なし| C[正常処理継続]

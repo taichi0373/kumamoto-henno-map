@@ -4,7 +4,7 @@
 
 ## システム利用フロー
 
-```text
+```mermaid
 sequenceDiagram
     participant U as ユーザー
     participant M as 地図画面

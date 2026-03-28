@@ -4,7 +4,7 @@
 
 ## API構成図
 
-```text
+```mermaid
 graph LR
     subgraph "Frontend"
         FE[Vue.js アプリケーション]
@@ -50,7 +50,7 @@ graph LR
 
 JWT (JSON Web Token) を HttpOnly Cookie で管理するステートレス認証を採用しています。
 
-```text
+```mermaid
 sequenceDiagram
     participant C as クライアント
     participant API as Backend API
