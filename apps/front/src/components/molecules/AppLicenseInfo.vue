@@ -7,15 +7,6 @@
           「運転免許証自主返納者への特典」のご紹介
         </AppLink>
       </p>
-      <div class="yahoo-attribution">
-        <!-- Begin Yahoo! JAPAN Web Services Attribution Snippet -->
-        <span class="attribution-text">
-          <AppLink @click="openUrl('https://developer.yahoo.co.jp/sitemap/')">
-            Webサービス by Yahoo! JAPAN
-          </AppLink>
-        </span>
-        <!-- End Yahoo! JAPAN Web Services Attribution Snippet -->
-      </div>
 
       <!-- 出典・ライセンス情報のボタン -->
       <div class="license-button-section">

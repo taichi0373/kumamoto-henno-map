@@ -2,6 +2,12 @@ package io.github.taichi0373.benefit_map.dto;
 
 import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import lombok.Data;
+/**
+ * 特典情報DTO
+ * <p>
+ * 特典の詳細情報を保持するデータ転送オブジェクト。
+ * </p>
+ */
 @Data
 public class BenefitDto {
 

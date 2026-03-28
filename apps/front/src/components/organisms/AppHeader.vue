@@ -11,7 +11,7 @@
       <!-- ユーザー情報 -->
       <template #end>
         <div v-if="isLoggedIn" class="user-section">
-          <span class="user-name">{{ currentUser.username }}</span>
+          <span class="user-name">{{ currentUsername }}</span>
         </div>
       </template>
     </Menubar>
@@ -19,18 +19,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onBeforeUnmount, watch, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { AuthUtils } from '@/utils/auth'
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import Menubar from 'primevue/menubar'
 
 const router = useRouter()
-const route = useRoute()
+const auth = useAuthStore()
 
-/** ログイン状態 */
-const isLoggedIn = ref(false)
-/** 現在のユーザー情報 */
-const currentUser = reactive({ username: '' })
+/** ログイン状態（ストアから算出） */
+const isLoggedIn = computed(() => auth.isLoggedIn)
+/** ユーザー名（ストアから算出） */
+const currentUsername = computed(() => auth.user?.username || '')
 
 /**
  * ルーティング処理
@@ -40,41 +40,10 @@ const navigateTo = (path: string): void => {
 }
 
 /**
- * ログイン状態をチェックする
- */
-const checkLoginStatus = (): void => {
-  isLoggedIn.value = AuthUtils.isLoggedIn()
-  console.log('Login Status:', isLoggedIn.value)
-}
-
-/**
- * ユーザー情報を読み込む
- */
-const loadUserInfo = (): void => {
-  if (isLoggedIn.value) {
-    const user = AuthUtils.getUser()
-    currentUser.username = user?.username || sessionStorage.getItem('username') || ''
-  } else {
-    currentUser.username = ''
-  }
-  console.log('Current User:', currentUser.username)
-}
-
-/**
- * ストレージ変更時の処理
- */
-const onStorageChange = (): void => {
-  checkLoginStatus()
-  loadUserInfo()
-}
-
-/**
  * ログアウト処理
  */
-const handleLogout = (): void => {
-  AuthUtils.logout()
-  isLoggedIn.value = false
-  currentUser.username = ''
+const handleLogout = async (): Promise<void> => {
+  await auth.logout()
   router.push('/login')
 }
 
@@ -121,23 +90,6 @@ const menuItems = computed(() => [
     }
   ])
 ])
-
-/** ルートが変更されるたびに認証状態をチェック */
-watch(route, () => {
-  checkLoginStatus()
-  loadUserInfo()
-})
-
-onMounted(() => {
-  checkLoginStatus()
-  loadUserInfo()
-  /** セッションストレージの変更を監視 */
-  window.addEventListener('storage', onStorageChange)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('storage', onStorageChange)
-})
 </script>
 
 <style scoped lang="scss">

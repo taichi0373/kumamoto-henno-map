@@ -18,7 +18,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.session:spring-session-jdbc'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
     runtimeOnly 'org.postgresql:postgresql'
 
@@ -54,4 +56,10 @@ javadoc {
     options.charSet = 'UTF-8'
     options.addBooleanOption('Xdoclint:none', true)
     options.addBooleanOption('quiet', true)
+}
+
+// ローカル開発時は dev プロファイルをデフォルトで有効にする
+// 本番環境では SPRING_PROFILES_ACTIVE 環境変数で上書きすること
+bootRun {
+    systemProperty 'spring.profiles.active', System.getProperty('spring.profiles.active', 'dev')
 }

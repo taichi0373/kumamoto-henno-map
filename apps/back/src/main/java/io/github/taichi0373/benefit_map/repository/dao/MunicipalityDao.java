@@ -14,6 +14,12 @@ import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity;
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity_;
 import io.github.taichi0373.benefit_map.constants.CodeConstants;
 
+/**
+ * 市区町村DAOインターフェース
+ * <p>
+ * 市区町村情報の登録・更新・削除・検索操作を提供する。
+ * </p>
+ */
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")

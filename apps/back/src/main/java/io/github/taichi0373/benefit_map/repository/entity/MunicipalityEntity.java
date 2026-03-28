@@ -12,6 +12,12 @@ import org.seasar.doma.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 市区町村エンティティ
+ * <p>
+ * 市区町村の情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "municipality")
 @Getter

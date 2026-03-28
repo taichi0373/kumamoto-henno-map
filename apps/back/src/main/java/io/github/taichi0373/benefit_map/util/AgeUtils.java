@@ -5,6 +5,12 @@ import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+/**
+ * 年齢計算ユーティリティ
+ * <p>
+ * 生年月日から現在の年齢を計算するユーティリティクラス。
+ * </p>
+ */
 public class AgeUtils {
 
     /**

@@ -2,6 +2,12 @@ package io.github.taichi0373.benefit_map.dto;
 
 import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import lombok.Data;
+/**
+ * 市区町村情報DTO
+ * <p>
+ * 市区町村の情報を保持するデータ転送オブジェクト。
+ * </p>
+ */
 @Data
 public class MunicipalityDto {
 

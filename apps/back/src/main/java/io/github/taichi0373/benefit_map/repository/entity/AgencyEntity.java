@@ -12,6 +12,12 @@ import org.seasar.doma.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 事業者エンティティ
+ * <p>
+ * 公共交通事業者（GTFS agency）の情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "agency")
 @Getter

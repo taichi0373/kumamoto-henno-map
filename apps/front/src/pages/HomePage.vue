@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
@@ -77,7 +77,7 @@ import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
-import { AuthUtils } from '@/utils/auth'
+import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/utils/api'
 import { createRouteMarker, type Store, type RouteMarkerType } from '@/utils/markerConfig'
 import { ValidateUtils } from '@/utils/validateUtils'
@@ -107,8 +107,9 @@ const sidebarCollapsed = ref(false)
 const activeTab = ref('route-guidance')
 /** 店舗のマーカー表示フラグ */
 const storeMarkersVisible = ref(false)
-/** ログイン状態 */
-const isLoggedIn = ref(false)
+const auth = useAuthStore()
+/** ログイン状態（Piniaストアから導出） */
+const isLoggedIn = computed(() => auth.isLoggedIn)
 
 /** ユーザー特典データ */
 const usersBenefits = ref<BenefitDto[]>([])
@@ -154,13 +155,12 @@ const activeTabIndex = computed(() =>
 
 // 初期表示
 onMounted(() => {
-  // ログイン状態の確認
-  checkLoginStatus()
+  // ログイン済みの場合はユーザー特典を取得
+  if (auth.isLoggedIn) {
+    fetchUserBenefits()
+  }
   // マップの初期化
   const map = initializeMap('map')
-  if (map) {
-    map.on('load', () => console.log('Map loaded successfully'))
-  }
 })
 
 /** マップ中心座標を取得 */
@@ -272,7 +272,6 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
       // 経路探索結果（サイドバー表示用）
       routeResults.value = routes
-      console.log(routeResults.value);
       // 全経路を色分けして地図に描画
       const routeLegs = routes.map(r => r.legs ?? [])
       if (routeLegs.length > 0) {
@@ -290,7 +289,7 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
 
 /** ユーザー特典データを取得 */
 const fetchUserBenefits = async () => {
-  const userId = AuthUtils.getUser()?.id;
+  const userId = auth.user?.id;
   // ログイン状態でない、またはユーザーIDが取得できない場合は処理しない
   if (!isLoggedIn.value || ValidateUtils.isNullOrEmpty(userId)) {
     return
@@ -307,12 +306,20 @@ const fetchUserBenefits = async () => {
   } catch (error: unknown) {
     ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
     if ((error as AxiosError).response?.status === 401) {
-      AuthUtils.logout()
-      isLoggedIn.value = false
+      await auth.logout()
       usersBenefits.value = []
     }
   }
 }
+
+/** ログイン状態の変化を監視してユーザー特典を更新 */
+watch(() => auth.isLoggedIn, (newVal) => {
+  if (newVal) {
+    fetchUserBenefits()
+  } else {
+    usersBenefits.value = []
+  }
+})
 
 /** 支援協賛店データを取得 */
 const fetchSupportStores = async () => {
@@ -490,17 +497,6 @@ const clearSuggestions = () => {
   endSuggestions.value = []
 }
 
-/** ログイン状態の確認・更新 */
-const checkLoginStatus = () => {
-  const newLoginStatus = AuthUtils.isLoggedIn()
-  if (isLoggedIn.value === newLoginStatus) return
-  isLoggedIn.value = newLoginStatus
-  if (isLoggedIn.value) {
-    fetchUserBenefits()
-  } else {
-    usersBenefits.value = []
-  }
-}
 
 </script>
 

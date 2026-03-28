@@ -14,6 +14,12 @@ import io.github.taichi0373.benefit_map.repository.entity.BenefitEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEntity_;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
+/**
+ * 特典情報DAOインターフェース
+ * <p>
+ * 特典情報の登録・更新・削除・検索操作を提供する。
+ * </p>
+ */
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")
