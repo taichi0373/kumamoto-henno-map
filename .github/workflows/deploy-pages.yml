@@ -44,6 +44,16 @@ on:
         type: string
         default: 'temurin'
 
+      build-storybook:
+        description: 'Storybookビルド実行フラグ'
+        type: boolean
+        default: true
+
+      build-javadoc:
+        description: 'Javadocビルド実行フラグ'
+        type: boolean
+        default: true
+
       is-deploy:
         description: 'デプロイ実行フラグ'
         type: boolean
@@ -100,6 +110,7 @@ jobs:
   # Storybook のビルド処理
   build-storybook:
     name: Build Storybook
+    if: ${{ inputs.build-storybook }}
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
@@ -134,6 +145,7 @@ jobs:
   # Javadoc のビルド処理
   build-javadoc:
     name: Build Javadoc
+    if: ${{ inputs.build-javadoc }}
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
@@ -169,7 +181,10 @@ jobs:
     name: Combine and Deploy to GitHub Pages
     needs: [build-docs, build-storybook, build-javadoc]
     runs-on: ubuntu-latest
-    if: ${{ inputs.is-deploy }}
+    if: >-
+      ${{ inputs.is-deploy &&
+         (needs.build-storybook.result == 'success' || needs.build-storybook.result == 'skipped') &&
+         (needs.build-javadoc.result == 'success' || needs.build-javadoc.result == 'skipped') }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -187,6 +202,7 @@ jobs:
 
       # Storybook を /storybook/ サブディレクトリに配置
       - name: Download Storybook artifact
+        if: ${{ inputs.build-storybook }}
         uses: actions/download-artifact@v4
         with:
           name: pages-storybook
@@ -194,6 +210,7 @@ jobs:
 
       # Javadoc を /javadoc/ サブディレクトリに配置
       - name: Download Javadoc artifact
+        if: ${{ inputs.build-javadoc }}
         uses: actions/download-artifact@v4
         with:
           name: pages-javadoc

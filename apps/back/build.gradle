@@ -52,5 +52,6 @@ compileJava {
 javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
-    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addBooleanOption('Xdoclint:none', true)
+    options.addBooleanOption('quiet', true)
 }

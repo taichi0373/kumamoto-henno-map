@@ -51,6 +51,8 @@ jobs:
       needs.precheck.outputs.component-changed != ''
     uses: ./.github/workflows/deploy-pages.yml
     with:
+      build-storybook: ${{ needs.precheck.outputs.component-changed != '' }}
+      build-javadoc: ${{ needs.precheck.outputs.backend-changed != '' }}
       is-deploy: true
     permissions:
       contents: read
