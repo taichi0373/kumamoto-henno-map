@@ -155,7 +155,7 @@ const getLicenseStatusName = (code: string) => {
 }
 
 // 特典検索API呼び出し
-const searchBenefits = async (conditions) => {
+const searchBenefits = async (conditions: SearchBenefitDto) => {
   isLoading.value = true
   hasSearched.value = true
   const requestData = {

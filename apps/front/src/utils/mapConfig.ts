@@ -29,9 +29,15 @@ export interface MapClickOptions {
   searchRouteEvent?: () => void
 }
 
+/** タイルスタイルURL（開発時はdevServerプロキシ経由、本番は直接参照） */
+const TILE_STYLE_URL =
+  process.env.NODE_ENV === 'production'
+    ? 'https://tile.openstreetmap.jp/styles/osm-bright-ja/style.json'
+    : '/tile-proxy/styles/osm-bright-ja/style.json'
+
 // デフォルト設定
 export const DEFAULT_MAP_CONFIG: MapConfig = {
-  style: '/tile-proxy/styles/osm-bright-ja/style.json',
+  style: TILE_STYLE_URL,
   center: [130.741584, 32.7898], // 熊本市中心部
   zoom: 14,
   minZoom: 8,

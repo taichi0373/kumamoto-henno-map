@@ -1,6 +1,6 @@
 import maplibregl from 'maplibre-gl'
-import type { Map, Marker, Popup } from 'maplibre-gl'
-import type { MarkerType, RouteMarkerType, MarkerOptions } from './markerTypes'
+import type { Map, Marker } from 'maplibre-gl'
+import type { RouteMarkerType, MarkerOptions } from './markerTypes'
 
 export { MarkerType, RouteMarkerType } from './markerTypes'
 
