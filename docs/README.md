@@ -28,6 +28,9 @@
 - [インターフェース一覧](04_interfaces/interface_list.md)
 - [インターフェース仕様](04_interfaces/interface_spec.md)
 
+### 6. APIリファレンス
+- [Javadoc（バックエンドAPI）](https://taichi0373.github.io/benefit-map/javadoc/)
+
 ## 技術スタック
 
 **フロントエンド**: Vue 3 + TypeScript + Vue CLI

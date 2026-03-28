@@ -29,6 +29,31 @@ on:
         type: string
         default: '22'
 
+      backend-dir:
+        description: 'バックエンドディレクトリ'
+        type: string
+        default: 'apps/back'
+
+      java-version:
+        description: 'Javaバージョン'
+        type: string
+        default: '21'
+
+      distribution:
+        description: 'Java distribution'
+        type: string
+        default: 'temurin'
+
+      build-storybook:
+        description: 'Storybookビルド実行フラグ'
+        type: boolean
+        default: true
+
+      build-javadoc:
+        description: 'Javadocビルド実行フラグ'
+        type: boolean
+        default: true
+
       is-deploy:
         description: 'デプロイ実行フラグ'
         type: boolean
@@ -83,8 +108,10 @@ jobs:
           path: ${{ inputs.document-dir }}/_book
 
   # Storybook のビルド処理
+  # is-deploy: true の場合は常にビルド（デプロイ時に /storybook が欠落するのを防ぐ）
   build-storybook:
     name: Build Storybook
+    if: ${{ inputs.build-storybook || inputs.is-deploy }}
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
@@ -116,12 +143,50 @@ jobs:
           name: pages-storybook
           path: ${{ inputs.frontend-dir }}/storybook-static
 
-  # ドキュメントとStorybookを結合してデプロイ
+  # Javadoc のビルド処理
+  # is-deploy: true の場合は常にビルド（デプロイ時に /javadoc が欠落するのを防ぐ）
+  build-javadoc:
+    name: Build Javadoc
+    if: ${{ inputs.build-javadoc || inputs.is-deploy }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.distribution }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle Wrapper executable
+        working-directory: ${{ inputs.backend-dir }}
+        run: chmod +x ./gradlew
+
+      - name: Build Javadoc
+        working-directory: ${{ inputs.backend-dir }}
+        run: ./gradlew javadoc
+
+      - name: Upload Javadoc artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-javadoc
+          path: ${{ inputs.backend-dir }}/build/docs/javadoc
+
+  # ドキュメントとStorybookとJavadocを結合してデプロイ
   deploy:
     name: Combine and Deploy to GitHub Pages
-    needs: [build-docs, build-storybook]
+    needs: [build-docs, build-storybook, build-javadoc]
     runs-on: ubuntu-latest
-    if: ${{ inputs.is-deploy }}
+    if: >-
+      ${{ inputs.is-deploy &&
+         (needs.build-storybook.result == 'success' || needs.build-storybook.result == 'skipped') &&
+         (needs.build-javadoc.result == 'success' || needs.build-javadoc.result == 'skipped') }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -143,6 +208,13 @@ jobs:
         with:
           name: pages-storybook
           path: ./site/storybook
+
+      # Javadoc を /javadoc/ サブディレクトリに配置
+      - name: Download Javadoc artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-javadoc
+          path: ./site/javadoc
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
