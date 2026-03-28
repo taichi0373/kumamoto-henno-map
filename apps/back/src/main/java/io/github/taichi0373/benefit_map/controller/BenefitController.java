@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,10 +15,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
+import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.BenefitService;
-import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
-import jakarta.servlet.http.HttpSession;
 
 /**
  * 特典情報コントローラー
@@ -53,17 +53,17 @@ public class BenefitController {
      * ユーザーIDからユーザーが受けられる特典を検索
      */
     @GetMapping("/users/{userId}")
-    public ResponseEntity<ApiResponseDto<?>> getUsersBenefits(@PathVariable Long userId, HttpSession session) {
+    public ResponseEntity<ApiResponseDto<?>> getUsersBenefits(@PathVariable Long userId, Authentication auth) {
         try {
-            // セッション認証チェック
-            Object sessionUserId = session.getAttribute("user_id");
-            if (ValidateUtils.isNullOrEmpty(sessionUserId)) {
+            // JWT認証チェック
+            if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponseDto.error("認証が必要です"));
             }
 
             // ユーザーIDの一致確認
-            if (!userId.equals(sessionUserId)) {
+            CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal();
+            if (!userId.equals(principal.getUserId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponseDto.error("アクセス権限がありません"));
             }

@@ -2,6 +2,8 @@ package io.github.taichi0373.benefit_map.security;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,6 +26,9 @@ import jakarta.servlet.http.HttpServletResponse;
  * </p>
  */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    /** ロガー */
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     /** JWTユーティリティ */
     private final JwtUtil jwtUtil;
@@ -71,7 +76,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // トークンが無効な場合は認証をスキップ（後続のセキュリティ設定でアクセス制御）
+            // トークンが無効・期限切れの場合は認証コンテキストをクリアして後続へ渡す
+            SecurityContextHolder.clearContext();
+            logger.debug("JWT検証失敗 [{}]: {} - {}", request.getRequestURI(),
+                    e.getClass().getSimpleName(), e.getMessage());
         }
 
         filterChain.doFilter(request, response);

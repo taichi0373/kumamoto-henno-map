@@ -48,7 +48,6 @@ class RestApiClient {
     this.axiosInstance = axios.create({
       baseURL,
       timeout: 10000,
-      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -23,6 +25,9 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
+    /** HS256 に必要な最低キー長（バイト） */
+    private static final int MIN_SECRET_BYTES = 32;
+
     /** JWTシークレットキー */
     @Value("${jwt.secret}")
     private String secret;
@@ -30,6 +35,24 @@ public class JwtUtil {
     /** トークン有効期限（ミリ秒、デフォルト: 1時間） */
     @Value("${jwt.expiration:3600000}")
     private long expiration;
+
+    /**
+     * 起動時に jwt.secret の最低長を検証する。
+     * HS256 は 256 bit（32 バイト）以上のキーが必要。
+     * 要件を満たさない場合はアプリを起動失敗させる。
+     */
+    @PostConstruct
+    void validateSecret() {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "jwt.secret は UTF-8 エンコード後に %d バイト以上必要です（現在: %d バイト）。"
+                    .formatted(
+                            MIN_SECRET_BYTES,
+                            secret == null ? 0 : secret.getBytes(StandardCharsets.UTF_8).length
+                    )
+            );
+        }
+    }
 
     /**
      * 署名キーを取得する

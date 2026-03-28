@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
@@ -108,8 +108,8 @@ const activeTab = ref('route-guidance')
 /** 店舗のマーカー表示フラグ */
 const storeMarkersVisible = ref(false)
 const auth = useAuthStore()
-/** ログイン状態 */
-const isLoggedIn = ref(auth.isLoggedIn)
+/** ログイン状態（Piniaストアから導出） */
+const isLoggedIn = computed(() => auth.isLoggedIn)
 
 /** ユーザー特典データ */
 const usersBenefits = ref<BenefitDto[]>([])
@@ -155,8 +155,10 @@ const activeTabIndex = computed(() =>
 
 // 初期表示
 onMounted(() => {
-  // ログイン状態の確認
-  checkLoginStatus()
+  // ログイン済みの場合はユーザー特典を取得
+  if (auth.isLoggedIn) {
+    fetchUserBenefits()
+  }
   // マップの初期化
   const map = initializeMap('map')
   if (map) {
@@ -309,11 +311,19 @@ const fetchUserBenefits = async () => {
     ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
     if ((error as AxiosError).response?.status === 401) {
       auth.logout()
-      isLoggedIn.value = false
       usersBenefits.value = []
     }
   }
 }
+
+/** ログイン状態の変化を監視してユーザー特典を更新 */
+watch(() => auth.isLoggedIn, (newVal) => {
+  if (newVal) {
+    fetchUserBenefits()
+  } else {
+    usersBenefits.value = []
+  }
+})
 
 /** 支援協賛店データを取得 */
 const fetchSupportStores = async () => {
@@ -491,17 +501,6 @@ const clearSuggestions = () => {
   endSuggestions.value = []
 }
 
-/** ログイン状態の確認・更新 */
-const checkLoginStatus = () => {
-  const newLoginStatus = auth.isLoggedIn
-  if (isLoggedIn.value === newLoginStatus) return
-  isLoggedIn.value = newLoginStatus
-  if (isLoggedIn.value) {
-    fetchUserBenefits()
-  } else {
-    usersBenefits.value = []
-  }
-}
 
 </script>
 
