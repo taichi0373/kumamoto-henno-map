@@ -49,6 +49,10 @@ export const useAuthStore = defineStore('auth', {
     login(token: string, user: User, remember: boolean = false): void {
       this.token = token
       this.user = user
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
+      sessionStorage.removeItem(TOKEN_KEY)
+      sessionStorage.removeItem(USER_KEY)
       const storage = remember ? localStorage : sessionStorage
       storage.setItem(TOKEN_KEY, token)
       storage.setItem(USER_KEY, JSON.stringify(user))
