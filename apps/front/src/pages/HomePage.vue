@@ -267,15 +267,15 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
       // 経路探索結果（サイドバー表示用）
       routeResults.value = routes
-      // 全経路を色分けして地図に描画
+      // 全経路を色分けして地図に描画（空配列の場合は既存ラインをクリア）
       const routeLegs = routes.map(r => r.legs ?? [])
-      if (routeLegs.length > 0) {
-        addRouteLines(routeLegs)
-      }
+      addRouteLines(routeLegs)
     } else {
+      addRouteLines([])
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
     }
   } catch (error) {
+    addRouteLines([])
     ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
   } finally {
     routeSearchLoading.value = false
