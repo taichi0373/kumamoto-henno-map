@@ -154,7 +154,7 @@ const getLicenseStatusOptions = () => {
 /**
  * 新規登録処理
   */
-const onClick = () => {
+const onClick = async () => {
   // エラーチェック
   const hasError = checkError()
   // エラーがない場合はAPIを呼び出す
@@ -170,20 +170,18 @@ const onClick = () => {
     }
 
     isLoading.value = true
-    apiClient.post('/users/signup', requestData)
-      .then((response) => {
-        if (response.status === responseStatusConstant.CREATED) {
-          router.push('/login')
-        } else {
-          ToastMessageUtils.error(API_RESPONSE_MESSAGE.CREATE_FAILED)
-        }
-      })
-      .catch(() => {
-        ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
-      })
-      .finally(() => {
-        isLoading.value = false
-      });
+    try {
+      const response = await apiClient.post('/users/signup', requestData)
+      if (response.status === responseStatusConstant.CREATED) {
+        router.push('/login')
+      } else {
+        ToastMessageUtils.error(API_RESPONSE_MESSAGE.CREATE_FAILED)
+      }
+    } catch {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    } finally {
+      isLoading.value = false
+    }
   }
 }
 

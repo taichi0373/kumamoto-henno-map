@@ -164,23 +164,21 @@ const searchBenefits = async (conditions: SearchBenefitDto) => {
     municipalityCd: conditions.address,
   }
 
-  apiClient.post('/benefit/search', requestData)
-    .then((response) => {
-      if (response.status === responseStatusConstant.OK) {
-        const data = ((response.data as unknown) as { data: BenefitDetailDto[] }).data
-        benefitResults.value = data || []
-      } else {
-        ToastMessageUtils.error(API_RESPONSE_MESSAGE.READ_FAILED)
-        hasSearched.value = false
-      }
-    })
-    .catch(() => {
-      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+  try {
+    const response = await apiClient.post('/benefit/search', requestData)
+    if (response.status === responseStatusConstant.OK) {
+      const data = ((response.data as unknown) as { data: BenefitDetailDto[] }).data
+      benefitResults.value = data || []
+    } else {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.READ_FAILED)
       hasSearched.value = false
-    })
-    .finally(() => {
-      isLoading.value = false
-    });
+    }
+  } catch {
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    hasSearched.value = false
+  } finally {
+    isLoading.value = false
+  }
 }
 
 // 条件クリア
