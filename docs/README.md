@@ -22,14 +22,11 @@
 - [ER図](03_database/er_diagram.md)
 
 ### 4. UIコンポーネント
-- [コンポーネントカタログ](https://taichi0373.github.io/benefit-map/storybook/)
+- [コンポーネント仕様書](https://taichi0373.github.io/benefit-map/storybook/)
 
-### 5. 外部インターフェース
-- [インターフェース一覧](04_interfaces/interface_list.md)
-- [インターフェース仕様](04_interfaces/interface_spec.md)
-
-### 6. APIリファレンス
-- [Javadoc（バックエンドAPI）](https://taichi0373.github.io/benefit-map/javadoc/)
+## 5. API仕様
+* [API仕様書](04_interfaces/api_spec.md)
+* [APIリファレンス](https://taichi0373.github.io/benefit-map/javadoc/)
 
 ## 技術スタック
 
