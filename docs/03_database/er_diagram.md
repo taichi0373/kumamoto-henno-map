@@ -36,24 +36,24 @@ erDiagram
     }
 
     BENEFIT_ELIGIBILITY {
-        int     ID
-        varchar BENEFIT_ID
-        varchar LICENSE_STATUS
-        int     MIN_AGE
-        int     MAX_AGE
-        varchar MUNICIPALITY_CD
-        varchar NOTE
+        bigserial ID
+        varchar   BENEFIT_ID
+        varchar   LICENSE_STATUS
+        int       MIN_AGE
+        int       MAX_AGE
+        varchar   MUNICIPALITY_CD
+        varchar   NOTE
     }
 
     USERS {
-        int     USER_ID
-        varchar USERNAME
-        varchar PASSWORD_HASH
-        varchar EMAIL
-        date    BIRTH_DATE
-        varchar MUNICIPALITY_CD
-        varchar LICENSE_STATUS
-        date    LICENSE_SURRENDERED_AT
+        bigserial USER_ID
+        varchar   USERNAME
+        varchar   PASSWORD_HASH
+        varchar   EMAIL
+        date      BIRTH_DATE
+        varchar   MUNICIPALITY_CD
+        varchar   LICENSE_STATUS
+        date      LICENSE_SURRENDERED_AT
     }
 
     AGENCY {

@@ -66,7 +66,7 @@ sequenceDiagram
     participant API as Backend API
     participant DB as PostgreSQL
 
-    C->>API: POST /auth/csrf (CSRFトークン取得)
+    C->>API: GET /auth/csrf (CSRFトークン取得)
     API-->>C: XSRF-TOKEN Cookie セット
 
     C->>API: POST /auth/login (username, password)
@@ -122,7 +122,7 @@ sequenceDiagram
 | フィールド | 型 | 説明 |
 |---|---|---|
 | success | boolean | 処理成功時: `true`、エラー時: `false` |
-| data | any / null | 成功時のレスポンスデータ。`null` の場合は省略 |
+| data | object / array / string / number / boolean / null | 成功時のレスポンスデータ。`null` の場合は省略 |
 | message | string / null | エラー時のメッセージ。成功時は省略 |
 
 ---

@@ -24,7 +24,7 @@
 ### 4. UIコンポーネント
 - [コンポーネント仕様書](https://taichi0373.github.io/benefit-map/storybook/)
 
-## 5. API仕様
+### 5. API仕様
 * [API仕様書](04_interfaces/api_spec.md)
 * [APIリファレンス](https://taichi0373.github.io/benefit-map/javadoc/)
 
