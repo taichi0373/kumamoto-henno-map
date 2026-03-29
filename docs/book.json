@@ -5,5 +5,5 @@
   "styles": {
     "website": "styles/base.css"
   },
-  "plugins": ["livereload"]
+  "plugins": ["livereload", "mermaid"]
 }
