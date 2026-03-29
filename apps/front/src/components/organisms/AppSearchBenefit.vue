@@ -19,13 +19,17 @@
       </div>
       <div class="form-btn">
         <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
-        <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :loading="isLoading"
-          :disabled="isLoading" />
+        <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
       </div>
     </form>
   </div>
 
   <div class="p-2" v-if="hasSearched">
+    <!-- ローディング -->
+    <div v-if="isLoading" class="loading-icon">
+      <AppProgressSpinner/>
+    </div>
+    <!-- 検索結果 -->
     <AppAlert v-if="benefitResults.length === 0 && !isLoading" :variant="'error'"
       :message="'条件に一致する特典がありません'" />
 
@@ -79,6 +83,7 @@ import AppCard from '@/components/atoms/AppCard.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
+import AppProgressSpinner from '@/components/atoms/AppProgressSpinner.vue'
 import apiClient from '@/utils/api'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
@@ -150,35 +155,37 @@ const getLicenseStatusName = (code: string) => {
 }
 
 // 特典検索API呼び出し
-const searchBenefits = async (conditions) => {
+const searchBenefits = async (conditions: SearchBenefitDto) => {
   isLoading.value = true
+  hasSearched.value = true
   const requestData = {
     age: conditions.age,
     licenseStatus: conditions.licenseStatus,
     municipalityCd: conditions.address,
   }
 
-  apiClient.post('/benefit/search', requestData)
-    .then((response) => {
-      if (response.status === responseStatusConstant.OK) {
-        const data = ((response.data as unknown) as { data: BenefitDetailDto[] }).data
-        benefitResults.value = data || []
-        hasSearched.value = true
-      } else {
-        ToastMessageUtils.error(API_RESPONSE_MESSAGE.READ_FAILED)
-      }
-    })
-    .catch(() => {
-      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
-    })
-    .finally(() => {
-      isLoading.value = false
-    });
+  try {
+    const response = await apiClient.post('/benefit/search', requestData)
+    if (response.status === responseStatusConstant.OK) {
+      const data = ((response.data as unknown) as { data: BenefitDetailDto[] }).data
+      benefitResults.value = data || []
+    } else {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.READ_FAILED)
+      hasSearched.value = false
+    }
+  } catch {
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    hasSearched.value = false
+  } finally {
+    isLoading.value = false
+  }
 }
 
 // 条件クリア
 const clearConditions = () => {
   searchBenefit.value = new SearchBenefitDto()
+  benefitResults.value = []
+  hasSearched.value = false
 }
 
  /** 対象年齢の表示用文言を組み立て */
@@ -209,4 +216,12 @@ onMounted(() => {
 
 <style scoped lang="scss">
 @use "@/assets/scss/base";
+
+// ローディング
+.loading-icon {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+}
+
 </style>

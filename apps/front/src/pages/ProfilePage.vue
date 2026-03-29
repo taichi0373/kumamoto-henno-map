@@ -1,5 +1,6 @@
 <template>
   <div class="page">
+    <AppBlockUI :blocked="isLoading" />
     <div class="whole">
       <AppCard title="プロフィール編集" :inputStyle="{ width: '100%', maxWidth: '600px' }">
           <div class="form-row-2">
@@ -44,6 +45,7 @@ import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import apiClient from '@/utils/api'
+import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
@@ -76,6 +78,9 @@ const usernameErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const birthDateErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const addressErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const licenseStatusErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+
+/** ローディング */
+const isLoading = ref(false)
 
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
@@ -170,6 +175,7 @@ const updateUsersInfo = async () => {
       address: usersModel.value.address,
       licenseStatus: usersModel.value.licenseStatus
     }
+    isLoading.value = true
     try {
       const response = await apiClient.put(`/users`, requestData)
       if (response.status === responseStatusConstant.OK) {
@@ -181,6 +187,8 @@ const updateUsersInfo = async () => {
       }
     } catch (error) {
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    } finally {
+      isLoading.value = false
     }
   }
 }
