@@ -16,6 +16,13 @@ import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.RouteRequestDto;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.RouteService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.io.IOException;
 
@@ -25,6 +32,7 @@ import java.io.IOException;
  * OTP（OpenTripPlanner）を使用した経路探索に関するエンドポイントを提供する。
  * </p>
  */
+@Tag(name = "経路探索", description = "OpenTripPlanner を使用した公共交通経路探索")
 @RestController
 @RequestMapping("/route")
 public class RouteController {
@@ -38,8 +46,15 @@ public class RouteController {
     /**
      * 経路探索
      */
+    @Operation(summary = "経路探索", description = "出発地・目的地・日時を指定し OTP 経由で公共交通経路を探索する。未ログインでも利用可（ログイン時はユーザーIDがログに記録される）。CSRF トークン必須。")
+    @SecurityRequirement(name = "csrfToken")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "探索成功（OTP レスポンスをそのまま返却）"),
+            @ApiResponse(responseCode = "500", description = "OTP 接続エラーまたは探索失敗",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PostMapping("/search")
-    public ResponseEntity<ApiResponseDto<?>> searchRoutes(@RequestBody RouteRequestDto request, Authentication auth) {
+    public ResponseEntity<ApiResponseDto<JsonNode>> searchRoutes(@RequestBody RouteRequestDto request, Authentication auth) {
         try {
             // JWT認証済みの場合はユーザーIDを取得（未ログインは null）
             Long userId = (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof CustomUserDetails)

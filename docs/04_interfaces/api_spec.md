@@ -7,8 +7,12 @@
 - 認証が必要なエンドポイントは JWT を HttpOnly Cookie (`jwt`) で送信する
 - 状態変更系（POST / PUT / DELETE）には CSRF トークン (`X-XSRF-TOKEN` ヘッダー) が必要（除外対象を除く）
 
-> **Javadoc（APIリファレンス）** はコントローラーメソッドの引数・例外・内部処理の詳細を参照する場合に使用してください。
-> → [API仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
+> **OpenAPI 仕様書（ReDoc）** は GitHub Pages で公開されています。
+> → [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
+> → [openapi.yaml（ソース）](https://taichi0373.github.io/benefit-map/openapi/openapi.yaml)
+
+> **サービスクラス仕様書（Javadoc）** はコントローラーメソッドの引数・例外・内部処理の詳細を参照する場合に使用してください。
+> → [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
 
 ---
 
