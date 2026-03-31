@@ -257,13 +257,15 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
 
-      # 生成した YAML を Redoc で静的 HTML に変換
+      # 生成した YAML を Redoc で静的 HTML に変換し、YAML 自体も一緒に配置
+      # → GitHub Pages の /openapi/index.html と /openapi/openapi.yaml の両方を提供
       - name: Build ReDoc HTML
         run: |
           npx --yes @redocly/cli@latest build-docs \
             ${{ inputs.backend-dir }}/build/openapi/openapi.yaml \
             --output ./openapi-build/index.html \
             --title "熊本県自主返納特典マップ API"
+          cp ${{ inputs.backend-dir }}/build/openapi/openapi.yaml ./openapi-build/openapi.yaml
 
       - name: Upload OpenAPI artifact
         uses: actions/upload-artifact@v4

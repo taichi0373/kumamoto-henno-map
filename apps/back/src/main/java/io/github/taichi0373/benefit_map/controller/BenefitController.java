@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
+import io.github.taichi0373.benefit_map.dto.BenefitListResponse;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.BenefitService;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
@@ -50,12 +51,12 @@ public class BenefitController {
     @SecurityRequirement(name = "csrfToken")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "検索成功",
-                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+                    content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
             @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/search")
-    public ResponseEntity<ApiResponseDto<?>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
+    public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
         try {
             List<BenefitDetailEntity> benefits = benefitService.searchBenefits(request);
             return ResponseEntity.ok(ApiResponseDto.success(benefits));
@@ -72,14 +73,14 @@ public class BenefitController {
     @SecurityRequirement(name = "cookieAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "取得成功",
-                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+                    content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
             @ApiResponse(responseCode = "401", description = "未認証",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @GetMapping("/users/{userId}")
-    public ResponseEntity<ApiResponseDto<?>> getUsersBenefits(@PathVariable Long userId, Authentication auth) {
+    public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> getUsersBenefits(@PathVariable Long userId, Authentication auth) {
         try {
             // JWT認証チェック
             if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {

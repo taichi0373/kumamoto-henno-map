@@ -26,7 +26,8 @@
 
 ### 5. API仕様
 * [API仕様書](04_interfaces/api_spec.md)
-* [APIリファレンス](https://taichi0373.github.io/benefit-map/javadoc/)
+* [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
+* [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
 
 ## 技術スタック
 

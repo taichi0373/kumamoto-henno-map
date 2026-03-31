@@ -9,14 +9,10 @@
 
 > **OpenAPI 仕様書（ReDoc）** は GitHub Pages で公開されています。
 > → [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
-> → [openapi.yaml（ソース）](openapi.yaml)
+> → [openapi.yaml（ソース）](https://taichi0373.github.io/benefit-map/openapi/openapi.yaml)
 
-> **Swagger UI（インタラクティブな API ドキュメント）** はバックエンドを起動した状態でローカルでアクセスできます。
-> → [Swagger UI（ローカルのみ）](http://localhost:8081/benefit-map/api/swagger-ui.html)
-> → [OpenAPI JSON（ローカルのみ）](http://localhost:8081/benefit-map/api/v3/api-docs)
-
-> **Javadoc（APIリファレンス）** はコントローラーメソッドの引数・例外・内部処理の詳細を参照する場合に使用してください。
-> → [API仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
+> **サービスクラス仕様書（Javadoc）** はコントローラーメソッドの引数・例外・内部処理の詳細を参照する場合に使用してください。
+> → [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
 
 ---
 

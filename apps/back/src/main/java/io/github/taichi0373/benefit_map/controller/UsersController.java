@@ -54,8 +54,7 @@ public class UsersController {
     @Operation(summary = "ユーザー情報取得", description = "JWT で認証されたユーザー自身の情報を取得する。")
     @SecurityRequirement(name = "cookieAuth")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "取得成功",
-                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "200", description = "取得成功（data: UserResponseDto）"),
             @ApiResponse(responseCode = "401", description = "未認証",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
@@ -64,7 +63,7 @@ public class UsersController {
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponseDto<?>> getUsersInfo(@PathVariable Long userId, Authentication auth) {
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> getUsersInfo(@PathVariable Long userId, Authentication auth) {
         try {
             // JWT認証チェック
             if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
@@ -102,8 +101,7 @@ public class UsersController {
             @SecurityRequirement(name = "csrfToken")
     })
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "更新成功",
-                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "200", description = "更新成功（data: null）"),
             @ApiResponse(responseCode = "401", description = "未認証",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
@@ -112,7 +110,7 @@ public class UsersController {
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PutMapping
-    public ResponseEntity<ApiResponseDto<?>> updateUserProfile(
+    public ResponseEntity<ApiResponseDto<Void>> updateUserProfile(
             @RequestBody UsersDto users,
             Authentication auth) {
         try {
@@ -148,15 +146,14 @@ public class UsersController {
      */
     @Operation(summary = "ユーザー登録", description = "新規アカウントを作成する。認証・CSRF 保護は不要。")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "登録成功",
-                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "201", description = "登録成功（data: UserResponseDto）"),
             @ApiResponse(responseCode = "409", description = "ユーザー名が既に使用されている",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "503", description = "DB接続エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponseDto<?>> signup(@RequestBody UsersDto users) {
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> signup(@RequestBody UsersDto users) {
         try {
             // ユーザー名の重複チェック
             Boolean userExists = usersService.existsByUsername(users.getUsername());

@@ -23,5 +23,4 @@
 ## 5. API仕様
 * [API仕様書](04_interfaces/api_spec.md)
 * [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
-* [Swagger UI（インタラクティブ・ローカルのみ）](http://localhost:8081/benefit-map/api/swagger-ui.html)
-* [サービスクラス仕様書](https://taichi0373.github.io/benefit-map/javadoc/)
+* [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)

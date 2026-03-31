@@ -63,15 +63,14 @@ public class AuthController {
      */
     @Operation(summary = "ログイン", description = "ユーザー名とパスワードで認証し、JWT を HttpOnly Cookie (`jwt`) にセットする。CSRF 保護は不要。")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "ログイン成功",
-                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "200", description = "ログイン成功（data: LoginResponseDto）"),
             @ApiResponse(responseCode = "401", description = "ユーザー名またはパスワードが正しくない",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/login")
-    public ResponseEntity<ApiResponseDto<?>> login(
+    public ResponseEntity<ApiResponseDto<LoginResponseDto>> login(
             @RequestBody LoginRequestDto request,
             HttpServletResponse httpResponse) {
         try {
