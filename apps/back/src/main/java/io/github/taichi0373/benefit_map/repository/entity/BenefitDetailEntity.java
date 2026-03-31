@@ -131,7 +131,7 @@ public class BenefitDetailEntity implements Serializable {
     private Integer minAge;
 
     /** 最高年齢 */
-    @Schema(description = "利用可能な最高年齢（null は上限なし）", example = "null", nullable = true)
+    @Schema(description = "利用可能な最高年齢（null は上限なし）", nullable = true)
     @Column(name = "max_age")
     private Integer maxAge;
 

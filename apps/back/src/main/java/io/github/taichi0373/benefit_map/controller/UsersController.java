@@ -22,12 +22,12 @@ import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -97,7 +97,10 @@ public class UsersController {
      * ユーザー情報の更新
      */
     @Operation(summary = "ユーザー情報更新", description = "JWT で認証されたユーザー自身の情報を更新する。CSRF トークン必須。")
-    @SecurityRequirement(name = "cookieAuth")
+    @SecurityRequirements({
+            @SecurityRequirement(name = "cookieAuth"),
+            @SecurityRequirement(name = "csrfToken")
+    })
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更新成功",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),

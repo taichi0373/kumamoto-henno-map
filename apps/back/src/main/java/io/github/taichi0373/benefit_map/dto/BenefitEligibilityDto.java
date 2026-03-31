@@ -31,7 +31,7 @@ public class BenefitEligibilityDto {
     private Integer minAge;
 
     /** 最高年齢 */
-    @Schema(description = "最高年齢（null は上限なし）", example = "null", nullable = true)
+    @Schema(description = "最高年齢（null は上限なし）", nullable = true)
     private Integer maxAge;
 
     /** 運転免許所持状況 */

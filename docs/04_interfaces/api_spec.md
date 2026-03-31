@@ -9,7 +9,7 @@
 
 > **OpenAPI 仕様書（ReDoc）** は GitHub Pages で公開されています。
 > → [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
-> → [openapi.yaml（ソース）](04_interfaces/openapi.yaml)
+> → [openapi.yaml（ソース）](openapi.yaml)
 
 > **Swagger UI（インタラクティブな API ドキュメント）** はバックエンドを起動した状態でローカルでアクセスできます。
 > → [Swagger UI（ローカルのみ）](http://localhost:8081/benefit-map/api/swagger-ui.html)

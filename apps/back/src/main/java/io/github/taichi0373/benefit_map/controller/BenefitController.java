@@ -19,7 +19,6 @@ import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.BenefitService;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -48,6 +47,7 @@ public class BenefitController {
      * 検索条件（年齢・運転免許所持状況・自治体コード）から特典を検索
      */
     @Operation(summary = "特典検索", description = "年齢・免許状態・自治体コードを指定して特典一覧を取得する。認証不要。CSRF トークン必須。")
+    @SecurityRequirement(name = "csrfToken")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "検索成功",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
