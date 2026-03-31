@@ -78,7 +78,7 @@ public class SecurityConfig {
             // CSRF保護を有効化（HttpOnly Cookie認証のため必須）
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/auth/**", "/users/signup")
+                .ignoringRequestMatchers("/auth/**", "/users/signup", "/v3/api-docs/**", "/swagger-ui/**")
             )
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .formLogin(form -> form.disable())
@@ -89,6 +89,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users/signup").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/users/**").authenticated()
                 .requestMatchers("/benefit/users/**").authenticated()
                 .anyRequest().permitAll()
