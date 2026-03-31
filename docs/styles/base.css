@@ -1,5 +1,5 @@
 /* ==========================================================================
-   熊本県自主返納特典マップ設計書 - CSS
+   熊本県自主返納特典マップ設計書 - CSS (Docsify)
    ========================================================================== */
 
 /* 基本設定 */
@@ -8,33 +8,27 @@ body {
   line-height: 1.7;
 }
 
-/* サイドバー */
-.book-summary ul.summary li > a {
-  font-weight: 600;
-}
-
 /* メインコンテンツ */
-.page-wrapper {
-  margin: 20px;
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.page-inner {
-  padding: 40px;
+.content {
   max-width: 1000px;
   margin: 0 auto;
+  padding: 20px 40px;
+}
+
+.markdown-section {
+  max-width: 1000px;
+  padding: 30px 40px;
 }
 
 h1 {
-  border-bottom: 2px solid;
+  border-bottom: 2px solid var(--theme-color, #42b983);
   padding-bottom: 10px;
   margin-bottom: 30px;
   font-weight: 700;
 }
 
 h2 {
-  border-left: 4px solid;
+  border-left: 4px solid var(--theme-color, #42b983);
   padding-left: 15px;
   margin-top: 40px;
   margin-bottom: 20px;
@@ -54,107 +48,82 @@ pre {
   padding: 20px;
   margin: 20px 0;
   overflow-x: auto;
-  border: 1px solid;
-  opacity: 0.9;
 }
 
 code {
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-  border: 1px solid;
-  opacity: 0.9;
 }
 
 /* テーブル */
-table {
+.markdown-section table {
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid;
 }
 
-th {
-  padding: 15px;
+.markdown-section th {
+  padding: 12px 15px;
   text-align: left;
   font-weight: 600;
-  border-bottom: 2px solid;
+  background-color: #f0f0f0;
+  border-bottom: 2px solid #ddd;
 }
 
-td {
-  padding: 12px 15px;
-  border-bottom: 1px solid;
+.markdown-section td {
+  padding: 10px 15px;
+  border-bottom: 1px solid #eee;
 }
 
-tr:nth-child(even) {
-  opacity: 0.95;
+.markdown-section tr:nth-child(even) {
+  background-color: #f9f9f9;
 }
 
-tr:hover {
-  opacity: 0.9;
+.markdown-section tr:hover {
+  background-color: #f0f8f4;
 }
 
 /* リスト */
-ul, ol {
+.markdown-section ul,
+.markdown-section ol {
   padding-left: 20px;
 }
 
-li {
+.markdown-section li {
   margin: 8px 0;
 }
 
 /* 引用 */
-blockquote {
-  border-left: 4px solid;
+.markdown-section blockquote {
+  border-left: 4px solid var(--theme-color, #42b983);
   padding: 15px 20px;
   margin: 20px 0;
   border-radius: 0 8px 8px 0;
   font-style: italic;
-  opacity: 0.9;
+  background-color: #f8fffe;
 }
 
-/* 強調表示 */
-strong {
-  font-weight: 700;
+/* サイドバー */
+.sidebar-nav li > a {
+  font-weight: 400;
 }
 
-/* ページナビゲーション */
-.navigation {
-  padding: 20px 0;
-  border-top: 1px solid;
-  margin-top: 40px;
-}
-
-.navigation a {
-  padding: 10px 20px;
-  border-radius: 25px;
-  transition: all 0.3s ease;
-  display: inline-block;
-  border: 2px solid;
-}
-
-.navigation a:hover {
-  transform: translateY(-2px);
-  text-decoration: none;
-  opacity: 0.8;
+.sidebar-nav > ul > li > a,
+.sidebar-nav > ul > li > p {
+  font-weight: 600;
 }
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
-  .page-wrapper {
-    margin: 10px;
-  }
-  
-  .page-inner {
+  .markdown-section {
     padding: 20px;
   }
-  
+
   h1 {
     font-size: 24px;
   }
-  
+
   h2 {
     font-size: 20px;
   }
