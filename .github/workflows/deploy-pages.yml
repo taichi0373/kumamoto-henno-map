@@ -224,22 +224,9 @@ jobs:
         working-directory: ${{ inputs.backend-dir }}
         run: chmod +x ./gradlew
 
-      # DDL を実行してテーブル・ビューを作成
+      # DDL・DML を実行してテーブル・ビュー・初期データを作成
       - name: Initialize database
-        run: |
-          for f in \
-            config/database/DDL/TABLE/AGENCY.SQL \
-            config/database/DDL/TABLE/BENEFIT_CATEGORY.SQL \
-            config/database/DDL/TABLE/MUNICIPALITY.SQL \
-            config/database/DDL/TABLE/BENEFIT.SQL \
-            config/database/DDL/TABLE/BENEFIT_ELIGIBILITY.SQL \
-            config/database/DDL/TABLE/FARE_DISCOUNT.SQL \
-            config/database/DDL/TABLE/COMMUNITY_BUS.SQL \
-            config/database/DDL/TABLE/USERS.SQL \
-            config/database/DDL/VIEW/V_BENEFIT_DETAIL.SQL \
-            config/database/DDL/VIEW/V_FARE_DISCOUNT_ELIGIBILITY.SQL; do
-            PGPASSWORD=pass psql -h localhost -U user -d benefit_map -f "$f"
-          done
+        run: PGPASSWORD=pass psql -h localhost -U user -d benefit_map -f config/database/setup.sql
 
       # Spring Boot を起動して /v3/api-docs.yaml を生成（build/openapi/openapi.yaml に出力）
       - name: Generate OpenAPI YAML

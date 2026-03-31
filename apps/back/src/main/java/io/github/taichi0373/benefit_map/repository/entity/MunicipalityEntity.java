@@ -47,7 +47,7 @@ public class MunicipalityEntity implements Serializable {
     private String municipalityKana;
 
     /** 自治体区分 */
-    @Schema(description = "自治体区分", example = "市")
+    @Schema(description = "自治体区分（1: 都道府県 / 2: 区 / 3: 市町村）", example = "3")
     @Column(name = "municipality_type")
     private String municipalityType;
 
