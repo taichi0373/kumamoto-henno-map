@@ -17,6 +17,12 @@ import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.LoginRequestDto;
 import io.github.taichi0373.benefit_map.dto.LoginResponseDto;
 import io.github.taichi0373.benefit_map.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
@@ -25,6 +31,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * JWT認証のエンドポイントを提供する。
  * </p>
  */
+@Tag(name = "認証", description = "ログイン・ログアウト・CSRFトークン取得")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -54,6 +61,15 @@ public class AuthController {
      * @param httpResponse HTTPレスポンス
      * @return ユーザー情報（トークンはCookieに格納）
      */
+    @Operation(summary = "ログイン", description = "ユーザー名とパスワードで認証し、JWT を HttpOnly Cookie (`jwt`) にセットする。CSRF 保護は不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "ログイン成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "ユーザー名またはパスワードが正しくない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PostMapping("/login")
     public ResponseEntity<ApiResponseDto<?>> login(
             @RequestBody LoginRequestDto request,
@@ -87,6 +103,8 @@ public class AuthController {
      * @param httpResponse HTTPレスポンス
      * @return 204 No Content
      */
+    @Operation(summary = "ログアウト", description = "JWT Cookie を無効化（Max-Age=0）する。CSRF 保護は不要。")
+    @ApiResponse(responseCode = "204", description = "ログアウト成功（ボディなし）")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletResponse httpResponse) {
         ResponseCookie cookie = ResponseCookie.from("jwt", "")
@@ -109,6 +127,9 @@ public class AuthController {
      * @param csrfToken Spring Security により自動注入されるCSRFトークン
      * @return CSRFトークン文字列
      */
+    @Operation(summary = "CSRFトークン取得", description = "状態変更系 API を呼び出す前に取得する。レスポンスと同時に `XSRF-TOKEN` Cookie も設定される。")
+    @ApiResponse(responseCode = "200", description = "CSRFトークン取得成功",
+            content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     @GetMapping("/csrf")
     public ResponseEntity<ApiResponseDto<String>> getCsrfToken(CsrfToken csrfToken) {
         return ResponseEntity.ok(ApiResponseDto.success(csrfToken.getToken()));

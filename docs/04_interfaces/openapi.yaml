@@ -1,0 +1,793 @@
+openapi: "3.1.0"
+
+info:
+  title: 熊本県自主返納特典マップ API
+  version: "1.0.0"
+  description: |
+    熊本県の運転免許自主返納者向け特典情報を提供する RESTful API。
+
+    ## 認証方式
+    JWT を HttpOnly Cookie (`jwt`) で管理するステートレス認証を採用。
+    認証が必要なエンドポイントは事前に `POST /auth/login` でログインし、Cookie を取得すること。
+
+    ## CSRF 保護
+    状態変更系 (POST / PUT / DELETE) には `X-XSRF-TOKEN` ヘッダーが必要。
+    事前に `GET /auth/csrf` で CSRF トークンを取得すること。
+    除外対象: `/auth/**`、`POST /users/signup`
+
+servers:
+  - url: http://localhost:8081/benefit-map/api
+    description: ローカル開発環境
+
+security: []
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt
+      description: JWT 認証 Cookie。`POST /auth/login` で取得し、HttpOnly Cookie として自動送信される。
+    csrfToken:
+      type: apiKey
+      in: header
+      name: X-XSRF-TOKEN
+      description: CSRF トークン。`GET /auth/csrf` で取得し、状態変更系 API のヘッダーに付与する。
+
+  schemas:
+    ApiResponse:
+      type: object
+      description: 共通 API レスポンス形式
+      properties:
+        success:
+          type: boolean
+          description: "処理成否。成功時: true、エラー時: false"
+          example: true
+        data:
+          description: レスポンスデータ（成功時のみ。null の場合は省略）
+        message:
+          type: string
+          description: エラーメッセージ（失敗時のみ。成功時は省略）
+          example: ユーザー名またはパスワードが正しくありません
+
+    LoginRequest:
+      type: object
+      description: ログインリクエスト
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          description: ユーザー名
+          example: taro
+        password:
+          type: string
+          format: password
+          description: パスワード（平文。サーバー側でハッシュ化）
+          example: password123
+
+    LoginResponse:
+      type: object
+      description: ログインレスポンス（JWT は HttpOnly Cookie に格納されるため JSON に含まれない）
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: ユーザーID
+          example: 1
+        username:
+          type: string
+          description: ユーザー名
+          example: taro
+
+    UserRequest:
+      type: object
+      description: ユーザー情報（登録・更新リクエスト）
+      required:
+        - username
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: ユーザーID（更新時に指定）
+          example: 1
+        username:
+          type: string
+          description: ユーザー名（一意）
+          example: taro
+        password:
+          type: string
+          format: password
+          description: パスワード（平文。サーバー側でハッシュ化）
+          example: password123
+        email:
+          type: string
+          format: email
+          description: メールアドレス
+          example: taro@example.com
+        birthDate:
+          type: string
+          format: date
+          description: 生年月日 (ISO 8601)
+          example: "2000-01-01"
+        address:
+          type: string
+          description: 居住地域
+          example: 熊本市中央区
+        licenseStatus:
+          type: string
+          description: 運転免許所持状況コード（例: SURRENDERED）
+          example: SURRENDERED
+
+    UserResponse:
+      type: object
+      description: ユーザー情報レスポンス（機微情報を除く）
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: ユーザーID
+          example: 1
+        username:
+          type: string
+          description: ユーザー名
+          example: taro
+        email:
+          type: string
+          format: email
+          description: メールアドレス
+          example: taro@example.com
+        birthDate:
+          type: string
+          format: date
+          description: 生年月日 (ISO 8601)
+          example: "2000-01-01"
+        address:
+          type: string
+          description: 居住地域
+          example: 熊本市中央区
+        licenseStatus:
+          type: string
+          description: 運転免許所持状況コード（例: SURRENDERED）
+          example: SURRENDERED
+        licenseSurrenderedAt:
+          type: string
+          format: date
+          nullable: true
+          description: 運転免許返納日 (ISO 8601)。未返納の場合は null
+          example: "2024-04-01"
+
+    BenefitSearchRequest:
+      type: object
+      description: 特典検索条件
+      properties:
+        age:
+          type: integer
+          description: 年齢
+          example: 70
+        licenseStatus:
+          type: string
+          description: 運転免許所持状況コード（例: SURRENDERED）
+          example: SURRENDERED
+        municipalityCd:
+          type: string
+          description: 対象自治体コード
+          example: "43100"
+
+    BenefitDetail:
+      type: object
+      description: 特典詳細情報（自治体・カテゴリ・利用条件を含む）
+      properties:
+        benefitId:
+          type: string
+          description: 特典ID
+          example: B001
+        municipalityCd:
+          type: string
+          description: 自治体コード
+          example: "43100"
+        municipalityName:
+          type: string
+          description: 自治体名称
+          example: 熊本市
+        municipalityKana:
+          type: string
+          description: 自治体名称かな
+          example: くまもとし
+        municipalityType:
+          type: string
+          description: 自治体区分
+          example: 市
+        benefitName:
+          type: string
+          description: 特典名称
+          example: バス運賃割引
+        benefitShortName:
+          type: string
+          description: 特典短縮名称
+          example: バス割引
+        benefitDetail:
+          type: string
+          description: 特典内容
+          example: バス運賃を10%割引
+        expDetail:
+          type: string
+          description: 有効期限
+          example: 2025年3月31日まで
+        phoneNumber:
+          type: string
+          description: 問い合わせ電話番号
+          example: 096-XXX-XXXX
+        benefitUrl:
+          type: string
+          format: uri
+          description: 特典URL
+          example: https://example.com/benefit
+        categoryCd:
+          type: string
+          description: カテゴリコード
+          example: C001
+        categoryName:
+          type: string
+          description: カテゴリ名称
+          example: 交通
+        displayOrder:
+          type: integer
+          description: 表示順
+          example: 1
+        categoryIsActive:
+          type: string
+          description: カテゴリ有効フラグ（"1"：有効、"0"：無効）
+          example: "1"
+        eligibilityId:
+          type: integer
+          format: int64
+          description: 利用条件ID
+          example: 1
+        licenseStatus:
+          type: string
+          description: 運転免許所持状況コード
+          example: SURRENDERED
+        minAge:
+          type: integer
+          nullable: true
+          description: 利用可能な最低年齢（null は制限なし）
+          example: 65
+        maxAge:
+          type: integer
+          nullable: true
+          description: 利用可能な最高年齢（null は上限なし）
+          example: null
+        eligibilityMunicipalityCd:
+          type: string
+          description: 利用条件の対象自治体コード
+          example: "43100"
+        eligibilityNote:
+          type: string
+          nullable: true
+          description: 利用条件の備考
+          example: null
+
+    Municipality:
+      type: object
+      description: 市区町村情報
+      properties:
+        municipalityCd:
+          type: string
+          description: 自治体コード
+          example: "43100"
+        municipalityName:
+          type: string
+          description: 自治体名称
+          example: 熊本市
+        municipalityKana:
+          type: string
+          description: 自治体名称かな
+          example: くまもとし
+        municipalityType:
+          type: string
+          description: 自治体区分
+          example: 市
+
+    RouteRequest:
+      type: object
+      description: 経路探索リクエスト
+      required:
+        - transportMode
+        - startLat
+        - startLon
+        - endLat
+        - endLon
+        - date
+        - time
+      properties:
+        transportMode:
+          type: string
+          description: OTP 交通手段指定
+          example: "TRANSIT,WALK"
+        startLocation:
+          type: string
+          description: 出発地名称（表示用）
+          example: 熊本駅
+        startLat:
+          type: number
+          format: double
+          description: 出発地緯度
+          example: 32.7898
+        startLon:
+          type: number
+          format: double
+          description: 出発地経度
+          example: 130.6984
+        endLocation:
+          type: string
+          description: 目的地名称（表示用）
+          example: 熊本市役所
+        endLat:
+          type: number
+          format: double
+          description: 目的地緯度
+          example: 32.8031
+        endLon:
+          type: number
+          format: double
+          description: 目的地経度
+          example: 130.7078
+        date:
+          type: string
+          format: date
+          description: 出発日（または到着日）
+          example: "2025-04-01"
+        time:
+          type: string
+          description: 出発時刻（または到着時刻）。HH:mm 形式
+          example: "09:00"
+        arriveBy:
+          type: boolean
+          description: "true: 到着時刻指定、false: 出発時刻指定（デフォルト: false）"
+          default: false
+          example: false
+
+tags:
+  - name: 認証
+    description: ログイン・ログアウト・CSRFトークン取得
+  - name: ユーザー
+    description: ユーザー情報の取得・更新・登録
+  - name: 特典
+    description: 特典情報の検索・取得
+  - name: 市区町村
+    description: 熊本県内の市区町村情報取得
+  - name: 経路探索
+    description: OpenTripPlanner を使用した公共交通経路探索
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - 認証
+      summary: ログイン
+      description: |
+        ユーザー名とパスワードで認証し、JWT を HttpOnly Cookie (`jwt`) にセットする。
+        CSRF 保護は不要。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: ログイン成功
+          headers:
+            Set-Cookie:
+              description: jwt Cookie（HttpOnly、Secure、SameSite=Strict）
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoginResponse'
+              example:
+                success: true
+                data:
+                  userId: 1
+                  username: taro
+        "401":
+          description: ユーザー名またはパスワードが正しくない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: false
+                message: ユーザー名またはパスワードが正しくありません
+        "500":
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - 認証
+      summary: ログアウト
+      description: |
+        JWT Cookie を無効化（Max-Age=0）する。
+        CSRF 保護は不要。
+      responses:
+        "204":
+          description: ログアウト成功（ボディなし）
+
+  /auth/csrf:
+    get:
+      tags:
+        - 認証
+      summary: CSRFトークン取得
+      description: |
+        状態変更系 API を呼び出す前に取得する。
+        レスポンスと同時に `XSRF-TOKEN` Cookie も設定される。
+        CSRF 保護は不要。
+      responses:
+        "200":
+          description: CSRFトークン取得成功
+          headers:
+            Set-Cookie:
+              description: XSRF-TOKEN Cookie（JS から読み取り可）
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: string
+              example:
+                success: true
+                data: abc123-csrf-token
+
+  /users/signup:
+    post:
+      tags:
+        - ユーザー
+      summary: ユーザー登録
+      description: |
+        新規アカウントを作成する。
+        認証・CSRF 保護は不要。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+            example:
+              username: taro
+              password: password123
+              email: taro@example.com
+              birthDate: "2000-01-01"
+              address: 熊本市中央区
+              licenseStatus: SURRENDERED
+      responses:
+        "201":
+          description: 登録成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserResponse'
+              example:
+                success: true
+                data:
+                  userId: 1
+                  username: taro
+                  email: taro@example.com
+                  birthDate: "2000-01-01"
+                  address: 熊本市中央区
+                  licenseStatus: SURRENDERED
+                  licenseSurrenderedAt: null
+        "409":
+          description: ユーザー名が既に使用されている
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: false
+                message: このユーザー名は既に使用されています
+        "503":
+          description: DB接続エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /users/{userId}:
+    get:
+      tags:
+        - ユーザー
+      summary: ユーザー情報取得
+      description: |
+        JWT で認証されたユーザー自身の情報を取得する。
+        他ユーザーの情報は取得不可。
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: 取得対象ユーザーID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserResponse'
+              example:
+                success: true
+                data:
+                  userId: 1
+                  username: taro
+                  email: taro@example.com
+                  birthDate: "2000-01-01"
+                  address: 熊本市中央区
+                  licenseStatus: SURRENDERED
+                  licenseSurrenderedAt: "2024-04-01"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "403":
+          description: 他ユーザーへのアクセス
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "404":
+          description: ユーザーが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /users:
+    put:
+      tags:
+        - ユーザー
+      summary: ユーザー情報更新
+      description: |
+        JWT で認証されたユーザー自身の情報を更新する。
+        CSRF トークン必須。
+      security:
+        - cookieAuth: []
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+            example:
+              userId: 1
+              username: taro
+              email: taro@example.com
+              birthDate: "2000-01-01"
+              address: 熊本市中央区
+              licenseStatus: SURRENDERED
+      responses:
+        "200":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "403":
+          description: 他ユーザーへのアクセス
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "404":
+          description: ユーザーが存在しない
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /benefit/search:
+    post:
+      tags:
+        - 特典
+      summary: 特典検索
+      description: |
+        年齢・免許状態・自治体コードを指定して特典一覧を取得する。
+        認証不要。CSRF トークン必須。
+      security:
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BenefitSearchRequest'
+            example:
+              age: 70
+              licenseStatus: SURRENDERED
+              municipalityCd: "43100"
+      responses:
+        "200":
+          description: 検索成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BenefitDetail'
+        "500":
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /benefit/users/{userId}:
+    get:
+      tags:
+        - 特典
+      summary: ユーザー特典取得
+      description: |
+        ユーザーのプロフィール情報（年齢・免許状態・居住自治体）を元に受けられる特典一覧を取得する。
+        JWT 認証必須。
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: 対象ユーザーID
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/BenefitDetail'
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        "403":
+          description: 他ユーザーへのアクセス
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /municipality/all:
+    get:
+      tags:
+        - 市区町村
+      summary: 全市区町村取得
+      description: |
+        熊本県内の全市区町村情報を取得する。
+        認証・CSRF 保護は不要。
+      responses:
+        "200":
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Municipality'
+              example:
+                success: true
+                data:
+                  - municipalityCd: "43100"
+                    municipalityName: 熊本市
+                    municipalityKana: くまもとし
+                    municipalityType: 市
+        "500":
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /route/search:
+    post:
+      tags:
+        - 経路探索
+      summary: 経路探索
+      description: |
+        出発地・目的地・日時を指定し OTP 経由で公共交通経路を探索する。
+        未ログインでも利用可（ログイン時はユーザーIDがログに記録される）。
+        CSRF トークン必須。
+      security:
+        - csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
+      responses:
+        "200":
+          description: 探索成功（OTP レスポンスをそのまま返却）
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        description: OTP レスポンス（plan.itineraries 配列等を含む）
+              example:
+                success: true
+                data:
+                  plan:
+                    itineraries:
+                      - duration: 1800
+                        legs: []
+        "500":
+          description: OTP 接続エラーまたは探索失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'

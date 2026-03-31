@@ -7,6 +7,14 @@
 - 認証が必要なエンドポイントは JWT を HttpOnly Cookie (`jwt`) で送信する
 - 状態変更系（POST / PUT / DELETE）には CSRF トークン (`X-XSRF-TOKEN` ヘッダー) が必要（除外対象を除く）
 
+> **OpenAPI 仕様書（ReDoc）** は GitHub Pages で公開されています。
+> → [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
+> → [openapi.yaml（ソース）](04_interfaces/openapi.yaml)
+
+> **Swagger UI（インタラクティブな API ドキュメント）** はバックエンドを起動した状態でローカルでアクセスできます。
+> → [Swagger UI（ローカルのみ）](http://localhost:8081/benefit-map/api/swagger-ui.html)
+> → [OpenAPI JSON（ローカルのみ）](http://localhost:8081/benefit-map/api/v3/api-docs)
+
 > **Javadoc（APIリファレンス）** はコントローラーメソッドの引数・例外・内部処理の詳細を参照する場合に使用してください。
 > → [API仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
 

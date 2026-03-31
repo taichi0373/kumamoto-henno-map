@@ -54,6 +54,11 @@ on:
         type: boolean
         default: true
 
+      build-openapi:
+        description: 'OpenAPI ドキュメントビルド実行フラグ'
+        type: boolean
+        default: true
+
       is-deploy:
         description: 'デプロイ実行フラグ'
         type: boolean
@@ -178,15 +183,104 @@ jobs:
           name: pages-javadoc
           path: ${{ inputs.backend-dir }}/build/docs/javadoc
 
-  # ドキュメントとStorybookとJavadocを結合してデプロイ
+  # OpenAPI ドキュメントのビルド処理
+  # Spring Boot を起動して /v3/api-docs.yaml を生成し、Redoc で HTML に変換する
+  # is-deploy: true の場合は常にビルド（デプロイ時に /openapi が欠落するのを防ぐ）
+  build-openapi:
+    name: Build OpenAPI Docs
+    if: ${{ inputs.build-openapi || inputs.is-deploy }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: benefit_map
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.distribution }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle Wrapper executable
+        working-directory: ${{ inputs.backend-dir }}
+        run: chmod +x ./gradlew
+
+      # DDL を実行してテーブル・ビューを作成
+      - name: Initialize database
+        run: |
+          for f in \
+            config/database/DDL/TABLE/AGENCY.SQL \
+            config/database/DDL/TABLE/BENEFIT_CATEGORY.SQL \
+            config/database/DDL/TABLE/MUNICIPALITY.SQL \
+            config/database/DDL/TABLE/BENEFIT.SQL \
+            config/database/DDL/TABLE/BENEFIT_ELIGIBILITY.SQL \
+            config/database/DDL/TABLE/FARE_DISCOUNT.SQL \
+            config/database/DDL/TABLE/COMMUNITY_BUS.SQL \
+            config/database/DDL/TABLE/USERS.SQL \
+            config/database/DDL/VIEW/V_BENEFIT_DETAIL.SQL \
+            config/database/DDL/VIEW/V_FARE_DISCOUNT_ELIGIBILITY.SQL; do
+            PGPASSWORD=pass psql -h localhost -U user -d benefit_map -f "$f"
+          done
+
+      # Spring Boot を起動して /v3/api-docs.yaml を生成（build/openapi/openapi.yaml に出力）
+      - name: Generate OpenAPI YAML
+        working-directory: ${{ inputs.backend-dir }}
+        run: ./gradlew generateOpenApiDocs
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: benefit_map
+          DB_USERNAME: user
+          DB_PASSWORD: pass
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      # 生成した YAML を Redoc で静的 HTML に変換
+      - name: Build ReDoc HTML
+        run: |
+          npx --yes @redocly/cli@latest build-docs \
+            ${{ inputs.backend-dir }}/build/openapi/openapi.yaml \
+            --output ./openapi-build/index.html \
+            --title "熊本県自主返納特典マップ API"
+
+      - name: Upload OpenAPI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-openapi
+          path: ./openapi-build
+
+  # ドキュメントとStorybookとJavadocとOpenAPIを結合してデプロイ
   deploy:
     name: Combine and Deploy to GitHub Pages
-    needs: [build-docs, build-storybook, build-javadoc]
+    needs: [build-docs, build-storybook, build-javadoc, build-openapi]
     runs-on: ubuntu-latest
     if: >-
       inputs.is-deploy &&
       (needs.build-storybook.result == 'success' || needs.build-storybook.result == 'skipped') &&
-      (needs.build-javadoc.result == 'success' || needs.build-javadoc.result == 'skipped')
+      (needs.build-javadoc.result == 'success' || needs.build-javadoc.result == 'skipped') &&
+      (needs.build-openapi.result == 'success' || needs.build-openapi.result == 'skipped')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -215,6 +309,13 @@ jobs:
         with:
           name: pages-javadoc
           path: ./site/javadoc
+
+      # OpenAPI を /openapi/ サブディレクトリに配置
+      - name: Download OpenAPI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-openapi
+          path: ./site/openapi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

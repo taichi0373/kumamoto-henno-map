@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.3.5'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
 }
 
 java {
@@ -32,6 +33,7 @@ dependencies {
     annotationProcessor 'org.seasar.doma:doma-processor:2.60.0'
 
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -73,4 +75,16 @@ javadoc {
 // 本番環境では SPRING_PROFILES_ACTIVE 環境変数で上書きすること
 bootRun {
     systemProperty 'spring.profiles.active', System.getProperty('spring.profiles.active', 'dev')
+}
+
+// springdoc-openapi-gradle-plugin: OpenAPI YAML 自動生成設定
+// 実行: ./gradlew generateOpenApiDocs → build/openapi/openapi.yaml に出力
+openApi {
+    apiDocsUrl = 'http://localhost:8081/benefit-map/api/v3/api-docs.yaml'
+    outputDir = file("${buildDir}/openapi")
+    outputFileName = 'openapi.yaml'
+    // dev プロファイルを有効化して JWT シークレットのデフォルト値を使用
+    customBootRun {
+        jvmArgs = ['-Dspring.profiles.active=dev']
+    }
 }

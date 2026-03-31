@@ -21,6 +21,14 @@ import io.github.taichi0373.benefit_map.dto.UsersDto;
 import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.UsersService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * ユーザーコントローラー
@@ -29,6 +37,7 @@ import io.github.taichi0373.benefit_map.service.UsersService;
  * 認証が必要なエンドポイントは JWT トークンで認証する。
  * </p>
  */
+@Tag(name = "ユーザー", description = "ユーザー情報の取得・更新・登録")
 @RestController
 @RequestMapping("/users")
 public class UsersController {
@@ -42,6 +51,18 @@ public class UsersController {
     /**
      * ユーザー情報取得
      */
+    @Operation(summary = "ユーザー情報取得", description = "JWT で認証されたユーザー自身の情報を取得する。")
+    @SecurityRequirement(name = "cookieAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "未認証",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponseDto<?>> getUsersInfo(@PathVariable Long userId, Authentication auth) {
         try {
@@ -75,6 +96,18 @@ public class UsersController {
     /**
      * ユーザー情報の更新
      */
+    @Operation(summary = "ユーザー情報更新", description = "JWT で認証されたユーザー自身の情報を更新する。CSRF トークン必須。")
+    @SecurityRequirement(name = "cookieAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "更新成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "未認証",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PutMapping
     public ResponseEntity<ApiResponseDto<?>> updateUserProfile(
             @RequestBody UsersDto users,
@@ -110,6 +143,15 @@ public class UsersController {
     /**
      * ユーザー登録
      */
+    @Operation(summary = "ユーザー登録", description = "新規アカウントを作成する。認証・CSRF 保護は不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "登録成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "ユーザー名が既に使用されている",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "503", description = "DB接続エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PostMapping("/signup")
     public ResponseEntity<ApiResponseDto<?>> signup(@RequestBody UsersDto users) {
         try {

@@ -18,6 +18,14 @@ import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.BenefitService;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * 特典情報コントローラー
@@ -25,6 +33,7 @@ import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
  * 特典の検索・取得に関するエンドポイントを提供する。
  * </p>
  */
+@Tag(name = "特典", description = "特典情報の検索・取得")
 @RestController
 @RequestMapping("/benefit")
 public class BenefitController {
@@ -38,6 +47,13 @@ public class BenefitController {
     /**
      * 検索条件（年齢・運転免許所持状況・自治体コード）から特典を検索
      */
+    @Operation(summary = "特典検索", description = "年齢・免許状態・自治体コードを指定して特典一覧を取得する。認証不要。CSRF トークン必須。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "検索成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PostMapping("/search")
     public ResponseEntity<ApiResponseDto<?>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
         try {
@@ -52,6 +68,16 @@ public class BenefitController {
     /**
      * ユーザーIDからユーザーが受けられる特典を検索
      */
+    @Operation(summary = "ユーザー特典取得", description = "ユーザーのプロフィール情報（年齢・免許状態・居住自治体）を元に受けられる特典一覧を取得する。JWT 認証必須。")
+    @SecurityRequirement(name = "cookieAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "未認証",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @GetMapping("/users/{userId}")
     public ResponseEntity<ApiResponseDto<?>> getUsersBenefits(@PathVariable Long userId, Authentication auth) {
         try {
