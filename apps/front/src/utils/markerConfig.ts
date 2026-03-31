@@ -1,34 +1,8 @@
 import maplibregl from 'maplibre-gl'
-import type { Map, Marker, Popup } from 'maplibre-gl'
+import type { Map, Marker } from 'maplibre-gl'
+import type { RouteMarkerType, MarkerOptions } from './markerTypes'
 
-// 型定義
-export interface Store {
-  latitude?: number
-  longitude?: number
-  name: string
-  address: string
-}
-
-export interface MarkerOptions {
-  color?: string
-  draggable?: boolean
-  popup?: Popup | null
-  className?: string
-}
-
-export type RouteMarkerType = 'start' | 'end' | 'stop'
-
-// 店舗マーカー作成関数
-export const createStoreMarker = (store: Store): Marker | null => {
-  if (!store.latitude || !store.longitude) return null
-  
-  return new maplibregl.Marker()
-    .setLngLat([store.longitude, store.latitude])
-    .setPopup(
-      new maplibregl.Popup({ offset: 25 })
-        .setHTML(`<h4>${store.name}</h4><p>${store.address}</p>`)
-    )
-}
+export type { MarkerType, RouteMarkerType } from './markerTypes'
 
 // 汎用マーカー作成関数
 export const createMarker = (lat: number, lon: number, options: MarkerOptions = {}): Marker => {
@@ -64,12 +38,6 @@ export const createRouteMarker = (lat: number, lon: number, type: RouteMarkerTyp
     stop: '#FF9800'
   }
 
-  const icons: Record<RouteMarkerType, string> = {
-    start: 'S',
-    end: 'E',
-    stop: 'P'
-  }
-
   const color = colors[type] || '#3FB1CE'
   
   const popup = name ? new maplibregl.Popup({ offset: 25 })
@@ -84,57 +52,62 @@ export const createRouteMarker = (lat: number, lon: number, type: RouteMarkerTyp
 
 // マーカー管理クラス
 export class MarkerManager {
-  private markers: { [key: string]: Marker }
+  private _markers: { [key: string]: Marker }
 
   constructor() {
-    this.markers = {}
+    this._markers = {}
+  }
+
+  // マーカー一覧への読み取り専用アクセス
+  get markers(): { [key: string]: Marker } {
+    return { ...this._markers }
   }
 
   // マーカー追加
   addMarker(id: string, marker: Marker, map: Map): Marker {
-    if (this.markers[id]) {
+    if (this._markers[id]) {
       this.removeMarker(id)
     }
     
-    this.markers[id] = marker
+    this._markers[id] = marker
     marker.addTo(map)
     return marker
   }
 
   // マーカー削除
   removeMarker(id: string): void {
-    const marker = this.markers[id]
+    const marker = this._markers[id]
     if (marker) {
       marker.remove()
-      delete this.markers[id]
+      delete this._markers[id]
     }
   }
 
   // 特定タイプのマーカーを全て削除
   removeMarkersByType(type: string): void {
-    for (const id in this.markers) {
+    for (const id in this._markers) {
       if (id.startsWith(type)) {
-        this.markers[id].remove()
-        delete this.markers[id]
+        this._markers[id].remove()
+        delete this._markers[id]
       }
     }
   }
 
   // 全マーカー削除
   clearAllMarkers(): void {
-    for (const marker of Object.values(this.markers)) {
+    for (const marker of Object.values(this._markers)) {
       marker.remove()
     }
-    this.markers = {}
+    this._markers = {}
   }
 
   // マーカー取得
   getMarker(id: string): Marker | undefined {
-    return this.markers[id]
+    return this._markers[id]
   }
 
   // 全マーカー取得
   getAllMarkers(): Marker[] {
-    return Object.values(this.markers)
+    return Object.values(this._markers)
   }
 }

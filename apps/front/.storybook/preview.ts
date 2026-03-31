@@ -1,6 +1,18 @@
 import type { Preview } from '@storybook/vue3';
 import { setup } from '@storybook/vue3';
 
+// Pinia
+import { createPinia } from 'pinia';
+
+// PrimeVue Import
+import PrimeVue from 'primevue/config'
+import ToastService from 'primevue/toastservice'
+import Ripple from 'primevue/ripple'
+import BadgeDirective from 'primevue/badgedirective'
+import Aura from '@primevue/themes/aura'
+import 'primeicons/primeicons.css'
+import 'primeflex/primeflex.css'
+
 // Storybookプレビュー用のSCSSをインポート
 import './preview.scss';
 
@@ -17,7 +29,12 @@ const router = createRouter({
 
 // Vue 3アプリケーションのセットアップ
 setup((app) => {
+  app.use(createPinia());
   app.use(router);
+  app.use(PrimeVue, { ripple: true, theme: { preset: Aura } })
+  app.use(ToastService)
+  app.directive('ripple', Ripple);
+  app.directive('badge', BadgeDirective);
 });
 
 const preview: Preview = {

@@ -6,14 +6,22 @@ import java.time.LocalDate;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
+import org.seasar.doma.GeneratedValue;
+import org.seasar.doma.GenerationType;
 import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
+import org.seasar.doma.SequenceGenerator;
 import org.seasar.doma.Table;
 
-import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * ユーザーエンティティ
+ * <p>
+ * アプリ利用者の情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "users")
 @Getter
@@ -26,8 +34,10 @@ public class UsersEntity implements Serializable {
     
     /** ユーザーID */
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(sequence = "users_user_id_seq")
     @Column(name = "user_id")
-    String userId;
+    Long userId;
 
     /** ユーザー名 */
     @Column(name = "username")
@@ -46,8 +56,8 @@ public class UsersEntity implements Serializable {
     LocalDate birthDate;
 
     /** 自治体コード */
-    @Column(name = "municipality_code")
-    String municipalityCode;
+    @Column(name = "municipality_cd")
+    String municipalityCd;
 
     /** 運転免許所持状況 */
     @Column(name = "license_status")

@@ -1,120 +1,136 @@
 package io.github.taichi0373.benefit_map.controller;
 
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.web.csrf.CsrfToken;
 
-import io.github.taichi0373.benefit_map.dto.LoginRequest;
-import io.github.taichi0373.benefit_map.dto.RegisterRequest;
-import io.github.taichi0373.benefit_map.service.UserService;
-import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
+import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.LoginRequestDto;
+import io.github.taichi0373.benefit_map.dto.LoginResponseDto;
+import io.github.taichi0373.benefit_map.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * 認証コントローラー
+ * <p>
+ * JWT認証のエンドポイントを提供する。
+ * </p>
+ */
+@Tag(name = "認証", description = "ログイン・ログアウト・CSRFトークン取得")
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:6006", "http://127.0.0.1:3000", "http://127.0.0.1:6006"}, allowCredentials = "true")
 public class AuthController {
-    
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-    
-    private final UserService userService;
-    
+
+    /** 認証サービス */
+    @Autowired
+    private AuthService authService;
+
+    /** トークン有効期限（ミリ秒） */
+    @Value("${jwt.expiration:3600000}")
+    private long jwtExpiration;
+
+    /** CookieのSecure属性設定 */
+    @Value("${app.security.cookie.secure:true}")
+    private boolean cookieSecure;
+
+    /** CookieのPath */
+    @Value("${server.servlet.context-path:/benefit-map/api}")
+    private String contextPath;
+
     /**
      * ログイン
+     * <p>
+     * 認証成功時に JWT を HttpOnly Cookie にセットし、ユーザー情報を返す。
+     * </p>
+     * @param request ログインリクエスト
+     * @param httpResponse HTTPレスポンス
+     * @return ユーザー情報（トークンはCookieに格納）
      */
+    @Operation(summary = "ログイン", description = "ユーザー名とパスワードで認証し、JWT を HttpOnly Cookie (`jwt`) にセットする。CSRF 保護は不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "ログイン成功（data: LoginResponseDto）"),
+            @ApiResponse(responseCode = "401", description = "ユーザー名またはパスワードが正しくない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequest request, HttpSession session) {
+    public ResponseEntity<ApiResponseDto<LoginResponseDto>> login(
+            @RequestBody LoginRequestDto request,
+            HttpServletResponse httpResponse) {
         try {
-            log.info("ログイン試行: username={}", request.getUsername());
-            Map<String, Object> result = userService.authenticateUser(request.getUsername(), request.getPassword());
-            
-            if ((Boolean) result.get("success")) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> user = (Map<String, Object>) result.get("user");
-                session.setAttribute("user_id", user.get("userId"));
-                session.setAttribute("username", user.get("username"));
-                log.info("ユーザー {} がログインしました", user.get("username"));
+            LoginResponseDto response = authService.login(request.getUsername(), request.getPassword());
+            if (response == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("ユーザー名またはパスワードが正しくありません"));
             }
-            
-            return ResponseEntity.ok(result);
+            ResponseCookie cookie = ResponseCookie.from("jwt", response.getToken())
+                    .httpOnly(true)
+                    .secure(cookieSecure)
+                    .sameSite("Strict")
+                    .path(contextPath)
+                    .maxAge(jwtExpiration / 1000)
+                    .build();
+            httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+            return ResponseEntity.ok(ApiResponseDto.success(response));
         } catch (Exception e) {
-            log.error("ログインエラー", e);
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("ログイン中にエラーが発生しました"));
         }
     }
-    
+
     /**
      * ログアウト
+     * <p>
+     * JWT Cookie を削除する。削除操作のため 204 No Content を返す。
+     * </p>
+     * @param httpResponse HTTPレスポンス
+     * @return 204 No Content
      */
+    @Operation(summary = "ログアウト", description = "JWT Cookie を無効化（Max-Age=0）する。CSRF 保護は不要。")
+    @ApiResponse(responseCode = "204", description = "ログアウト成功（ボディなし）")
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, Object>> logout(HttpSession session) {
-        try {
-            session.invalidate();
-            log.info("ユーザーがログアウトしました");
-            return ResponseEntity.ok(Map.of("success", true, "message", "ログアウトしました"));
-        } catch (Exception e) {
-            log.error("ログアウトエラー", e);
-            return ResponseEntity.status(500).build();
-        }
+    public ResponseEntity<Void> logout(HttpServletResponse httpResponse) {
+        ResponseCookie cookie = ResponseCookie.from("jwt", "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .sameSite("Strict")
+                .path(contextPath)
+                .maxAge(0)
+                .build();
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.noContent().build();
     }
-    
+
     /**
-     * ユーザー登録
+     * CSRF トークン取得
+     * <p>
+     * フロントエンドが状態変更系API実行前に取得するCSRFトークンを提供する。
+     * CookieCsrfTokenRepository により自動的にXSRF-TOKENクッキーも設定される。
+     * </p>
+     * @param csrfToken Spring Security により自動注入されるCSRFトークン
+     * @return CSRFトークン文字列
      */
-    @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody RegisterRequest request) {
-        try {
-            log.info("ユーザー登録試行: username={}", request.getUsername());
-            Map<String, Object> result = userService.registerUser(request);
-            return ResponseEntity.ok(result);
-        } catch (Exception e) {
-            log.error("ユーザー登録エラー", e);
-            return ResponseEntity.status(500).build();
-        }
-    }
-    
-    /**
-     * セッション確認
-     */
-    @GetMapping("/session")
-    public ResponseEntity<Map<String, Object>> getSession(HttpSession session) {
-        try {
-            Object userId = session.getAttribute("user_id");
-            Object username = session.getAttribute("username");
-            
-            if (userId != null) {
-                return ResponseEntity.ok(Map.of(
-                    "authenticated", true,
-                    "user_id", userId,
-                    "username", username
-                ));
-            } else {
-                return ResponseEntity.ok(Map.of("authenticated", false));
-            }
-        } catch (Exception e) {
-            log.error("セッション確認エラー", e);
-            return ResponseEntity.status(500).build();
-        }
-    }
-    
-    /**
-     * ヘルスチェック
-     */
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> health() {
-        return ResponseEntity.ok(Map.of(
-            "status", "OK",
-            "message", "Backend server is running",
-            "timestamp", System.currentTimeMillis()
-        ));
+    @Operation(summary = "CSRFトークン取得", description = "状態変更系 API を呼び出す前に取得する。レスポンスと同時に `XSRF-TOKEN` Cookie も設定される。")
+    @ApiResponse(responseCode = "200", description = "CSRFトークン取得成功",
+            content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    @GetMapping("/csrf")
+    public ResponseEntity<ApiResponseDto<String>> getCsrfToken(CsrfToken csrfToken) {
+        return ResponseEntity.ok(ApiResponseDto.success(csrfToken.getToken()));
     }
 }

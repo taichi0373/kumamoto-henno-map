@@ -10,8 +10,14 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
-import java.util.List;
 
+/**
+ * CORS設定クラス
+ * <p>
+ * クロスオリジンリソース共有（CORS）の許可設定を行う。
+ * application.properties の cors.* プロパティを読み込んで設定する。
+ * </p>
+ */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
@@ -30,26 +36,20 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:3000", "http://localhost:6006", "http://127.0.0.1:3000", "http://127.0.0.1:6006")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
+                .allowedOrigins(allowedOrigins.split(","))
+                .allowedMethods(allowedMethods.split(","))
+                .allowedHeaders(allowedHeaders.split(","))
+                .allowCredentials(allowCredentials)
                 .maxAge(3600);
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // 開発環境用: フロントエンドのポート3000と6006を許可
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000", 
-            "http://localhost:6006",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:6006"
-        ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+        configuration.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
+        configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
+        configuration.setAllowCredentials(allowCredentials);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

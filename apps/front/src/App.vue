@@ -5,83 +5,60 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AppHeader from './components/organisms/AppHeader.vue'
+import { setUnauthorizedHandler } from '@/utils/api'
+import { useAuthStore } from '@/stores/auth'
 
-export default {
-  name: 'App',
-  components: {
-    AppHeader
-  },
-  mounted() {
-    // ユーザートークンの確認
-    const userToken = sessionStorage.getItem('userToken')
-    if (userToken) {
-      // セッション復元のロジック
-      this.restoreUserSession()
-    }
-    // ウィンドウリサイズイベントの設定
-    this.setupResponsiveDesign()
-  },
-  methods: {
-    restoreUserSession() {
-      // サーバー側でトークンの有効性を確認
-      const userToken = sessionStorage.getItem('userToken')
-      const userId = sessionStorage.getItem('userId')
-      
-      if (userToken && userId) {
-        // サーバーAPIでセッション確認
-        this.validateSession(userToken)
-      }
-    },
-    
-    async validateSession(token) {
-      try {
-        const response = await fetch('/api/validate-session', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        
-        if (!response.ok) {
-          // トークンが無効な場合はクリア
-          this.clearSession()
-        }
-      } catch (error) {
-        console.error('Session validation error:', error)
-        this.clearSession()
-      }
-    },
-    
-    clearSession() {
-      sessionStorage.removeItem('userToken')
-      sessionStorage.removeItem('userId')
-    },
-    
-    setupResponsiveDesign() {
-      const handleResize = () => {
-        const formSelectElements = document.querySelectorAll('.form-select')
-        if (window.innerWidth < 360) {
-          formSelectElements.forEach(element => {
-            element.classList.add('form-select-sm')
-          })
-        } else {
-          formSelectElements.forEach(element => {
-            element.classList.remove('form-select-sm')
-          })
-        }
-        
-        // vh設定
-        const height = window.innerHeight
-        document.documentElement.style.setProperty('--vh', height / 100 + 'px')
-      }
-      
-      window.addEventListener('resize', handleResize)
-      handleResize()
-    }
+/** 401発生時のハンドラーを登録（setup()トップレベルで実行し未登録状態をなくす） */
+const authStore = useAuthStore()
+const router = useRouter()
+setUnauthorizedHandler(() => {
+  authStore.logout().finally(() => {
+    router.push('/login')
+  })
+})
+
+// JWT (HttpOnly Cookie) 方式のため、セッション復元ロジックは不要
+// ユーザー情報は auth store (localStorage/sessionStorage) で管理
+// JWT の有効性確認は setUnauthorizedHandler で 401 レスポンス時に自動処理
+
+/**
+ * リサイズイベントハンドラ
+ */
+const handleResize = () => {
+  const formSelectElements = document.querySelectorAll('.form-select')
+  if (window.innerWidth < 360) {
+    formSelectElements.forEach(element => {
+      element.classList.add('form-select-sm')
+    })
+  } else {
+    formSelectElements.forEach(element => {
+      element.classList.remove('form-select-sm')
+    })
   }
+
+  // vh設定
+  const height = window.innerHeight
+  document.documentElement.style.setProperty('--vh', height / 100 + 'px')
 }
+
+const setupResponsiveDesign = () => {
+  window.addEventListener('resize', handleResize)
+  handleResize()
+}
+
+onMounted(() => {
+  // ウィンドウリサイズイベントの設定
+  setupResponsiveDesign()
+})
+
+onUnmounted(() => {
+  // リサイズイベントの解除
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style>
@@ -96,5 +73,6 @@ export default {
   height: calc(var(--vh) * 100);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 </style>

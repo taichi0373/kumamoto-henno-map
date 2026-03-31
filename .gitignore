@@ -1,0 +1,52 @@
+### cursor ###
+.cursor
+
+### claude ###
+.claude
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Editor / IDE ###
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+### Eclipse / STS ###
+.project
+.classpath
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/
+
+### NetBeans ###
+nbproject/private/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+### Logs ###
+*.log
+
+### Environment variables ###
+.env
+.env.local
+.env.*.local
+
+### dist ###
+dist
+
+### otp data ###
+config/otp/data/*.gtfs.zip
+config/otp/data/*.obj
+config/otp/data/.venv

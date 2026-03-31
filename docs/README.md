@@ -2,28 +2,32 @@
 
 ## システム概要
 
-熊本県の自主返納特典情報を地図上で表示・検索できるWebアプリケーション。特典施設の地図表示、条件絞り込み検索、管理機能、経路探索機能を提供。
+熊本県の自主返納特典情報を地図上で表示・検索できるWebアプリケーション。特典情報の表示、条件絞り込み検索、経路探索機能を提供。
 
 ## ドキュメント構成
 
-### 1. アプリケーション概要・仕様
-- [概要](01_overview/overview.md)
+### 1. 概要・アーキテクチャ
+- [アプリケーション概要](01_overview/overview.md)
 - [技術スタック](01_overview/tech_stack.md)
 - [命名規則](01_overview/naming_conventions.md)
 
-### 2. 機能仕様
+### 2. 機能・画面仕様
 - [機能一覧](02_functions/feature_list.md)
 - [画面一覧](02_functions/screen_list.md)
 - [画面遷移図](02_functions/screen_flow.md)
 
-### 3. データ設計
+### 3. データベース設計
 - [テーブル一覧](03_database/table_list.md)
 - [テーブル定義](03_database/table_definitions.md)
 - [ER図](03_database/er_diagram.md)
 
-### 4. 外部インターフェース
-- [インターフェース一覧](04_interfaces/interface_list.md)
-- [インターフェース仕様](04_interfaces/interface_spec.md)
+### 4. UIコンポーネント
+- [コンポーネント仕様書](https://taichi0373.github.io/benefit-map/storybook/)
+
+### 5. API仕様
+* [API仕様書](04_interfaces/api_spec.md)
+* [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
+* [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
 
 ## 技術スタック
 

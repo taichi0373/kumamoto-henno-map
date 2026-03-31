@@ -5,14 +5,22 @@ import java.io.Serializable;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
+import org.seasar.doma.GeneratedValue;
+import org.seasar.doma.GenerationType;
 import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
+import org.seasar.doma.SequenceGenerator;
 import org.seasar.doma.Table;
 
-import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 特典適用条件エンティティ
+ * <p>
+ * 特典の適用条件（年齢・免許状況・自治体コード）を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "benefit_eligibility")
 @Getter
@@ -25,8 +33,10 @@ public class BenefitEligibilityEntity implements Serializable {
     
     /** ID */
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(sequence = "benefit_eligibility_id_seq")
     @Column(name = "id")
-    private Integer id;
+    private Long id;
 
     /** 特典ID */
     @Column(name = "benefit_id")
@@ -36,14 +46,13 @@ public class BenefitEligibilityEntity implements Serializable {
     @Column(name = "license_status")
     private String licenseStatus;
 
-
     /** 最低年齢 */
     @Column(name = "min_age")
-    private String minAge;
+    private Integer minAge;
 
     /** 最高年齢 */
     @Column(name = "max_age")
-    private String maxAge;
+    private Integer maxAge;
 
     /** 対象自治体コード */
     @Column(name = "municipality_cd")
@@ -55,5 +64,4 @@ public class BenefitEligibilityEntity implements Serializable {
 
     /** システム共通フィールド */
     private SystemField systemField;
-
 }

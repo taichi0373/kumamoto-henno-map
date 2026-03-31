@@ -9,10 +9,19 @@ import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
 import org.seasar.doma.Table;
 
-import io.github.taichi0373.benefit_map.repository.entity.SystemField;
+import lombok.Getter;
+import lombok.Setter;
 
+/**
+ * コミュニティバスエンティティ
+ * <p>
+ * コミュニティバス路線情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "community_bus")
+@Getter
+@Setter
 public class CommunityBusEntity implements Serializable {
 
     /** シリアルバージョンUID */

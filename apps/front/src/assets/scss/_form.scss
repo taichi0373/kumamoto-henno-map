@@ -1,0 +1,40 @@
+/**
+ * フォームレイアウト用の共通スタイル
+ */
+
+/* フォーム行レイアウト */
+.form-row-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px 20px;
+  margin-bottom: 8px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+  margin-bottom: 8px;
+}
+
+/* フォーム列レイアウト */
+.form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* フォームボタンレイアウト */
+.form-btn {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* フォームリンクレイアウト */
+.form-link {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}

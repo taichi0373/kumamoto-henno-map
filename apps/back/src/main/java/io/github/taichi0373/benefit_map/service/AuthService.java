@@ -1,0 +1,75 @@
+package io.github.taichi0373.benefit_map.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import io.github.taichi0373.benefit_map.dto.LoginResponseDto;
+import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
+import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
+import io.github.taichi0373.benefit_map.security.CustomUserDetails;
+import io.github.taichi0373.benefit_map.util.JwtUtil;
+
+/**
+ * 認証サービス
+ * <p>
+ * ログイン処理とSpring SecurityのUserDetailsService実装を担う。
+ * </p>
+ */
+@Service
+public class AuthService implements UserDetailsService {
+
+    /** ユーザー情報DAO */
+    @Autowired
+    private UsersDao usersDao;
+
+    /** パスワードエンコーダー */
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
+
+    /** JWTユーティリティ */
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    /**
+     * ユーザー名によってユーザー詳細を取得する（JwtAuthenticationFilterから使用）
+     * @param username ユーザー名
+     * @return ユーザー詳細
+     * @throws UsernameNotFoundException ユーザーが見つからない場合
+     */
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        UsersEntity user = usersDao.selectByUsername(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("ユーザーが見つかりません: " + username);
+        }
+        return new CustomUserDetails(user);
+    }
+
+    /**
+     * ログイン処理
+     * <p>
+     * パスワードを検証し、成功時にJWTトークンを含むレスポンスを返す。
+     * </p>
+     * @param username ユーザー名
+     * @param password パスワード
+     * @return ログインレスポンスDTO（認証失敗時はnull）
+     */
+    public LoginResponseDto login(String username, String password) {
+        UsersEntity user = usersDao.selectByUsername(username);
+        if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
+            return null;
+        }
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        String token = jwtUtil.generateToken(userDetails);
+
+        LoginResponseDto response = new LoginResponseDto();
+        response.setToken(token);
+        response.setUserId(user.getUserId());
+        response.setUsername(user.getUsername());
+        return response;
+    }
+}

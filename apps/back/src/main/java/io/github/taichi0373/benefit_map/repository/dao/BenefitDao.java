@@ -5,7 +5,6 @@ import java.util.List;
 import org.seasar.doma.Dao;
 import org.seasar.doma.Delete;
 import org.seasar.doma.Insert;
-import org.seasar.doma.Select;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
@@ -13,7 +12,14 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEntity_;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
+/**
+ * 特典情報DAOインターフェース
+ * <p>
+ * 特典情報の登録・更新・削除・検索操作を提供する。
+ * </p>
+ */
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")
@@ -35,7 +41,7 @@ public interface BenefitDao {
      * 特典IDリストで検索
      */
     default List<BenefitEntity> selectByIds(List<String> benefitIds) {
-        if (benefitIds == null || benefitIds.isEmpty()) {
+        if (ValidateUtils.isNullOrEmpty(benefitIds)) {
             return List.of();
         }
         

@@ -2,7 +2,6 @@ package io.github.taichi0373.benefit_map.repository.entity;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
@@ -10,10 +9,19 @@ import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
 import org.seasar.doma.Table;
 
-import io.github.taichi0373.benefit_map.repository.entity.SystemField;
+import lombok.Getter;
+import lombok.Setter;
 
+/**
+ * 運賃割引エンティティ
+ * <p>
+ * 公共交通事業者ごとの運賃割引情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "fare_discount")
+@Getter
+@Setter
 public class FareDiscountEntity implements Serializable {
 
     /** シリアルバージョンUID */
@@ -36,7 +44,7 @@ public class FareDiscountEntity implements Serializable {
 
     /** 割引値 */
     @Column(name = "discount_value")
-    private BigDecimal discountValue;
+    private Integer discountValue;
 
     /** システム共通フィールド */
     private SystemField systemField;

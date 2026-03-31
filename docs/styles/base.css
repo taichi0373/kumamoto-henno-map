@@ -2,6 +2,11 @@
    熊本県自主返納特典マップ設計書 - CSS (Docsify)
    ========================================================================== */
 
+:root {
+  --text-primary: #333333;
+  --text-secondary: #575757;
+}
+
 /* 基本設定 */
 body {
   font-family: 'Hiragino Sans', 'ヒラギノ角ゴシック', 'Yu Gothic Medium', '游ゴシック Medium', 'Yu Gothic', '游ゴシック', 'Noto Sans JP', 'メイリオ', sans-serif;
@@ -107,11 +112,13 @@ code {
 /* サイドバー */
 .sidebar-nav li > a {
   font-weight: 400;
+  color: var(--text-secondary);
 }
 
 .sidebar-nav > ul > li > a,
 .sidebar-nav > ul > li > p {
   font-weight: 600;
+  color: var(--text-primary);
 }
 
 /* レスポンシブデザイン */
