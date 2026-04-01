@@ -74,46 +74,23 @@ permissions:
 
 # jobs: 動作内容
 jobs:
-  # HonKit ドキュメントのビルド処理
+  # Docsify ドキュメントのアップロード処理
   build-docs:
-    name: Build HonKit Docs
+    name: Upload Docs Artifact
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
-
-    defaults:
-      run:
-        working-directory: ${{ inputs.document-dir }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-          cache: npm
-          cache-dependency-path: ${{ inputs.document-dir }}/package-lock.json
-
-      - name: Install dependencies
-        run: ${{ inputs.npm-install-command }}
-
-      # HonKit ビルド
-      - name: Build HonKit
-        run: npx honkit build . ./_book
-
-      # HTML整形
-      - name: Format HTML
-        run: npm run format || echo "skip format"
-
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
         with:
           name: pages-docs
-          path: ${{ inputs.document-dir }}/_book
+          path: ${{ inputs.document-dir }}
 
   # Storybook のビルド処理
-  # is-deploy: true の場合は常にビルド（デプロイ時に /storybook が欠落するのを防ぐ）
   build-storybook:
     name: Build Storybook
     if: ${{ inputs.build-storybook || inputs.is-deploy }}
@@ -149,7 +126,6 @@ jobs:
           path: ${{ inputs.frontend-dir }}/storybook-static
 
   # Javadoc のビルド処理
-  # is-deploy: true の場合は常にビルド（デプロイ時に /javadoc が欠落するのを防ぐ）
   build-javadoc:
     name: Build Javadoc
     if: ${{ inputs.build-javadoc || inputs.is-deploy }}
@@ -185,7 +161,6 @@ jobs:
 
   # OpenAPI ドキュメントのビルド処理
   # Spring Boot を起動して /v3/api-docs.yaml を生成し、Redoc で HTML に変換する
-  # is-deploy: true の場合は常にビルド（デプロイ時に /openapi が欠落するのを防ぐ）
   build-openapi:
     name: Build OpenAPI Docs
     if: ${{ inputs.build-openapi || inputs.is-deploy }}
@@ -228,7 +203,7 @@ jobs:
       - name: Initialize database
         run: PGPASSWORD=pass psql -h localhost -U user -d benefit_map -f config/database/setup.sql
 
-      # Spring Boot を起動して /v3/api-docs.yaml を生成（build/openapi/openapi.yaml に出力）
+      # Spring Boot を起動して /v3/api-docs.yaml を生成
       - name: Generate OpenAPI YAML
         working-directory: ${{ inputs.backend-dir }}
         run: ./gradlew generateOpenApiDocs
