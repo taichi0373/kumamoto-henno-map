@@ -1,13 +1,5 @@
 {
   "scripts": {
-    "serve": "honkit serve",
-    "build": "honkit build"
-  },
-  "devDependencies": {
-    "honkit": "^6.1.4"
-  },
-  "dependencies": {
-    "gitbook-plugin-livereload": "^0.0.1",
-    "honkit-plugin-mermaid": "^0.1.4"
+    "serve": "npx docsify-cli serve ."
   }
 }

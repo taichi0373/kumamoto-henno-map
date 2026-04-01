@@ -43,8 +43,14 @@ nbdist/
 .env.local
 .env.*.local
 
+### node_modules ###
+node_modules/
+
 ### dist ###
 dist
+
+### HonKit build output ###
+_book/
 
 ### otp data ###
 config/otp/data/*.gtfs.zip
