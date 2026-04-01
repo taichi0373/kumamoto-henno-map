@@ -97,5 +97,5 @@ graph TB
 |------|-----------|------|
 | Docker / Docker Compose | - | コンテナ化・開発環境統一 |
 | GitHub Actions | - | CI/CD |
-| HonKit | - | ドキュメント生成 |
+| Docsify | 4.13.1 | ドキュメントホスティング（ビルド不要） |
 | GitHub Pages | - | ドキュメントホスティング |
