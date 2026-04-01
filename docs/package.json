@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "serve": "docsify-cli serve ."
+    "serve": "docsify serve ."
   },
   "devDependencies": {
     "docsify-cli": "^4.4.4"

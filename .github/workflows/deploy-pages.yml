@@ -74,9 +74,9 @@ permissions:
 
 # jobs: 動作内容
 jobs:
-  # Docsify ドキュメントのビルド処理
+  # Docsify ドキュメントのアップロード処理
   build-docs:
-    name: Build Docsify Docs
+    name: Upload Docs Artifact
     runs-on: ubuntu-latest
     timeout-minutes: ${{ inputs.timeout-minutes }}
 
