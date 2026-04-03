@@ -120,6 +120,7 @@ const onClick = async () => {
 
     if (response.status === responseStatusConstant.OK) {
       const userData = (response.data as { data: { username: string; userId: number } }).data
+      isLoading.value = false
       auth.login({ username: userData.username, id: String(userData.userId) })
       const redirect = route.query.redirect as string | undefined
       router.push(redirect || '/')

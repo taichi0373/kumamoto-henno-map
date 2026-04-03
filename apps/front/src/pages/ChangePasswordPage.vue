@@ -106,6 +106,7 @@ const onSubmit = async () => {
     })
     if (response.status === responseStatusConstant.OK) {
       ToastMessageUtils.success(API_RESPONSE_MESSAGE.PASSWORD_CHANGE_SUCCESS)
+      isLoading.value = false
       router.push('/profile')
     }
   } catch (error: unknown) {

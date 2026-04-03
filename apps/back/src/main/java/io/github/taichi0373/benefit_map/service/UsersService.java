@@ -48,6 +48,7 @@ public class UsersService {
             newUser.setBirthDate(users.getBirthDate());
             newUser.setMunicipalityCd(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
+            newUser.setLicenseSurrenderedAt(users.getLicenseSurrenderedAt());
             LocalDateTime now = LocalDateTime.now();
             newUser.setSystemField(new SystemField(now, now));
 
@@ -153,6 +154,7 @@ public class UsersService {
             existingUser.setBirthDate(users.getBirthDate());
             existingUser.setMunicipalityCd(users.getAddress());
             existingUser.setLicenseStatus(users.getLicenseStatus());
+            existingUser.setLicenseSurrenderedAt(users.getLicenseSurrenderedAt());
             
             // データベースに更新を保存
             Integer result = usersDao.update(existingUser);

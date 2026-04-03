@@ -103,6 +103,7 @@ const onSubmit = async () => {
       confirmNewPassword: confirmNewPassword.value
     })
     if (response.status === responseStatusConstant.OK) {
+      isLoading.value = false
       router.push({ path: '/login', query: { resetSuccess: '1' } })
     }
   } catch {
