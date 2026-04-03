@@ -47,6 +47,20 @@ public interface UsersDao {
     }
 
     /**
+     * メールアドレスで検索
+     * @param email メールアドレス
+     * @return 該当ユーザーエンティティ、存在しない場合はnull
+     */
+    default UsersEntity selectByEmail(String email) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                      .where(c -> c.eq(e.email, email))
+                      .fetchOne();
+    }
+
+    /**
      * 登録
      */
     @Insert

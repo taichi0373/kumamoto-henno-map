@@ -7,6 +7,9 @@ import LoginPage from '../pages/LoginPage.vue'
 import SignupPage from '../pages/SignupPage.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
 import SupportInfoPage from '../pages/SupportInfoPage.vue'
+import ChangePasswordPage from '../pages/ChangePasswordPage.vue'
+import ForgotPasswordPage from '../pages/ForgotPasswordPage.vue'
+import ResetPasswordPage from '../pages/ResetPasswordPage.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -34,6 +37,22 @@ const routes: RouteRecordRaw[] = [
     path: '/support_info',
     name: 'SupportInfoPage',
     component: SupportInfoPage
+  },
+  {
+    path: '/change-password',
+    name: 'ChangePasswordPage',
+    component: ChangePasswordPage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/forgot-password',
+    name: 'ForgotPasswordPage',
+    component: ForgotPasswordPage
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPasswordPage',
+    component: ResetPasswordPage
   }
 ]
 

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.ChangePasswordRequestDto;
 import io.github.taichi0373.benefit_map.dto.UserResponseDto;
 import io.github.taichi0373.benefit_map.dto.UsersDto;
 import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
@@ -138,6 +139,59 @@ public class UsersController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("ユーザー情報の更新に失敗しました"));
+        }
+    }
+
+    /**
+     * パスワード変更
+     * <p>
+     * ログイン済みユーザーが現在のパスワードを確認したうえで新しいパスワードに変更する。
+     * </p>
+     */
+    @Operation(summary = "パスワード変更", description = "JWT で認証されたユーザー自身のパスワードを変更する。現在のパスワードの確認が必要。CSRF トークン必須。")
+    @SecurityRequirements({
+            @SecurityRequirement(name = "cookieAuth"),
+            @SecurityRequirement(name = "csrfToken")
+    })
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "変更成功（data: null）"),
+            @ApiResponse(responseCode = "401", description = "未認証",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "現在のパスワードが正しくない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponseDto<Void>> changePassword(
+            @RequestBody ChangePasswordRequestDto request,
+            Authentication auth) {
+        try {
+            // JWT認証チェック
+            if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("認証が必要です"));
+            }
+
+            CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal();
+            Boolean result = usersService.changePassword(
+                    principal.getUserId(),
+                    request.getCurrentPassword(),
+                    request.getNewPassword());
+
+            if (result == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.error("ユーザーが見つかりません"));
+            }
+            if (Boolean.FALSE.equals(result)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("現在のパスワードが正しくありません"));
+            }
+
+            return ResponseEntity.ok(ApiResponseDto.success(null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("パスワードの変更に失敗しました"));
         }
     }
 

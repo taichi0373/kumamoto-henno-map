@@ -33,6 +33,10 @@
             <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
           </div>
 
+          <div class="form-link">
+            <AppLink @click="router.push('/change-password')">パスワードを変更する</AppLink>
+          </div>
+
       </AppCard>
       <!-- トーストメッセージ -->
       <AppToastMessage />
@@ -53,6 +57,7 @@ import AppCard from '@/components/atoms/AppCard.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppCalendar from '@/components/atoms/AppCalendar.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
+import AppLink from '@/components/atoms/AppLink.vue'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { UsersDto } from '@/dto/usersDto'
