@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.web.csrf.CsrfToken;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.LoginRequestDto;
@@ -40,7 +39,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * JWT認証のエンドポイントを提供する。
  * </p>
  */
-@Tag(name = "認証", description = "ログイン・ログアウト・CSRFトークン取得")
+@Tag(name = "認証", description = "ログイン・ログアウト")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -243,20 +242,4 @@ public class AuthController {
         }
     }
 
-    /**
-     * CSRF トークン取得
-     * <p>
-     * フロントエンドが状態変更系API実行前に取得するCSRFトークンを提供する。
-     * CookieCsrfTokenRepository により自動的にXSRF-TOKENクッキーも設定される。
-     * </p>
-     * @param csrfToken Spring Security により自動注入されるCSRFトークン
-     * @return CSRFトークン文字列
-     */
-    @Operation(summary = "CSRFトークン取得", description = "状態変更系 API を呼び出す前に取得する。レスポンスと同時に `XSRF-TOKEN` Cookie も設定される。")
-    @ApiResponse(responseCode = "200", description = "CSRFトークン取得成功",
-            content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
-    @GetMapping("/csrf")
-    public ResponseEntity<ApiResponseDto<String>> getCsrfToken(CsrfToken csrfToken) {
-        return ResponseEntity.ok(ApiResponseDto.success(csrfToken.getToken()));
-    }
 }

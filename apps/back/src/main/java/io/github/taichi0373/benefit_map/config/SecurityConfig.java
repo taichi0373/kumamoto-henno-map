@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -14,24 +15,24 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.InvalidCsrfTokenException;
-import org.springframework.security.web.csrf.MissingCsrfTokenException;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.security.CsrfProtectionFilter;
 import io.github.taichi0373.benefit_map.security.JwtAuthenticationFilter;
 import io.github.taichi0373.benefit_map.util.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 
 /**
  * Spring Security 設定クラス
  * <p>
  * JWT認証を使用したステートレスセキュリティ設定を行う。
- * フォームログイン・HTTP Basicは無効化し、
- * CSRF 保護は CookieCsrfTokenRepository で有効化する。
+ * フォームログイン・HTTP Basicは無効化し、Spring標準CSRF保護は無効化する。
+ * JWT は HttpOnly Cookie で送信するため、Origin検証＋X-Service-Nameカスタムヘッダー検証で
+ * CSRF対策を行う（{@link CsrfProtectionFilter}）。
  * 認証エラー時は {@link ApiResponseDto} 形式のJSONを返す。
  * </p>
  */
@@ -55,6 +56,14 @@ public class SecurityConfig {
     @Autowired
     private ObjectMapper objectMapper;
 
+    /** 許可するOriginのカンマ区切り文字列 */
+    @Value("${cors.allowed-origins}")
+    private String allowedOrigins;
+
+    /** 期待するX-Service-Nameヘッダー値 */
+    @Value("${app.security.expected-service-name:front}")
+    private String expectedServiceName;
+
     /**
      * JWT認証フィルターBean
      *
@@ -63,6 +72,20 @@ public class SecurityConfig {
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(jwtUtil, userDetailsService);
+    }
+
+    /**
+     * CSRFカスタム対策フィルターBean
+     * <p>
+     * Origin ヘッダーと X-Service-Name カスタムヘッダーを検証し、
+     * 不正なリクエストを HTTP 403 で拒否する。
+     * </p>
+     *
+     * @return CsrfProtectionFilter
+     */
+    @Bean
+    public CsrfProtectionFilter csrfProtectionFilter() {
+        return new CsrfProtectionFilter(allowedOrigins, expectedServiceName, objectMapper);
     }
 
     /**
@@ -75,11 +98,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // CSRF保護を有効化（HttpOnly Cookie認証のため必須）
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/auth/**", "/users/signup", "/v3/api-docs/**", "/swagger-ui/**")
-            )
+            // JWT は Authorization ヘッダーで送信するためCSRF保護は不要
+            .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
@@ -97,16 +117,11 @@ public class SecurityConfig {
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->
                     writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "認証が必要です"))
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    if (accessDeniedException instanceof InvalidCsrfTokenException
-                            || accessDeniedException instanceof MissingCsrfTokenException) {
-                        writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "CSRFトークンが無効です");
-                    } else {
-                        writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "アクセス権限がありません");
-                    }
-                })
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                    writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "アクセス権限がありません"))
             )
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(csrfProtectionFilter(), JwtAuthenticationFilter.class);
 
         return http.build();
     }
