@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.BenefitCategoryDto;
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.benefit_map.dto.BenefitListResponse;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
@@ -43,6 +44,27 @@ public class BenefitController {
      */
     @Autowired
     private BenefitService benefitService;
+
+    /**
+     * 有効なカテゴリ一覧を取得
+     */
+    @Operation(summary = "カテゴリ一覧取得", description = "有効な特典カテゴリ一覧を表示順で取得する。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @GetMapping("/categories")
+    public ResponseEntity<ApiResponseDto<List<BenefitCategoryDto>>> getCategories() {
+        try {
+            List<BenefitCategoryDto> categories = benefitService.getCategories();
+            return ResponseEntity.ok(ApiResponseDto.success(categories));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("カテゴリ一覧の取得に失敗しました"));
+        }
+    }
 
     /**
      * 検索条件（年齢・運転免許所持状況・自治体コード）から特典を検索

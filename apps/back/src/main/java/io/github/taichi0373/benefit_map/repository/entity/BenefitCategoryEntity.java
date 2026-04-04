@@ -39,7 +39,7 @@ public class BenefitCategoryEntity implements Serializable {
 
     /** 表示順 */
     @Column(name = "display_order")
-    private String displayOrder;
+    private Integer displayOrder;
 
     /** 有効フラグ */
     @Column(name = "is_active")
