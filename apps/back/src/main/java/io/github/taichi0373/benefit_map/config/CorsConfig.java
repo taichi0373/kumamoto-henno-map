@@ -40,6 +40,20 @@ public class CorsConfig implements WebMvcConfigurer {
     private List<String> parsedAllowedOrigins;
 
     /**
+     * パース済みの許可オリジンリストを返す。
+     * <p>
+     * {@link io.github.taichi0373.benefit_map.security.CsrfProtectionFilter} 等、
+     * 同じ許可オリジンリストを必要とするコンポーネントから利用する。
+     * {@code @PostConstruct} の実行後に呼び出すこと。
+     * </p>
+     *
+     * @return trim・空除外済みの許可オリジンリスト
+     */
+    public List<String> getParsedAllowedOrigins() {
+        return parsedAllowedOrigins;
+    }
+
+    /**
      * 起動時にCORS設定の妥当性を検証する。
      * <p>
      * cors.allowed-origins が未設定・空・ブランクのみの場合、

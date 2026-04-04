@@ -48,6 +48,10 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsService userDetailsService;
 
+    /** CORS設定（パース済みオリジンリストの取得元） */
+    @Autowired
+    private CorsConfig corsConfig;
+
     /** CORS設定ソース */
     @Autowired
     private CorsConfigurationSource corsConfigurationSource;
@@ -55,10 +59,6 @@ public class SecurityConfig {
     /** JSONシリアライザー */
     @Autowired
     private ObjectMapper objectMapper;
-
-    /** 許可するOriginのカンマ区切り文字列 */
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
 
     /** 期待するX-Service-Nameヘッダー値 */
     @Value("${app.security.expected-service-name:front}")
@@ -85,7 +85,7 @@ public class SecurityConfig {
      */
     @Bean
     public CsrfProtectionFilter csrfProtectionFilter() {
-        return new CsrfProtectionFilter(allowedOrigins, expectedServiceName, objectMapper);
+        return new CsrfProtectionFilter(corsConfig.getParsedAllowedOrigins(), expectedServiceName, objectMapper);
     }
 
     /**

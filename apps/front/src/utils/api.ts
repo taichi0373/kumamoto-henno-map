@@ -2,6 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosR
 
 // Vue CLI用の環境変数
 const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/benefit-map/api';
+const SERVICE_NAME = process.env.VUE_APP_SERVICE_NAME || 'front';
 
 /**
  * 401 Unauthorized 発生時に呼び出されるコールバックの型
@@ -84,11 +85,11 @@ class RestApiClient {
     // リクエストインターセプター（ロギング、CSRF用カスタムヘッダー付与）
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        // // GET 等の非状態変更系リクエストではカスタムヘッダーを付与せず、不要なプリフライトを避ける
+        // GET 等の非状態変更系リクエストではカスタムヘッダーを付与せず、不要なプリフライトを避ける
         const mutatingMethods = ['post', 'put', 'patch', 'delete']
         if (mutatingMethods.includes(config.method?.toLowerCase() ?? '')) {
           config.headers['Content-Type'] = 'application/json'
-          config.headers['X-Service-Name'] = 'front'
+          config.headers['X-Service-Name'] = SERVICE_NAME
         }
         console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))
         return config

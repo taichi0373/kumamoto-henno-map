@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.customizers.OperationCustomizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,6 +22,10 @@ import java.util.List;
  */
 @Configuration
 public class OpenApiConfig {
+
+    /** 期待する X-Service-Name ヘッダー値（デフォルト: front、app.security.expected-service-name で変更可） */
+    @Value("${app.security.expected-service-name:front}")
+    private String expectedServiceName;
 
     /**
      * OpenAPI 基本情報・セキュリティスキームの定義
@@ -40,7 +45,7 @@ public class OpenApiConfig {
                                 .type(SecurityScheme.Type.APIKEY)
                                 .in(SecurityScheme.In.HEADER)
                                 .name("X-Service-Name")
-                                .description("CSRF対策カスタムヘッダー。値は `front` を設定する。状態変更系エンドポイント（POST / PUT / PATCH / DELETE）で必須。")))
+                                .description("CSRF対策カスタムヘッダー。値は `" + expectedServiceName + "` を設定する（app.security.expected-service-name で変更可、デフォルト: front）。状態変更系エンドポイント（POST / PUT / PATCH / DELETE）で必須。")))
                 .info(new Info()
                         .title("熊本県自主返納特典マップ API")
                         .version("1.0.0")
@@ -52,7 +57,8 @@ public class OpenApiConfig {
                                 認証が必要なエンドポイントは事前に `POST /auth/login` でログインし、Cookie を取得すること。
 
                                 ## CSRF 保護
-                                状態変更系 (POST / PUT / PATCH / DELETE) には `X-Service-Name: front` ヘッダーが必要。
+                                状態変更系 (POST / PUT / PATCH / DELETE) には `X-Service-Name` ヘッダーが必要。
+                                期待値は `app.security.expected-service-name` プロパティで設定する（デフォルト: front）。
                                 サーバー側では Origin ヘッダーと X-Service-Name ヘッダーの両方を検証する。
                                 除外対象: `/auth/**`、`POST /users/signup`
                                 """));
@@ -69,7 +75,7 @@ public class OpenApiConfig {
      * @return OperationCustomizer
      */
     @Bean
-    public OperationCustomizer cookieAndCsrfCombiner() {
+    public OperationCustomizer cookieAndServiceHeaderCombiner() {
         return (operation, handlerMethod) -> {
             var security = operation.getSecurity();
             if (security == null) return operation;

@@ -103,10 +103,10 @@ public class UsersController {
     /**
      * ユーザー情報の更新
      */
-    @Operation(summary = "ユーザー情報更新", description = "JWT で認証されたユーザー自身の情報を更新する。CSRF トークン必須。")
+    @Operation(summary = "ユーザー情報更新", description = "JWT で認証されたユーザー自身の情報を更新する。X-Service-Name ヘッダー必須。")
     @SecurityRequirements({
             @SecurityRequirement(name = "cookieAuth"),
-            @SecurityRequirement(name = "csrfToken")
+            @SecurityRequirement(name = "serviceHeader")
     })
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更新成功（data: null）"),
@@ -176,10 +176,10 @@ public class UsersController {
      * ログイン済みユーザーが現在のパスワードを確認したうえで新しいパスワードに変更する。
      * </p>
      */
-    @Operation(summary = "パスワード変更", description = "JWT で認証されたユーザー自身のパスワードを変更する。現在のパスワードの確認が必要。CSRF トークン必須。")
+    @Operation(summary = "パスワード変更", description = "JWT で認証されたユーザー自身のパスワードを変更する。現在のパスワードの確認が必要。X-Service-Name ヘッダー必須。")
     @SecurityRequirements({
             @SecurityRequirement(name = "cookieAuth"),
-            @SecurityRequirement(name = "csrfToken")
+            @SecurityRequirement(name = "serviceHeader")
     })
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "変更成功（data: null）"),

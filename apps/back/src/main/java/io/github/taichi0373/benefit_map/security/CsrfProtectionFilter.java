@@ -2,7 +2,6 @@ package io.github.taichi0373.benefit_map.security;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -29,6 +28,13 @@ import jakarta.servlet.http.HttpServletResponse;
  * </ol>
  * いずれかの検証に失敗した場合は HTTP 403 を返し、後続のフィルターチェーンは実行しない。
  * </p>
+ * <p>
+ * 以下のパスは検証をスキップする（認証前エンドポイントのため）。
+ * <ul>
+ *   <li>{@code /auth/**} — ログイン・ログアウト・パスワードリセット</li>
+ *   <li>{@code POST /users/signup} — ユーザー登録</li>
+ * </ul>
+ * </p>
  */
 public class CsrfProtectionFilter extends OncePerRequestFilter {
 
@@ -53,17 +59,30 @@ public class CsrfProtectionFilter extends OncePerRequestFilter {
     /**
      * コンストラクタ
      *
-     * @param allowedOriginsStr     許可Originのカンマ区切り文字列
+     * @param allowedOrigins        パース済みの許可Originリスト（{@code CorsConfig.getParsedAllowedOrigins()} から取得）
      * @param expectedServiceName   期待するX-Service-Nameヘッダー値
      * @param objectMapper          JSONシリアライザー
      */
-    public CsrfProtectionFilter(String allowedOriginsStr, String expectedServiceName, ObjectMapper objectMapper) {
-        this.allowedOrigins = Arrays.stream(allowedOriginsStr.split(","))
-                .map(String::trim)
-                .filter(origin -> !origin.isEmpty())
-                .toList();
+    public CsrfProtectionFilter(List<String> allowedOrigins, String expectedServiceName, ObjectMapper objectMapper) {
+        this.allowedOrigins = allowedOrigins;
         this.expectedServiceName = expectedServiceName;
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * 認証前エンドポイントはCSRF検証をスキップする
+     * <p>
+     * /auth/** はログイン・ログアウト・パスワードリセット等の認証前エンドポイント。
+     * /users/signup はユーザー登録エンドポイント。
+     * </p>
+     *
+     * @param request HTTPリクエスト
+     * @return スキップする場合 true
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/auth/") || "/users/signup".equals(path);
     }
 
     /**
