@@ -76,10 +76,10 @@ const isLoading = ref(false)
 /** リセットトークン */
 const token = ref<string>('')
 
-// トークンが存在しない場合はパスワード忘れページにリダイレクト
+// トークンが存在しない・文字列でない場合はパスワード忘れページにリダイレクト
 onMounted(() => {
-  const queryToken = route.query.token as string | undefined
-  if (!queryToken) {
+  const queryToken = route.query.token
+  if (typeof queryToken !== 'string' || !queryToken) {
     router.push('/forgot-password')
     return
   }

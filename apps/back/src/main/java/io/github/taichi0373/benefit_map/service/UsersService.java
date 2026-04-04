@@ -56,7 +56,13 @@ public class UsersService {
             // insert後にDTOへ変換してpasswordHashを含めずに返す
             return toUserResponseDto(newUser);
         } catch (DataIntegrityViolationException e) {
-            // 一意制約違反（ユーザー名重複）の場合は DuplicateUserException に変換してスローする
+            // 一意制約違反を制約名で判別して適切なメッセージの DuplicateUserException に変換する
+            // PostgreSQL の例外メッセージには制約名が含まれる
+            String detail = (e.getMessage() != null ? e.getMessage() : "")
+                    + (e.getCause() != null && e.getCause().getMessage() != null ? e.getCause().getMessage() : "");
+            if (detail.toLowerCase().contains("users_email_unique")) {
+                throw new DuplicateUserException("このメールアドレスは既に使用されています", e);
+            }
             throw new DuplicateUserException("このユーザー名は既に使用されています", e);
         } catch (Exception e) {
             return null;
@@ -187,7 +193,11 @@ public class UsersService {
             existingUser.setMunicipalityCd(users.getAddress());
             existingUser.setLicenseStatus(users.getLicenseStatus());
             existingUser.setLicenseSurrenderedAt(users.getLicenseSurrenderedAt());
-            existingUser.setSystemField(new SystemField(existingUser.getSystemField().getSysCreatedAt(), now));
+            SystemField currentSystemField = existingUser.getSystemField();
+            LocalDateTime sysCreatedAt = currentSystemField != null && currentSystemField.getSysCreatedAt() != null
+                    ? currentSystemField.getSysCreatedAt()
+                    : now;
+            existingUser.setSystemField(new SystemField(sysCreatedAt, now));
             
             // データベースに更新を保存
             Integer result = usersDao.update(existingUser);

@@ -103,6 +103,8 @@ public class UsersController {
     })
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更新成功（data: null）"),
+            @ApiResponse(responseCode = "400", description = "メールアドレス未入力または形式不正",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "401", description = "未認証",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
@@ -243,7 +245,9 @@ public class UsersController {
     @Operation(summary = "ユーザー登録", description = "新規アカウントを作成する。認証・CSRF 保護は不要。")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "登録成功（data: UserResponseDto）"),
-            @ApiResponse(responseCode = "409", description = "ユーザー名が既に使用されている",
+            @ApiResponse(responseCode = "400", description = "メールアドレス未入力または形式不正",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "ユーザー名またはメールアドレスが既に使用されている（同時登録によるDB制約違反を含む）",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "503", description = "DB接続エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
