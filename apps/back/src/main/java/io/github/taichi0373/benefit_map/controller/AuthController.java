@@ -21,15 +21,17 @@ import io.github.taichi0373.benefit_map.dto.LoginResponseDto;
 import io.github.taichi0373.benefit_map.dto.PasswordResetConfirmRequestDto;
 import io.github.taichi0373.benefit_map.dto.PasswordResetRequestDto;
 import io.github.taichi0373.benefit_map.service.AuthService;
+import io.github.taichi0373.benefit_map.service.LoginAttemptService;
 import io.github.taichi0373.benefit_map.service.PasswordResetService;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 認証コントローラー
@@ -52,6 +54,10 @@ public class AuthController {
     /** パスワードリセットサービス */
     @Autowired
     private PasswordResetService passwordResetService;
+
+    /** ログイン試行管理サービス */
+    @Autowired
+    private LoginAttemptService loginAttemptService;
 
     /** トークン有効期限（ミリ秒） */
     @Value("${jwt.expiration:3600000}")
@@ -79,23 +85,33 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "ログイン成功（data: LoginResponseDto）"),
             @ApiResponse(responseCode = "401", description = "ユーザー名またはパスワードが正しくない",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "429", description = "ログイン試行回数が上限を超えた（15分後に解除）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/login")
     public ResponseEntity<ApiResponseDto<LoginResponseDto>> login(
             @RequestBody LoginRequestDto request,
+            HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
+        String clientIp = getClientIp(httpRequest);
+        if (loginAttemptService.isLoginBlocked(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponseDto.error("ログイン試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
+        }
         try {
             LoginResponseDto response = authService.login(request.getUsername(), request.getPassword());
             if (response == null) {
+                loginAttemptService.recordLoginFailure(clientIp);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponseDto.error("ユーザー名またはパスワードが正しくありません"));
             }
+            loginAttemptService.recordLoginSuccess(clientIp);
             ResponseCookie cookie = ResponseCookie.from("jwt", response.getToken())
                     .httpOnly(true)
                     .secure(cookieSecure)
-                    .sameSite("Strict")
+                    .sameSite("Lax")
                     .path(contextPath)
                     .maxAge(jwtExpiration / 1000)
                     .build();
@@ -105,6 +121,22 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("ログイン中にエラーが発生しました"));
         }
+    }
+
+    /**
+     * クライアントIPアドレスを取得する
+     * <p>
+     * リバースプロキシ経由の場合は X-Forwarded-For ヘッダーを優先する。
+     * </p>
+     * @param request HTTPリクエスト
+     * @return クライアントIPアドレス
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     /**
@@ -122,7 +154,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("jwt", "")
                 .httpOnly(true)
                 .secure(cookieSecure)
-                .sameSite("Strict")
+                .sameSite("Lax")
                 .path(contextPath)
                 .maxAge(0)
                 .build();
@@ -175,12 +207,20 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "リセット成功（data: null）"),
             @ApiResponse(responseCode = "400", description = "入力値が不正（必須項目未入力・パスワード不一致・長さ不足）またはトークンが無効・期限切れ・使用済み",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "429", description = "試行回数が上限を超えた（15分後に解除）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/password-reset/confirm")
     public ResponseEntity<ApiResponseDto<Void>> confirmPasswordReset(
-            @RequestBody PasswordResetConfirmRequestDto request) {
+            @RequestBody PasswordResetConfirmRequestDto request,
+            HttpServletRequest httpRequest) {
+        String clientIp = getClientIp(httpRequest);
+        if (loginAttemptService.isPasswordResetBlocked(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponseDto.error("試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
+        }
         try {
             // 必須チェック
             if (ValidateUtils.isNullOrEmpty(request.getToken())
@@ -206,9 +246,11 @@ public class AuthController {
             boolean success = passwordResetService.confirmPasswordReset(
                     request.getToken(), request.getNewPassword());
             if (!success) {
+                loginAttemptService.recordPasswordResetFailure(clientIp);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponseDto.error("このリンクは無効または期限切れです。再度お試しください。"));
             }
+            loginAttemptService.recordPasswordResetSuccess(clientIp);
             return ResponseEntity.ok(ApiResponseDto.success(null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

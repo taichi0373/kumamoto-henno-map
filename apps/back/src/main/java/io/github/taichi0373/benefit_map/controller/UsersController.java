@@ -21,7 +21,9 @@ import io.github.taichi0373.benefit_map.dto.UserResponseDto;
 import io.github.taichi0373.benefit_map.dto.UsersDto;
 import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
+import io.github.taichi0373.benefit_map.service.LoginAttemptService;
 import io.github.taichi0373.benefit_map.service.UsersService;
+import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -48,6 +50,10 @@ public class UsersController {
      */
     @Autowired
     private UsersService usersService;
+
+    /** ログイン試行管理サービス */
+    @Autowired
+    private LoginAttemptService loginAttemptService;
 
     /**
      * ユーザー情報取得
@@ -245,21 +251,38 @@ public class UsersController {
     @Operation(summary = "ユーザー登録", description = "新規アカウントを作成する。認証・CSRF 保護は不要。")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "登録成功（data: UserResponseDto）"),
-            @ApiResponse(responseCode = "400", description = "メールアドレス未入力または形式不正",
+            @ApiResponse(responseCode = "400", description = "パスワードが短すぎる・メールアドレス未入力または形式不正",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "409", description = "ユーザー名またはメールアドレスが既に使用されている（同時登録によるDB制約違反を含む）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "429", description = "登録試行回数が上限を超えた（1時間後に解除）",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "503", description = "DB接続エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponseDto<UserResponseDto>> signup(@RequestBody UsersDto users) {
+    public ResponseEntity<ApiResponseDto<UserResponseDto>> signup(
+            @RequestBody UsersDto users,
+            HttpServletRequest httpRequest) {
+        String clientIp = getClientIp(httpRequest);
+        if (loginAttemptService.isSignupBlocked(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponseDto.error("登録試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
+        }
+        loginAttemptService.recordSignupAttempt(clientIp);
         try {
             // ユーザー名の重複チェック
             Boolean userExists = usersService.existsByUsername(users.getUsername());
             if (Boolean.TRUE.equals(userExists)) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(ApiResponseDto.error("このユーザー名は既に使用されています"));
+            }
+
+            // パスワードポリシーチェック（最低文字数）
+            if (!ValidateUtils.isValidPassword(users.getPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error(
+                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上で入力してください"));
             }
 
             // メールアドレスの必須・形式チェック
@@ -300,5 +323,21 @@ public class UsersController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("サーバーエラーが発生しました"));
         }
+    }
+
+    /**
+     * クライアントIPアドレスを取得する
+     * <p>
+     * リバースプロキシ経由の場合は X-Forwarded-For ヘッダーを優先する。
+     * </p>
+     * @param request HTTPリクエスト
+     * @return クライアントIPアドレス
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }

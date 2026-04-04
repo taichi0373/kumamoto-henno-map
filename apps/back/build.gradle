@@ -62,7 +62,7 @@ javadoc {
     options.windowTitle = '熊本県自主返納特典マップ APIリファレンス'
     options.docTitle    = '<h1>熊本県自主返納特典マップ APIリファレンス</h1>'
     options.header      = '<strong>熊本県自主返納特典マップ</strong>'
-    options.bottom      = 'Copyright &copy; 2024 benefit-map contributors'
+    options.bottom      = 'Copyright &copy; 2026 benefit-map contributors'
     // カスタムスタイルシートを追加
     doFirst {
         def customCss = file('../../config/javadoc/custom.css')
