@@ -1,4 +1,6 @@
 class ValidateUtils {
+  /** パスワードの最小文字数 */
+  public static readonly PASSWORD_MIN_LENGTH = 8
   /** 半角文字のパターン */
   private static readonly HALF_WIDTH_PATTERN = /^[\u0020-\u007E]+$/
   /** 全角文字のパターン */

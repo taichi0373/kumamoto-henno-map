@@ -92,6 +92,33 @@ public class UsersService {
             throw new RuntimeException("ユーザー名による検索処理でエラーが発生しました", e);
         }
     }
+
+    /**
+     * メールアドレスによる重複確認（新規登録用）
+     * @param email メールアドレス
+     * @return 同一メールアドレスを持つユーザーが存在する場合はtrue
+     */
+    public Boolean existsByEmail(String email) {
+        try {
+            return usersDao.existsByEmail(email);
+        } catch (Exception e) {
+            throw new RuntimeException("メールアドレスによる検索処理でエラーが発生しました", e);
+        }
+    }
+
+    /**
+     * メールアドレスによる重複確認（プロフィール更新用: 自分自身を除外）
+     * @param email メールアドレス
+     * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）
+     * @return 自分以外に同一メールアドレスを持つユーザーが存在する場合はtrue
+     */
+    public Boolean existsByEmailExcluding(String email, Long excludeUserId) {
+        try {
+            return usersDao.existsByEmailExcluding(email, excludeUserId);
+        } catch (Exception e) {
+            throw new RuntimeException("メールアドレスによる検索処理でエラーが発生しました", e);
+        }
+    }
     
     /**
      * UsersEntityをUserResponseDtoに変換する
@@ -133,6 +160,8 @@ public class UsersService {
         }
         // 新しいパスワードをハッシュ化して更新
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        LocalDateTime now = LocalDateTime.now();
+        user.setSystemField(new SystemField(user.getSystemField().getSysCreatedAt(), now));
         usersDao.update(user);
         return true;
     }
@@ -146,6 +175,7 @@ public class UsersService {
             if (ValidateUtils.isNullOrEmpty(existingUser)) {
                 return null; // ユーザーが存在しない場合はnullを返す
             }
+            LocalDateTime now = LocalDateTime.now();
             
             // ユーザー情報を更新
             existingUser.setEmail(users.getEmail());
@@ -153,6 +183,7 @@ public class UsersService {
             existingUser.setMunicipalityCd(users.getAddress());
             existingUser.setLicenseStatus(users.getLicenseStatus());
             existingUser.setLicenseSurrenderedAt(users.getLicenseSurrenderedAt());
+            existingUser.setSystemField(new SystemField(existingUser.getSystemField().getSysCreatedAt(), now));
             
             // データベースに更新を保存
             Integer result = usersDao.update(existingUser);

@@ -61,6 +61,33 @@ public interface UsersDao {
     }
 
     /**
+     * メールアドレスの存在確認（新規登録用）
+     * @param email メールアドレス
+     * @return 同一メールアドレスを持つユーザーが存在する場合はtrue
+     */
+    default boolean existsByEmail(String email) {
+        return selectByEmail(email) != null;
+    }
+
+    /**
+     * メールアドレスの存在確認（プロフィール更新用: 自分自身を除外）
+     * @param email メールアドレス
+     * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）
+     * @return 自分以外に同一メールアドレスを持つユーザーが存在する場合はtrue
+     */
+    default boolean existsByEmailExcluding(String email, Long excludeUserId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                      .where(c -> {
+                          c.eq(e.email, email);
+                          c.ne(e.userId, excludeUserId);
+                      })
+                      .fetchOne() != null;
+    }
+
+    /**
      * 登録
      */
     @Insert

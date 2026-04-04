@@ -145,6 +145,11 @@ public class AuthController {
     @PostMapping("/password-reset/request")
     public ResponseEntity<ApiResponseDto<Void>> requestPasswordReset(
             @RequestBody PasswordResetRequestDto request) {
+        // メールアドレスの必須・形式チェック（無効入力はサービスを呼ばず200を返す）
+        // isEmail は null/空文字でも false を返すため一括チェック可能
+        if (!ValidateUtils.isEmail(request.getEmail())) {
+            return ResponseEntity.ok(ApiResponseDto.success(null));
+        }
         try {
             passwordResetService.requestPasswordReset(request.getEmail());
             return ResponseEntity.ok(ApiResponseDto.success(null));

@@ -54,6 +54,10 @@ public class PasswordResetService {
     @Value("${app.password-reset.base-url:http://localhost:3000}")
     private String frontendBaseUrl;
 
+    /** メール送信元アドレス */
+    @Value("${app.mail.from}")
+    private String mailFrom;
+
     /**
      * パスワードリセットメールを送信する
      * <p>
@@ -92,6 +96,7 @@ public class PasswordResetService {
         // パスワードリセットメールを送信
         String resetUrl = frontendBaseUrl + "/reset-password?token=" + token;
         SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(mailFrom);
         message.setTo(email);
         message.setSubject("【自主返納特典マップ】パスワードリセットのご案内");
         message.setText(

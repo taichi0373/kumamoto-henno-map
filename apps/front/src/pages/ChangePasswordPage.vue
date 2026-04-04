@@ -152,9 +152,9 @@ function checkError(): boolean {
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "新しいパスワード")
     )
     hasError = true
-  } else if ((model.value.newPassword ?? '').length < 8) {
+  } else if ((model.value.newPassword ?? '').length < ValidateUtils.PASSWORD_MIN_LENGTH) {
     newPasswordErrorDto.value.push(
-      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "新しいパスワード", "8")
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "新しいパスワード", String(ValidateUtils.PASSWORD_MIN_LENGTH))
     )
     hasError = true
   }

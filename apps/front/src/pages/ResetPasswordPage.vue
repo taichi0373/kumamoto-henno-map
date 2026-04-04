@@ -111,7 +111,7 @@ const onSubmit = async () => {
     const axiosError = error as AxiosError<{ message: string }>
     barErrMode.value = 'error'
     if (axiosError.response?.status === responseStatusConstant.BAD_REQUEST) {
-      barErrMsg.value = API_RESPONSE_MESSAGE.INVALID_OR_EXPIRED_TOKEN
+      barErrMsg.value = axiosError.response.data?.message ?? API_RESPONSE_MESSAGE.INVALID_OR_EXPIRED_TOKEN
     } else {
       barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR
     }
@@ -141,9 +141,9 @@ function checkError(): boolean {
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "新しいパスワード")
     )
     hasError = true
-  } else if ((newPassword.value ?? '').length < 8) {
+  } else if ((newPassword.value ?? '').length < ValidateUtils.PASSWORD_MIN_LENGTH) {
     newPasswordErrorDto.value.push(
-      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "新しいパスワード", "8")
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "新しいパスワード", String(ValidateUtils.PASSWORD_MIN_LENGTH))
     )
     hasError = true
   }

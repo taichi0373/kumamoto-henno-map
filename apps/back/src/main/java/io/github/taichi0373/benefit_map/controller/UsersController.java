@@ -108,6 +108,8 @@ public class UsersController {
             @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "メールアドレスが既に使用されている",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PutMapping
@@ -126,6 +128,15 @@ public class UsersController {
             if (!Objects.equals(users.getUserId(), principal.getUserId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponseDto.error("アクセス権限がありません"));
+            }
+
+            // メールアドレスの重複チェック（入力がある場合のみ、自分自身は除外）
+            if (!ValidateUtils.isNullOrEmpty(users.getEmail())) {
+                Boolean emailExists = usersService.existsByEmailExcluding(users.getEmail(), principal.getUserId());
+                if (Boolean.TRUE.equals(emailExists)) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
+                }
             }
 
             // ユーザー情報更新
@@ -237,6 +248,15 @@ public class UsersController {
             if (Boolean.TRUE.equals(userExists)) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(ApiResponseDto.error("このユーザー名は既に使用されています"));
+            }
+
+            // メールアドレスの重複チェック（入力がある場合のみ）
+            if (!ValidateUtils.isNullOrEmpty(users.getEmail())) {
+                Boolean emailExists = usersService.existsByEmail(users.getEmail());
+                if (Boolean.TRUE.equals(emailExists)) {
+                    return ResponseEntity.status(HttpStatus.CONFLICT)
+                            .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
+                }
             }
 
             // ユーザー登録処理
