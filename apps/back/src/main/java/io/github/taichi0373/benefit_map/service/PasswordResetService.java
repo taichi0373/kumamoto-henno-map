@@ -154,7 +154,11 @@ public class PasswordResetService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setSystemField(new SystemField(user.getSystemField().getSysCreatedAt(), now));
+        SystemField currentSystemField = user.getSystemField();
+        LocalDateTime sysCreatedAt = currentSystemField != null && currentSystemField.getSysCreatedAt() != null
+                ? currentSystemField.getSysCreatedAt()
+                : now;
+        user.setSystemField(new SystemField(sysCreatedAt, now));
         usersDao.update(user);
 
         return true;
