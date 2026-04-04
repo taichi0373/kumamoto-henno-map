@@ -58,7 +58,10 @@ public class CsrfProtectionFilter extends OncePerRequestFilter {
      * @param objectMapper          JSONシリアライザー
      */
     public CsrfProtectionFilter(String allowedOriginsStr, String expectedServiceName, ObjectMapper objectMapper) {
-        this.allowedOrigins = Arrays.asList(allowedOriginsStr.split(","));
+        this.allowedOrigins = Arrays.stream(allowedOriginsStr.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
         this.expectedServiceName = expectedServiceName;
         this.objectMapper = objectMapper;
     }

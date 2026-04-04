@@ -98,7 +98,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // JWT は Authorization ヘッダーで送信するためCSRF保護は不要
+            // CSRFはカスタムフィルターで対策するため無効化
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .formLogin(form -> form.disable())
