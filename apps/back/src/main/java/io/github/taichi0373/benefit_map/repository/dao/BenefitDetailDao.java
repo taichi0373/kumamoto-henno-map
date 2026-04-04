@@ -6,6 +6,7 @@ import org.seasar.doma.Dao;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.option.LikeOption;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity_;
@@ -99,8 +100,8 @@ public interface BenefitDetailDao {
                     // フリーワード検索（特典名または特典内容の部分一致）
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
-                            c.like(e.benefitName, "%" + keyword + "%");
-                            c.or(() -> c.like(e.benefitDetail, "%" + keyword + "%"));
+                            c.like(e.benefitName, keyword, LikeOption.infix('$'));
+                            c.or(() -> c.like(e.benefitDetail, keyword, LikeOption.infix('$')));
                         });
                     }
                     // カテゴリコードで絞り込み

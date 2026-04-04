@@ -31,7 +31,7 @@
 
           <div class="form-col">
             <AppLabel :id="'address'" :required="true">居住地域</AppLabel>
-            <AppSelect id="address" v-model="usersModel.address" placeholder="選択してください" :options="addressOptions"
+            <AppSelect :input-id="'address'" v-model="usersModel.address" placeholder="選択してください" :options="addressOptions"
               :filter="true" :required="true" :error="addressErrorDto" />
           </div>
 
@@ -42,7 +42,7 @@
 
           <div class="form-col">
             <AppLabel :id="'licenseStatus'" :required="true">運転免許の所持状況</AppLabel>
-            <AppSelect :id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
+            <AppSelect :input-id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
               :options="licenseOptions" :required="true" :error="licenseStatusErrorDto" />
           </div>
 

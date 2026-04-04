@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service;
 
 import io.github.taichi0373.benefit_map.util.AgeUtils;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
+import io.github.taichi0373.benefit_map.dto.BenefitCategoryDto;
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.benefit_map.repository.dao.BenefitCategoryDao;
 import io.github.taichi0373.benefit_map.repository.dao.BenefitDetailDao;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
-import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 
@@ -58,10 +58,19 @@ public class BenefitService {
 
     /**
      * 有効なカテゴリ一覧を表示順で取得
-     * @return カテゴリ一覧
+     * @return カテゴリDTO一覧
      */
-    public List<BenefitCategoryEntity> getCategories() {
-        return benefitCategoryDao.selectAllOrdered();
+    public List<BenefitCategoryDto> getCategories() {
+        return benefitCategoryDao.selectAllOrdered().stream()
+                .map(entity -> {
+                    BenefitCategoryDto dto = new BenefitCategoryDto();
+                    dto.setCategoryCd(entity.getCategoryCd());
+                    dto.setCategoryName(entity.getCategoryName());
+                    dto.setDisplayOrder(entity.getDisplayOrder());
+                    dto.setIsActive(entity.getIsActive());
+                    return dto;
+                })
+                .toList();
     }
 
     /**

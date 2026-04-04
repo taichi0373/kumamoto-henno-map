@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.BenefitCategoryDto;
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.benefit_map.dto.BenefitListResponse;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.BenefitService;
-import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -56,9 +56,9 @@ public class BenefitController {
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @GetMapping("/categories")
-    public ResponseEntity<ApiResponseDto<List<BenefitCategoryEntity>>> getCategories() {
+    public ResponseEntity<ApiResponseDto<List<BenefitCategoryDto>>> getCategories() {
         try {
-            List<BenefitCategoryEntity> categories = benefitService.getCategories();
+            List<BenefitCategoryDto> categories = benefitService.getCategories();
             return ResponseEntity.ok(ApiResponseDto.success(categories));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

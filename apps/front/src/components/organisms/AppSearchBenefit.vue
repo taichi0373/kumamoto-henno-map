@@ -11,19 +11,19 @@
       <div class="form-row-2 mt-4">
         <div class="form-col">
           <AppLabel :id="'category'">カテゴリ</AppLabel>
-          <AppSelect id="category" v-model="searchBenefit.categoryCd"
+          <AppSelect :input-id="'category'" v-model="searchBenefit.categoryCd"
             :options="categoryOptions" :placeholder="''" />
         </div>
         <div class="form-col">
           <AppLabel :id="'address'">居住地域</AppLabel>
-          <AppSelect id="address" v-model="searchBenefit.address" :options="addressOptions" :filter="true"
+          <AppSelect :input-id="'address'" v-model="searchBenefit.address" :options="addressOptions" :filter="true"
             :placeholder="''" />
         </div>
       </div>
       <div class="form-row-2 mt-4">
         <div class="form-col">
           <AppLabel :id="'license-status'">運転免許の所持状況</AppLabel>
-          <AppSelect id="license-status" v-model="searchBenefit.licenseStatus" :options="licenseOptions"
+          <AppSelect :input-id="'license-status'" v-model="searchBenefit.licenseStatus" :options="licenseOptions"
             :optionValue="'value'" :placeholder="''" />
         </div>
         <div class="form-col">
