@@ -18,7 +18,7 @@ public class BenefitCategoryDto {
     private String categoryName;
 
     /** 表示順 */
-    private String displayOrder;
+    private Integer displayOrder;
 
     /** 有効フラグ */
     private String isActive;
