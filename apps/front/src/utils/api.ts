@@ -70,7 +70,6 @@ class RestApiClient {
       timeout: 10000,
       withCredentials: true,
       headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
       }
     })
@@ -85,9 +84,10 @@ class RestApiClient {
     // リクエストインターセプター（ロギング、CSRF用カスタムヘッダー付与）
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        // 状態変更系メソッドにのみ X-Service-Name を付与してプリフライトを抑制
+        // // GET 等の非状態変更系リクエストではカスタムヘッダーを付与せず、不要なプリフライトを避ける
         const mutatingMethods = ['post', 'put', 'patch', 'delete']
         if (mutatingMethods.includes(config.method?.toLowerCase() ?? '')) {
+          config.headers['Content-Type'] = 'application/json'
           config.headers['X-Service-Name'] = 'front'
         }
         console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))

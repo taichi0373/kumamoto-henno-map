@@ -15,7 +15,7 @@ import java.util.List;
  * OpenAPI (Swagger) 設定クラス
  * <p>
  * springdoc-openapi を使用したAPI仕様書の設定を行う。
- * JWT Cookie 認証スキーム（cookieAuth）と CSRF トークンスキーム（csrfToken）を定義する。
+ * JWT Cookie 認証スキーム（cookieAuth）と CSRF 対策カスタムヘッダースキーム（serviceHeader）を定義する。
  * Swagger UI: /benefit-map/api/swagger-ui.html（dev プロファイル時のみ有効）
  * </p>
  */
@@ -36,11 +36,11 @@ public class OpenApiConfig {
                                 .in(SecurityScheme.In.COOKIE)
                                 .name("jwt")
                                 .description("JWT認証Cookie。POST /auth/login で取得し、HttpOnly Cookie として自動送信される。"))
-                        .addSecuritySchemes("csrfToken", new SecurityScheme()
+                        .addSecuritySchemes("serviceHeader", new SecurityScheme()
                                 .type(SecurityScheme.Type.APIKEY)
                                 .in(SecurityScheme.In.HEADER)
-                                .name("X-XSRF-TOKEN")
-                                .description("CSRFトークン。GET /auth/csrf で取得した値を X-XSRF-TOKEN ヘッダーに設定する。POST /benefit/search・PUT /users・POST /route/search で必須。")))
+                                .name("X-Service-Name")
+                                .description("CSRF対策カスタムヘッダー。値は `front` を設定する。状態変更系エンドポイント（POST / PUT / PATCH / DELETE）で必須。")))
                 .info(new Info()
                         .title("熊本県自主返納特典マップ API")
                         .version("1.0.0")
@@ -52,18 +52,18 @@ public class OpenApiConfig {
                                 認証が必要なエンドポイントは事前に `POST /auth/login` でログインし、Cookie を取得すること。
 
                                 ## CSRF 保護
-                                状態変更系 (POST / PUT / DELETE) には `X-XSRF-TOKEN` ヘッダーが必要。
-                                事前に `GET /auth/csrf` で CSRF トークンを取得すること。
+                                状態変更系 (POST / PUT / PATCH / DELETE) には `X-Service-Name: front` ヘッダーが必要。
+                                サーバー側では Origin ヘッダーと X-Service-Name ヘッダーの両方を検証する。
                                 除外対象: `/auth/**`、`POST /users/signup`
                                 """));
     }
 
     /**
-     * cookieAuth と csrfToken が両方必要なエンドポイントの security 要件を AND 表現に変換する
+     * cookieAuth と serviceHeader が両方必要なエンドポイントの security 要件を AND 表現に変換する
      * <p>
      * OpenAPI の security 配列に別々に並べると OR 条件になるため、
      * 同一オブジェクト内にまとめることで「両方必須」の AND 条件として表現する。
-     * 対象: PUT /users
+     * 対象: PUT /users 等の状態変更系かつ認証必須のエンドポイント
      * </p>
      *
      * @return OperationCustomizer
@@ -74,14 +74,14 @@ public class OpenApiConfig {
             var security = operation.getSecurity();
             if (security == null) return operation;
 
-            boolean hasCookieAuth = security.stream().anyMatch(r -> r.containsKey("cookieAuth"));
-            boolean hasCsrfToken  = security.stream().anyMatch(r -> r.containsKey("csrfToken"));
+            boolean hasCookieAuth   = security.stream().anyMatch(r -> r.containsKey("cookieAuth"));
+            boolean hasServiceHeader = security.stream().anyMatch(r -> r.containsKey("serviceHeader"));
 
-            if (hasCookieAuth && hasCsrfToken) {
+            if (hasCookieAuth && hasServiceHeader) {
                 // 別々の項目（OR）をひとつのオブジェクト（AND）にまとめる
                 SecurityRequirement combined = new SecurityRequirement()
                         .addList("cookieAuth")
-                        .addList("csrfToken");
+                        .addList("serviceHeader");
                 operation.setSecurity(List.of(combined));
             }
             return operation;
