@@ -2,19 +2,33 @@
   <div class="p-2">
    <form class="p-2" @submit.prevent="searchBenefits(searchBenefit)">
       <div class="form-row-1">
+        <div class="form-col form-col--wide">
+          <AppLabel :id="'keyword'">フリーワード</AppLabel>
+          <AppTextField :input-id="'keyword'" :type="'text'" v-model="searchBenefit.keyword"
+             :placeholder="'商品券'" />
+        </div>
+      </div>
+      <div class="form-row-2 mt-4">
+        <div class="form-col">
+          <AppLabel :id="'category'">カテゴリ</AppLabel>
+          <AppSelect id="category" v-model="searchBenefit.categoryCd"
+            :options="categoryOptions" :placeholder="''" />
+        </div>
         <div class="form-col">
           <AppLabel :id="'address'">居住地域</AppLabel>
           <AppSelect id="address" v-model="searchBenefit.address" :options="addressOptions" :filter="true"
-            :placeholder="'選択してください'" />
+            :placeholder="''" />
         </div>
+      </div>
+      <div class="form-row-2 mt-4">
         <div class="form-col">
           <AppLabel :id="'license-status'">運転免許の所持状況</AppLabel>
           <AppSelect id="license-status" v-model="searchBenefit.licenseStatus" :options="licenseOptions"
-            :optionValue="'value'" :placeholder="'選択してください'" />
+            :optionValue="'value'" :placeholder="''" />
         </div>
         <div class="form-col">
           <AppLabel :id="'age'">年齢</AppLabel>
-          <AppNumberField id="age" v-model="searchBenefit.age" :max="999" :placeholder="'年齢を入力してください'" />
+          <AppNumberField id="age" v-model="searchBenefit.age" :max="999" :placeholder="''" />
         </div>
       </div>
       <div class="form-btn">
@@ -78,6 +92,7 @@ import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
+import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppCard from '@/components/atoms/AppCard.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
@@ -94,7 +109,7 @@ import { MunicipalityDto } from '@/dto/municipalityDto'
 import { SearchBenefitDto } from '@/dto/searchBenefitDto'
 import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 
-const emit = defineEmits<{
+defineEmits<{
   (e: 'show-benefit-on-map', benefit: BenefitDetailDto): void;
 }>();
 
@@ -112,6 +127,9 @@ const benefitResults = ref([]) as Ref<BenefitDetailDto[]>
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
 
+/** カテゴリプルダウン */
+const categoryOptions = ref([]) as Ref<SelectDto[]>
+
 /** 運転免許の所持状況のプルダウン */
 const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.UNLICENSED]: '所持していない',
@@ -122,6 +140,23 @@ const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.OTHER]: 'その他',
 }
 const licenseOptions = ref([]) as Ref<SelectDto[]>
+
+// カテゴリデータを取得
+const getCategories = async () => {
+  try {
+    const response = await apiClient.get('/benefit/categories')
+    if (response.status === responseStatusConstant.OK && response.data) {
+      const categories = ((response.data as unknown) as { data: { categoryCd: string; categoryName: string }[] }).data
+      categoryOptions.value = categories.map((c) => ({
+        value: c.categoryCd,
+        label: c.categoryName,
+        text: c.categoryName
+      }))
+    }
+  } catch (error) {
+    console.error('カテゴリデータの取得に失敗しました:', error)
+  }
+}
 
 // 自治体データを取得
 const getMunicipalities = async () => {
@@ -142,7 +177,7 @@ const getMunicipalities = async () => {
 
 // 運転免許の所持状況データを取得
 const getLicenseStatusOptions = () => {
-  licenseOptions.value = Object.entries(codeConstant.LICENSE_STATUS).map(([key, value]) => ({
+  licenseOptions.value = Object.entries(codeConstant.LICENSE_STATUS).map(([, value]) => ({
     value: value.toString(),
     label: licenseStatusLabels[value],
     text: licenseStatusLabels[value]
@@ -162,6 +197,8 @@ const searchBenefits = async (conditions: SearchBenefitDto) => {
     age: conditions.age,
     licenseStatus: conditions.licenseStatus,
     municipalityCd: conditions.address,
+    keyword: conditions.keyword,
+    categoryCd: conditions.categoryCd,
   }
 
   try {
@@ -210,6 +247,8 @@ onMounted(() => {
   getMunicipalities()
   // 運転免許の所持状況データの取得
   getLicenseStatusOptions()
+  // カテゴリデータの取得
+  getCategories()
 })
 
 </script>

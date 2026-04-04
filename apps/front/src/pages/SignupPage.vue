@@ -158,7 +158,7 @@ const getMunicipalities = async () => {
 
 // 運転免許の所持状況プルダウン取得
 const getLicenseStatusOptions = () => {
-  licenseOptions.value = Object.entries(codeConstant.LICENSE_STATUS).map(([key, value]) => ({
+  licenseOptions.value = Object.entries(codeConstant.LICENSE_STATUS).map(([, value]) => ({
     value: value.toString(),
     label: licenseStatusLabels[value],
     text: licenseStatusLabels[value]

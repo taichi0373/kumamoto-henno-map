@@ -8,6 +8,8 @@ import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.criteria.Entityql;
 
+import java.util.List;
+
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity_;
 
@@ -22,7 +24,21 @@ import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity_
 @SuppressWarnings("PMD.TooManyMethods")
 public interface BenefitCategoryDao {
 
-    /** 
+    /**
+     * 有効カテゴリを表示順で全件取得
+     * @return 有効カテゴリ一覧
+     */
+    default List<BenefitCategoryEntity> selectAllOrdered() {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
+
+        return entityql.from(e)
+                .where(c -> c.eq(e.isActive, "1"))
+                .orderBy(c -> c.asc(e.displayOrder))
+                .fetch();
+    }
+
+    /**
      * 主キー検索
      */
     default BenefitCategoryEntity selectById(String categoryCd) {

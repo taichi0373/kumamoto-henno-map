@@ -226,7 +226,7 @@ watch(() => props.mapSelectedLocation, (location) => {
 
 // 交通手段オプションを取得
 const getTransportOptions = () => {
-  transportOptions.value = Object.entries(codeConstant.TRANSPORTATION).map(([key, value]) => ({
+  transportOptions.value = Object.entries(codeConstant.TRANSPORTATION).map(([, value]) => ({
     value: value.toString(),
     label: transportLabels[value],
     text: transportLabels[value]
@@ -235,7 +235,7 @@ const getTransportOptions = () => {
 
 // 出発/到着オプションを取得
 const getDepartureArrivalOptions = () => {
-  departureArrivalOptions.value = Object.entries(codeConstant.DEPARTURE_ARRIVAL).map(([key, value]) => ({
+  departureArrivalOptions.value = Object.entries(codeConstant.DEPARTURE_ARRIVAL).map(([, value]) => ({
     value: value.toString(),
     label: departureArrivalLabels[value],
     text: departureArrivalLabels[value]
