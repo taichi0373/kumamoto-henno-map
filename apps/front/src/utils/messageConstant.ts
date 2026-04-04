@@ -49,6 +49,12 @@ const API_RESPONSE_MESSAGE = {
     DATA_NOT_FOUND: '該当データが存在しません',
     BENEFIT_NOT_FOUND: '特典データの取得に失敗しました',
     ROUTE_SEARCH_FAILED: '経路の取得に失敗しました',
+    PASSWORD_CHANGE_SUCCESS: 'パスワードを変更しました',
+    PASSWORD_CHANGE_FAILED: 'パスワードの変更に失敗しました',
+    PASSWORD_CURRENT_WRONG: '現在のパスワードが正しくありません',
+    PASSWORD_RESET_MAIL_SENT: 'パスワードリセットメールを送信しました。メールのリンクからパスワードを変更してください。',
+    PASSWORD_RESET_SUCCESS: 'パスワードをリセットしました。新しいパスワードでログインしてください。',
+    INVALID_OR_EXPIRED_TOKEN: 'このリンクは無効または期限切れです。再度お試しください。',
 }
 
 const GEOLOCATION_MESSAGE = {

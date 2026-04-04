@@ -48,6 +48,7 @@ public class UsersService {
             newUser.setBirthDate(users.getBirthDate());
             newUser.setMunicipalityCd(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
+            newUser.setLicenseSurrenderedAt(users.getLicenseSurrenderedAt());
             LocalDateTime now = LocalDateTime.now();
             newUser.setSystemField(new SystemField(now, now));
 
@@ -55,7 +56,13 @@ public class UsersService {
             // insert後にDTOへ変換してpasswordHashを含めずに返す
             return toUserResponseDto(newUser);
         } catch (DataIntegrityViolationException e) {
-            // 一意制約違反（ユーザー名重複）の場合は DuplicateUserException に変換してスローする
+            // 一意制約違反を制約名で判別して適切なメッセージの DuplicateUserException に変換する
+            // PostgreSQL の例外メッセージには制約名が含まれる
+            String detail = (e.getMessage() != null ? e.getMessage() : "")
+                    + (e.getCause() != null && e.getCause().getMessage() != null ? e.getCause().getMessage() : "");
+            if (detail.toLowerCase().contains("users_email_unique")) {
+                throw new DuplicateUserException("このメールアドレスは既に使用されています", e);
+            }
             throw new DuplicateUserException("このユーザー名は既に使用されています", e);
         } catch (Exception e) {
             return null;
@@ -91,6 +98,33 @@ public class UsersService {
             throw new RuntimeException("ユーザー名による検索処理でエラーが発生しました", e);
         }
     }
+
+    /**
+     * メールアドレスによる重複確認（新規登録用）
+     * @param email メールアドレス
+     * @return 同一メールアドレスを持つユーザーが存在する場合はtrue
+     */
+    public Boolean existsByEmail(String email) {
+        try {
+            return usersDao.existsByEmail(email);
+        } catch (Exception e) {
+            throw new RuntimeException("メールアドレスによる検索処理でエラーが発生しました", e);
+        }
+    }
+
+    /**
+     * メールアドレスによる重複確認（プロフィール更新用: 自分自身を除外）
+     * @param email メールアドレス
+     * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）
+     * @return 自分以外に同一メールアドレスを持つユーザーが存在する場合はtrue
+     */
+    public Boolean existsByEmailExcluding(String email, Long excludeUserId) {
+        try {
+            return usersDao.existsByEmailExcluding(email, excludeUserId);
+        } catch (Exception e) {
+            throw new RuntimeException("メールアドレスによる検索処理でエラーが発生しました", e);
+        }
+    }
     
     /**
      * UsersEntityをUserResponseDtoに変換する
@@ -110,6 +144,39 @@ public class UsersService {
     }
 
     /**
+     * パスワード変更
+     * <p>
+     * 現在のパスワードを検証したうえで新しいパスワードに変更する。
+     * DB アクセス等で例外が発生した場合はそのままスローし、呼び出し元で 500 として処理する。
+     * </p>
+     * @param userId ユーザーID
+     * @param currentPassword 現在のパスワード（平文）
+     * @param newPassword 新しいパスワード（平文）
+     * @return 変更成功時はtrue、現在のパスワードが不一致の場合はfalse、ユーザーが存在しない場合はnull
+     * @throws Exception DB アクセスエラー等の内部エラー
+     */
+    public Boolean changePassword(Long userId, String currentPassword, String newPassword) throws Exception {
+        UsersEntity user = usersDao.selectById(userId);
+        if (ValidateUtils.isNullOrEmpty(user)) {
+            return null;
+        }
+        // 現在のパスワードを検証
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            return false;
+        }
+        // 新しいパスワードをハッシュ化して更新
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        LocalDateTime now = LocalDateTime.now();
+        SystemField currentSystemField = user.getSystemField();
+        LocalDateTime sysCreatedAt = currentSystemField != null && currentSystemField.getSysCreatedAt() != null
+                ? currentSystemField.getSysCreatedAt()
+                : now;
+        user.setSystemField(new SystemField(sysCreatedAt, now));
+        usersDao.update(user);
+        return true;
+    }
+
+    /**
      * ユーザー情報の更新
      */
     public Integer updateUsersInfo(UsersDto users) {
@@ -118,12 +185,19 @@ public class UsersService {
             if (ValidateUtils.isNullOrEmpty(existingUser)) {
                 return null; // ユーザーが存在しない場合はnullを返す
             }
+            LocalDateTime now = LocalDateTime.now();
             
             // ユーザー情報を更新
             existingUser.setEmail(users.getEmail());
             existingUser.setBirthDate(users.getBirthDate());
             existingUser.setMunicipalityCd(users.getAddress());
             existingUser.setLicenseStatus(users.getLicenseStatus());
+            existingUser.setLicenseSurrenderedAt(users.getLicenseSurrenderedAt());
+            SystemField currentSystemField = existingUser.getSystemField();
+            LocalDateTime sysCreatedAt = currentSystemField != null && currentSystemField.getSysCreatedAt() != null
+                    ? currentSystemField.getSysCreatedAt()
+                    : now;
+            existingUser.setSystemField(new SystemField(sysCreatedAt, now));
             
             // データベースに更新を保存
             Integer result = usersDao.update(existingUser);

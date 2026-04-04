@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.ChangePasswordRequestDto;
 import io.github.taichi0373.benefit_map.dto.UserResponseDto;
 import io.github.taichi0373.benefit_map.dto.UsersDto;
 import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
@@ -102,11 +103,15 @@ public class UsersController {
     })
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更新成功（data: null）"),
+            @ApiResponse(responseCode = "400", description = "メールアドレス未入力または形式不正",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "401", description = "未認証",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "メールアドレスが既に使用されている",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PutMapping
@@ -127,6 +132,23 @@ public class UsersController {
                         .body(ApiResponseDto.error("アクセス権限がありません"));
             }
 
+            // メールアドレスの必須・形式チェック
+            if (ValidateUtils.isNullOrEmpty(users.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("メールアドレスを入力してください"));
+            }
+            if (!ValidateUtils.isEmail(users.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("メールアドレスの形式が正しくありません"));
+            }
+
+            // メールアドレスの重複チェック（自分自身は除外）
+            Boolean emailExists = usersService.existsByEmailExcluding(users.getEmail(), principal.getUserId());
+            if (Boolean.TRUE.equals(emailExists)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
+            }
+
             // ユーザー情報更新
             Integer result = usersService.updateUsersInfo(users);
             if (ValidateUtils.isNullOrEmpty(result)) {
@@ -142,12 +164,90 @@ public class UsersController {
     }
 
     /**
+     * パスワード変更
+     * <p>
+     * ログイン済みユーザーが現在のパスワードを確認したうえで新しいパスワードに変更する。
+     * </p>
+     */
+    @Operation(summary = "パスワード変更", description = "JWT で認証されたユーザー自身のパスワードを変更する。現在のパスワードの確認が必要。CSRF トークン必須。")
+    @SecurityRequirements({
+            @SecurityRequirement(name = "cookieAuth"),
+            @SecurityRequirement(name = "csrfToken")
+    })
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "変更成功（data: null）"),
+            @ApiResponse(responseCode = "400", description = "入力値が不正（必須項目未入力・パスワード不一致）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "未認証",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "現在のパスワードが正しくない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponseDto<Void>> changePassword(
+            @RequestBody ChangePasswordRequestDto request,
+            Authentication auth) {
+        try {
+            // JWT認証チェック
+            if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("認証が必要です"));
+            }
+
+            // 必須チェック
+            if (ValidateUtils.isNullOrEmpty(request.getCurrentPassword())
+                    || ValidateUtils.isNullOrEmpty(request.getNewPassword())
+                    || ValidateUtils.isNullOrEmpty(request.getConfirmNewPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("すべての項目を入力してください"));
+            }
+
+            // パスワードポリシーチェック（最低文字数）
+            if (!ValidateUtils.isValidPassword(request.getNewPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error(
+                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上で入力してください"));
+            }
+
+            // 新パスワード一致チェック
+            if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("新しいパスワードと確認用パスワードが一致しません"));
+            }
+
+            CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal();
+            Boolean result = usersService.changePassword(
+                    principal.getUserId(),
+                    request.getCurrentPassword(),
+                    request.getNewPassword());
+
+            if (result == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.error("ユーザーが見つかりません"));
+            }
+            if (Boolean.FALSE.equals(result)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("現在のパスワードが正しくありません"));
+            }
+
+            return ResponseEntity.ok(ApiResponseDto.success(null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("パスワードの変更に失敗しました"));
+        }
+    }
+
+    /**
      * ユーザー登録
      */
     @Operation(summary = "ユーザー登録", description = "新規アカウントを作成する。認証・CSRF 保護は不要。")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "登録成功（data: UserResponseDto）"),
-            @ApiResponse(responseCode = "409", description = "ユーザー名が既に使用されている",
+            @ApiResponse(responseCode = "400", description = "メールアドレス未入力または形式不正",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "ユーザー名またはメールアドレスが既に使用されている（同時登録によるDB制約違反を含む）",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "503", description = "DB接続エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
@@ -160,6 +260,23 @@ public class UsersController {
             if (Boolean.TRUE.equals(userExists)) {
                 return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(ApiResponseDto.error("このユーザー名は既に使用されています"));
+            }
+
+            // メールアドレスの必須・形式チェック
+            if (ValidateUtils.isNullOrEmpty(users.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("メールアドレスを入力してください"));
+            }
+            if (!ValidateUtils.isEmail(users.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("メールアドレスの形式が正しくありません"));
+            }
+
+            // メールアドレスの重複チェック
+            Boolean emailExists = usersService.existsByEmail(users.getEmail());
+            if (Boolean.TRUE.equals(emailExists)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
             }
 
             // ユーザー登録処理

@@ -35,6 +35,10 @@
           <AppLink @click="router.push('/signup')">新規登録はこちら</AppLink>
         </div>
 
+        <div class="form-link">
+          <AppLink @click="router.push('/forgot-password')">パスワードを忘れた方はこちら</AppLink>
+        </div>
+
       </AppCard>
     </div>
   </div>
@@ -82,9 +86,15 @@ const barErrMsg = ref('') as Ref<string>
 const isLoading = ref(false)
 
 // 既にログイン済みの場合はホームにリダイレクト
+// パスワードリセット完了時はクエリパラメータからメッセージを表示
 onMounted(() => {
   if (auth.isLoggedIn) {
     router.push('/')
+    return
+  }
+  if (route.query.resetSuccess === '1') {
+    barErrMode.value = 'success'
+    barErrMsg.value = API_RESPONSE_MESSAGE.PASSWORD_RESET_SUCCESS
   }
 })
 
@@ -110,6 +120,7 @@ const onClick = async () => {
 
     if (response.status === responseStatusConstant.OK) {
       const userData = (response.data as { data: { username: string; userId: number } }).data
+      isLoading.value = false
       auth.login({ username: userData.username, id: String(userData.userId) })
       const redirect = route.query.redirect as string | undefined
       router.push(redirect || '/')

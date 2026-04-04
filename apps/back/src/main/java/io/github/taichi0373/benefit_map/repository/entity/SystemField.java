@@ -8,6 +8,7 @@ import org.seasar.doma.Column;
 import org.seasar.doma.Embeddable;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -16,6 +17,7 @@ import lombok.ToString;
  */
 
 @Embeddable
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
