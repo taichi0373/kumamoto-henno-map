@@ -28,7 +28,7 @@
         </div>
         <div class="form-col">
           <AppLabel :id="'age'">年齢</AppLabel>
-          <AppNumberField id="age" v-model="searchBenefit.age" :max="999" :placeholder="''" />
+          <AppNumberField :input-id="'age'" v-model="searchBenefit.age" :max="999" :placeholder="''" />
         </div>
       </div>
       <div class="form-btn">
