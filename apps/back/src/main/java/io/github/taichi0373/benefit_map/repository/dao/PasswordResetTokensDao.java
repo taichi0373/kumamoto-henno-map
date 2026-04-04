@@ -65,6 +65,29 @@ public interface PasswordResetTokensDao {
     }
 
     /**
+     * 期限切れまたは使用済みのトークンを一括削除する
+     * <p>
+     * ① expires_at が now 以前のトークン（期限切れ）を削除する。
+     * ② used=true のトークン（使用済み・まだ期限内）を削除する。
+     * 2回に分けることで OR 条件を回避しつつ同等の結果を得る。
+     * 定期クリーンアップ処理から呼び出される。
+     * </p>
+     * @param now 現在時刻（expires_at との比較に使用）
+     * @return 削除件数の合計
+     */
+    default int deleteExpiredOrUsed(LocalDateTime now) {
+        NativeSql nativeSql = new NativeSql(Config.get(this));
+        PasswordResetTokensEntity_ e = new PasswordResetTokensEntity_();
+        int count = nativeSql.delete(e)
+                .where(c -> c.le(e.expiresAt, now))
+                .execute();
+        count += nativeSql.delete(e)
+                .where(c -> c.eq(e.used, true))
+                .execute();
+        return count;
+    }
+
+    /**
      * 登録
      * @param entity 登録するトークンエンティティ
      * @return 登録件数

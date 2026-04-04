@@ -5,10 +5,13 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,9 @@ import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
  */
 @Service
 public class PasswordResetService {
+
+    /** ロガー */
+    private static final Logger logger = LoggerFactory.getLogger(PasswordResetService.class);
 
     /** トークン有効期限（分） */
     private static final int TOKEN_EXPIRY_MINUTES = 30;
@@ -127,6 +133,8 @@ public class PasswordResetService {
         String tokenHash = hashToken(token);
         PasswordResetTokensEntity tokenEntity = passwordResetTokensDao.selectByToken(tokenHash);
 
+        LocalDateTime now = LocalDateTime.now();
+
         // トークンの存在チェック
         if (tokenEntity == null) {
             return false;
@@ -134,7 +142,7 @@ public class PasswordResetService {
 
         // used=false かつ期限内の場合のみ used=true に更新する原子的操作
         // 0件更新 = 使用済みまたは期限切れ（同時リクエスト時も必ず片方が0件になる）
-        int updated = passwordResetTokensDao.markAsUsedIfValid(tokenHash, LocalDateTime.now());
+        int updated = passwordResetTokensDao.markAsUsedIfValid(tokenHash, now);
         if (updated == 0) {
             return false;
         }
@@ -144,10 +152,26 @@ public class PasswordResetService {
         if (user == null) {
             return false;
         }
+
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setSystemField(new SystemField(user.getSystemField().getSysCreatedAt(), now));
         usersDao.update(user);
 
         return true;
+    }
+
+    /**
+     * 期限切れ・使用済みトークンの定期クリーンアップ
+     * <p>
+     * 毎日午前2時に実行し、expires_at が現在時刻以前または used=true のトークンを削除する。
+     * ON DELETE CASCADE でユーザー削除時の孤児化は防いでいるが、
+     * アクティブユーザーのトークン蓄積はこのジョブで対処する。
+     * </p>
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    public void cleanupExpiredTokens() {
+        int deleted = passwordResetTokensDao.deleteExpiredOrUsed(LocalDateTime.now());
+        logger.info("パスワードリセットトークンのクリーンアップ完了: {}件削除", deleted);
     }
 
     /**

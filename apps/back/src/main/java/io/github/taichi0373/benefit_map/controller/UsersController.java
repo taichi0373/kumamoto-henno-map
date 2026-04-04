@@ -130,13 +130,21 @@ public class UsersController {
                         .body(ApiResponseDto.error("アクセス権限がありません"));
             }
 
-            // メールアドレスの重複チェック（入力がある場合のみ、自分自身は除外）
-            if (!ValidateUtils.isNullOrEmpty(users.getEmail())) {
-                Boolean emailExists = usersService.existsByEmailExcluding(users.getEmail(), principal.getUserId());
-                if (Boolean.TRUE.equals(emailExists)) {
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
-                }
+            // メールアドレスの必須・形式チェック
+            if (ValidateUtils.isNullOrEmpty(users.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("メールアドレスを入力してください"));
+            }
+            if (!ValidateUtils.isEmail(users.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("メールアドレスの形式が正しくありません"));
+            }
+
+            // メールアドレスの重複チェック（自分自身は除外）
+            Boolean emailExists = usersService.existsByEmailExcluding(users.getEmail(), principal.getUserId());
+            if (Boolean.TRUE.equals(emailExists)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
             }
 
             // ユーザー情報更新
@@ -250,13 +258,21 @@ public class UsersController {
                         .body(ApiResponseDto.error("このユーザー名は既に使用されています"));
             }
 
-            // メールアドレスの重複チェック（入力がある場合のみ）
-            if (!ValidateUtils.isNullOrEmpty(users.getEmail())) {
-                Boolean emailExists = usersService.existsByEmail(users.getEmail());
-                if (Boolean.TRUE.equals(emailExists)) {
-                    return ResponseEntity.status(HttpStatus.CONFLICT)
-                            .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
-                }
+            // メールアドレスの必須・形式チェック
+            if (ValidateUtils.isNullOrEmpty(users.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("メールアドレスを入力してください"));
+            }
+            if (!ValidateUtils.isEmail(users.getEmail())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("メールアドレスの形式が正しくありません"));
+            }
+
+            // メールアドレスの重複チェック
+            Boolean emailExists = usersService.existsByEmail(users.getEmail());
+            if (Boolean.TRUE.equals(emailExists)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
             }
 
             // ユーザー登録処理
