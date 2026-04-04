@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.taichi0373.benefit_map.util.RequestUtils;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.ChangePasswordRequestDto;
@@ -264,7 +265,7 @@ public class UsersController {
     public ResponseEntity<ApiResponseDto<UserResponseDto>> signup(
             @RequestBody UsersDto users,
             HttpServletRequest httpRequest) {
-        String clientIp = getClientIp(httpRequest);
+        String clientIp = RequestUtils.getClientIp(httpRequest);
         if (loginAttemptService.isSignupBlocked(clientIp)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body(ApiResponseDto.error("登録試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
@@ -325,19 +326,4 @@ public class UsersController {
         }
     }
 
-    /**
-     * クライアントIPアドレスを取得する
-     * <p>
-     * リバースプロキシ経由の場合は X-Forwarded-For ヘッダーを優先する。
-     * </p>
-     * @param request HTTPリクエスト
-     * @return クライアントIPアドレス
-     */
-    private String getClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
-    }
 }

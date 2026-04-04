@@ -12,6 +12,13 @@ import org.springframework.stereotype.Service;
  * ログイン・新規登録のIPアドレスごとの試行回数を管理し、
  * 過剰なアクセスをブロックする。
  * </p>
+ * <p>
+ * <strong>【注意】単一インスタンス前提の実装</strong><br>
+ * 試行回数は {@link java.util.concurrent.ConcurrentHashMap} によるインメモリ管理のため、
+ * 複数インスタンスで水平スケールする構成では制限がインスタンス間で共有されず、
+ * ブルートフォース対策が無効化される。<br>
+ * 水平スケールが必要になった場合は Redis 等の共有ストアへの移行を検討すること。
+ * </p>
  */
 @Service
 public class LoginAttemptService {
@@ -34,8 +41,15 @@ public class LoginAttemptService {
     /** パスワードリセット: ロックアウト時間（分） */
     private static final long PASSWORD_RESET_LOCK_MINUTES = 15;
 
-    /** 試行情報レコード */
-    private record AttemptData(int count, LocalDateTime lockedUntil) {}
+    /**
+     * 試行情報レコード
+     * <p>
+     * lockedUntil  : ロックアウト解除時刻（上限未達の場合はnull）<br>
+     * windowExpiresAt : ウィンドウ終了時刻（試行のたびにスライディング更新）。
+     *                   ロックなしエントリのクリーンアップ基準として使用する。
+     * </p>
+     */
+    private record AttemptData(int count, LocalDateTime lockedUntil, LocalDateTime windowExpiresAt) {}
 
     /** ログイン試行情報（キー: IPアドレス） */
     private final ConcurrentHashMap<String, AttemptData> loginAttempts = new ConcurrentHashMap<>();
@@ -129,30 +143,45 @@ public class LoginAttemptService {
     }
 
     /**
-     * 試行を記録し、上限到達時はロックアウト時刻を設定する
+     * 試行を記録し、上限到達時はロックアウト時刻を設定する。
+     * windowExpiresAt は試行のたびにスライディング更新する。
      */
     private void record(ConcurrentHashMap<String, AttemptData> map, String key,
             int maxAttempts, long lockMinutes) {
         map.compute(key, (k, data) -> {
             int count = (data == null) ? 1 : data.count() + 1;
+            LocalDateTime now = LocalDateTime.now();
             LocalDateTime lockedUntil = count >= maxAttempts
-                    ? LocalDateTime.now().plusMinutes(lockMinutes)
+                    ? now.plusMinutes(lockMinutes)
                     : null;
-            return new AttemptData(count, lockedUntil);
+            LocalDateTime windowExpiresAt = now.plusMinutes(lockMinutes);
+            return new AttemptData(count, lockedUntil, windowExpiresAt);
         });
     }
 
     /**
      * 期限切れエントリの定期クリーンアップ（1時間ごと）
+     * <p>
+     * ロック中エントリは lockedUntil、未ロックエントリは windowExpiresAt を基準に削除する。
+     * これにより上限未達のIPアドレス記録がメモリに残り続けることを防ぐ。
+     * </p>
      */
     @Scheduled(fixedRate = 3_600_000)
     public void cleanUp() {
         LocalDateTime now = LocalDateTime.now();
-        loginAttempts.entrySet().removeIf(e ->
-                e.getValue().lockedUntil() != null && now.isAfter(e.getValue().lockedUntil()));
-        signupAttempts.entrySet().removeIf(e ->
-                e.getValue().lockedUntil() != null && now.isAfter(e.getValue().lockedUntil()));
-        passwordResetAttempts.entrySet().removeIf(e ->
-                e.getValue().lockedUntil() != null && now.isAfter(e.getValue().lockedUntil()));
+        loginAttempts.entrySet().removeIf(e -> isExpired(e.getValue(), now));
+        signupAttempts.entrySet().removeIf(e -> isExpired(e.getValue(), now));
+        passwordResetAttempts.entrySet().removeIf(e -> isExpired(e.getValue(), now));
+    }
+
+    /**
+     * エントリが期限切れかどうかを判定する
+     * <p>
+     * ロック中の場合は lockedUntil、未ロックの場合は windowExpiresAt を参照する。
+     * </p>
+     */
+    private boolean isExpired(AttemptData data, LocalDateTime now) {
+        LocalDateTime expiry = data.lockedUntil() != null ? data.lockedUntil() : data.windowExpiresAt();
+        return expiry != null && now.isAfter(expiry);
     }
 }

@@ -23,6 +23,7 @@ import io.github.taichi0373.benefit_map.dto.PasswordResetRequestDto;
 import io.github.taichi0373.benefit_map.service.AuthService;
 import io.github.taichi0373.benefit_map.service.LoginAttemptService;
 import io.github.taichi0373.benefit_map.service.PasswordResetService;
+import io.github.taichi0373.benefit_map.util.RequestUtils;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -95,7 +96,7 @@ public class AuthController {
             @RequestBody LoginRequestDto request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-        String clientIp = getClientIp(httpRequest);
+        String clientIp = RequestUtils.getClientIp(httpRequest);
         if (loginAttemptService.isLoginBlocked(clientIp)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body(ApiResponseDto.error("ログイン試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
@@ -126,16 +127,16 @@ public class AuthController {
     /**
      * クライアントIPアドレスを取得する
      * <p>
-     * リバースプロキシ経由の場合は X-Forwarded-For ヘッダーを優先する。
+     * X-Forwarded-For ヘッダーはクライアントが任意に偽装できるため使用しない。
+     * リバースプロキシ配下にデプロイする場合は application.properties の
+     * server.forward-headers-strategy を FRAMEWORK に変更し、
+     * プロキシ側で X-Forwarded-For を適切に付与する設定を行うこと。
+     * その場合、Spring が安全に処理した結果が getRemoteAddr() に反映される。
      * </p>
      * @param request HTTPリクエスト
      * @return クライアントIPアドレス
      */
     private String getClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
         return request.getRemoteAddr();
     }
 
@@ -216,7 +217,7 @@ public class AuthController {
     public ResponseEntity<ApiResponseDto<Void>> confirmPasswordReset(
             @RequestBody PasswordResetConfirmRequestDto request,
             HttpServletRequest httpRequest) {
-        String clientIp = getClientIp(httpRequest);
+        String clientIp = RequestUtils.getClientIp(httpRequest);
         if (loginAttemptService.isPasswordResetBlocked(clientIp)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body(ApiResponseDto.error("試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
