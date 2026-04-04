@@ -1,22 +1,28 @@
 package io.github.taichi0373.benefit_map.service;
 
 import java.time.LocalDateTime;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 /**
  * ログイン試行管理サービス
  * <p>
- * ログイン・新規登録のIPアドレスごとの試行回数を管理し、
+ * ログイン・新規登録・パスワードリセットのIPアドレスごとの試行回数を管理し、
  * 過剰なアクセスをブロックする。
  * </p>
  * <p>
+ * キャッシュには Caffeine を使用し、最大件数（{@link #MAX_TRACKED_IPS}）と
+ * TTL（各操作のロックアウト時間）によりメモリ使用量を制限する。
+ * TTL は最終書き込み時刻から起算するため、期限内に再試行がなければ自動削除される。
+ * </p>
+ * <p>
  * <strong>【注意】単一インスタンス前提の実装</strong><br>
- * 試行回数は {@link java.util.concurrent.ConcurrentHashMap} によるインメモリ管理のため、
- * 複数インスタンスで水平スケールする構成では制限がインスタンス間で共有されず、
- * ブルートフォース対策が無効化される。<br>
+ * 試行回数はインメモリ管理のため、複数インスタンスで水平スケールする構成では
+ * 制限がインスタンス間で共有されず、ブルートフォース対策が無効化される。<br>
  * 水平スケールが必要になった場合は Redis 等の共有ストアへの移行を検討すること。
  * </p>
  */
@@ -41,24 +47,29 @@ public class LoginAttemptService {
     /** パスワードリセット: ロックアウト時間（分） */
     private static final long PASSWORD_RESET_LOCK_MINUTES = 15;
 
+    /** キャッシュに保持するIPアドレスの最大件数（超過時は古いエントリをLRU削除） */
+    private static final long MAX_TRACKED_IPS = 10_000L;
+
     /**
      * 試行情報レコード
      * <p>
-     * lockedUntil  : ロックアウト解除時刻（上限未達の場合はnull）<br>
-     * windowExpiresAt : ウィンドウ終了時刻（試行のたびにスライディング更新）。
-     *                   ロックなしエントリのクリーンアップ基準として使用する。
+     * lockedUntil : ロックアウト解除時刻（上限未達の場合はnull）。<br>
+     * エントリ自体のTTLはCaffeineが管理するため、windowExpiresAt は不要。
      * </p>
      */
-    private record AttemptData(int count, LocalDateTime lockedUntil, LocalDateTime windowExpiresAt) {}
+    private record AttemptData(int count, LocalDateTime lockedUntil) {}
 
-    /** ログイン試行情報（キー: IPアドレス） */
-    private final ConcurrentHashMap<String, AttemptData> loginAttempts = new ConcurrentHashMap<>();
+    /** ログイン試行キャッシュ（キー: IPアドレス） */
+    private final Cache<String, AttemptData> loginAttempts =
+            buildCache(LOGIN_LOCK_MINUTES, MAX_TRACKED_IPS);
 
-    /** 新規登録試行情報（キー: IPアドレス） */
-    private final ConcurrentHashMap<String, AttemptData> signupAttempts = new ConcurrentHashMap<>();
+    /** 新規登録試行キャッシュ（キー: IPアドレス） */
+    private final Cache<String, AttemptData> signupAttempts =
+            buildCache(SIGNUP_LOCK_MINUTES, MAX_TRACKED_IPS);
 
-    /** パスワードリセット試行情報（キー: IPアドレス） */
-    private final ConcurrentHashMap<String, AttemptData> passwordResetAttempts = new ConcurrentHashMap<>();
+    /** パスワードリセット試行キャッシュ（キー: IPアドレス） */
+    private final Cache<String, AttemptData> passwordResetAttempts =
+            buildCache(PASSWORD_RESET_LOCK_MINUTES, MAX_TRACKED_IPS);
 
     /**
      * ログイン試行がブロックされているか確認する
@@ -82,7 +93,7 @@ public class LoginAttemptService {
      * @param ip クライアントIPアドレス
      */
     public void recordLoginSuccess(String ip) {
-        loginAttempts.remove(ip);
+        loginAttempts.invalidate(ip);
     }
 
     /**
@@ -124,64 +135,58 @@ public class LoginAttemptService {
      * @param ip クライアントIPアドレス
      */
     public void recordPasswordResetSuccess(String ip) {
-        passwordResetAttempts.remove(ip);
+        passwordResetAttempts.invalidate(ip);
     }
 
     /**
-     * ブロック判定（ロック期限切れの場合はエントリを削除してfalseを返す）
+     * ブロック判定
+     * <p>
+     * ロックアウト期限切れのエントリは無効化してfalseを返す。
+     * TTL による自動削除前に呼ばれた場合の保険的チェック。
+     * </p>
      */
-    private boolean isBlocked(ConcurrentHashMap<String, AttemptData> map, String key) {
-        AttemptData data = map.get(key);
+    private boolean isBlocked(Cache<String, AttemptData> cache, String key) {
+        AttemptData data = cache.getIfPresent(key);
         if (data == null || data.lockedUntil() == null) {
             return false;
         }
         if (LocalDateTime.now().isBefore(data.lockedUntil())) {
             return true;
         }
-        map.remove(key);
+        cache.invalidate(key);
         return false;
     }
 
     /**
-     * 試行を記録し、上限到達時はロックアウト時刻を設定する。
-     * windowExpiresAt は試行のたびにスライディング更新する。
+     * 試行を記録し、上限到達時はロックアウト時刻を設定する
      */
-    private void record(ConcurrentHashMap<String, AttemptData> map, String key,
+    private void record(Cache<String, AttemptData> cache, String key,
             int maxAttempts, long lockMinutes) {
-        map.compute(key, (k, data) -> {
+        cache.asMap().compute(key, (k, data) -> {
             int count = (data == null) ? 1 : data.count() + 1;
-            LocalDateTime now = LocalDateTime.now();
             LocalDateTime lockedUntil = count >= maxAttempts
-                    ? now.plusMinutes(lockMinutes)
+                    ? LocalDateTime.now().plusMinutes(lockMinutes)
                     : null;
-            LocalDateTime windowExpiresAt = now.plusMinutes(lockMinutes);
-            return new AttemptData(count, lockedUntil, windowExpiresAt);
+            return new AttemptData(count, lockedUntil);
         });
     }
 
     /**
-     * 期限切れエントリの定期クリーンアップ（1時間ごと）
+     * 最大サイズとTTLを指定してCaffeineキャッシュを生成する
      * <p>
-     * ロック中エントリは lockedUntil、未ロックエントリは windowExpiresAt を基準に削除する。
-     * これにより上限未達のIPアドレス記録がメモリに残り続けることを防ぐ。
+     * expireAfterWrite: 最終書き込み時刻からTTL経過で自動削除。
+     * 未ロックの中途試行エントリも一定時間後に自動削除されるため、
+     * メモリ肥大化を防ぐ。
+     * maximumSize: 超過時はLRUで古いエントリを削除する。
      * </p>
+     * @param expireMinutes TTL（分）
+     * @param maxSize 最大保持件数
+     * @return Caffeineキャッシュ
      */
-    @Scheduled(fixedRate = 3_600_000)
-    public void cleanUp() {
-        LocalDateTime now = LocalDateTime.now();
-        loginAttempts.entrySet().removeIf(e -> isExpired(e.getValue(), now));
-        signupAttempts.entrySet().removeIf(e -> isExpired(e.getValue(), now));
-        passwordResetAttempts.entrySet().removeIf(e -> isExpired(e.getValue(), now));
-    }
-
-    /**
-     * エントリが期限切れかどうかを判定する
-     * <p>
-     * ロック中の場合は lockedUntil、未ロックの場合は windowExpiresAt を参照する。
-     * </p>
-     */
-    private boolean isExpired(AttemptData data, LocalDateTime now) {
-        LocalDateTime expiry = data.lockedUntil() != null ? data.lockedUntil() : data.windowExpiresAt();
-        return expiry != null && now.isAfter(expiry);
+    private Cache<String, AttemptData> buildCache(long expireMinutes, long maxSize) {
+        return Caffeine.newBuilder()
+                .maximumSize(maxSize)
+                .expireAfterWrite(expireMinutes, TimeUnit.MINUTES)
+                .build();
     }
 }

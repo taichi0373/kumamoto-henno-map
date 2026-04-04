@@ -125,22 +125,6 @@ public class AuthController {
     }
 
     /**
-     * クライアントIPアドレスを取得する
-     * <p>
-     * X-Forwarded-For ヘッダーはクライアントが任意に偽装できるため使用しない。
-     * リバースプロキシ配下にデプロイする場合は application.properties の
-     * server.forward-headers-strategy を FRAMEWORK に変更し、
-     * プロキシ側で X-Forwarded-For を適切に付与する設定を行うこと。
-     * その場合、Spring が安全に処理した結果が getRemoteAddr() に反映される。
-     * </p>
-     * @param request HTTPリクエスト
-     * @return クライアントIPアドレス
-     */
-    private String getClientIp(HttpServletRequest request) {
-        return request.getRemoteAddr();
-    }
-
-    /**
      * ログアウト
      * <p>
      * JWT Cookie を削除する。削除操作のため 204 No Content を返す。
