@@ -44,6 +44,10 @@ public class UsersDto {
     @Schema(description = "運転免許所持状況コード（例: SURRENDERED）", example = "SURRENDERED")
     private String licenseStatus;
 
+    /** 運転免許返納日 */
+    @Schema(description = "運転免許返納日 (ISO 8601)", example = "2024-04-01", type = "string", format = "date")
+    private LocalDate licenseSurrenderedAt;
+
     /** システム共通フィールド */
     @Schema(hidden = true)
     private SystemField systemField;

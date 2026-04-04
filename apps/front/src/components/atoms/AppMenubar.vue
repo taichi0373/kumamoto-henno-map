@@ -35,6 +35,7 @@ const items = ref([
 
 <style scoped lang="scss">
 @use "@/assets/scss/base";
+
 .p-menubar {
   border-radius: 0px;
   z-index: 1000;

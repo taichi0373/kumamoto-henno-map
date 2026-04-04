@@ -24,8 +24,9 @@
           </div>
 
           <div class="form-col">
-            <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
-            <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true" :error="birthDateErrorDto" />
+            <AppLabel :id="'email'" :required="true">メールアドレス</AppLabel>
+            <AppTextField :input-id="'email'" :type="'text'" v-model="usersModel.email"
+              placeholder="メールアドレスを入力してください" :required="true" :error="emailErrorDto" />
           </div>
 
           <div class="form-col">
@@ -35,9 +36,20 @@
           </div>
 
           <div class="form-col">
+            <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
+            <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true" :error="birthDateErrorDto" />
+          </div>
+
+          <div class="form-col">
             <AppLabel :id="'licenseStatus'" :required="true">運転免許の所持状況</AppLabel>
             <AppSelect :id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
               :options="licenseOptions" :required="true" :error="licenseStatusErrorDto" />
+          </div>
+
+          <div class="form-col">
+            <AppLabel :id="'licenseSurrenderedAt'">運転免許返納日</AppLabel>
+            <AppCalendar :input-id="'licenseSurrenderedAt'" v-model="usersModel.licenseSurrenderedAt"
+              :error="licenseSurrenderedAtErrorDto" />
           </div>
         </div>
 
@@ -93,9 +105,11 @@ const usersModel = ref<UsersDto>(new UsersDto())
 const usernameErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const passwordErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const confirmPasswordErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+const emailErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const birthDateErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const addressErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const licenseStatusErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+const licenseSurrenderedAtErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
@@ -164,15 +178,18 @@ const onClick = async () => {
       username: usersModel.value.username,
       password: usersModel.value.password,
       confirmPassword: usersModel.value.confirmPassword,
+      email: usersModel.value.email,
       birthDate: TypeConvertUtils.toStringFromDate(usersModel.value.birthDate),
       address: usersModel.value.address,
-      licenseStatus: usersModel.value.licenseStatus
+      licenseStatus: usersModel.value.licenseStatus,
+      licenseSurrenderedAt: TypeConvertUtils.toStringFromDate(usersModel.value.licenseSurrenderedAt)
     }
 
     isLoading.value = true
     try {
       const response = await apiClient.post('/users/signup', requestData)
       if (response.status === responseStatusConstant.CREATED) {
+        isLoading.value = false
         router.push('/login')
       } else {
         ToastMessageUtils.error(API_RESPONSE_MESSAGE.CREATE_FAILED)
@@ -192,9 +209,11 @@ const clearError = () => {
   usernameErrorDto.value.splice(0)
   passwordErrorDto.value.splice(0)
   confirmPasswordErrorDto.value.splice(0)
+  emailErrorDto.value.splice(0)
   birthDateErrorDto.value.splice(0)
   addressErrorDto.value.splice(0)
   licenseStatusErrorDto.value.splice(0)
+  licenseSurrenderedAtErrorDto.value.splice(0)
 }
 
 /**
@@ -234,6 +253,19 @@ function checkError(): boolean {
     usersModel.value.password !== usersModel.value.confirmPassword) {
     confirmPasswordErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_008, "パスワード", "パスワード確認")
+    );
+    hasError = true
+  }
+  // メールアドレスが未入力の場合はエラー
+  if (ValidateUtils.isNullOrEmpty(usersModel.value.email)) {
+    emailErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "メールアドレス")
+    );
+    hasError = true
+  } else if (!ValidateUtils.isEmail(usersModel.value.email ?? '')) {
+    // メールアドレスの形式チェック
+    emailErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_004, "メールアドレス")
     );
     hasError = true
   }

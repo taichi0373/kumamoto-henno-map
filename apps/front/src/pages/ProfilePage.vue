@@ -10,12 +10,11 @@
                 placeholder="ユーザー名を入力してください" :required="true" :error="usernameErrorDto" />
             </div>
             <div class="form-col">
-              <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
-              <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true"
-                :error="birthDateErrorDto" />
+              <AppLabel :id="'email'" :required="true">メールアドレス</AppLabel>
+              <AppTextField :input-id="'email'" type="text" v-model="usersModel.email"
+                placeholder="メールアドレスを入力してください" :required="true" :error="emailErrorDto" />
             </div>
           </div>
-
           <div class="form-row-2">
             <div class="form-col">
               <AppLabel :required="true">居住地域</AppLabel>
@@ -23,14 +22,30 @@
                 :options="addressOptions" :filter="true" :required="true" :error="addressErrorDto" />
             </div>
             <div class="form-col">
+              <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
+              <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true"
+                :error="birthDateErrorDto" />
+            </div>
+          </div>
+          <div class="form-row-2">
+            <div class="form-col">
               <AppLabel :required="true">運転免許の所持状況</AppLabel>
               <AppSelect :input-id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
                 :options="licenseOptions" :required="true" :error="licenseStatusErrorDto" />
+            </div>
+            <div class="form-col">
+              <AppLabel :id="'licenseSurrenderedAt'">運転免許返納日</AppLabel>
+              <AppCalendar :input-id="'licenseSurrenderedAt'" v-model="usersModel.licenseSurrenderedAt"
+                :error="licenseSurrenderedAtErrorDto" />
             </div>
           </div>
           <div class="form-btn">
             <AppButton :primary="false" label="クリア" @click="clearForm" />
             <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
+          </div>
+
+          <div class="form-link">
+            <AppLink @click="router.push('/change-password')">パスワードを変更する</AppLink>
           </div>
 
       </AppCard>
@@ -53,6 +68,7 @@ import AppCard from '@/components/atoms/AppCard.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppCalendar from '@/components/atoms/AppCalendar.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
+import AppLink from '@/components/atoms/AppLink.vue'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { UsersDto } from '@/dto/usersDto'
@@ -75,9 +91,11 @@ const usersModel = ref<UsersDto>(new UsersDto())
 
 /** エラーオブジェクト */
 const usernameErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+const emailErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const birthDateErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const addressErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const licenseStatusErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+const licenseSurrenderedAtErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 
 /** ローディング */
 const isLoading = ref(false)
@@ -171,9 +189,11 @@ const updateUsersInfo = async () => {
     const requestData = {
       userId: usersModel.value.userId,
       username: usersModel.value.username,
+      email: usersModel.value.email,
       birthDate: TypeConvertUtils.toStringFromDate(usersModel.value.birthDate),
       address: usersModel.value.address,
-      licenseStatus: usersModel.value.licenseStatus
+      licenseStatus: usersModel.value.licenseStatus,
+      licenseSurrenderedAt: TypeConvertUtils.toStringFromDate(usersModel.value.licenseSurrenderedAt)
     }
     isLoading.value = true
     try {
@@ -199,9 +219,11 @@ const updateUsersInfo = async () => {
 const clearForm = () => {
   clearError()
   usersModel.value.username = ''
+  usersModel.value.email = null
   usersModel.value.birthDate = null
   usersModel.value.address = ''
   usersModel.value.licenseStatus = ''
+  usersModel.value.licenseSurrenderedAt = null
 }
 
 /**
@@ -209,9 +231,11 @@ const clearForm = () => {
   */
 const clearError = () => {
   usernameErrorDto.value.splice(0)
+  emailErrorDto.value.splice(0)
   birthDateErrorDto.value.splice(0)
   addressErrorDto.value.splice(0)
   licenseStatusErrorDto.value.splice(0)
+  licenseSurrenderedAtErrorDto.value.splice(0)
 }
 
 /**
@@ -227,6 +251,18 @@ function checkError(): boolean {
   if (ValidateUtils.isNullOrEmpty(usersModel.value.username)) {
     usernameErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "ユーザ名")
+    );
+    hasError = true
+  }
+  // メールアドレスが未入力の場合はエラー
+  if (ValidateUtils.isNullOrEmpty(usersModel.value.email)) {
+    emailErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "メールアドレス")
+    );
+    hasError = true
+  } else if (!ValidateUtils.isEmail(usersModel.value.email ?? '')) {
+    emailErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_004, "メールアドレス")
     );
     hasError = true
   }
