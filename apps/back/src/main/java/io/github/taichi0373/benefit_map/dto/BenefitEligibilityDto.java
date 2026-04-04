@@ -46,6 +46,14 @@ public class BenefitEligibilityDto {
     @Schema(description = "備考", example = "熊本市内限定")
     private String note;
 
+    /** フリーワード検索キーワード */
+    @Schema(description = "フリーワード（特典名・特典内容の部分一致）", example = "バス")
+    private String keyword;
+
+    /** カテゴリコード */
+    @Schema(description = "カテゴリコード", example = "TR001")
+    private String categoryCd;
+
     /** システム共通フィールド */
     @Schema(hidden = true)
     private SystemField systemField;

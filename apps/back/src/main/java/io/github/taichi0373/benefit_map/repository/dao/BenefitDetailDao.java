@@ -6,6 +6,7 @@ import org.seasar.doma.Dao;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.option.LikeOption;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity_;
@@ -58,14 +59,17 @@ public interface BenefitDetailDao {
     }
 
     /**
-     * 利用資格条件で検索（年齢・運転免許所持状況・自治体コード）
+     * 利用資格条件で検索（年齢・運転免許所持状況・自治体コード・キーワード・カテゴリコード）
      * @param age            年齢
      * @param licenseStatus  運転免許所持状況
      * @param municipalityCd 対象自治体コード
+     * @param keyword        フリーワード（特典名・特典内容の部分一致）
+     * @param categoryCd     カテゴリコード
      * @return 特典詳細一覧
      */
     default List<BenefitDetailEntity> selectEligible(
-            Integer age, String licenseStatus, String municipalityCd) {
+            Integer age, String licenseStatus, String municipalityCd,
+            String keyword, String categoryCd) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
@@ -92,6 +96,17 @@ public interface BenefitDetailDao {
                             // 都道府県コード（上位2桁）
                             c.or(() -> c.eq(e.municipalityCd, municipalityCd.substring(0, 2)));
                         });
+                    }
+                    // フリーワード検索（特典名または特典内容の部分一致）
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.benefitName, keyword, LikeOption.infix('$'));
+                            c.or(() -> c.like(e.benefitDetail, keyword, LikeOption.infix('$')));
+                        });
+                    }
+                    // カテゴリコードで絞り込み
+                    if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
+                        c.eq(e.categoryCd, categoryCd);
                     }
                 })
                 .fetch();
