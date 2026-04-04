@@ -121,7 +121,7 @@ public class SecurityConfig {
                     writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "アクセス権限がありません"))
             )
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-            .addFilterAfter(csrfProtectionFilter(), JwtAuthenticationFilter.class);
+            .addFilterBefore(csrfProtectionFilter(), JwtAuthenticationFilter.class);
 
         return http.build();
     }

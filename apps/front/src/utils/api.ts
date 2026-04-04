@@ -72,7 +72,6 @@ class RestApiClient {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'X-Service-Name': 'front'
       }
     })
 
@@ -83,9 +82,14 @@ class RestApiClient {
    * リクエスト・レスポンスインターセプターの設定
    */
   private setupInterceptors(): void {
-    // リクエストインターセプター（ロギング）
+    // リクエストインターセプター（ロギング、CSRF用カスタムヘッダー付与）
     this.axiosInstance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
+        // 状態変更系メソッドにのみ X-Service-Name を付与してプリフライトを抑制
+        const mutatingMethods = ['post', 'put', 'patch', 'delete']
+        if (mutatingMethods.includes(config.method?.toLowerCase() ?? '')) {
+          config.headers['X-Service-Name'] = 'front'
+        }
         console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))
         return config
       },
