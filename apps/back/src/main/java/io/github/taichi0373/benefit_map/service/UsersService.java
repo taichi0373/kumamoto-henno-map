@@ -114,29 +114,27 @@ public class UsersService {
      * パスワード変更
      * <p>
      * 現在のパスワードを検証したうえで新しいパスワードに変更する。
+     * DB アクセス等で例外が発生した場合はそのままスローし、呼び出し元で 500 として処理する。
      * </p>
      * @param userId ユーザーID
      * @param currentPassword 現在のパスワード（平文）
      * @param newPassword 新しいパスワード（平文）
      * @return 変更成功時はtrue、現在のパスワードが不一致の場合はfalse、ユーザーが存在しない場合はnull
+     * @throws Exception DB アクセスエラー等の内部エラー
      */
-    public Boolean changePassword(Long userId, String currentPassword, String newPassword) {
-        try {
-            UsersEntity user = usersDao.selectById(userId);
-            if (ValidateUtils.isNullOrEmpty(user)) {
-                return null;
-            }
-            // 現在のパスワードを検証
-            if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-                return false;
-            }
-            // 新しいパスワードをハッシュ化して更新
-            user.setPasswordHash(passwordEncoder.encode(newPassword));
-            usersDao.update(user);
-            return true;
-        } catch (Exception e) {
+    public Boolean changePassword(Long userId, String currentPassword, String newPassword) throws Exception {
+        UsersEntity user = usersDao.selectById(userId);
+        if (ValidateUtils.isNullOrEmpty(user)) {
             return null;
         }
+        // 現在のパスワードを検証
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            return false;
+        }
+        // 新しいパスワードをハッシュ化して更新
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        usersDao.update(user);
+        return true;
     }
 
     /**

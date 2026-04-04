@@ -155,11 +155,13 @@ public class UsersController {
     })
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "変更成功（data: null）"),
+            @ApiResponse(responseCode = "400", description = "入力値が不正（必須項目未入力・パスワード不一致）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "401", description = "未認証",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
-            @ApiResponse(responseCode = "409", description = "現在のパスワードが正しくない",
-                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "現在のパスワードが正しくない",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PutMapping("/password")
@@ -171,6 +173,20 @@ public class UsersController {
             if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(ApiResponseDto.error("認証が必要です"));
+            }
+
+            // 必須チェック
+            if (ValidateUtils.isNullOrEmpty(request.getCurrentPassword())
+                    || ValidateUtils.isNullOrEmpty(request.getNewPassword())
+                    || ValidateUtils.isNullOrEmpty(request.getConfirmNewPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("すべての項目を入力してください"));
+            }
+
+            // 新パスワード一致チェック
+            if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("新しいパスワードと確認用パスワードが一致しません"));
             }
 
             CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal();

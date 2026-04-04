@@ -20,6 +20,7 @@ import io.github.taichi0373.benefit_map.dto.PasswordResetConfirmRequestDto;
 import io.github.taichi0373.benefit_map.dto.PasswordResetRequestDto;
 import io.github.taichi0373.benefit_map.service.AuthService;
 import io.github.taichi0373.benefit_map.service.PasswordResetService;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -58,6 +59,9 @@ public class AuthController {
     /** CookieのPath */
     @Value("${server.servlet.context-path:/benefit-map/api}")
     private String contextPath;
+
+    /** パスワード最低文字数 */
+    private static final int PASSWORD_MIN_LENGTH = 8;
 
     /**
      * ログイン
@@ -143,7 +147,7 @@ public class AuthController {
             passwordResetService.requestPasswordReset(request.getEmail());
             return ResponseEntity.ok(ApiResponseDto.success(null));
         } catch (Exception e) {
-            // メール送信失敗等のエラーは内部でログ記録するが、ユーザーには成功を返す
+            // メール送信失敗等のエラーはログに記録し、ユーザーには成功を返す
             return ResponseEntity.ok(ApiResponseDto.success(null));
         }
     }
@@ -160,13 +164,36 @@ public class AuthController {
     @Operation(summary = "パスワードリセット実行", description = "リセットトークンを使用して新しいパスワードを設定する。認証・CSRF 保護は不要。")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "リセット成功（data: null）"),
-            @ApiResponse(responseCode = "400", description = "トークンが無効・期限切れ・使用済み",
+            @ApiResponse(responseCode = "400", description = "入力値が不正（必須項目未入力・パスワード不一致・長さ不足）またはトークンが無効・期限切れ・使用済み",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/password-reset/confirm")
     public ResponseEntity<ApiResponseDto<Void>> confirmPasswordReset(
             @RequestBody PasswordResetConfirmRequestDto request) {
         try {
+            // 必須チェック
+            if (ValidateUtils.isNullOrEmpty(request.getToken())
+                    || ValidateUtils.isNullOrEmpty(request.getNewPassword())
+                    || ValidateUtils.isNullOrEmpty(request.getConfirmNewPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("すべての項目を入力してください"));
+            }
+
+            // パスワード最低文字数チェック
+            if (request.getNewPassword().length() < PASSWORD_MIN_LENGTH) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error(
+                                "パスワードは" + PASSWORD_MIN_LENGTH + "文字以上で入力してください"));
+            }
+
+            // 新パスワード一致チェック
+            if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("新しいパスワードと確認用パスワードが一致しません"));
+            }
+
             boolean success = passwordResetService.confirmPasswordReset(
                     request.getToken(), request.getNewPassword());
             if (!success) {

@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.service;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
@@ -76,11 +78,11 @@ public class PasswordResetService {
         }
         String token = sb.toString();
 
-        // トークンをDBに保存
+        // トークンをDBに保存（DB漏えい対策のためSHA-256ハッシュのみ保存）
         LocalDateTime now = LocalDateTime.now();
         PasswordResetTokensEntity tokenEntity = new PasswordResetTokensEntity();
         tokenEntity.setUserId(user.getUserId());
-        tokenEntity.setToken(token);
+        tokenEntity.setToken(hashToken(token));
         tokenEntity.setExpiresAt(now.plusMinutes(TOKEN_EXPIRY_MINUTES));
         tokenEntity.setUsed(false);
         tokenEntity.setSystemField(new SystemField(now, now));
@@ -106,22 +108,27 @@ public class PasswordResetService {
      * パスワードリセットを実行する
      * <p>
      * トークンを検証し、有効な場合に新しいパスワードを設定する。
+     * DBにはハッシュのみ保存されているため、照合時に同じSHA-256ハッシュを計算して比較する。
+     * used=false かつ期限内の条件付き UPDATE を原子的に実行することで、
+     * 同時リクエストによるトークンの二重使用を防ぐ。
      * </p>
-     * @param token リセットトークン
+     * @param token リセットトークン（平文）
      * @param newPassword 新しいパスワード（平文）
      * @return 成功時はtrue、トークンが無効・期限切れ・使用済みの場合はfalse
      */
     public boolean confirmPasswordReset(String token, String newPassword) {
-        PasswordResetTokensEntity tokenEntity = passwordResetTokensDao.selectByToken(token);
+        String tokenHash = hashToken(token);
+        PasswordResetTokensEntity tokenEntity = passwordResetTokensDao.selectByToken(tokenHash);
 
-        // トークンの存在・使用済み・有効期限チェック
+        // トークンの存在チェック
         if (tokenEntity == null) {
             return false;
         }
-        if (Boolean.TRUE.equals(tokenEntity.getUsed())) {
-            return false;
-        }
-        if (LocalDateTime.now().isAfter(tokenEntity.getExpiresAt())) {
+
+        // used=false かつ期限内の場合のみ used=true に更新する原子的操作
+        // 0件更新 = 使用済みまたは期限切れ（同時リクエスト時も必ず片方が0件になる）
+        int updated = passwordResetTokensDao.markAsUsedIfValid(tokenHash, LocalDateTime.now());
+        if (updated == 0) {
             return false;
         }
 
@@ -133,15 +140,31 @@ public class PasswordResetService {
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         usersDao.update(user);
 
-        // トークンを使用済みに更新
-        tokenEntity.setUsed(true);
-        LocalDateTime updatedAt = LocalDateTime.now();
-        SystemField originalField = tokenEntity.getSystemField();
-        LocalDateTime createdAt = (originalField != null) ? originalField.getSysCreatedAt() : updatedAt;
-        tokenEntity.setSystemField(new SystemField(createdAt, updatedAt));
-        passwordResetTokensDao.update(tokenEntity);
-
         return true;
+    }
+
+    /**
+     * トークンをSHA-256でハッシュ化する
+     * <p>
+     * DBには平文トークンを保存せず、このハッシュ値のみを保存する。
+     * メールには平文トークンを送信し、照合時に同じハッシュを計算して比較する。
+     * </p>
+     * @param token 平文トークン
+     * @return SHA-256ハッシュ（64文字hex文字列）
+     */
+    private String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-256はJava標準で必ず利用可能なため到達しない
+            throw new IllegalStateException("SHA-256アルゴリズムが利用できません", e);
+        }
     }
 
 }

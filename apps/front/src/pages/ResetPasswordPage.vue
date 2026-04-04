@@ -40,6 +40,7 @@
 import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import type { AxiosError } from 'axios'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppPassword from '@/components/atoms/AppPassword.vue'
@@ -106,9 +107,14 @@ const onSubmit = async () => {
       isLoading.value = false
       router.push({ path: '/login', query: { resetSuccess: '1' } })
     }
-  } catch {
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<{ message: string }>
     barErrMode.value = 'error'
-    barErrMsg.value = API_RESPONSE_MESSAGE.INVALID_OR_EXPIRED_TOKEN
+    if (axiosError.response?.status === responseStatusConstant.BAD_REQUEST) {
+      barErrMsg.value = API_RESPONSE_MESSAGE.INVALID_OR_EXPIRED_TOKEN
+    } else {
+      barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR
+    }
   } finally {
     isLoading.value = false
   }

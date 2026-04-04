@@ -44,7 +44,7 @@ public class PasswordResetTokensEntity implements Serializable {
     @Column(name = "user_id")
     Long userId;
 
-    /** リセットトークン（SecureRandomで生成した64文字hex文字列） */
+    /** リセットトークン（平文トークンのSHA-256ハッシュ値、64文字hex文字列。DBには平文を保存しない） */
     @Column(name = "token")
     String token;
 
