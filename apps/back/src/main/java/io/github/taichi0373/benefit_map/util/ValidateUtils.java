@@ -25,6 +25,9 @@ public class ValidateUtils {
     /** メールアドレスのパターン */
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[\\w.-]+@[\\w.-]+\\.[a-zA-Z]{2,}$");
 
+    /** パスワード最低文字数 */
+    public static final int PASSWORD_MIN_LENGTH = 8;
+
     /**
      * オブジェクトが null または空文字かどうか
      */
@@ -95,6 +98,14 @@ public class ValidateUtils {
     public static boolean isEmail(String str) {
         if (isNullOrEmpty(str)) return false;
         return EMAIL_PATTERN.matcher(str).matches();
+    }
+
+    /**
+     * パスワードポリシーを満たすか（{@value #PASSWORD_MIN_LENGTH}文字以上）
+     */
+    public static boolean isValidPassword(String password) {
+        if (isNullOrEmpty(password)) return false;
+        return password.length() >= PASSWORD_MIN_LENGTH;
     }
 
     /** コンストラクタ */

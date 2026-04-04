@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import org.seasar.doma.Dao;
 import org.seasar.doma.Insert;
-import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.criteria.Entityql;
@@ -53,7 +52,10 @@ public interface PasswordResetTokensDao {
         NativeSql nativeSql = new NativeSql(Config.get(this));
         PasswordResetTokensEntity_ e = new PasswordResetTokensEntity_();
         return nativeSql.update(e)
-                .set(c -> c.value(e.used, true))
+                .set(c -> {
+                    c.value(e.used, true);
+                    c.value(e.systemField.sysUpdatedAt, now);
+                })
                 .where(c -> {
                     c.eq(e.token, tokenHash);
                     c.eq(e.used, false);

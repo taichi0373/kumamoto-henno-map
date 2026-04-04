@@ -183,6 +183,13 @@ public class UsersController {
                         .body(ApiResponseDto.error("すべての項目を入力してください"));
             }
 
+            // パスワードポリシーチェック（最低文字数）
+            if (!ValidateUtils.isValidPassword(request.getNewPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error(
+                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上で入力してください"));
+            }
+
             // 新パスワード一致チェック
             if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)

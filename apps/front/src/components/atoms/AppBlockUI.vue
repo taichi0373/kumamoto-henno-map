@@ -16,6 +16,8 @@ defineProps<{
 </script>
 
 <style scoped lang="scss">
+@use "@/assets/scss/base";
+
 .blockui-overlay {
   position: fixed;
   inset: 0;

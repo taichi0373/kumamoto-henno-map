@@ -11,6 +11,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import io.github.taichi0373.benefit_map.repository.dao.PasswordResetTokensDao;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
@@ -116,6 +117,7 @@ public class PasswordResetService {
      * @param newPassword 新しいパスワード（平文）
      * @return 成功時はtrue、トークンが無効・期限切れ・使用済みの場合はfalse
      */
+    @Transactional
     public boolean confirmPasswordReset(String token, String newPassword) {
         String tokenHash = hashToken(token);
         PasswordResetTokensEntity tokenEntity = passwordResetTokensDao.selectByToken(tokenHash);

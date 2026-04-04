@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -40,6 +42,9 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping("/auth")
 public class AuthController {
 
+    /** ロガー */
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     /** 認証サービス */
     @Autowired
     private AuthService authService;
@@ -59,9 +64,6 @@ public class AuthController {
     /** CookieのPath */
     @Value("${server.servlet.context-path:/benefit-map/api}")
     private String contextPath;
-
-    /** パスワード最低文字数 */
-    private static final int PASSWORD_MIN_LENGTH = 8;
 
     /**
      * ログイン
@@ -147,7 +149,9 @@ public class AuthController {
             passwordResetService.requestPasswordReset(request.getEmail());
             return ResponseEntity.ok(ApiResponseDto.success(null));
         } catch (Exception e) {
-            // メール送信失敗等のエラーはログに記録し、ユーザーには成功を返す
+            // ユーザーには成功を返す（列挙攻撃対策）が、運用検知のためWARNログを記録する
+            // メールアドレス等のPIIはログに含めない
+            logger.warn("パスワードリセットメールの送信中にエラーが発生しました", e);
             return ResponseEntity.ok(ApiResponseDto.success(null));
         }
     }
@@ -181,11 +185,11 @@ public class AuthController {
                         .body(ApiResponseDto.error("すべての項目を入力してください"));
             }
 
-            // パスワード最低文字数チェック
-            if (request.getNewPassword().length() < PASSWORD_MIN_LENGTH) {
+            // パスワードポリシーチェック（最低文字数）
+            if (!ValidateUtils.isValidPassword(request.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponseDto.error(
-                                "パスワードは" + PASSWORD_MIN_LENGTH + "文字以上で入力してください"));
+                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上で入力してください"));
             }
 
             // 新パスワード一致チェック
