@@ -119,9 +119,6 @@ class RestApiClient {
         return config
       },
       (error) => {
-        // error オブジェクトを丸ごと出力すると config.headers の Authorization トークンが漏えいするため、
-        // URL・メッセージのみ抽出して出力する
-        console.error('API Request Error:', error?.config?.method?.toUpperCase(), error?.config?.url, error?.message)
         return Promise.reject(error)
       }
     )
@@ -133,8 +130,6 @@ class RestApiClient {
         return response
       },
       (error) => {
-        console.error('API Response Error:', error.response?.status, error.config?.url, error.message)
-
         // /auth/login・/auth/logout・/auth/refresh は401を自前でハンドリングするため除外
         const isAuthEndpoint = ['/auth/login', '/auth/logout', '/auth/refresh'].some(
           path => error.config?.url?.includes(path)
