@@ -51,7 +51,9 @@ const setupResponsiveDesign = () => {
   handleResize()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // ページリフレッシュ時にリフレッシュトークンでセッションを復元
+  await authStore.restoreSession()
   // ウィンドウリサイズイベントの設定
   setupResponsiveDesign()
 })

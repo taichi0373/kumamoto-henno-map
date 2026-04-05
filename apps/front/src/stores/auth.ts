@@ -10,9 +10,19 @@ export interface User {
 
 /** ストレージキー定数 */
 const USER_KEY = 'user_info'
-const TOKEN_KEY = 'auth_token'
 
-/** 初期ユーザー情報の取得 */
+/**
+ * セキュリティ注意事項:
+ * - アクセストークンは XSS によるトークン窃取を防ぐため、localStorage/sessionStorage には保存しない。
+ *   Pinia の state（JS メモリ）のみで管理する。
+ * - ページリフレッシュ時はトークンが消えるため、再ログインまたはリフレッシュトークンが必要。
+ *   現在はリフレッシュトークン未実装のため、ページリフレッシュ時は再ログインが必要。
+ * - ユーザー情報（username・id）は認証に関わらない表示用データのため sessionStorage に保存する。
+ *   remember=true の場合のみ localStorage に保存する。
+ * - 根本的な XSS 対策として、厳格な CSP・入力サニタイズ・依存ライブラリ監査を必ず行うこと。
+ */
+
+/** 初期ユーザー情報の取得（表示用のみ。認証判定には token を使う） */
 const loadInitialUser = (): User | null => {
   try {
     const userInfo = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
@@ -22,25 +32,28 @@ const loadInitialUser = (): User | null => {
   }
 }
 
-/** 初期トークンの取得 */
-const loadInitialToken = (): string | null => {
-  return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
-}
-
 /**
  * 認証状態を管理するPiniaストア
- * JWTトークンは Authorization: Bearer ヘッダーで送信するため、localStorage/sessionStorage で管理する。
+ *
+ * ## トークン管理方針
+ * - アクセストークン: JS メモリのみ（XSS 耐性のため storage に保存しない）
+ * - ユーザー情報: sessionStorage（remember=true 時は localStorage）
+ * - ページリフレッシュ後: トークンは消えるため未認証状態になる
+ *   → リフレッシュトークン実装後は自動復元される予定
  */
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    /** ユーザー情報 */
+    /** ユーザー情報（表示用） */
     user: loadInitialUser(),
-    /** JWTトークン */
-    token: loadInitialToken()
+    /**
+     * JWTアクセストークン（メモリのみ・storage非保存）
+     * ページリフレッシュで消えることを許容する設計。
+     */
+    token: null as string | null
   }),
   getters: {
-    /** ログイン状態（トークンとユーザー情報の両方が存在する場合のみtrue） */
-    isLoggedIn: (state): boolean => !!state.token && !!state.user,
+    /** ログイン状態（メモリ上のトークン存在で判定） */
+    isLoggedIn: (state): boolean => !!state.token,
     /** ユーザー情報取得 */
     getUser: (state): User | null => state.user,
     /** トークン取得 */
@@ -49,37 +62,63 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     /**
      * ログイン処理
-     * @param user ユーザー情報
-     * @param token JWTトークン
-     * @param remember ログイン状態を維持するか
+     * @param user ユーザー情報（表示用）
+     * @param token JWTアクセストークン（メモリのみに保持）
+     * @param remember ユーザー情報をlocalStorageに保持するか（トークンは対象外）
      */
     login(user: User, token: string, remember: boolean = false): void {
-      this.user = user
       this.token = token
+      this.user = user
       localStorage.removeItem(USER_KEY)
       sessionStorage.removeItem(USER_KEY)
-      localStorage.removeItem(TOKEN_KEY)
-      sessionStorage.removeItem(TOKEN_KEY)
       const storage = remember ? localStorage : sessionStorage
       storage.setItem(USER_KEY, JSON.stringify(user))
-      storage.setItem(TOKEN_KEY, token)
       if (user.username) {
         sessionStorage.setItem('username', user.username)
       }
     },
     /**
+     * ページリフレッシュ時のセッション復元
+     * <p>
+     * HttpOnly Cookie のリフレッシュトークンで新しいアクセストークンを取得する。
+     * App.vue の onMounted で呼び出すこと。
+     * </p>
+     * @returns セッション復元に成功した場合はtrue
+     */
+    async restoreSession(): Promise<boolean> {
+      try {
+        const response = await apiClient.post<{ data: { token: string } }>('/auth/refresh')
+        const newToken = response.data?.data?.token
+        if (!newToken) return false
+
+        this.token = newToken
+        // ユーザー情報は storage から復元（表示用のみ）
+        const stored = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
+        if (stored) {
+          this.user = JSON.parse(stored) as User
+        }
+        return true
+      } catch {
+        // リフレッシュトークン無効・期限切れ → 未ログイン状態に戻す
+        this.token = null
+        this.user = null
+        localStorage.removeItem(USER_KEY)
+        sessionStorage.removeItem(USER_KEY)
+        return false
+      }
+    },
+    /**
      * ログアウト処理
-     * ローカルのトークンとユーザー情報をクリアし、サーバーにログアウトを通知する。
+     * DBのリフレッシュトークンを失効させ、メモリ上のトークンとユーザー情報をクリアする。
      */
     async logout(): Promise<void> {
-      this.user = null
       this.token = null
+      this.user = null
       localStorage.removeItem(USER_KEY)
       sessionStorage.removeItem(USER_KEY)
-      localStorage.removeItem(TOKEN_KEY)
-      sessionStorage.removeItem(TOKEN_KEY)
       sessionStorage.removeItem('username')
       try {
+        // サーバー側でリフレッシュトークンを失効させ Cookie をクリア
         await apiClient.post('/auth/logout')
       } catch (error) {
         console.warn('Logout API call failed:', error)
