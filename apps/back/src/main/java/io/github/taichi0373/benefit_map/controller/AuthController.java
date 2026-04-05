@@ -286,6 +286,11 @@ public class AuthController {
 
     /**
      * リフレッシュトークンをHttpOnly Cookieにセットする
+     * <p>
+     * SameSite=Lax は同一オリジン前提。
+     * フロントエンドは開発時は devServer.proxy、本番は Nginx リバースプロキシで
+     * 同一オリジンに統一すること（クロスオリジン XHR では Cookie が送信されない）。
+     * </p>
      * @param response HTTPレスポンス
      * @param plainToken 平文リフレッシュトークン
      */

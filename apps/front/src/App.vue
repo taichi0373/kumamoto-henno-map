@@ -7,24 +7,9 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
 import AppHeader from './components/organisms/AppHeader.vue'
-import { setUnauthorizedHandler, setTokenProvider } from '@/utils/api'
-import { useAuthStore } from '@/stores/auth'
 
-/** 認証ストア */
-const authStore = useAuthStore()
-const router = useRouter()
-
-/** 401発生時のハンドラーを登録（setup()トップレベルで実行し未登録状態をなくす） */
-setUnauthorizedHandler(() => {
-  authStore.logout().finally(() => {
-    router.push('/login')
-  })
-})
-
-/** JWTトークンプロバイダーを登録 */
-setTokenProvider(() => authStore.getToken)
+// setTokenProvider・setUnauthorizedHandler・restoreSession は main.ts で初期化済み
 
 /**
  * リサイズイベントハンドラ
@@ -51,10 +36,7 @@ const setupResponsiveDesign = () => {
   handleResize()
 }
 
-onMounted(async () => {
-  // ページリフレッシュ時にリフレッシュトークンでセッションを復元
-  await authStore.restoreSession()
-  // ウィンドウリサイズイベントの設定
+onMounted(() => {
   setupResponsiveDesign()
 })
 

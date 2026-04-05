@@ -66,8 +66,10 @@ public class RefreshTokenService {
     /**
      * リフレッシュトークンを検証してローテーションする
      * <p>
-     * 旧トークンを失効させ、新しいトークンを発行する（ローテーション）。
-     * 旧トークンの再利用を防ぐためにトークン検証後は必ず失効させること。
+     * 「条件付きUPDATE → 件数チェック → 新トークン発行」の順で実行することで
+     * 並行リクエスト（レース）に対して原子的なローテーションを保証する。
+     * SELECT と UPDATE を分離すると間に割り込みが可能になるため、
+     * 有効性の最終判定は必ず DB の条件付き UPDATE の更新件数で行う。
      * </p>
      * @param plainToken Cookieから取得した平文トークン
      * @return 検証成功時は新しい平文トークンとユーザーIDのペア、失敗時はnull
@@ -79,32 +81,35 @@ public class RefreshTokenService {
         }
 
         String tokenHash = hashToken(plainToken);
+        LocalDateTime now = LocalDateTime.now();
+
+        // userId 取得のための SELECT（存在確認のみ。有効性の判定は条件付き UPDATE で行う）
         RefreshTokensEntity entity = refreshTokensDao.selectByTokenHash(tokenHash);
-
         if (entity == null) {
-            logger.warn("リフレッシュトークンが存在しません");
-            return null;
-        }
-        if (Boolean.TRUE.equals(entity.getRevoked())) {
-            // 失効済みトークンの使用は再利用攻撃の可能性がある
-            logger.warn("失効済みリフレッシュトークンの使用を検出 userId={}", entity.getUserId());
-            return null;
-        }
-        if (entity.getExpiresAt().isBefore(LocalDateTime.now())) {
-            logger.debug("リフレッシュトークンが期限切れ userId={}", entity.getUserId());
+            logger.debug("リフレッシュトークンが存在しません");
             return null;
         }
 
-        // 旧トークンを失効させる（ローテーション）
-        refreshTokensDao.revokeByTokenHash(tokenHash, LocalDateTime.now());
+        // 「revoked=false かつ expires_at > now」の条件付き UPDATE で原子的に失効させる。
+        // 並行リクエストが同一トークンで到達しても、DB レベルで一方のみが1件更新される。
+        // 更新件数 0 = 失効済み・期限切れ・または競合で負けた → 新トークンを発行しない。
+        int updated = refreshTokensDao.revokeIfValidByTokenHash(tokenHash, now);
+        if (updated == 0) {
+            logger.warn("リフレッシュトークンのローテーション失敗（失効済み・期限切れ・競合）userId={}", entity.getUserId());
+            return null;
+        }
 
-        // 新しいトークンを発行
+        // 更新件数 1 = 確実に自分だけが失効させた → 新トークンを発行する
         String newPlainToken = createRefreshToken(entity.getUserId());
         return new RotationResult(newPlainToken, entity.getUserId());
     }
 
     /**
      * リフレッシュトークンを失効させる（ログアウト時）
+     * <p>
+     * 条件付き UPDATE（revoked=false かつ expires_at > now）を使用する。
+     * 更新件数0（失効済み・期限切れ）はログアウト時には正常系のため無視する。
+     * </p>
      * @param plainToken Cookieから取得した平文トークン
      */
     @Transactional
@@ -112,7 +117,7 @@ public class RefreshTokenService {
         if (plainToken == null || plainToken.isBlank()) {
             return;
         }
-        refreshTokensDao.revokeByTokenHash(hashToken(plainToken), LocalDateTime.now());
+        refreshTokensDao.revokeIfValidByTokenHash(hashToken(plainToken), LocalDateTime.now());
     }
 
     /**

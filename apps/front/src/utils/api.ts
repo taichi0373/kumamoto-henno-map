@@ -87,6 +87,11 @@ class RestApiClient {
     this.axiosInstance = axios.create({
       baseURL,
       timeout: 10000,
+      // withCredentials は設定しない（同一オリジン前提のため不要）。
+      // 開発環境は vue.config.js の devServer.proxy で同一オリジンを実現。
+      // 本番環境は Nginx リバースプロキシで同一オリジンを実現すること。
+      // ※ SameSite=Lax の Cookie はクロスオリジン XHR では送信されないため、
+      //   VUE_APP_API_BASE_URL に絶対 URL を設定して proxy をバイパスすることは禁止。
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -128,7 +133,11 @@ class RestApiClient {
       (error) => {
         console.error('API Response Error:', error.response?.status, error.config?.url, error.message)
 
-        if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login') && !error.config?.url?.includes('/auth/logout')) {
+        // /auth/login・/auth/logout・/auth/refresh は401を自前でハンドリングするため除外
+        const isAuthEndpoint = ['/auth/login', '/auth/logout', '/auth/refresh'].some(
+          path => error.config?.url?.includes(path)
+        )
+        if (error.response?.status === 401 && !isAuthEndpoint) {
           console.warn('Unauthorized access, redirecting to login...')
           if (unauthorizedHandler) {
             unauthorizedHandler()

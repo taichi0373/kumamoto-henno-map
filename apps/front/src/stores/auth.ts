@@ -16,7 +16,6 @@ const USER_KEY = 'user_info'
  * - アクセストークンは XSS によるトークン窃取を防ぐため、localStorage/sessionStorage には保存しない。
  *   Pinia の state（JS メモリ）のみで管理する。
  * - ページリフレッシュ時はトークンが消えるため、再ログインまたはリフレッシュトークンが必要。
- *   現在はリフレッシュトークン未実装のため、ページリフレッシュ時は再ログインが必要。
  * - ユーザー情報（username・id）は認証に関わらない表示用データのため sessionStorage に保存する。
  *   remember=true の場合のみ localStorage に保存する。
  * - 根本的な XSS 対策として、厳格な CSP・入力サニタイズ・依存ライブラリ監査を必ず行うこと。

@@ -36,12 +36,21 @@ public interface RefreshTokensDao {
     }
 
     /**
-     * トークンを失効させる（ローテーション・ログアウト時）
+     * トークンを条件付きで原子的に失効させる（ローテーション・ログアウト共用）
+     * <p>
+     * {@code revoked=false かつ expires_at > now} の条件付き UPDATE を使用することで、
+     * 同一トークンへの並行リクエスト（レース）が発生しても
+     * DBレベルで一方のみが1件更新され、他方は0件になる。
+     * <ul>
+     *   <li>ローテーション時: 更新件数0=競合負け → 新トークン発行不可</li>
+     *   <li>ログアウト時: 更新件数0=失効済み/期限切れ → 既に無効化済みなので問題なし</li>
+     * </ul>
+     * </p>
      * @param tokenHash SHA-256ハッシュ値
-     * @param now 更新日時
-     * @return 更新件数
+     * @param now 現在時刻
+     * @return 更新件数（1=成功、0=失効済み/期限切れ/競合負け）
      */
-    default int revokeByTokenHash(String tokenHash, LocalDateTime now) {
+    default int revokeIfValidByTokenHash(String tokenHash, LocalDateTime now) {
         NativeSql nativeSql = new NativeSql(Config.get(this));
         RefreshTokensEntity_ e = new RefreshTokensEntity_();
         return nativeSql.update(e)
@@ -49,7 +58,11 @@ public interface RefreshTokensDao {
                     c.value(e.revoked, true);
                     c.value(e.systemField.sysUpdatedAt, now);
                 })
-                .where(c -> c.eq(e.tokenHash, tokenHash))
+                .where(c -> {
+                    c.eq(e.tokenHash, tokenHash);
+                    c.eq(e.revoked, false);
+                    c.gt(e.expiresAt, now);
+                })
                 .execute();
     }
 
