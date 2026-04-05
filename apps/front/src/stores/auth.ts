@@ -82,17 +82,17 @@ export const useAuthStore = defineStore('auth', {
      * @returns セッション復元に成功した場合はtrue
      */
     async restoreSession(): Promise<boolean> {
+      // ユーザー情報がない = 前回ログインしていない → リフレッシュトークンもないためスキップ
+      const stored = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
+      if (!stored) return false
+
       try {
         const response = await apiClient.post<{ data: { token: string } }>('/auth/refresh')
         const newToken = response.data?.data?.token
         if (!newToken) return false
 
         this.token = newToken
-        // ユーザー情報は storage から復元（表示用のみ）
-        const stored = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
-        if (stored) {
-          this.user = JSON.parse(stored) as User
-        }
+        this.user = JSON.parse(stored) as User
         return true
       } catch {
         // リフレッシュトークン無効・期限切れ → 未ログイン状態に戻す
