@@ -72,9 +72,6 @@ export const useAuthStore = defineStore('auth', {
       sessionStorage.removeItem(USER_KEY)
       const storage = remember ? localStorage : sessionStorage
       storage.setItem(USER_KEY, JSON.stringify(user))
-      if (user.username) {
-        sessionStorage.setItem('username', user.username)
-      }
     },
     /**
      * ページリフレッシュ時のセッション復元
@@ -115,7 +112,6 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       localStorage.removeItem(USER_KEY)
       sessionStorage.removeItem(USER_KEY)
-      sessionStorage.removeItem('username')
       try {
         // サーバー側でリフレッシュトークンを失効させ Cookie をクリア
         await apiClient.post('/auth/logout')

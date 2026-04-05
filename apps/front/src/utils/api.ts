@@ -8,7 +8,7 @@ const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/benefit-map/api';
  */
 type UnauthorizedHandler = () => void
 
-/** 401ハンドラー（App.vue のセットアップ時に登録される） */
+/** 401ハンドラー（main.ts で登録される） */
 let unauthorizedHandler: UnauthorizedHandler | null = null
 
 /**
@@ -119,7 +119,9 @@ class RestApiClient {
         return config
       },
       (error) => {
-        console.error('API Request Error:', error)
+        // error オブジェクトを丸ごと出力すると config.headers の Authorization トークンが漏えいするため、
+        // URL・メッセージのみ抽出して出力する
+        console.error('API Request Error:', error?.config?.method?.toUpperCase(), error?.config?.url, error?.message)
         return Promise.reject(error)
       }
     )
