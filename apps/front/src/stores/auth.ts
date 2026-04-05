@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
+import type { AxiosError } from 'axios'
 
 /** ユーザー情報の型定義 */
 export interface User {
@@ -10,6 +11,16 @@ export interface User {
 
 /** ストレージキー定数 */
 const USER_KEY = 'user_info'
+
+/**
+ * AxiosErrorの型ガード
+ */
+function isAxiosError(error: unknown): error is AxiosError {
+  return error !== null && 
+         typeof error === 'object' && 
+         'isAxiosError' in error && 
+         (error as AxiosError).isAxiosError === true
+}
 
 /**
  * セキュリティ注意事項:
@@ -115,9 +126,10 @@ export const useAuthStore = defineStore('auth', {
           }
         }
         return true
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const axiosError = error as AxiosError<{ message: string }>
         // 401はリフレッシュトークンが無い/無効な正常系 → 静かに未ログイン扱い
-        if (error?.response?.status === 401) {
+        if (axiosError?.response?.status === 401) {
           return false
         }
         
