@@ -119,9 +119,9 @@ const onClick = async () => {
     })
 
     if (response.status === responseStatusConstant.OK) {
-      const userData = (response.data as { data: { username: string; userId: number } }).data
+      const userData = (response.data as { data: { username: string; userId: number; token: string } }).data
       isLoading.value = false
-      auth.login({ username: userData.username, id: String(userData.userId) })
+      auth.login({ username: userData.username, id: String(userData.userId) }, userData.token)
       const redirect = route.query.redirect as string | undefined
       router.push(redirect || '/')
     }
