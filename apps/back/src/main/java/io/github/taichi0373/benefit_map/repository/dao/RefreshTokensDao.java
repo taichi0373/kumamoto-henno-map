@@ -68,19 +68,21 @@ public interface RefreshTokensDao {
 
     /**
      * 期限切れ・失効済みトークンを一括削除する（定期クリーンアップ用）
+     * <p>
+     * OR 条件で1回の DELETE にまとめることでテーブル走査・ロックを1回に抑える。
+     * </p>
      * @param now 現在時刻
-     * @return 削除件数の合計
+     * @return 削除件数
      */
     default int deleteExpiredOrRevoked(LocalDateTime now) {
         NativeSql nativeSql = new NativeSql(Config.get(this));
         RefreshTokensEntity_ e = new RefreshTokensEntity_();
-        int count = nativeSql.delete(e)
-                .where(c -> c.le(e.expiresAt, now))
+        return nativeSql.delete(e)
+                .where(c -> c.or(() -> {
+                    c.le(e.expiresAt, now);
+                    c.eq(e.revoked, true);
+                }))
                 .execute();
-        count += nativeSql.delete(e)
-                .where(c -> c.eq(e.revoked, true))
-                .execute();
-        return count;
     }
 
     /**

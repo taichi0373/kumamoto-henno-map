@@ -9,7 +9,6 @@
 import { onMounted, onUnmounted } from 'vue'
 import AppHeader from './components/organisms/AppHeader.vue'
 
-// setTokenProvider・setUnauthorizedHandler・restoreSession は main.ts で初期化済み
 
 /**
  * リサイズイベントハンドラ

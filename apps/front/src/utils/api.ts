@@ -16,7 +16,7 @@ let unauthorizedHandler: UnauthorizedHandler | null = null
  * <p>
  * api.ts とストアの循環依存を避けるため、ストアへの直接依存を持たず
  * コールバック注入でハンドリングを委譲する。
- * App.vue の setup() トップレベルで呼び出すこと。
+ * main.tsで呼び出すこと。
  * </p>
  * @param handler ログアウト処理とリダイレクトを行うコールバック
  */
@@ -35,7 +35,7 @@ let tokenProvider: TokenProvider | null = null
 /**
  * JWTトークンプロバイダーを登録する
  * <p>
- * App.vue の setup() トップレベルで呼び出すこと。
+ * main.tsで呼び出すこと。
  * </p>
  * @param provider トークンを返す関数
  */

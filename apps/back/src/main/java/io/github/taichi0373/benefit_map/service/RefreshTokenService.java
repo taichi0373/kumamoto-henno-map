@@ -34,6 +34,9 @@ public class RefreshTokenService {
     /** トークンのバイト長（256bit = 32バイト、hex文字列で64文字） */
     private static final int TOKEN_BYTE_LENGTH = 32;
 
+    /** 乱数生成器（インスタンス共有で初期化コストを節約。SecureRandom はスレッドセーフ） */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     /** リフレッシュトークン有効期限（秒） */
     @Value("${jwt.refresh-expiration:2592000}")
     private long refreshExpirationSeconds;
@@ -141,9 +144,8 @@ public class RefreshTokenService {
      * @return 平文トークン
      */
     private String generatePlainToken() {
-        SecureRandom secureRandom = new SecureRandom();
         byte[] tokenBytes = new byte[TOKEN_BYTE_LENGTH];
-        secureRandom.nextBytes(tokenBytes);
+        SECURE_RANDOM.nextBytes(tokenBytes);
         StringBuilder sb = new StringBuilder();
         for (byte b : tokenBytes) {
             sb.append(String.format("%02x", b));

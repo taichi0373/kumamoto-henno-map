@@ -21,7 +21,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.io.IOException;
@@ -46,8 +45,7 @@ public class RouteController {
     /**
      * 経路探索
      */
-    @Operation(summary = "経路探索", description = "出発地・目的地・日時を指定し OTP 経由で公共交通経路を探索する。未ログインでも利用可（ログイン時はユーザーIDがログに記録される）。CSRF トークン必須。")
-    @SecurityRequirement(name = "csrfToken")
+    @Operation(summary = "経路探索", description = "出発地・目的地・日時を指定し OTP 経由で公共交通経路を探索する。未ログインでも利用可（ログイン時はユーザーIDがログに記録される）。")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "探索成功（OTP レスポンスをそのまま返却）"),
             @ApiResponse(responseCode = "500", description = "OTP 接続エラーまたは探索失敗",
