@@ -31,7 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -60,7 +59,7 @@ public class UsersController {
      * ユーザー情報取得
      */
     @Operation(summary = "ユーザー情報取得", description = "JWT で認証されたユーザー自身の情報を取得する。")
-    @SecurityRequirement(name = "cookieAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "取得成功（data: UserResponseDto）"),
             @ApiResponse(responseCode = "401", description = "未認証",
@@ -103,11 +102,8 @@ public class UsersController {
     /**
      * ユーザー情報の更新
      */
-    @Operation(summary = "ユーザー情報更新", description = "JWT で認証されたユーザー自身の情報を更新する。CSRF トークン必須。")
-    @SecurityRequirements({
-            @SecurityRequirement(name = "cookieAuth"),
-            @SecurityRequirement(name = "csrfToken")
-    })
+    @Operation(summary = "ユーザー情報更新", description = "JWT で認証されたユーザー自身の情報を更新する。")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更新成功（data: null）"),
             @ApiResponse(responseCode = "400", description = "メールアドレス未入力または形式不正",
@@ -176,11 +172,8 @@ public class UsersController {
      * ログイン済みユーザーが現在のパスワードを確認したうえで新しいパスワードに変更する。
      * </p>
      */
-    @Operation(summary = "パスワード変更", description = "JWT で認証されたユーザー自身のパスワードを変更する。現在のパスワードの確認が必要。CSRF トークン必須。")
-    @SecurityRequirements({
-            @SecurityRequirement(name = "cookieAuth"),
-            @SecurityRequirement(name = "csrfToken")
-    })
+    @Operation(summary = "パスワード変更", description = "JWT で認証されたユーザー自身のパスワードを変更する。現在のパスワードの確認が必要。")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "変更成功（data: null）"),
             @ApiResponse(responseCode = "400", description = "入力値が不正（必須項目未入力・パスワード不一致）",

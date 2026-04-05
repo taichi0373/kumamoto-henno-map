@@ -10,6 +10,7 @@ export interface User {
 
 /** ストレージキー定数 */
 const USER_KEY = 'user_info'
+const TOKEN_KEY = 'auth_token'
 
 /** 初期ユーザー情報の取得 */
 const loadInitialUser = (): User | null => {
@@ -21,53 +22,67 @@ const loadInitialUser = (): User | null => {
   }
 }
 
+/** 初期トークンの取得 */
+const loadInitialToken = (): string | null => {
+  return localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY)
+}
+
 /**
  * 認証状態を管理するPiniaストア
- * JWTトークンは HttpOnly Cookie に格納されるため、このストアでは管理しない。
+ * JWTトークンは Authorization: Bearer ヘッダーで送信するため、localStorage/sessionStorage で管理する。
  */
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     /** ユーザー情報 */
-    user: loadInitialUser()
+    user: loadInitialUser(),
+    /** JWTトークン */
+    token: loadInitialToken()
   }),
   getters: {
-    /** ログイン状態（ユーザー情報の有無で判定） */
-    isLoggedIn: (state): boolean => !!state.user,
+    /** ログイン状態（トークンとユーザー情報の両方が存在する場合のみtrue） */
+    isLoggedIn: (state): boolean => !!state.token && !!state.user,
     /** ユーザー情報取得 */
-    getUser: (state): User | null => state.user
+    getUser: (state): User | null => state.user,
+    /** トークン取得 */
+    getToken: (state): string | null => state.token
   },
   actions: {
     /**
      * ログイン処理
      * @param user ユーザー情報
+     * @param token JWTトークン
      * @param remember ログイン状態を維持するか
      */
-    login(user: User, remember: boolean = false): void {
+    login(user: User, token: string, remember: boolean = false): void {
       this.user = user
+      this.token = token
       localStorage.removeItem(USER_KEY)
       sessionStorage.removeItem(USER_KEY)
+      localStorage.removeItem(TOKEN_KEY)
+      sessionStorage.removeItem(TOKEN_KEY)
       const storage = remember ? localStorage : sessionStorage
       storage.setItem(USER_KEY, JSON.stringify(user))
+      storage.setItem(TOKEN_KEY, token)
       if (user.username) {
         sessionStorage.setItem('username', user.username)
       }
     },
     /**
      * ログアウト処理
-     * ローカルのユーザー情報をクリアし、サーバー側の HttpOnly Cookie を削除する。
+     * ローカルのトークンとユーザー情報をクリアし、サーバーにログアウトを通知する。
      */
     async logout(): Promise<void> {
       this.user = null
+      this.token = null
       localStorage.removeItem(USER_KEY)
       sessionStorage.removeItem(USER_KEY)
+      localStorage.removeItem(TOKEN_KEY)
+      sessionStorage.removeItem(TOKEN_KEY)
       sessionStorage.removeItem('username')
       try {
         await apiClient.post('/auth/logout')
-        // CSRFトークンキャッシュもクリア（api.tsの private メソッドのため、新しいリクエストで自動取得される）
-        console.log('Logged out successfully, CSRF token will be refreshed on next request')
       } catch (error) {
         console.warn('Logout API call failed:', error)
-        // Cookie のクリアに失敗しても JWT 期限切れにより自動無効化される
       }
     }
   }

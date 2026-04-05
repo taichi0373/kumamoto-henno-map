@@ -1,20 +1,17 @@
 package io.github.taichi0373.benefit_map.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
  * ログインレスポンスDTO
  */
-@Schema(description = "ログインレスポンス（JWT は HttpOnly Cookie に格納されるため JSON に含まれない）")
+@Schema(description = "ログインレスポンス")
 @Data
 public class LoginResponseDto {
 
-    /** JWTトークン（HttpOnly Cookie に設定するため JSON レスポンスには含めない） */
-    @JsonIgnore
-    @Schema(hidden = true)
+    /** JWTトークン */
+    @Schema(description = "JWTトークン（Authorization: Bearer <token> で使用）")
     private String token;
 
     /** ユーザーID */

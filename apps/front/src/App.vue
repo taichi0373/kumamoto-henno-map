@@ -9,21 +9,22 @@
 import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from './components/organisms/AppHeader.vue'
-import { setUnauthorizedHandler } from '@/utils/api'
+import { setUnauthorizedHandler, setTokenProvider } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
 
-/** 401発生時のハンドラーを登録（setup()トップレベルで実行し未登録状態をなくす） */
+/** 認証ストア */
 const authStore = useAuthStore()
 const router = useRouter()
+
+/** 401発生時のハンドラーを登録（setup()トップレベルで実行し未登録状態をなくす） */
 setUnauthorizedHandler(() => {
   authStore.logout().finally(() => {
     router.push('/login')
   })
 })
 
-// JWT (HttpOnly Cookie) 方式のため、セッション復元ロジックは不要
-// ユーザー情報は auth store (localStorage/sessionStorage) で管理
-// JWT の有効性確認は setUnauthorizedHandler で 401 レスポンス時に自動処理
+/** JWTトークンプロバイダーを登録 */
+setTokenProvider(() => authStore.getToken)
 
 /**
  * リサイズイベントハンドラ
