@@ -69,8 +69,7 @@ public class BenefitController {
     /**
      * 検索条件（年齢・運転免許所持状況・自治体コード）から特典を検索
      */
-    @Operation(summary = "特典検索", description = "年齢・免許状態・自治体コードを指定して特典一覧を取得する。認証不要。CSRF トークン必須。")
-    @SecurityRequirement(name = "csrfToken")
+    @Operation(summary = "特典検索", description = "年齢・免許状態・自治体コードを指定して特典一覧を取得する。認証不要。")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "検索成功",
                     content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
@@ -92,7 +91,7 @@ public class BenefitController {
      * ユーザーIDからユーザーが受けられる特典を検索
      */
     @Operation(summary = "ユーザー特典取得", description = "ユーザーのプロフィール情報（年齢・免許状態・居住自治体）を元に受けられる特典一覧を取得する。JWT 認証必須。")
-    @SecurityRequirement(name = "cookieAuth")
+    @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "取得成功",
                     content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
