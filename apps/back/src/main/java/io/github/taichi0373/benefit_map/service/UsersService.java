@@ -188,6 +188,7 @@ public class UsersService {
             LocalDateTime now = LocalDateTime.now();
             
             // ユーザー情報を更新
+            existingUser.setUsername(users.getUsername());
             existingUser.setEmail(users.getEmail());
             existingUser.setBirthDate(users.getBirthDate());
             existingUser.setMunicipalityCd(users.getAddress());

@@ -11,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -20,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.security.JwtAuthenticationFilter;
+import io.github.taichi0373.benefit_map.service.AuthService;
 import io.github.taichi0373.benefit_map.util.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -40,9 +40,9 @@ public class SecurityConfig {
     @Autowired
     private JwtUtil jwtUtil;
 
-    /** ユーザー詳細サービス（AuthServiceが注入される） */
+    /** 認証サービス */
     @Autowired
-    private UserDetailsService userDetailsService;
+    private AuthService authService;
 
     /** CORS設定ソース */
     @Autowired
@@ -59,7 +59,7 @@ public class SecurityConfig {
      */
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
-        return new JwtAuthenticationFilter(jwtUtil, userDetailsService);
+        return new JwtAuthenticationFilter(jwtUtil, authService);
     }
 
     /**

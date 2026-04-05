@@ -145,6 +145,16 @@ public class UsersController {
                         .body(ApiResponseDto.error("メールアドレスの形式が正しくありません"));
             }
 
+            // 生年月日の必須・未来日チェック
+            if (ValidateUtils.isNullOrEmpty(users.getBirthDate())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("生年月日を入力してください"));
+            }
+            if (users.getBirthDate().isAfter(java.time.LocalDate.now())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("生年月日に未来日は登録できません"));
+            }
+
             // メールアドレスの重複チェック（自分自身は除外）
             Boolean emailExists = usersService.existsByEmailExcluding(users.getEmail(), principal.getUserId());
             if (Boolean.TRUE.equals(emailExists)) {
