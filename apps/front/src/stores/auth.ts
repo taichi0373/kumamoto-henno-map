@@ -98,15 +98,30 @@ export const useAuthStore = defineStore('auth', {
           const storage = hasRememberStorage ? localStorage : sessionStorage
           storage.setItem(USER_KEY, JSON.stringify(responseUser))
         } else {
-          // APIにユーザー情報が含まれない場合、ストレージから復元
+          // APIにユーザー情報が含まれない場合、ストレージから復元（局所的にtry-catch）
           const stored = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
           if (stored) {
-            this.user = JSON.parse(stored) as User
+            try {
+              this.user = JSON.parse(stored) as User
+            } catch (parseError) {
+              console.warn('Failed to parse stored user info, continuing without user data:', parseError)
+              this.user = null
+              // 破損したストレージをクリア
+              localStorage.removeItem(USER_KEY)
+              sessionStorage.removeItem(USER_KEY)
+            }
+          } else {
+            this.user = null
           }
         }
         return true
-      } catch {
-        // リフレッシュトークン無効・期限切れ → 未ログイン状態に戻す
+      } catch (error: any) {
+        // 401はリフレッシュトークンが無い/無効な正常系 → 静かに未ログイン扱い
+        if (error?.response?.status === 401) {
+          return false
+        }
+        
+        // その他のエラー（ネットワークエラー等）は状態をクリアして静かに処理
         this.token = null
         this.user = null
         localStorage.removeItem(USER_KEY)

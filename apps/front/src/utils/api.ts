@@ -119,6 +119,12 @@ class RestApiClient {
         return config
       },
       (error) => {
+        if (process.env.NODE_ENV !== 'production') {
+          const method = error?.config?.method?.toUpperCase() || 'UNKNOWN'
+          const url = `${error?.config?.baseURL || ''}${error?.config?.url || ''}`
+          const message = error instanceof Error ? error.message : 'Unknown request interceptor error'
+          console.warn('API Request Error:', method, url, message)
+        }
         return Promise.reject(error)
       }
     )
