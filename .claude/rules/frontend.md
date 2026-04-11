@@ -43,7 +43,6 @@
 - `pages/` — 画面単位のコンポーネント（Vue Routerと対応）
 - `layouts/` — 共通レイアウトコンポーネント専用
 - `stores/` — Pinia ストア
-- `composables/` — カスタムComposables（`use` + PascalCase）
 
 ## スタイル規約（SCSS）
 
