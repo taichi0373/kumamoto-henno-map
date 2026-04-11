@@ -50,7 +50,7 @@
           <ul class="license-list">
             <li class="license-item">
               <AppLink @click="openUrl('https://www.opentripplanner.org')">
-                OpenTripPlanner
+                OpenTripPlanner 2.5.0
               </AppLink>
               <div class="license-details">
                 ライセンス：

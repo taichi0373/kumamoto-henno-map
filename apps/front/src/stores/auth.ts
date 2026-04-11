@@ -13,16 +13,6 @@ export interface User {
 const USER_KEY = 'user_info'
 
 /**
- * AxiosErrorの型ガード
- */
-function isAxiosError(error: unknown): error is AxiosError {
-  return error !== null && 
-         typeof error === 'object' && 
-         'isAxiosError' in error && 
-         (error as AxiosError).isAxiosError === true
-}
-
-/**
  * セキュリティ注意事項:
  * - アクセストークンは XSS によるトークン窃取を防ぐため、localStorage/sessionStorage には保存しない。
  *   Pinia の state（JS メモリ）のみで管理する。
