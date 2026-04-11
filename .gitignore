@@ -3,6 +3,7 @@
 
 ### claude ###
 .claude
+.mcp.json
 
 ### OS ###
 .DS_Store
