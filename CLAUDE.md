@@ -1,12 +1,12 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## 前提条件
 
 - **回答は必ず日本語で行うこと**
 - コードの変更量が200行を超える可能性がある場合は、事前にユーザーに確認をとること
 - 大きな変更を加える場合は、まず計画を立ててユーザーに提案し、承認を得てから実施すること
+- 調査やデバッグにはサブエージェントを活用してコンテキストを節約してください
+- 重要な決定事項は定期的にマークダウンファイルに記録してください
 
 ## ワークフロー指針
 
@@ -128,6 +128,9 @@ benefit_map/
 - `Object` 型多用禁止（明示的な型を使用）
 - 日本語JavaDocコメント必須
 - Entity は `Serializable` 実装 + `serialVersionUID = 1L`
+
+**Git 要点:**
+- コミットメッセージは日本語で簡潔に
 
 ## 外部サービス
 
