@@ -70,6 +70,24 @@ public interface UsersDao {
     }
 
     /**
+     * ユーザー名の存在確認（プロフィール更新用: 自分自身を除外）
+     * @param username ユーザー名
+     * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）
+     * @return 自分以外に同一ユーザー名を持つユーザーが存在する場合はtrue
+     */
+    default boolean existsByUsernameExcluding(String username, Long excludeUserId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                      .where(c -> {
+                          c.eq(e.username, username);
+                          c.ne(e.userId, excludeUserId);
+                      })
+                      .fetchOne() != null;
+    }
+
+    /**
      * メールアドレスの存在確認（プロフィール更新用: 自分自身を除外）
      * @param email メールアドレス
      * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）

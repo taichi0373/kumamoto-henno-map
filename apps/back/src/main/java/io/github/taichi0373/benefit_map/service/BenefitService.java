@@ -85,7 +85,14 @@ public class BenefitService {
         }
 
         // 年齢を計算
-        Integer age = AgeUtils.calculateAge(user.getBirthDate());
+        Integer age = null;
+        if (!ValidateUtils.isNullOrEmpty(user.getBirthDate())) {
+            try {
+                age = AgeUtils.calculateAge(user.getBirthDate());
+            } catch (IllegalArgumentException e) {
+                // 未来日等、年齢計算不可の場合は年齢フィルターをスキップ
+            }
+        }
 
         // 特典適用条件に一致する特典を取得
         BenefitEligibilityDto benefitEligibilityDto = new BenefitEligibilityDto();
