@@ -23,7 +23,8 @@
 ## API設計
 
 - エンドポイントは kebab-case かつ RESTful に設計する
-- 例外ハンドリングは `config/` の共通設定（`GlobalExceptionHandler` 等）を利用する
+- 例外ハンドリングは各Controllerで `try-catch` を行い、`ApiResponseDto` で統一したレスポンスを返す
+- 共通例外ハンドラ（`GlobalExceptionHandler` / `@ControllerAdvice` 等）を導入する場合は、実装追加後に本規約も更新する
 - CORS・Security設定は `config/SecurityConfig.java` で管理する
 
 ## 認証関連クラス

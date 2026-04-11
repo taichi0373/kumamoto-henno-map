@@ -73,9 +73,9 @@ benefit_map/
 
 **ルーティング** (`router/index.ts`): Vue Router 4のHistory API。`requiresAuth: true` メタを持つルートは未ログイン時に `/login?redirect=...` にリダイレクト。
 
-**APIクライアント** (`utils/api.ts`): AxiosベースのHTTPクライアント。Base URL: `http://localhost:8081/benefit-map/api`。`Authorization: Bearer <TOKEN>` ヘッダーを付与。401レスポンス時は自動ログアウト・`/login` にリダイレクト。
+**APIクライアント** (`utils/api.ts`): AxiosベースのHTTPクライアント。Base URL は `VUE_APP_API_BASE_URL` を優先し、未設定時は同一オリジン前提の `'/benefit-map/api'` を使用（開発時は proxy / 本番時はリバースプロキシ）。`Authorization: Bearer <TOKEN>` ヘッダーを付与。401レスポンス時は自動ログアウト・`/login` にリダイレクト。
 
-**認証** (`stores/auth.ts`): Pinia store + JWT Bearer Token。アクセストークンはメモリ（Pinia state）のみ保持（XSS耐性）。リフレッシュトークンは HttpOnly Cookie で管理。`App.vue` の `onMounted` で `restoreSession()` を呼び出し。
+**認証** (`stores/auth.ts`): Pinia store + JWT Bearer Token。アクセストークンはメモリ（Pinia state）のみ保持（XSS耐性）。リフレッシュトークンは HttpOnly Cookie で管理。`restoreSession()` は `App.vue` の `onMounted` ではなく、`main.ts` で `app.mount()` 前に `await authStore.restoreSession()` を実行し、ルートガード判定前にセッション復元を完了させる。
 
 ### バックエンド (`apps/back/src/main/java/io/github/taichi0373/benefit_map/`)
 
