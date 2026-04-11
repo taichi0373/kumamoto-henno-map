@@ -231,12 +231,42 @@ function checkError(): boolean {
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "ユーザ名")
     );
     hasError = true
+  } else if ((usersModel.value.username ?? '').length < ValidateUtils.USERNAME_MIN_LENGTH) {
+    // ユーザ名が最小文字数未満の場合はエラー
+    usernameErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "ユーザ名", String(ValidateUtils.USERNAME_MIN_LENGTH))
+    );
+    hasError = true
+  } else if ((usersModel.value.username ?? '').length > ValidateUtils.USERNAME_MAX_LENGTH) {
+    // ユーザ名が最大文字数超過の場合はエラー
+    usernameErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_003, "ユーザ名", String(ValidateUtils.USERNAME_MAX_LENGTH))
+    );
+    hasError = true
+  } else if (!ValidateUtils.isUsername(usersModel.value.username ?? '')) {
+    // ユーザ名に使用できない文字が含まれている場合はエラー
+    usernameErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_004, "ユーザ名")
+    );
+    hasError = true
   }
 
   // パスワードが未入力の場合はエラー
   if (ValidateUtils.isNullOrEmpty(usersModel.value.password)) {
     passwordErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "パスワード")
+    );
+    hasError = true
+  } else if ((usersModel.value.password ?? '').length < ValidateUtils.PASSWORD_MIN_LENGTH) {
+    // パスワードが最小文字数未満の場合はエラー
+    passwordErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "パスワード", String(ValidateUtils.PASSWORD_MIN_LENGTH))
+    );
+    hasError = true
+  } else if ((usersModel.value.password ?? '').length > ValidateUtils.PASSWORD_MAX_LENGTH) {
+    // パスワードが最大文字数超過の場合はエラー
+    passwordErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_003, "パスワード", String(ValidateUtils.PASSWORD_MAX_LENGTH))
     );
     hasError = true
   }

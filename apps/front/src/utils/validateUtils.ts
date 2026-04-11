@@ -1,6 +1,12 @@
 class ValidateUtils {
   /** パスワードの最小文字数 */
   public static readonly PASSWORD_MIN_LENGTH = 8
+  /** パスワードの最大文字数 */
+  public static readonly PASSWORD_MAX_LENGTH = 64
+  /** ユーザー名の最小文字数 */
+  public static readonly USERNAME_MIN_LENGTH = 3
+  /** ユーザー名の最大文字数 */
+  public static readonly USERNAME_MAX_LENGTH = 30
   /** 半角文字のパターン */
   private static readonly HALF_WIDTH_PATTERN = /^[\u0020-\u007E]+$/
   /** 全角文字のパターン */
@@ -17,6 +23,8 @@ class ValidateUtils {
   private static readonly PHONE_NUMBER_PATTERN = /^(0\d{1,4}-\d{1,4}-\d{4}|0\d{9,10})$/
   /** メールアドレスのパターン */
   private static readonly EMAIL_PATTERN = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/
+  /** ユーザー名のパターン（半角英数字・ハイフン・アンダースコアのみ） */
+  private static readonly USERNAME_PATTERN = /^[A-Za-z0-9\-_]+$/
 
   /**
    * オブジェクトが null / undefined または空（空文字・空配列・空オブジェクト・無効日付）かどうか
@@ -98,6 +106,14 @@ class ValidateUtils {
   public static isEmail(str: string): boolean {
     if (this.isNullOrEmpty(str)) return false
     return this.EMAIL_PATTERN.test(str)
+  }
+
+  /**
+   * ユーザー名形式（半角英数字・ハイフン・アンダースコアのみ）
+   */
+  public static isUsername(str: string): boolean {
+    if (this.isNullOrEmpty(str)) return false
+    return this.USERNAME_PATTERN.test(str)
   }
 
   /** コンストラクタ */

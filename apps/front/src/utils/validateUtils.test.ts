@@ -290,4 +290,76 @@ describe('ValidateUtils', () => {
       expect(ValidateUtils.isEmail('')).toBe(false);
     });
   });
+
+  // ----------------------------------------------------------------
+  // isUsername
+  // ----------------------------------------------------------------
+  describe('isUsername', () => {
+
+    /** 正常系 */
+    test('半角英小文字のみの場合はtrueを返す', () => {
+      expect(ValidateUtils.isUsername('abc')).toBe(true);
+    });
+
+    test('半角英大文字のみの場合はtrueを返す', () => {
+      expect(ValidateUtils.isUsername('ABC')).toBe(true);
+    });
+
+    test('半角数字のみの場合はtrueを返す', () => {
+      expect(ValidateUtils.isUsername('123')).toBe(true);
+    });
+
+    test('ハイフンを含む場合はtrueを返す', () => {
+      expect(ValidateUtils.isUsername('user-name')).toBe(true);
+    });
+
+    test('アンダースコアを含む場合はtrueを返す', () => {
+      expect(ValidateUtils.isUsername('user_name')).toBe(true);
+    });
+
+    test('英数字・ハイフン・アンダースコアの組み合わせはtrueを返す', () => {
+      expect(ValidateUtils.isUsername('User_123-abc')).toBe(true);
+    });
+
+    test('最小文字数（3文字）の場合はtrueを返す', () => {
+      expect(ValidateUtils.isUsername('a'.repeat(ValidateUtils.USERNAME_MIN_LENGTH))).toBe(true);
+    });
+
+    test('最大文字数（30文字）の場合はtrueを返す', () => {
+      expect(ValidateUtils.isUsername('a'.repeat(ValidateUtils.USERNAME_MAX_LENGTH))).toBe(true);
+    });
+
+    /** 異常系 */
+    test('空文字の場合はfalseを返す', () => {
+      expect(ValidateUtils.isUsername('')).toBe(false);
+    });
+
+    test('スペースのみの場合はfalseを返す', () => {
+      expect(ValidateUtils.isUsername('   ')).toBe(false);
+    });
+
+    test('スペースを含む場合はfalseを返す', () => {
+      expect(ValidateUtils.isUsername('user name')).toBe(false);
+    });
+
+    test('@を含む場合はfalseを返す', () => {
+      expect(ValidateUtils.isUsername('user@name')).toBe(false);
+    });
+
+    test('ドットを含む場合はfalseを返す', () => {
+      expect(ValidateUtils.isUsername('user.name')).toBe(false);
+    });
+
+    test('感嘆符などの記号を含む場合はfalseを返す', () => {
+      expect(ValidateUtils.isUsername('user!name')).toBe(false);
+    });
+
+    test('全角英数字を含む場合はfalseを返す', () => {
+      expect(ValidateUtils.isUsername('ａｂｃ')).toBe(false);
+    });
+
+    test('日本語を含む場合はfalseを返す', () => {
+      expect(ValidateUtils.isUsername('ユーザ名')).toBe(false);
+    });
+  });
 });
