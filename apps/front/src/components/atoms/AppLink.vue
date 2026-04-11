@@ -44,7 +44,7 @@ const onClick = (e: Event) => {
   color: base.$text-primary;
   text-decoration: underline;
   align-items: baseline;
-  &:hover {
+  &:hover, &:focus {
     color: base.$text-secondary !important;
   }
 }

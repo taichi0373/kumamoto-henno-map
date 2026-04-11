@@ -114,8 +114,6 @@ class RestApiClient {
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`
         }
-
-        console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))
         return config
       },
       (error) => {
@@ -132,7 +130,6 @@ class RestApiClient {
     // レスポンスインターセプター（エラーハンドリング）
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
-        console.log('API Response:', response.status, response.config.url)
         return response
       },
       (error) => {

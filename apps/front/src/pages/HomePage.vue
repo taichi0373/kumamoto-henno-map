@@ -284,6 +284,8 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
 
 /** 経路探索結果のクリア */
 const handleClearRoutes = () => {
+  markerManager.value.removeMarker('route-start')
+  markerManager.value.removeMarker('route-end')
   routeResults.value = []
   addRouteLines([])
 }
