@@ -106,7 +106,7 @@ public class UsersController {
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "更新成功（data: null）"),
-            @ApiResponse(responseCode = "400", description = "メールアドレス未入力または形式不正",
+            @ApiResponse(responseCode = "400", description = "ユーザー名未入力・メールアドレス未入力または形式不正・生年月日不正",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "401", description = "未認証",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
@@ -114,7 +114,7 @@ public class UsersController {
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
-            @ApiResponse(responseCode = "409", description = "メールアドレスが既に使用されている",
+            @ApiResponse(responseCode = "409", description = "ユーザー名またはメールアドレスが既に使用されている",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PutMapping
@@ -135,6 +135,19 @@ public class UsersController {
                         .body(ApiResponseDto.error("アクセス権限がありません"));
             }
 
+            // ユーザー名の必須チェック
+            if (ValidateUtils.isNullOrEmpty(users.getUsername())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("ユーザー名を入力してください"));
+            }
+
+            // ユーザー名の重複チェック（自分自身は除外）
+            Boolean usernameExists = usersService.existsByUsernameExcluding(users.getUsername(), principal.getUserId());
+            if (Boolean.TRUE.equals(usernameExists)) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("このユーザー名は既に使用されています"));
+            }
+
             // メールアドレスの必須・形式チェック
             if (ValidateUtils.isNullOrEmpty(users.getEmail())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -143,6 +156,16 @@ public class UsersController {
             if (!ValidateUtils.isEmail(users.getEmail())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponseDto.error("メールアドレスの形式が正しくありません"));
+            }
+
+            // 生年月日の必須・未来日チェック
+            if (ValidateUtils.isNullOrEmpty(users.getBirthDate())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("生年月日を入力してください"));
+            }
+            if (users.getBirthDate().isAfter(java.time.LocalDate.now())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("生年月日に未来日は登録できません"));
             }
 
             // メールアドレスの重複チェック（自分自身は除外）

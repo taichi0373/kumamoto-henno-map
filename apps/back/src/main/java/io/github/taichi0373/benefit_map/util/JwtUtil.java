@@ -6,11 +6,11 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 
+import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -64,12 +64,12 @@ public class JwtUtil {
 
     /**
      * JWTトークンを生成する
-     * @param userDetails ユーザー詳細
+     * @param userDetails カスタムユーザー詳細
      * @return JWTトークン文字列
      */
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(CustomUserDetails userDetails) {
         return Jwts.builder()
-                .subject(userDetails.getUsername())
+                .subject(String.valueOf(userDetails.getUserId()))
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), Jwts.SIG.HS256)
@@ -77,24 +77,24 @@ public class JwtUtil {
     }
 
     /**
-     * トークンからユーザー名を取得する
+     * トークンからユーザーIDを取得する
      * @param token JWTトークン
-     * @return ユーザー名
+     * @return ユーザーID
      */
-    public String extractUsername(String token) {
-        return getClaims(token).getSubject();
+    public Long extractUserId(String token) {
+        return Long.parseLong(getClaims(token).getSubject());
     }
 
     /**
      * トークンを検証する
      * @param token JWTトークン
-     * @param userDetails ユーザー詳細
+     * @param userDetails カスタムユーザー詳細
      * @return 有効な場合はtrue
      */
-    public boolean validateToken(String token, UserDetails userDetails) {
+    public boolean validateToken(String token, CustomUserDetails userDetails) {
         try {
-            String username = extractUsername(token);
-            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+            Long userId = extractUserId(token);
+            return userId.equals(userDetails.getUserId()) && !isTokenExpired(token);
         } catch (Exception e) {
             return false;
         }

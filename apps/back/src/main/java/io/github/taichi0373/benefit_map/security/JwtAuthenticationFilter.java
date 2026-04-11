@@ -6,12 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import org.springframework.security.core.userdetails.UserDetailsService;
-
+import io.github.taichi0373.benefit_map.service.AuthService;
 import io.github.taichi0373.benefit_map.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -39,17 +37,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     /** JWTユーティリティ */
     private final JwtUtil jwtUtil;
 
-    /** ユーザー詳細サービス */
-    private final UserDetailsService userDetailsService;
+    /** 認証サービス */
+    private final AuthService authService;
 
     /**
      * コンストラクタ
      * @param jwtUtil JWTユーティリティ
-     * @param userDetailsService ユーザー詳細サービス
+     * @param authService 認証サービス
      */
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, AuthService authService) {
         this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
+        this.authService = authService;
     }
 
     /**
@@ -68,10 +66,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            final String username = jwtUtil.extractUsername(token);
+            final Long userId = jwtUtil.extractUserId(token);
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                CustomUserDetails userDetails = authService.loadUserById(userId);
 
                 if (jwtUtil.validateToken(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =

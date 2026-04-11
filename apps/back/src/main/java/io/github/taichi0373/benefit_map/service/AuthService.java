@@ -35,7 +35,7 @@ public class AuthService implements UserDetailsService {
     private JwtUtil jwtUtil;
 
     /**
-     * ユーザー名によってユーザー詳細を取得する（JwtAuthenticationFilterから使用）
+     * ユーザー名によってユーザー詳細を取得する
      * @param username ユーザー名
      * @return ユーザー詳細
      * @throws UsernameNotFoundException ユーザーが見つからない場合
@@ -45,6 +45,20 @@ public class AuthService implements UserDetailsService {
         UsersEntity user = usersDao.selectByUsername(username);
         if (user == null) {
             throw new UsernameNotFoundException("ユーザーが見つかりません: " + username);
+        }
+        return new CustomUserDetails(user);
+    }
+
+    /**
+     * ユーザーIDによってユーザー詳細を取得する
+     * @param userId ユーザーID
+     * @return ユーザー詳細
+     * @throws UsernameNotFoundException ユーザーが見つからない場合
+     */
+    public CustomUserDetails loadUserById(Long userId) throws UsernameNotFoundException {
+        UsersEntity user = usersDao.selectById(userId);
+        if (user == null) {
+            throw new UsernameNotFoundException("ユーザーが見つかりません: " + userId);
         }
         return new CustomUserDetails(user);
     }
