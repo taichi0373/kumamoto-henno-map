@@ -113,6 +113,20 @@ public class UsersService {
     }
 
     /**
+     * ユーザー名による重複確認（プロフィール更新用: 自分自身を除外）
+     * @param username ユーザー名
+     * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）
+     * @return 自分以外に同一ユーザー名を持つユーザーが存在する場合はtrue
+     */
+    public Boolean existsByUsernameExcluding(String username, Long excludeUserId) {
+        try {
+            return usersDao.existsByUsernameExcluding(username, excludeUserId);
+        } catch (Exception e) {
+            throw new RuntimeException("ユーザー名による検索処理でエラーが発生しました", e);
+        }
+    }
+
+    /**
      * メールアドレスによる重複確認（プロフィール更新用: 自分自身を除外）
      * @param email メールアドレス
      * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）
