@@ -42,4 +42,5 @@
 - `/auth/**` → permitAll（login・refresh・logout・パスワードリセット）
 - `POST /users/signup` → permitAll
 - `/users/**` → authenticated（JWT必須）
-- その他（`/benefits`, `/municipality`, `/route` 等）→ permitAll
+- `/benefit/users/**` → authenticated（JWT必須）
+- その他（`/benefit`, `/municipality`, `/route` 等）→ permitAll
