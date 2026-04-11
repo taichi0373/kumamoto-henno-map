@@ -1,5 +1,6 @@
 package io.github.taichi0373.benefit_map.util;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.util.ObjectUtils;
 
@@ -109,10 +110,11 @@ public class ValidateUtils {
     }
 
     /**
-     * パスワードポリシーを満たすか（{@value #PASSWORD_MIN_LENGTH}〜{@value #PASSWORD_MAX_LENGTH}文字）
+     * パスワードポリシーを満たすか（{@value #PASSWORD_MIN_LENGTH}〜{@value #PASSWORD_MAX_LENGTH}文字、空白のみ不可）
      */
     public static boolean isValidPassword(String password) {
         if (isNullOrEmpty(password)) return false;
+        if (password.strip().isEmpty()) return false;
         return password.length() >= PASSWORD_MIN_LENGTH && password.length() <= PASSWORD_MAX_LENGTH;
     }
 
@@ -122,6 +124,28 @@ public class ValidateUtils {
     public static boolean isValidUsernameFormat(String username) {
         if (isNullOrEmpty(username)) return false;
         return USERNAME_PATTERN.matcher(username).matches();
+    }
+
+    /**
+     * ユーザー名の一括バリデーション（必須・文字数・文字種）
+     *
+     * @param username 検証するユーザー名
+     * @return エラーメッセージ。{@link Optional#empty()} の場合は検証通過
+     */
+    public static Optional<String> validateUsername(String username) {
+        if (isNullOrEmpty(username)) {
+            return Optional.of("ユーザー名を入力してください");
+        }
+        if (username.length() < USERNAME_MIN_LENGTH) {
+            return Optional.of("ユーザー名は" + USERNAME_MIN_LENGTH + "文字以上で入力してください");
+        }
+        if (username.length() > USERNAME_MAX_LENGTH) {
+            return Optional.of("ユーザー名は" + USERNAME_MAX_LENGTH + "文字以内で入力してください");
+        }
+        if (!isValidUsernameFormat(username)) {
+            return Optional.of("ユーザー名は半角英数字・ハイフン・アンダースコアのみ使用できます");
+        }
+        return Optional.empty();
     }
 
     /** コンストラクタ */

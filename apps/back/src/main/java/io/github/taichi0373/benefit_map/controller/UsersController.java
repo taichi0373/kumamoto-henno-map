@@ -135,28 +135,11 @@ public class UsersController {
                         .body(ApiResponseDto.error("アクセス権限がありません"));
             }
 
-            // ユーザー名の必須チェック
-            if (ValidateUtils.isNullOrEmpty(users.getUsername())) {
+            // ユーザー名バリデーション（必須・文字数・文字種）
+            var usernameError = ValidateUtils.validateUsername(users.getUsername());
+            if (usernameError.isPresent()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponseDto.error("ユーザー名を入力してください"));
-            }
-
-            // ユーザー名の文字数チェック
-            if (users.getUsername().length() < ValidateUtils.USERNAME_MIN_LENGTH) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponseDto.error(
-                                "ユーザー名は" + ValidateUtils.USERNAME_MIN_LENGTH + "文字以上で入力してください"));
-            }
-            if (users.getUsername().length() > ValidateUtils.USERNAME_MAX_LENGTH) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponseDto.error(
-                                "ユーザー名は" + ValidateUtils.USERNAME_MAX_LENGTH + "文字以内で入力してください"));
-            }
-
-            // ユーザー名の文字種チェック（半角英数字・ハイフン・アンダースコアのみ）
-            if (!ValidateUtils.isValidUsernameFormat(users.getUsername())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponseDto.error("ユーザー名は半角英数字・ハイフン・アンダースコアのみ使用できます"));
+                        .body(ApiResponseDto.error(usernameError.get()));
             }
 
             // ユーザー名の重複チェック（自分自身は除外）
@@ -249,8 +232,8 @@ public class UsersController {
             if (!ValidateUtils.isValidPassword(request.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponseDto.error(
-                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上"
-                                        + ValidateUtils.PASSWORD_MAX_LENGTH + "文字以内で入力してください"));
+                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "～"
+                                        + ValidateUtils.PASSWORD_MAX_LENGTH + "文字で入力してください"));
             }
 
             // 新パスワード一致チェック
@@ -307,28 +290,11 @@ public class UsersController {
         }
         loginAttemptService.recordSignupAttempt(clientIp);
         try {
-            // ユーザー名の必須チェック
-            if (ValidateUtils.isNullOrEmpty(users.getUsername())) {
+            // ユーザー名バリデーション（必須・文字数・文字種）
+            var usernameError = ValidateUtils.validateUsername(users.getUsername());
+            if (usernameError.isPresent()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponseDto.error("ユーザー名を入力してください"));
-            }
-
-            // ユーザー名の文字数チェック
-            if (users.getUsername().length() < ValidateUtils.USERNAME_MIN_LENGTH) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponseDto.error(
-                                "ユーザー名は" + ValidateUtils.USERNAME_MIN_LENGTH + "文字以上で入力してください"));
-            }
-            if (users.getUsername().length() > ValidateUtils.USERNAME_MAX_LENGTH) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponseDto.error(
-                                "ユーザー名は" + ValidateUtils.USERNAME_MAX_LENGTH + "文字以内で入力してください"));
-            }
-
-            // ユーザー名の文字種チェック（半角英数字・ハイフン・アンダースコアのみ）
-            if (!ValidateUtils.isValidUsernameFormat(users.getUsername())) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponseDto.error("ユーザー名は半角英数字・ハイフン・アンダースコアのみ使用できます"));
+                        .body(ApiResponseDto.error(usernameError.get()));
             }
 
             // ユーザー名の重複チェック
@@ -346,8 +312,8 @@ public class UsersController {
             if (!ValidateUtils.isValidPassword(users.getPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponseDto.error(
-                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上"
-                                        + ValidateUtils.PASSWORD_MAX_LENGTH + "文字以内で入力してください"));
+                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "～"
+                                        + ValidateUtils.PASSWORD_MAX_LENGTH + "文字で入力してください"));
             }
 
             // メールアドレスの必須・形式チェック
