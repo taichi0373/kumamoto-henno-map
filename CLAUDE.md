@@ -1,12 +1,19 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## 前提条件
 
 - **回答は必ず日本語で行うこと**
 - コードの変更量が200行を超える可能性がある場合は、事前にユーザーに確認をとること
 - 大きな変更を加える場合は、まず計画を立ててユーザーに提案し、承認を得てから実施すること
+- 調査やデバッグにはサブエージェントを活用してコンテキストを節約してください
+- 重要な決定事項は定期的にマークダウンファイルに記録してください
+
+## ワークフロー指針
+
+- 複数ファイルにまたがる変更・アーキテクチャ変更は **Plan Mode** で設計をユーザーに提示してから実施すること
+- コミットは **明示的な指示があった場合のみ** 実行すること
+- コード変更後はテストを実行し、失敗したら修正してから次に進むこと（例: `cd apps/back && ./gradlew test` / `cd apps/front && npm run lint`）
+- 未知のコードは変更前に必ず読んで理解すること
 
 ## アプリ概要
 
@@ -60,14 +67,15 @@ benefit_map/
 - `components/molecules/` — 複合コンポーネント（AppLicenseInfo, AppSidebarTab等）
 - `components/organisms/` — 機能コンポーネント（AppSearchBenefit, AppRouteGuidance等）
 - `pages/` — ページコンポーネント（Vue Routerと対応）
+- `stores/` — Pinia ストア（auth等）
 - `dto/` — TypeScriptのDTO定義
-- `utils/` — ユーティリティ（api.ts, auth.ts, validateUtils.ts等）
+- `utils/` — ユーティリティ（api.ts, validateUtils.ts等）
 
 **ルーティング** (`router/index.ts`): Vue Router 4のHistory API。`requiresAuth: true` メタを持つルートは未ログイン時に `/login?redirect=...` にリダイレクト。
 
-**APIクライアント** (`utils/api.ts`): AxiosベースのHTTPクライアント。Base URL: `http://localhost:8081/benefit-map/api`。リクエスト時にlocalStorageから `X-API-Key` ヘッダーを付与。401レスポンス時は自動的にログアウト処理して `/login` にリダイレクト。
+**APIクライアント** (`utils/api.ts`): AxiosベースのHTTPクライアント。Base URL は `VUE_APP_API_BASE_URL` を優先し、未設定時は同一オリジン前提の `'/benefit-map/api'` を使用（開発時は proxy / 本番時はリバースプロキシ）。`Authorization: Bearer <TOKEN>` ヘッダーを付与。401レスポンス時は自動ログアウト・`/login` にリダイレクト。
 
-**認証** (`utils/auth.ts`): Vuex/Piniaなし。`localStorage`（remember me）または `sessionStorage` に `auth_token` / `user_info` を保存するシンプルなトークン方式（ダミートークン: `"session-authenticated"`）。
+**認証** (`stores/auth.ts`): Pinia store + JWT Bearer Token。アクセストークンはメモリ（Pinia state）のみ保持（XSS耐性）。リフレッシュトークンは HttpOnly Cookie で管理。`restoreSession()` は `App.vue` の `onMounted` ではなく、`main.ts` で `app.mount()` 前に `await authStore.restoreSession()` を実行し、ルートガード判定前にセッション復元を完了させる。
 
 ### バックエンド (`apps/back/src/main/java/io/github/taichi0373/benefit_map/`)
 
@@ -81,7 +89,7 @@ benefit_map/
 
 **Doma 2パターン**: Entityqlとメタモデルクラスでタイプセーフクエリを記述。DAOは `@Dao` + `@ConfigAutowireable` を付与し、Entityqlを使うメソッドは `default` メソッドで実装。
 
-**認証**: Spring Security + JDBC Session（30分タイムアウト）。
+**認証**: Spring Security STATELESS + JWT Bearer Token（jjwt 0.12.6）。アクセストークン1時間・リフレッシュトークン30日（HttpOnly Cookie・DB管理・ローテーション）。
 
 ### データベース
 
@@ -106,72 +114,23 @@ benefit_map/
 
 ## コーディング規約
 
-### TypeScript / Vue
+詳細規約は以下を参照:
 
-#### 基本方針
+@.claude/rules/frontend.md
+@.claude/rules/backend.md
 
-- Vue 3 では `<script setup>` を原則使用する
-- Composition API を使用
-- 1コンポーネント = 1責務とする
-- 可読性・保守性を最優先とする
-- ESLint / Prettier のルールに従う
-- ロジックは可能な限り composables に分離する
-- コメントは日本語で記述し、/** */ を使用する
+**TypeScript / Vue 要点:**
+- `<script setup>` + Composition API 必須、ファイル構成: `template → script → style`
+- コメントは日本語で `/** */` 形式
+- PrimeVue は atoms 層のみ使用、SCSS は `@use "@/assets/scss/base"` 必須
 
-#### コンポーネント規約
+**Java 要点:**
+- `Object` 型多用禁止（明示的な型を使用）
+- 日本語JavaDocコメント必須
+- Entity は `Serializable` 実装 + `serialVersionUID = 1L`
 
-- 1コンポーネント = 1ファイル（PascalCase）
-- ファイル構成は `template → script → style` の順とする
-- `export default`（Options API）は使用せず、`<script setup>`（Composition API）を使用する
-- ロジックの記述順は以下とする
-
-1. import  
-2. props / emits  
-3. 定数  
-4. ref / reactive  
-5. computed  
-6. watch  
-7. 関数  
-8. ライフサイクル  
-
-#### 命名規則
-
-| 対象 | ルール |
-|------|--------|
-| ファイル名 | PascalCase |
-| コンポーネント | PascalCase |
-| 変数 | camelCase |
-| boolean | is / has / can で開始 |
-| 関数 | 動詞で開始 |
-| CSSクラス | kebab-case（BEM準拠） |
-
-#### ディレクトリ規約
-- `components/` はUIコンポーネント専用
-  - `atoms/`: 単純なUI要素（例: ボタン、入力フィールド）
-  - `molecules/`: 複数のatomsを組み合わせたコンポーネント（例: フォームグループ）
-  - `organisms/`: 複数のmoleculesを組み合わせた複雑なコンポーネント（例: ヘッダー、サイドバー）
-- `pages/` 画面単位は `pages`
-- `layouts/` は共通レイアウトコンポーネント専用
-
-#### スタイル規約（SCSS）
-
-- `<style scoped lang="scss">` を使用する
-- 全コンポーネントで以下を必ず記述する
-
-```scss
-@use "@/assets/scss/base";
-```
-
-#### PrimeVue 使用規約
-- PrimeVue は atoms 層のみで使用する
-- カスタムスタイルを当てる場合は、PrimeVueのクラス名を参考にする
-
-
-
-### Java
-- `any` 相当（`Object`型の多用）は禁止 — 明示的な型を使用
-- クラス・メソッド・フィールドには日本語JavaDocコメントを記述
-- Entityは `Serializable` を実装し `@Serial private static final long serialVersionUID = 1L;` を定義
+**Git 要点:**
+- コミットメッセージは日本語で簡潔に
 
 ## 外部サービス
 

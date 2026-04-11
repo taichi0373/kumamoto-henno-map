@@ -1,8 +1,7 @@
-### cursor ###
-.cursor
-
 ### claude ###
 .claude
+.claude/settings.json
+.claude/settings.local.json
 .mcp.json
 
 ### OS ###
