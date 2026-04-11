@@ -263,7 +263,8 @@ public class AuthController {
             if (!ValidateUtils.isValidPassword(request.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponseDto.error(
-                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上で入力してください"));
+                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上"
+                                        + ValidateUtils.PASSWORD_MAX_LENGTH + "文字以内で入力してください"));
             }
             if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)

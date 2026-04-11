@@ -27,6 +27,14 @@ public class ValidateUtils {
 
     /** パスワード最低文字数 */
     public static final int PASSWORD_MIN_LENGTH = 8;
+    /** パスワード最大文字数 */
+    public static final int PASSWORD_MAX_LENGTH = 64;
+    /** ユーザー名最小文字数 */
+    public static final int USERNAME_MIN_LENGTH = 3;
+    /** ユーザー名最大文字数 */
+    public static final int USERNAME_MAX_LENGTH = 30;
+    /** ユーザー名のパターン（半角英数字・ハイフン・アンダースコアのみ） */
+    private static final Pattern USERNAME_PATTERN = Pattern.compile("^[A-Za-z0-9\\-_]+$");
 
     /**
      * オブジェクトが null または空文字かどうか
@@ -101,11 +109,19 @@ public class ValidateUtils {
     }
 
     /**
-     * パスワードポリシーを満たすか（{@value #PASSWORD_MIN_LENGTH}文字以上）
+     * パスワードポリシーを満たすか（{@value #PASSWORD_MIN_LENGTH}〜{@value #PASSWORD_MAX_LENGTH}文字）
      */
     public static boolean isValidPassword(String password) {
         if (isNullOrEmpty(password)) return false;
-        return password.length() >= PASSWORD_MIN_LENGTH;
+        return password.length() >= PASSWORD_MIN_LENGTH && password.length() <= PASSWORD_MAX_LENGTH;
+    }
+
+    /**
+     * ユーザー名の形式チェック（半角英数字・ハイフン・アンダースコアのみ）
+     */
+    public static boolean isValidUsernameFormat(String username) {
+        if (isNullOrEmpty(username)) return false;
+        return USERNAME_PATTERN.matcher(username).matches();
     }
 
     /** コンストラクタ */
