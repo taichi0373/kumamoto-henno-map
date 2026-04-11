@@ -146,6 +146,11 @@ function checkError(): boolean {
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "新しいパスワード", String(ValidateUtils.PASSWORD_MIN_LENGTH))
     )
     hasError = true
+  } else if ((newPassword.value ?? '').length > ValidateUtils.PASSWORD_MAX_LENGTH) {
+    newPasswordErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_003, "新しいパスワード", String(ValidateUtils.PASSWORD_MAX_LENGTH))
+    )
+    hasError = true
   }
 
   if (ValidateUtils.isNullOrEmpty(confirmNewPassword.value)) {
