@@ -29,6 +29,7 @@
 | MUNICIPALITY_CD | VARCHAR(6) | ✓ | ✓ | | 自治体コード |
 | MUNICIPALITY_NAME | VARCHAR(200) | ✓ | | | 自治体名称 |
 | MUNICIPALITY_KANA | VARCHAR(200) | | | | 自治体名称かな |
+| MUNICIPALITY_TYPE | VARCHAR(1) | | | | 自治体区分（1:都道府県, 2:区, 3:市町村） |
 | SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
 | SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
 
@@ -81,7 +82,7 @@
 
 | カラム名 | 型 | NOT NULL | 主キー | 外部キー | 概要 |
 |----------|----|---------:|:------:|:--------:|------|
-| ID | SERIAL | ✓ | ✓ | | ID（自動採番） |
+| ID | BIGSERIAL | ✓ | ✓ | | ID（自動採番） |
 | BENEFIT_ID | VARCHAR(20) | ✓ | | ✓ | 特典ID |
 | LICENSE_STATUS | VARCHAR(1) | | | | 運転免許所持状況 |
 | MIN_AGE | INTEGER | | | | 最低年齢 |
@@ -108,10 +109,10 @@
 
 | カラム名 | 型 | NOT NULL | 主キー | 外部キー | 概要 |
 |----------|----|---------:|:------:|:--------:|------|
-| USER_ID | VARCHAR(10) | ✓ | ✓ | | ユーザーID |
-| USERNAME | VARCHAR(20) | ✓ | | | ユーザー名 |
-| PASSWORD_HASH | VARCHAR(200) | ✓ | | | パスワード |
-| EMAIL | VARCHAR(200) | | | | メールアドレス |
+| USER_ID | BIGSERIAL | ✓ | ✓ | | ユーザーID（自動採番） |
+| USERNAME | VARCHAR(30) | ✓ | | | ユーザー名 |
+| PASSWORD_HASH | VARCHAR(200) | ✓ | | | パスワード（ハッシュ値） |
+| EMAIL | VARCHAR(200) | ✓ | | | メールアドレス |
 | BIRTH_DATE | DATE | | | | 生年月日 |
 | MUNICIPALITY_CD | VARCHAR(6) | | | ✓ | 自治体コード |
 | LICENSE_STATUS | VARCHAR(1) | | | | 運転免許所持状況 |
@@ -121,6 +122,8 @@
 
 **制約**:
 - 主キー制約: `USERS_PK` (USER_ID)
+- ユニーク制約: `USERS_USERNAME_UNIQUE` (USERNAME)
+- ユニーク制約: `USERS_EMAIL_UNIQUE` (EMAIL)
 - 外部キー制約: `USERS_FK` (MUNICIPALITY_CD → MUNICIPALITY.MUNICIPALITY_CD)
 
 **LICENSE_STATUS値**:
@@ -130,7 +133,48 @@
 - 3: 失効
 - 4: その他
 
-## 7. COMMUNITY_BUS（コミュニティバス路線テーブル）
+## 7. REFRESH_TOKENS（リフレッシュトークンテーブル）
+
+JWT認証用リフレッシュトークンを管理するデータテーブル。平文トークンはDBに保存しない（Cookie のみに保持）。ローテーション・ログアウト時に失効フラグを立てる。
+
+| カラム名 | 型 | NOT NULL | 主キー | 外部キー | 概要 |
+|----------|----|---------:|:------:|:--------:|------|
+| TOKEN_ID | BIGSERIAL | ✓ | ✓ | | トークンID（自動採番） |
+| USER_ID | BIGINT | ✓ | | ✓ | ユーザーID |
+| TOKEN_HASH | VARCHAR(64) | ✓ | | | リフレッシュトークンのSHA-256ハッシュ値 |
+| EXPIRES_AT | TIMESTAMP | ✓ | | | トークン有効期限（発行から30日） |
+| REVOKED | BOOLEAN | ✓ | | | 失効フラグ（ローテーション・ログアウト時に true） |
+| SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
+| SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
+
+**制約**:
+- 主キー制約: TOKEN_ID (自動採番)
+- ユニーク制約: `REFRESH_TOKENS_TOKEN_HASH_UNIQUE` (TOKEN_HASH)
+- 外部キー制約: `REFRESH_TOKENS_FK` (USER_ID → USERS.USER_ID) ON DELETE CASCADE
+- インデックス: `REFRESH_TOKENS_USER_ID_IDX` (USER_ID)
+- デフォルト値: REVOKED = FALSE
+
+## 8. PASSWORD_RESET_TOKENS（パスワードリセットトークンテーブル）
+
+パスワードリセット用トークンを管理するデータテーブル。トークンはワンタイム使用で発行から30分間有効。
+
+| カラム名 | 型 | NOT NULL | 主キー | 外部キー | 概要 |
+|----------|----|---------:|:------:|:--------:|------|
+| TOKEN_ID | BIGSERIAL | ✓ | ✓ | | トークンID（自動採番） |
+| USER_ID | BIGINT | ✓ | | ✓ | ユーザーID |
+| TOKEN | VARCHAR(64) | ✓ | | | リセットトークンのSHA-256ハッシュ値 |
+| EXPIRES_AT | TIMESTAMP | ✓ | | | トークン有効期限（発行から30分） |
+| USED | BOOLEAN | ✓ | | | 使用済みフラグ（ワンタイム使用制限） |
+| SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
+| SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
+
+**制約**:
+- 主キー制約: TOKEN_ID (自動採番)
+- ユニーク制約: `PASSWORD_RESET_TOKENS_TOKEN_UNIQUE` (TOKEN)
+- 外部キー制約: `PASSWORD_RESET_TOKENS_FK` (USER_ID → USERS.USER_ID) ON DELETE CASCADE
+- デフォルト値: USED = FALSE
+
+## 9. COMMUNITY_BUS（コミュニティバス路線テーブル）
 
 コミュニティバスの路線情報を管理するデータテーブル。
 
@@ -146,7 +190,7 @@
 - 主キー制約: `COMMUNITY_BUS_PK` (ROUTE_ID)
 - 外部キー制約: `COMMUNITY_BUS_FK` (COMMUNITY_BUS_ID → AGENCY.AGENCY_ID)
 
-## 8. FARE_DISCOUNT（運転免許返納特典運賃割引テーブル）
+## 10. FARE_DISCOUNT（運転免許返納特典運賃割引テーブル）
 
 運賃割引の詳細情報を管理するデータテーブル。
 
@@ -167,3 +211,21 @@
 **DISCOUNT_TYPE値**:
 - 0: percentage（割合割引）
 - 1: free（無料）
+
+## ビュー定義
+
+### V_BENEFIT_DETAIL（特典詳細ビュー）
+
+特典情報・自治体情報・カテゴリ情報・利用条件を結合した読み取り専用ビュー。特典検索 API (`/benefit/search`, `/benefit/users/{userId}`) で使用する。
+
+**結合テーブル**:
+- `BENEFIT` INNER JOIN `MUNICIPALITY`
+- `BENEFIT` INNER JOIN `BENEFIT_CATEGORY`
+- `BENEFIT` LEFT JOIN `BENEFIT_ELIGIBILITY`
+
+### V_FARE_DISCOUNT_ELIGIBILITY（運賃割引条件ビュー）
+
+運賃割引と利用条件を結合した読み取り専用ビュー。経路探索時の運賃割引計算で使用する。
+
+**結合テーブル**:
+- `FARE_DISCOUNT` LEFT JOIN `BENEFIT_ELIGIBILITY`
