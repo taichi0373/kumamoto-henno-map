@@ -161,7 +161,7 @@ public class AuthController {
     public ResponseEntity<ApiResponseDto<RefreshResponseDto>> refresh(
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-        String plainToken = extractRefreshTokenFromCookie(httpRequest);
+        String plainToken = getRefreshTokenCookie(httpRequest);
         if (plainToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponseDto.error("リフレッシュトークンがありません"));
@@ -199,7 +199,7 @@ public class AuthController {
     @ApiResponse(responseCode = "204", description = "ログアウト成功")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        String plainToken = extractRefreshTokenFromCookie(httpRequest);
+        String plainToken = getRefreshTokenCookie(httpRequest);
         if (plainToken != null) {
             try {
                 refreshTokenService.revoke(plainToken);
@@ -326,7 +326,7 @@ public class AuthController {
      * @param request HTTPリクエスト
      * @return 平文リフレッシュトークン、Cookieが存在しない場合はnull
      */
-    private String extractRefreshTokenFromCookie(HttpServletRequest request) {
+    private String getRefreshTokenCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return null;
         return Arrays.stream(cookies)
