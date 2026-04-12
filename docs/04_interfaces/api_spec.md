@@ -289,7 +289,7 @@ sequenceDiagram
   "email": "string",
   "birthDate": "2000-01-01",
   "address": "string",
-  "licenseStatus": "string"
+  "licenseStatus": "2"
 }
 ```
 
@@ -300,7 +300,7 @@ sequenceDiagram
 | email | string | ○ | メールアドレス（一意） |
 | birthDate | string (ISO 8601) | - | 生年月日 |
 | address | string | - | 居住自治体コード |
-| licenseStatus | string | - | 免許状態コード |
+| licenseStatus | string | - | 免許状態コード（`"0"`: 未所持 / `"1"`: 所持 / `"2"`: 返納 / `"3"`: 失効） |
 
 **レスポンス 201 Created**
 
@@ -323,6 +323,10 @@ sequenceDiagram
 
 ```json
 { "success": false, "data": null, "message": "このユーザー名は既に使用されています" }
+```
+
+```json
+{ "success": false, "data": null, "message": "このメールアドレスは既に使用されています" }
 ```
 
 **レスポンス 429 Too Many Requests** — 登録試行回数超過（1時間後に解除）
@@ -397,6 +401,10 @@ sequenceDiagram
 
 ```json
 { "success": false, "data": null, "message": "このユーザー名は既に使用されています" }
+```
+
+```json
+{ "success": false, "data": null, "message": "このメールアドレスは既に使用されています" }
 ```
 
 ---
@@ -481,7 +489,7 @@ sequenceDiagram
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
 | age | Integer | - | 年齢 |
-| licenseStatus | string | - | 免許状態コード |
+| licenseStatus | string | - | 免許状態コード（`"0"`: 未所持 / `"1"`: 所持 / `"2"`: 返納 / `"3"`: 失効） |
 | municipalityCd | string | - | 自治体コード |
 | keyword | string | - | フリーワード検索 |
 | categoryCd | string | - | カテゴリコード |
@@ -537,7 +545,7 @@ sequenceDiagram
 | displayOrder | 表示順 |
 | categoryIsActive | カテゴリ有効フラグ（`"1"`: 有効） |
 | eligibilityId | 利用条件ID |
-| licenseStatus | 免許状態コード |
+| licenseStatus | 免許状態コード（`"0"`: 未所持 / `"1"`: 所持 / `"2"`: 返納 / `"3"`: 失効） |
 | minAge | 最低年齢 |
 | maxAge | 最高年齢 |
 | eligibilityMunicipalityCd | 利用条件の対象自治体コード |

@@ -37,7 +37,7 @@ public class UserResponseDto {
     private String address;
 
     /** 運転免許所持状況 */
-    @Schema(description = "運転免許所持状況コード（例: SURRENDERED）", example = "SURRENDERED")
+    @Schema(description = "運転免許所持状況コード（0: 未所持, 1: 所持, 2: 返納, 3: 失効）", example = "2")
     private String licenseStatus;
 
     /** 運転免許返納日 */

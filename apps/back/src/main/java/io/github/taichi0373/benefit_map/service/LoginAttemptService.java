@@ -137,7 +137,11 @@ public class LoginAttemptService {
      * @param ip クライアントIPアドレス
      */
     public void recordPasswordResetRequestAttempt(String ip) {
-        record(passwordResetRequestAttempts, ip, PASSWORD_RESET_REQUEST_MAX_ATTEMPTS, PASSWORD_RESET_REQUEST_LOCK_MINUTES);
+        record(
+                passwordResetRequestAttempts,
+                ip,
+                PASSWORD_RESET_REQUEST_MAX_ATTEMPTS,
+                PASSWORD_RESET_REQUEST_LOCK_MINUTES);
     }
 
     /**
