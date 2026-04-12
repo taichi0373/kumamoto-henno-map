@@ -215,10 +215,21 @@ public class AuthController {
      * パスワードリセットメール送信
      */
     @Operation(summary = "パスワードリセットメール送信", description = "メールアドレスにパスワードリセット用URLを送信する。認証不要。")
-    @ApiResponse(responseCode = "200", description = "処理完了（メールアドレスの存在有無に関わらず同一レスポンス）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "処理完了（メールアドレスの存在有無に関わらず同一レスポンス）"),
+            @ApiResponse(responseCode = "429", description = "リセット要求回数超過（15分後に解除）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PostMapping("/password-reset/request")
     public ResponseEntity<ApiResponseDto<Void>> requestPasswordReset(
-            @RequestBody PasswordResetRequestDto request) {
+            @RequestBody PasswordResetRequestDto request,
+            HttpServletRequest httpRequest) {
+        String clientIp = RequestUtils.getClientIp(httpRequest);
+        if (loginAttemptService.isPasswordResetRequestBlocked(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponseDto.error("リセット要求回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
+        }
+        loginAttemptService.recordPasswordResetRequestAttempt(clientIp);
         if (!ValidateUtils.isEmail(request.getEmail())) {
             return ResponseEntity.ok(ApiResponseDto.success(null));
         }
