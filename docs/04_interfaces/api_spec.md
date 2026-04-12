@@ -3,7 +3,7 @@
 システムが提供する REST API の仕様です。
 
 - ベース URL: `http://localhost:8081/benefit-map/api`
-- すべてのリクエスト・レスポンスは `application/json`
+- すべてのリクエストは `application/json`。ボディを持つレスポンスは `application/json`（204 No Content 等はボディなし）
 - 認証が必要なエンドポイントは `Authorization: Bearer <token>` ヘッダーを付与する
 - CSRF保護は無効（Bearer Token は CSRF 耐性があるため不要）
 
@@ -165,7 +165,7 @@ sequenceDiagram
 **レスポンス 401 Unauthorized**
 
 ```json
-{ "success": false, "message": "ユーザー名またはパスワードが正しくありません" }
+{ "success": false, "data": null, "message": "ユーザー名またはパスワードが正しくありません" }
 ```
 
 **レスポンス 429 Too Many Requests** — ログイン試行回数超過（15分後に解除）
@@ -322,7 +322,7 @@ sequenceDiagram
 **レスポンス 409 Conflict** — ユーザー名またはメールアドレス重複
 
 ```json
-{ "success": false, "message": "このユーザー名は既に使用されています" }
+{ "success": false, "data": null, "message": "このユーザー名は既に使用されています" }
 ```
 
 **レスポンス 429 Too Many Requests** — 登録試行回数超過（1時間後に解除）
@@ -395,6 +395,10 @@ sequenceDiagram
 **レスポンス 404 Not Found** — ユーザーが存在しない
 **レスポンス 409 Conflict** — ユーザー名またはメールアドレス重複
 
+```json
+{ "success": false, "data": null, "message": "このユーザー名は既に使用されています" }
+```
+
 ---
 
 ### PUT /users/password
@@ -423,6 +427,10 @@ sequenceDiagram
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 404 Not Found** — ユーザーが存在しない
 **レスポンス 409 Conflict** — 現在のパスワードが正しくない
+
+```json
+{ "success": false, "data": null, "message": "現在のパスワードが正しくありません" }
+```
 
 ---
 

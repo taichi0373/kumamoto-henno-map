@@ -13,7 +13,8 @@ import lombok.Getter;
  * <p>
  * 全コントローラーで共通使用するレスポンス形式。
  * 成功時は {@code success: true, data: {...}} 、
- * 失敗時は {@code success: false, message: "..."} を返す。
+ * 失敗時は {@code success: false, data: null, message: "..."} を返す。
+ * {@code data} フィールドは成功・失敗を問わず常に出力される。
  * </p>
  *
  * @param <T> レスポンスデータの型
@@ -35,8 +36,8 @@ public class ApiResponseDto<T> implements Serializable {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     private final T data;
 
-    /** エラーメッセージ（失敗時のみ） */
-    @Schema(description = "エラーメッセージ（失敗時のみ。成功時は省略）", example = "ユーザー名またはパスワードが正しくありません")
+    /** エラーメッセージ（失敗時のみ。成功時は省略） */
+    @Schema(description = "エラーメッセージ（失敗時のみ。成功時は JSON に含まれない）", example = "ユーザー名またはパスワードが正しくありません")
     private final String message;
 
     private ApiResponseDto(boolean success, T data, String message) {
