@@ -56,6 +56,22 @@ erDiagram
         date      LICENSE_SURRENDERED_AT
     }
 
+    REFRESH_TOKENS {
+        bigserial TOKEN_ID
+        bigint    USER_ID
+        varchar   TOKEN_HASH
+        timestamp EXPIRES_AT
+        boolean   REVOKED
+    }
+
+    PASSWORD_RESET_TOKENS {
+        bigserial TOKEN_ID
+        bigint    USER_ID
+        varchar   TOKEN
+        timestamp EXPIRES_AT
+        boolean   USED
+    }
+
     AGENCY {
         varchar AGENCY_ID
         varchar AGENCY_NAME
@@ -85,6 +101,8 @@ erDiagram
     BENEFIT           ||--o{ FARE_DISCOUNT        : includes
     AGENCY            ||--o{ COMMUNITY_BUS        : operates
     AGENCY            ||--o{ FARE_DISCOUNT        : offers
+    USERS             ||--o{ REFRESH_TOKENS       : owns
+    USERS             ||--o{ PASSWORD_RESET_TOKENS : requests
 ```
 
 ---
@@ -93,15 +111,17 @@ erDiagram
 
 ### 外部キー制約
 
-| テーブル | 外部キー列 | 参照先 |
-|----------|-----------|--------|
-| BENEFIT | MUNICIPALITY_CD | MUNICIPALITY.MUNICIPALITY_CD |
-| BENEFIT | CATEGORY_CD | BENEFIT_CATEGORY.CATEGORY_CD |
-| BENEFIT_ELIGIBILITY | BENEFIT_ID | BENEFIT.BENEFIT_ID |
-| USERS | MUNICIPALITY_CD | MUNICIPALITY.MUNICIPALITY_CD |
-| COMMUNITY_BUS | COMMUNITY_BUS_ID | AGENCY.AGENCY_ID |
-| FARE_DISCOUNT | BENEFIT_ID | BENEFIT.BENEFIT_ID |
-| FARE_DISCOUNT | AGENCY_ID | AGENCY.AGENCY_ID |
+| テーブル | 外部キー列 | 参照先 | ON DELETE |
+|----------|-----------|--------|-----------|
+| BENEFIT | MUNICIPALITY_CD | MUNICIPALITY.MUNICIPALITY_CD | - |
+| BENEFIT | CATEGORY_CD | BENEFIT_CATEGORY.CATEGORY_CD | - |
+| BENEFIT_ELIGIBILITY | BENEFIT_ID | BENEFIT.BENEFIT_ID | - |
+| USERS | MUNICIPALITY_CD | MUNICIPALITY.MUNICIPALITY_CD | - |
+| REFRESH_TOKENS | USER_ID | USERS.USER_ID | CASCADE |
+| PASSWORD_RESET_TOKENS | USER_ID | USERS.USER_ID | CASCADE |
+| COMMUNITY_BUS | COMMUNITY_BUS_ID | AGENCY.AGENCY_ID | - |
+| FARE_DISCOUNT | BENEFIT_ID | BENEFIT.BENEFIT_ID | - |
+| FARE_DISCOUNT | AGENCY_ID | AGENCY.AGENCY_ID | - |
 
 ### FARE_DISCOUNT の複合主キー
 
@@ -109,4 +129,13 @@ erDiagram
 
 ### USERS のユニーク制約
 
-`USERNAME` に一意制約（`USERS_USERNAME_UNIQUE`）が設定されており、重複ユーザー名は登録不可。
+- `USERNAME` に一意制約（`USERS_USERNAME_UNIQUE`）が設定されており、重複ユーザー名は登録不可。
+- `EMAIL` に一意制約（`USERS_EMAIL_UNIQUE`）が設定されており、重複メールアドレスは登録不可。
+
+### REFRESH_TOKENS のユニーク制約
+
+`TOKEN_HASH` に一意制約（`REFRESH_TOKENS_TOKEN_HASH_UNIQUE`）が設定されており、同一ハッシュ値のトークンは登録不可。
+
+### PASSWORD_RESET_TOKENS のユニーク制約
+
+`TOKEN` に一意制約（`PASSWORD_RESET_TOKENS_TOKEN_UNIQUE`）が設定されており、同一ハッシュ値のトークンは登録不可。
