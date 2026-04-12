@@ -35,7 +35,7 @@ public class BenefitEligibilityDto {
     private Integer maxAge;
 
     /** 運転免許所持状況 */
-    @Schema(description = "運転免許所持状況コード（0: 未所持, 1: 所持, 2: 返納, 3: 失効）", example = "2")
+    @Schema(description = "運転免許所持状況コード（例: 0: 未所持, 1: 所持, 2: 返納, 3: 失効）", example = "2")
     private String licenseStatus;
 
     /** 対象自治体コード */

@@ -37,7 +37,7 @@ public class ApiResponseDto<T> implements Serializable {
     private final T data;
 
     /** エラーメッセージ（失敗時のみ。成功時は省略） */
-    @Schema(description = "エラーメッセージ（失敗時のみ。成功時は JSON に含まれない）", example = "ユーザー名またはパスワードが正しくありません")
+    @Schema(description = "エラーメッセージ（成功時は message を省略）", example = "ユーザー名またはパスワードが正しくありません")
     private final String message;
 
     private ApiResponseDto(boolean success, T data, String message) {

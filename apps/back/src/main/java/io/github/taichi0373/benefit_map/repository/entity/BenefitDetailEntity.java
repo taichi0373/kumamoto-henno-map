@@ -121,7 +121,7 @@ public class BenefitDetailEntity implements Serializable {
     private Long eligibilityId;
 
     /** 運転免許所持状況 */
-    @Schema(description = "運転免許所持状況コード（0: 未所持, 1: 所持, 2: 返納, 3: 失効）", example = "2")
+    @Schema(description = "運転免許所持状況コード（例: 0: 未所持, 1: 所持, 2: 返納, 3: 失効）", example = "2")
     @Column(name = "license_status")
     private String licenseStatus;
 

@@ -5,7 +5,7 @@
 - ベース URL: `http://localhost:8081/benefit-map/api`
 - すべてのリクエストは `application/json`。ボディを持つレスポンスは `application/json`（204 No Content 等はボディなし）
 - 認証が必要なエンドポイントは `Authorization: Bearer <token>` ヘッダーを付与する
-- CSRF保護は無効（Bearer Token は CSRF 耐性があるため不要）
+- 通常の認証付き API は `Authorization` ヘッダーで Bearer Token を送信するため、Cookie 自動送信を前提とした CSRF の主対象ではない
 
 > **OpenAPI 仕様書（ReDoc）** は GitHub Pages で公開されています。
 > → [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
@@ -288,7 +288,7 @@ sequenceDiagram
   "password": "string",
   "email": "string",
   "birthDate": "2000-01-01",
-  "address": "string",
+  "address": "43100",
   "licenseStatus": "2"
 }
 ```
@@ -300,7 +300,7 @@ sequenceDiagram
 | email | string | ○ | メールアドレス（一意） |
 | birthDate | string (ISO 8601) | - | 生年月日 |
 | address | string | - | 居住自治体コード |
-| licenseStatus | string | - | 免許状態コード（`"0"`: 未所持 / `"1"`: 所持 / `"2"`: 返納 / `"3"`: 失効） |
+| licenseStatus | string | - | 運転免許の所持状況 |
 
 **レスポンス 201 Created**
 
@@ -489,7 +489,7 @@ sequenceDiagram
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
 | age | Integer | - | 年齢 |
-| licenseStatus | string | - | 免許状態コード（`"0"`: 未所持 / `"1"`: 所持 / `"2"`: 返納 / `"3"`: 失効） |
+| licenseStatus | string | - | 運転免許の所持状況 |
 | municipalityCd | string | - | 自治体コード |
 | keyword | string | - | フリーワード検索 |
 | categoryCd | string | - | カテゴリコード |
@@ -545,7 +545,7 @@ sequenceDiagram
 | displayOrder | 表示順 |
 | categoryIsActive | カテゴリ有効フラグ（`"1"`: 有効） |
 | eligibilityId | 利用条件ID |
-| licenseStatus | 免許状態コード（`"0"`: 未所持 / `"1"`: 所持 / `"2"`: 返納 / `"3"`: 失効） |
+| licenseStatus | 運転免許の所持状況 |
 | minAge | 最低年齢 |
 | maxAge | 最高年齢 |
 | eligibilityMunicipalityCd | 利用条件の対象自治体コード |
