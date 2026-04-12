@@ -3,55 +3,62 @@
     <AppBlockUI :blocked="isLoading" />
     <div class="whole">
       <AppCard title="プロフィール編集" :inputStyle="{ width: '100%', maxWidth: '600px' }">
-          <div class="form-row-2">
-            <div class="form-col">
-              <AppLabel :required="true">ユーザー名</AppLabel>
-              <AppTextField :input-id="'username'" type="text" v-model="usersModel.username"
-                placeholder="ユーザー名を入力してください" :required="true" :error="usernameErrorDto" />
-            </div>
-            <div class="form-col">
-              <AppLabel :id="'email'" :required="true">メールアドレス</AppLabel>
-              <AppTextField :input-id="'email'" type="text" v-model="usersModel.email"
-                placeholder="メールアドレスを入力してください" :required="true" :error="emailErrorDto" />
-            </div>
+        <div class="form-col">
+          <AppMessageBar
+            v-if="barErrMode != ''"
+            :mode="barErrMode"
+            :message="barErrMsg"
+            style="width: 100%;"
+          ></AppMessageBar>
+        </div>
+        <div class="form-row-2">
+          <div class="form-col">
+            <AppLabel :required="true">ユーザー名</AppLabel>
+            <AppTextField :input-id="'username'" type="text" v-model="usersModel.username"
+              placeholder="ユーザー名を入力してください" :required="true" :error="usernameErrorDto" />
           </div>
-          <div class="form-row-2">
-            <div class="form-col">
-              <AppLabel :required="true">居住地域</AppLabel>
-              <AppSelect :input-id="'address'" v-model="usersModel.address" placeholder="選択してください"
-                :options="addressOptions" :filter="true" :required="true" :error="addressErrorDto" />
-            </div>
-            <div class="form-col">
-              <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
-              <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true"
-                :error="birthDateErrorDto" />
-            </div>
+          <div class="form-col">
+            <AppLabel :id="'email'" :required="true">メールアドレス</AppLabel>
+            <AppTextField :input-id="'email'" type="text" v-model="usersModel.email"
+              placeholder="メールアドレスを入力してください" :required="true" :error="emailErrorDto" />
           </div>
-          <div class="form-row-2">
-            <div class="form-col">
-              <AppLabel :required="true">運転免許の所持状況</AppLabel>
-              <AppSelect :input-id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
-                :options="licenseOptions" :required="true" :error="licenseStatusErrorDto" />
-            </div>
-            <div class="form-col">
-              <AppLabel :id="'licenseSurrenderedAt'">運転免許返納日</AppLabel>
-              <AppCalendar :input-id="'licenseSurrenderedAt'" v-model="usersModel.licenseSurrenderedAt"
-                :error="licenseSurrenderedAtErrorDto" />
-            </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-col">
+            <AppLabel :required="true">居住地域</AppLabel>
+            <AppSelect :input-id="'address'" v-model="usersModel.address" placeholder="選択してください"
+              :options="addressOptions" :filter="true" :required="true" :error="addressErrorDto" />
           </div>
-          <div class="form-btn">
-            <AppButton :primary="false" label="クリア" @click="clearForm" />
-            <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
+          <div class="form-col">
+            <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
+            <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true"
+              :error="birthDateErrorDto" />
           </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-col">
+            <AppLabel :required="true">運転免許の所持状況</AppLabel>
+            <AppSelect :input-id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
+              :options="licenseOptions" :required="true" :error="licenseStatusErrorDto" />
+          </div>
+          <div class="form-col">
+            <AppLabel :id="'licenseSurrenderedAt'">運転免許返納日</AppLabel>
+            <AppCalendar :input-id="'licenseSurrenderedAt'" v-model="usersModel.licenseSurrenderedAt"
+              :error="licenseSurrenderedAtErrorDto" />
+          </div>
+        </div>
+        <div class="form-btn">
+          <AppButton :primary="false" label="クリア" @click="clearForm" />
+          <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
+        </div>
 
-          <div class="form-link">
-            <AppLink @click="router.push('/change-password')">パスワードを変更する</AppLink>
-          </div>
-
+        <div class="form-link">
+          <AppLink @click="router.push('/change-password')">パスワードを変更する</AppLink>
+        </div>
       </AppCard>
-      <!-- トーストメッセージ -->
-      <AppToastMessage />
     </div>
+    <!-- トーストメッセージ -->
+    <AppToastMessage />
   </div>
 </template>
 
@@ -67,6 +74,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import AppCard from '@/components/atoms/AppCard.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppCalendar from '@/components/atoms/AppCalendar.vue'
+import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
@@ -99,6 +107,10 @@ const licenseSurrenderedAtErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 
 /** ローディング */
 const isLoading = ref(false)
+
+/** エラーバー */
+const barErrMode = ref('') as Ref<string>
+const barErrMsg = ref('') as Ref<string>
 
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
@@ -138,10 +150,12 @@ const getMunicipalities = async () => {
         text: dto.municipalityKana
       }))
     } else {
-      ToastMessageUtils.error(API_RESPONSE_MESSAGE.DATA_NOT_FOUND)
+      barErrMode.value = 'error'
+      barErrMsg.value = API_RESPONSE_MESSAGE.DATA_NOT_FOUND
     }
-  } catch (error) {
-    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+  } catch {
+    barErrMode.value = 'error'
+    barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR
   }
 }
 
@@ -167,10 +181,12 @@ const getUsersInfo = async () => {
     if (response.status === responseStatusConstant.OK && response.data) {
       usersModel.value = (response.data as unknown as { data: UsersDto }).data
     } else {
-      ToastMessageUtils.error(API_RESPONSE_MESSAGE.DATA_NOT_FOUND)
+      barErrMode.value = 'error'
+      barErrMsg.value = API_RESPONSE_MESSAGE.DATA_NOT_FOUND
     }
-  } catch (error) {
-    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+  } catch {
+    barErrMode.value = 'error'
+    barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR
   }
 }
 
@@ -178,6 +194,9 @@ const getUsersInfo = async () => {
  * ユーザー情報の更新
  */
 const updateUsersInfo = async () => {
+  // エラーバーをリセット
+  barErrMode.value = ''
+  barErrMsg.value = ''
   // エラーチェック
   const hasError = checkError()
   // エラーがない場合はAPIを呼び出す
@@ -203,10 +222,13 @@ const updateUsersInfo = async () => {
         // ユーザー情報の再取得
         await getUsersInfo()
       } else {
-        ToastMessageUtils.error(API_RESPONSE_MESSAGE.UPDATE_FAILED)
+        barErrMode.value = 'error'
+        barErrMsg.value = API_RESPONSE_MESSAGE.UPDATE_FAILED
       }
-    } catch (error) {
-      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string } } }
+      barErrMode.value = 'error'
+      barErrMsg.value = axiosError?.response?.data?.message ?? API_RESPONSE_MESSAGE.API_ERROR
     } finally {
       isLoading.value = false
     }
