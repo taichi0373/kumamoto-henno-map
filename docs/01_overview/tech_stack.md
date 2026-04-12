@@ -62,8 +62,13 @@ graph TB
 | Vue.js | 3.x | UIフレームワーク |
 | TypeScript | 5.x | 静的型付け |
 | Vue Router | 4.x | SPAルーティング |
+| Pinia | 2.x | 状態管理 |
+| Axios | 1.x | HTTP通信クライアント |
+| PrimeVue | 4.x | UIコンポーネントライブラリ |
 | MapLibre GL JS | 5.6.0 | 地図表示 |
 | ESLint + Prettier | - | コード品質管理 |
+| Jest | 30.x | ユニットテスト |
+| Playwright | 1.x | E2Eテスト |
 | Storybook | 8.6.14 | コンポーネント開発・ドキュメント |
 | Vue CLI | 5.x | ビルドツール |
 | npm | - | パッケージ管理 |
@@ -76,6 +81,7 @@ graph TB
 | Spring Boot | 3.3.5 | Webフレームワーク |
 | Doma 2 | 2.60.0 | O/Rマッパー |
 | jjwt | 0.12.6 | JWT認証 |
+| springdoc-openapi | 2.6.0 | OpenAPI仕様書（Swagger UI / ReDoc） |
 | Gradle | - | ビルドツール |
 
 ## データベース
