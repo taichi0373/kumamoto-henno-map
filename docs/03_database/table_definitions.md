@@ -29,7 +29,7 @@
 | MUNICIPALITY_CD | VARCHAR(6) | ✓ | ✓ | | 自治体コード |
 | MUNICIPALITY_NAME | VARCHAR(200) | ✓ | | | 自治体名称 |
 | MUNICIPALITY_KANA | VARCHAR(200) | | | | 自治体名称かな |
-| MUNICIPALITY_TYPE | VARCHAR(1) | | | | 自治体区分（1:都道府県, 2:区, 3:市町村） |
+| MUNICIPALITY_TYPE | VARCHAR(1) | ✓ | | | 自治体区分（1:都道府県, 2:区, 3:市町村） |
 | SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
 | SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
 

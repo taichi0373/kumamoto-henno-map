@@ -125,7 +125,7 @@ sequenceDiagram
 | フィールド | 型 | 説明 |
 |---|---|---|
 | success | boolean | 処理成功時: `true`、エラー時: `false` |
-| data | object / array / string / number / boolean / null | 成功時のレスポンスデータ。`null` の場合は省略 |
+| data | object / array / string / number / boolean / null | レスポンスデータ。データなしの場合も `null` として常に含まれる |
 | message | string / null | エラー時のメッセージ。成功時は省略 |
 
 ---
@@ -168,10 +168,10 @@ sequenceDiagram
 { "success": false, "message": "ユーザー名またはパスワードが正しくありません" }
 ```
 
-**レスポンス 429 Too Many Requests** — ログイン試行回数超過
+**レスポンス 429 Too Many Requests** — ログイン試行回数超過（15分後に解除）
 
 ```json
-{ "success": false, "message": "ログイン試行回数が上限に達しました。しばらく時間をおいて再度お試しください。" }
+{ "success": false, "data": null, "message": "ログイン試行回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
 ```
 
 ---
@@ -203,7 +203,7 @@ sequenceDiagram
 
 ログアウト。DB 上のリフレッシュトークンを失効させ、Cookie を削除する。
 
-- **認証**: 不要（Cookie: `refresh_token` が必要）
+- **認証**: 不要（Cookie: `refresh_token` があれば失効処理する）
 
 **レスポンス 204 No Content**（ボディなし）
 
@@ -232,7 +232,11 @@ sequenceDiagram
 }
 ```
 
-**レスポンス 429 Too Many Requests** — リセット要求回数超過
+**レスポンス 429 Too Many Requests** — リセット要求回数超過（15分後に解除）
+
+```json
+{ "success": false, "data": null, "message": "リセット要求回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
+```
 
 ---
 
@@ -258,7 +262,13 @@ sequenceDiagram
 { "success": true, "data": null }
 ```
 
-**レスポンス 400 Bad Request** — トークン無効・期限切れ、パスワード不一致
+**レスポンス 400 Bad Request** — 入力値不正（必須項目未入力・パスワード不一致・パスワード形式不正）
+
+**レスポンス 429 Too Many Requests** — 試行回数超過（15分後に解除）
+
+```json
+{ "success": false, "data": null, "message": "試行回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
+```
 
 ---
 
@@ -302,7 +312,7 @@ sequenceDiagram
     "username": "taro",
     "email": "taro@example.com",
     "birthDate": "2000-01-01",
-    "address": "熊本市中央区",
+    "address": "43100",
     "licenseStatus": "2",
     "licenseSurrenderedAt": null
   }
@@ -315,7 +325,7 @@ sequenceDiagram
 { "success": false, "message": "このユーザー名は既に使用されています" }
 ```
 
-**レスポンス 429 Too Many Requests** — 登録試行回数超過
+**レスポンス 429 Too Many Requests** — 登録試行回数超過（1時間後に解除）
 
 **レスポンス 503 Service Unavailable** — DB接続エラー
 
@@ -341,7 +351,7 @@ sequenceDiagram
     "username": "taro",
     "email": "taro@example.com",
     "birthDate": "2000-01-01",
-    "address": "熊本市中央区",
+    "address": "43100",
     "licenseStatus": "2",
     "licenseSurrenderedAt": "2024-04-01"
   }
@@ -368,7 +378,7 @@ sequenceDiagram
   "username": "taro",
   "email": "taro@example.com",
   "birthDate": "2000-01-01",
-  "address": "熊本市中央区",
+  "address": "43100",
   "licenseStatus": "2"
 }
 ```
@@ -376,9 +386,10 @@ sequenceDiagram
 **レスポンス 200 OK**
 
 ```json
-{ "success": true }
+{ "success": true, "data": null }
 ```
 
+**レスポンス 400 Bad Request** — バリデーションエラー（ユーザー名未入力・メールアドレス形式不正・生年月日不正）
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 403 Forbidden** — 他ユーザーへのアクセス
 **レスポンス 404 Not Found** — ユーザーが存在しない
@@ -408,8 +419,10 @@ sequenceDiagram
 { "success": true, "data": null }
 ```
 
-**レスポンス 400 Bad Request** — 現在のパスワード不一致、新パスワード不正
+**レスポンス 400 Bad Request** — 入力値不正（必須項目未入力・パスワード不一致・パスワード形式不正）
 **レスポンス 401 Unauthorized** — 未認証
+**レスポンス 404 Not Found** — ユーザーが存在しない
+**レスポンス 409 Conflict** — 現在のパスワードが正しくない
 
 ---
 
@@ -637,7 +650,7 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 | 401 Unauthorized | Bearer Token なし、または無効・期限切れ |
 | 403 Forbidden | 他ユーザーのリソースへのアクセス |
 | 404 Not Found | 対象リソースが存在しない |
-| 409 Conflict | ユーザー名・メールアドレスの重複登録 |
+| 409 Conflict | ユーザー名・メールアドレスの重複登録、現在のパスワード不一致 |
 | 429 Too Many Requests | レート制限超過（ログイン・登録・パスワードリセット） |
 | 500 Internal Server Error | サーバー内部エラー、OTP 接続失敗 |
 | 503 Service Unavailable | DB 接続エラー |

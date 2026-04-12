@@ -41,10 +41,16 @@ public class LoginAttemptService {
     /** 新規登録: ロックアウト時間（分） */
     private static final long SIGNUP_LOCK_MINUTES = 60;
 
-    /** パスワードリセット: 最大失敗試行回数 */
+    /** パスワードリセット申請: IP当たりの最大試行回数 */
+    private static final int PASSWORD_RESET_REQUEST_MAX_ATTEMPTS = 5;
+
+    /** パスワードリセット申請: ロックアウト時間（分） */
+    private static final long PASSWORD_RESET_REQUEST_LOCK_MINUTES = 15;
+
+    /** パスワードリセット確認: 最大失敗試行回数 */
     private static final int PASSWORD_RESET_MAX_ATTEMPTS = 5;
 
-    /** パスワードリセット: ロックアウト時間（分） */
+    /** パスワードリセット確認: ロックアウト時間（分） */
     private static final long PASSWORD_RESET_LOCK_MINUTES = 15;
 
     /** キャッシュに保持するIPアドレスの最大件数（超過時は古いエントリをLRU削除） */
@@ -67,7 +73,11 @@ public class LoginAttemptService {
     private final Cache<String, AttemptData> signupAttempts =
             buildCache(SIGNUP_LOCK_MINUTES, MAX_TRACKED_IPS);
 
-    /** パスワードリセット試行キャッシュ（キー: IPアドレス） */
+    /** パスワードリセット申請試行キャッシュ（キー: IPアドレス） */
+    private final Cache<String, AttemptData> passwordResetRequestAttempts =
+            buildCache(PASSWORD_RESET_REQUEST_LOCK_MINUTES, MAX_TRACKED_IPS);
+
+    /** パスワードリセット確認試行キャッシュ（キー: IPアドレス） */
     private final Cache<String, AttemptData> passwordResetAttempts =
             buildCache(PASSWORD_RESET_LOCK_MINUTES, MAX_TRACKED_IPS);
 
@@ -111,6 +121,23 @@ public class LoginAttemptService {
      */
     public void recordSignupAttempt(String ip) {
         record(signupAttempts, ip, SIGNUP_MAX_ATTEMPTS, SIGNUP_LOCK_MINUTES);
+    }
+
+    /**
+     * パスワードリセット申請がブロックされているか確認する
+     * @param ip クライアントIPアドレス
+     * @return ブロック中の場合はtrue
+     */
+    public boolean isPasswordResetRequestBlocked(String ip) {
+        return isBlocked(passwordResetRequestAttempts, ip);
+    }
+
+    /**
+     * パスワードリセット申請の試行を記録する（成否問わずカウント）
+     * @param ip クライアントIPアドレス
+     */
+    public void recordPasswordResetRequestAttempt(String ip) {
+        record(passwordResetRequestAttempts, ip, PASSWORD_RESET_REQUEST_MAX_ATTEMPTS, PASSWORD_RESET_REQUEST_LOCK_MINUTES);
     }
 
     /**

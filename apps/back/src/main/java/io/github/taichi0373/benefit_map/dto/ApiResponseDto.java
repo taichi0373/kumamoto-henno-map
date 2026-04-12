@@ -30,8 +30,9 @@ public class ApiResponseDto<T> implements Serializable {
     @Schema(description = "処理成否。成功時: true、エラー時: false", example = "true")
     private final boolean success;
 
-    /** レスポンスデータ（成功時のみ） */
-    @Schema(description = "レスポンスデータ（成功時のみ。null の場合は省略）")
+    /** レスポンスデータ */
+    @Schema(description = "レスポンスデータ（データなしの場合は null）")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final T data;
 
     /** エラーメッセージ（失敗時のみ） */
