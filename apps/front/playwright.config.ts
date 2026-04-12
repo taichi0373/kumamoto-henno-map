@@ -16,12 +16,12 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-   webServer: {
-     command: 'npm run serve',
-     url: 'http://localhost:3000',
-     reuseExistingServer: true,
-     timeout: 120000,
-   },
+  webServer: {
+    command: 'npm run serve',
+    url: 'http://localhost:3000',
+    reuseExistingServer: true,
+    timeout: 120000,
+  },
   projects: [
     {
       name: 'chromium',

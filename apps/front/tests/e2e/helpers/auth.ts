@@ -60,5 +60,5 @@ export async function signupAndLogin(
   await page.locator('input#username').fill(username);
   await page.locator('input#password').fill(password);
   await page.getByRole('button', { name: 'ログイン' }).click();
-  await page.waitForURL('/');;
+  await page.waitForURL('/');
 }

@@ -42,10 +42,14 @@ test.describe('パスワード変更画面', () => {
     // ヘッダーの「マイページ」メニューをクリックしてサブメニューを展開
     await page.getByText('マイページ').click();
     // 「プロフィール」をクリックして /profile へ遷移
-    await page.getByText('プロフィール').click();
+    const profileMenuItem = page.getByText('プロフィール');
+    await expect(profileMenuItem).toBeVisible();
+    await profileMenuItem.click();
     await page.waitForURL('**/profile');
     // 「パスワードを変更する」リンクをクリックして /change-password へ遷移
-    await page.getByText('パスワードを変更する').click();
+    const changePasswordLink = page.getByText('パスワードを変更する');
+    await expect(changePasswordLink).toBeVisible();
+    await changePasswordLink.click();
     await page.waitForURL('**/change-password');
     await page.waitForLoadState('networkidle');
   });
