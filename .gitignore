@@ -42,6 +42,7 @@ nbdist/
 .env
 .env.local
 .env.*.local
+.env.test
 
 ### node_modules ###
 node_modules/
