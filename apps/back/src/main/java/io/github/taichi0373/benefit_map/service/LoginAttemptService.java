@@ -30,25 +30,25 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 public class LoginAttemptService {
 
     /** ログイン: 最大失敗試行回数 */
-    private static final int LOGIN_MAX_ATTEMPTS = 5;
+    private static final int LOGIN_MAX_ATTEMPTS = 10;
 
     /** ログイン: ロックアウト時間（分） */
     private static final long LOGIN_LOCK_MINUTES = 15;
 
     /** 新規登録: IP当たりの最大試行回数 */
-    private static final int SIGNUP_MAX_ATTEMPTS = 5;
+    private static final int SIGNUP_MAX_ATTEMPTS = 10;
 
     /** 新規登録: ロックアウト時間（分） */
     private static final long SIGNUP_LOCK_MINUTES = 60;
 
     /** パスワードリセット申請: IP当たりの最大試行回数 */
-    private static final int PASSWORD_RESET_REQUEST_MAX_ATTEMPTS = 5;
+    private static final int PASSWORD_RESET_REQUEST_MAX_ATTEMPTS = 10;
 
     /** パスワードリセット申請: ロックアウト時間（分） */
     private static final long PASSWORD_RESET_REQUEST_LOCK_MINUTES = 15;
 
     /** パスワードリセット確認: 最大失敗試行回数 */
-    private static final int PASSWORD_RESET_MAX_ATTEMPTS = 5;
+    private static final int PASSWORD_RESET_MAX_ATTEMPTS = 10;
 
     /** パスワードリセット確認: ロックアウト時間（分） */
     private static final long PASSWORD_RESET_LOCK_MINUTES = 15;
