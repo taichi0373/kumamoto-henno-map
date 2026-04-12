@@ -3,60 +3,58 @@
     <AppBlockUI :blocked="isLoading" />
     <div class="whole">
       <AppCard title="プロフィール編集" :inputStyle="{ width: '100%', maxWidth: '600px' }">
+        <div class="form-col">
+          <AppMessageBar
+            v-if="barErrMode != ''"
+            :mode="barErrMode"
+            :message="barErrMsg"
+            style="width: 100%;"
+          ></AppMessageBar>
+        </div>
+        <div class="form-row-2">
           <div class="form-col">
-            <AppMessageBar
-              v-if="barErrMode != ''"
-              :mode="barErrMode"
-              :message="barErrMsg"
-              style="width: 100%;"
-            ></AppMessageBar>
+            <AppLabel :required="true">ユーザー名</AppLabel>
+            <AppTextField :input-id="'username'" type="text" v-model="usersModel.username"
+              placeholder="ユーザー名を入力してください" :required="true" :error="usernameErrorDto" />
           </div>
+          <div class="form-col">
+            <AppLabel :id="'email'" :required="true">メールアドレス</AppLabel>
+            <AppTextField :input-id="'email'" type="text" v-model="usersModel.email"
+              placeholder="メールアドレスを入力してください" :required="true" :error="emailErrorDto" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-col">
+            <AppLabel :required="true">居住地域</AppLabel>
+            <AppSelect :input-id="'address'" v-model="usersModel.address" placeholder="選択してください"
+              :options="addressOptions" :filter="true" :required="true" :error="addressErrorDto" />
+          </div>
+          <div class="form-col">
+            <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
+            <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true"
+              :error="birthDateErrorDto" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-col">
+            <AppLabel :required="true">運転免許の所持状況</AppLabel>
+            <AppSelect :input-id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
+              :options="licenseOptions" :required="true" :error="licenseStatusErrorDto" />
+          </div>
+          <div class="form-col">
+            <AppLabel :id="'licenseSurrenderedAt'">運転免許返納日</AppLabel>
+            <AppCalendar :input-id="'licenseSurrenderedAt'" v-model="usersModel.licenseSurrenderedAt"
+              :error="licenseSurrenderedAtErrorDto" />
+          </div>
+        </div>
+        <div class="form-btn">
+          <AppButton :primary="false" label="クリア" @click="clearForm" />
+          <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
+        </div>
 
-          <div class="form-row-2">
-            <div class="form-col">
-              <AppLabel :required="true">ユーザー名</AppLabel>
-              <AppTextField :input-id="'username'" type="text" v-model="usersModel.username"
-                placeholder="ユーザー名を入力してください" :required="true" :error="usernameErrorDto" />
-            </div>
-            <div class="form-col">
-              <AppLabel :id="'email'" :required="true">メールアドレス</AppLabel>
-              <AppTextField :input-id="'email'" type="text" v-model="usersModel.email"
-                placeholder="メールアドレスを入力してください" :required="true" :error="emailErrorDto" />
-            </div>
-          </div>
-          <div class="form-row-2">
-            <div class="form-col">
-              <AppLabel :required="true">居住地域</AppLabel>
-              <AppSelect :input-id="'address'" v-model="usersModel.address" placeholder="選択してください"
-                :options="addressOptions" :filter="true" :required="true" :error="addressErrorDto" />
-            </div>
-            <div class="form-col">
-              <AppLabel :id="'birthDate'" :required="true">生年月日</AppLabel>
-              <AppCalendar :input-id="'birthDate'" v-model="usersModel.birthDate" :required="true"
-                :error="birthDateErrorDto" />
-            </div>
-          </div>
-          <div class="form-row-2">
-            <div class="form-col">
-              <AppLabel :required="true">運転免許の所持状況</AppLabel>
-              <AppSelect :input-id="'licenseStatus'" v-model="usersModel.licenseStatus" placeholder="選択してください"
-                :options="licenseOptions" :required="true" :error="licenseStatusErrorDto" />
-            </div>
-            <div class="form-col">
-              <AppLabel :id="'licenseSurrenderedAt'">運転免許返納日</AppLabel>
-              <AppCalendar :input-id="'licenseSurrenderedAt'" v-model="usersModel.licenseSurrenderedAt"
-                :error="licenseSurrenderedAtErrorDto" />
-            </div>
-          </div>
-          <div class="form-btn">
-            <AppButton :primary="false" label="クリア" @click="clearForm" />
-            <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
-          </div>
-
-          <div class="form-link">
-            <AppLink @click="router.push('/change-password')">パスワードを変更する</AppLink>
-          </div>
-
+        <div class="form-link">
+          <AppLink @click="router.push('/change-password')">パスワードを変更する</AppLink>
+        </div>
       </AppCard>
     </div>
     <!-- トーストメッセージ -->
