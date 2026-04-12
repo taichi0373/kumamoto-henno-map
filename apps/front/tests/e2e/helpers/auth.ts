@@ -10,7 +10,7 @@ export async function loginAsUser(page: Page, username: string, password: string
   await page.locator('input#username').fill(username);
   await page.locator('input#password').fill(password);
   await page.getByRole('button', { name: 'ログイン' }).click();
-  await page.waitForURL('http://localhost:3000/');
+  await page.waitForURL('/');
 }
 
 /**
@@ -60,5 +60,5 @@ export async function signupAndLogin(
   await page.locator('input#username').fill(username);
   await page.locator('input#password').fill(password);
   await page.getByRole('button', { name: 'ログイン' }).click();
-  await page.waitForURL('http://localhost:3000/');
+  await page.waitForURL('/');;
 }

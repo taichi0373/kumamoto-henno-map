@@ -15,7 +15,7 @@ test.describe('パスワード変更画面', () => {
 
   /**
    * サインアップはテストスイート全体で1回のみ実行
-   * UIプロキシのタイムアウトを避けるため request fixture でAPIを直接呼ぶ
+   * UI操作による待ち時間を避けるため、request fixture でサインアップAPIを呼ぶ
    */
   test.beforeAll(async ({ request }) => {
     const response = await request.post('/benefit-map/api/users/signup', {

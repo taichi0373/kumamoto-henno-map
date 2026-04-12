@@ -33,7 +33,7 @@ test.describe('認証ガード', () => {
   test('未ログインで / にアクセスするとリダイレクトなしでホームが表示される', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await expect(page).toHaveURL('http://localhost:3000/');
+    await expect(page).toHaveURL(/\/$/);
   });
 
   test('未ログインで /forgot-password にアクセスするとリダイレクトなしで表示される', async ({ page }) => {

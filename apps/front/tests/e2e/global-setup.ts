@@ -5,12 +5,38 @@ import { Client } from 'pg';
  * テスト実行前にUSERSテーブル（および関連テーブル）を全件削除する
  */
 async function globalSetup() {
+  // DB接続情報は必須環境変数 — デフォルト値なし
+  const host = process.env.DB_HOST;
+  const port = process.env.DB_PORT;
+  const database = process.env.DB_NAME;
+  const user = process.env.DB_USERNAME;
+  const password = process.env.DB_PASSWORD;
+
+  const missing = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USERNAME', 'DB_PASSWORD'].filter(
+    (key) => !process.env[key],
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `[global-setup] 必須環境変数が設定されていません: ${missing.join(', ')}\n` +
+        'テスト用の .env ファイルを確認してください。',
+    );
+  }
+
+  // テスト用DB以外への誤接続を防ぐガード
+  if (!database!.endsWith('_test')) {
+    throw new Error(
+      `[global-setup] 安全のため処理を中断しました。\n` +
+        `DB_NAME="${database}" は "_test" で終わっていません。\n` +
+        'テスト用DBのみ TRUNCATE を実行できます。',
+    );
+  }
+
   const client = new Client({
-    host: process.env.DB_HOST ?? 'localhost',
-    port: Number(process.env.DB_PORT ?? 5432),
-    database: process.env.DB_NAME ?? 'benefit_map',
-    user: process.env.DB_USERNAME ?? 'user',
-    password: process.env.DB_PASSWORD ?? 'pass',
+    host,
+    port: Number(port),
+    database,
+    user,
+    password,
   });
 
   await client.connect();
