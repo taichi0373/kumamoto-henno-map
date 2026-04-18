@@ -43,7 +43,16 @@ setUnauthorizedHandler(() => {
   await authStore.restoreSession()
 
   app.use(router)
-  app.use(PrimeVue, { ripple: true, theme: { preset: Aura } })
+  app.use(PrimeVue, {
+    ripple: true,
+    // ダークモード設定
+    theme: {
+        preset: Aura,
+        options: {
+            darkModeSelector: '.my-app-dark',
+        }
+    },
+  })
   app.use(ToastService)
   app.directive('ripple', Ripple)
   app.directive('badge', BadgeDirective)

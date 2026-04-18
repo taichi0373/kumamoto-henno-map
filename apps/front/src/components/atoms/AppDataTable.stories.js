@@ -1,13 +1,26 @@
+import { ref } from 'vue';
+import { FilterMatchMode } from '@primevue/core/api';
 import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 import AppButton from './AppButton.vue';
 import AppDataTable from './AppDataTable.vue';
 
-/** サンプルカラム定義 */
+/** サンプルカラム定義（フィルターなし） */
 const sampleColumns = [
-  { field: 'id',     header: 'ID',           sortable: true  },
-  { field: 'name',   header: '名前',         sortable: true  },
+  { field: 'id',     header: 'ID',             sortable: true  },
+  { field: 'name',   header: '名前',           sortable: true  },
   { field: 'email',  header: 'メールアドレス', sortable: false },
-  { field: 'status', header: 'ステータス',    sortable: true  },
+  { field: 'status', header: 'ステータス',      sortable: true  },
+];
+
+/** サンプルカラム定義（フィルターあり） */
+const sampleColumnsWithFilter = [
+  { field: 'id',     header: 'ID',             sortable: true  },
+  { field: 'name',   header: '名前',           sortable: true,  filterPlaceholder: '名前で検索' },
+  { field: 'email',  header: 'メールアドレス', sortable: false, filterPlaceholder: 'メールで検索' },
+  { field: 'status', header: 'ステータス',      sortable: true  },
 ];
 
 /** サンプルデータ */
@@ -33,7 +46,7 @@ export default {
     },
     columns: {
       control: 'object',
-      description: 'カラム定義（field / header / sortable）',
+      description: 'カラム定義（field / header / sortable / filterPlaceholder）',
     },
     loading: {
       control: 'boolean',
@@ -51,7 +64,17 @@ export default {
       control: { type: 'number', min: 0 },
       description: '先頭インデックス',
     },
+    filterDisplay: {
+      control: { type: 'select' },
+      options: [undefined, 'row', 'menu'],
+      description: 'フィルター表示モード（menu 推奨）',
+    },
+    globalFilterFields: {
+      control: 'object',
+      description: 'グローバルフィルター対象フィールド',
+    },
     onPageChange: { action: 'page-change' },
+    onFilter:     { action: 'filter' },
   },
 };
 
@@ -87,23 +110,6 @@ export const Loading = {
   },
 };
 
-/** ソート可能カラム */
-export const Sortable = {
-  args: {
-    value: sampleData,
-    columns: [
-      { field: 'id',     header: 'ID',           sortable: true  },
-      { field: 'name',   header: '名前',         sortable: true  },
-      { field: 'email',  header: 'メールアドレス', sortable: false },
-      { field: 'status', header: 'ステータス',    sortable: true  },
-    ],
-    loading: false,
-    totalRecords: sampleData.length,
-    rows: 20,
-    first: 0,
-  },
-};
-
 /** 操作カラムあり：スロットを使用して編集・削除ボタンを追加 */
 export const WithActions = {
   render: (args) => ({
@@ -115,8 +121,10 @@ export const WithActions = {
       <AppDataTable v-bind="args" @page-change="args.onPageChange">
         <Column field="actions" header="操作">
           <template #body>
-            <AppButton label="編集" icon="pi pi-pencil" style="margin-right: 4px;" />
-            <AppButton label="削除" icon="pi pi-trash" />
+            <div style="display: flex; gap: 8px;">
+              <AppButton label="編集" icon="pi pi-pencil" />
+              <AppButton label="削除" icon="pi pi-trash" />
+            </div>
           </template>
         </Column>
       </AppDataTable>
@@ -124,6 +132,72 @@ export const WithActions = {
   }),
   args: {
     ...Default.args,
+  },
+};
+
+/** メニューフィルター＋キーワード検索 */
+export const WithMenuFilter = {
+  render: (args) => ({
+    components: { AppDataTable, AppButton, Column, InputText, IconField, InputIcon },
+    setup() {
+      const filters = ref({
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+        name:   { value: null, matchMode: FilterMatchMode.CONTAINS },
+        email:  { value: null, matchMode: FilterMatchMode.CONTAINS },
+      });
+      const clearFilter = () => {
+        filters.value = {
+          global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+          name:   { value: null, matchMode: FilterMatchMode.CONTAINS },
+          email:  { value: null, matchMode: FilterMatchMode.CONTAINS },
+        };
+      };
+      let debounceTimer = null;
+      const onGlobalSearch = () => {
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          // 実際のページでは fetchItems(0) を呼ぶ
+          console.log('global search:', filters.value.global.value);
+        }, 300);
+      };
+      return { args, filters, clearFilter, onGlobalSearch };
+    },
+    template: `
+      <AppDataTable
+        v-bind="args"
+        v-model:filters="filters"
+        filterDisplay="menu"
+        :globalFilterFields="['name', 'email']"
+        @page-change="args.onPageChange"
+        @filter="args.onFilter"
+      >
+        <template #header>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <AppButton label="クリア" icon="pi pi-filter-slash" @click="clearFilter" />
+            <IconField>
+              <InputIcon><i class="pi pi-search" /></InputIcon>
+              <InputText v-model="filters['global'].value" placeholder="キーワード検索" @input="onGlobalSearch" />
+            </IconField>
+          </div>
+        </template>
+        <Column field="actions" header="操作">
+          <template #body>
+            <div style="display: flex; gap: 8px;">
+              <AppButton label="編集" icon="pi pi-pencil" />
+              <AppButton label="削除" icon="pi pi-trash" />
+            </div>
+          </template>
+        </Column>
+      </AppDataTable>
+    `,
+  }),
+  args: {
+    value: sampleData,
+    columns: sampleColumnsWithFilter,
+    loading: false,
+    totalRecords: sampleData.length,
+    rows: 20,
+    first: 0,
   },
 };
 

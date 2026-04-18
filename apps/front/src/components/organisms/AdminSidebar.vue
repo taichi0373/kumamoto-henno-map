@@ -1,53 +1,25 @@
 <template>
-  <Sidebar
-    v-model:visible="isVisible"
-    :modal="false"
-    :dismissable="false"
-    position="left"
-    style="width: 220px"
-  >
-    <template #container="{ closeCallback }">
-      <div class="flex flex-column h-full admin-sidebar__container">
-        <div class="flex align-items-center justify-content-between px-4 pt-3 flex-shrink-0">
-          <AppTitle class="admin-sidebar__title">管理メニュー</AppTitle>
-          <span>
-            <Button
-              type="button"
-              @click="closeCallback"
-              icon="pi pi-times"
-              rounded
-              outlined
-              class="h-2rem w-2rem admin-sidebar__close"
-            />
-          </span>
-        </div>
-        <div class="overflow-y-auto">
-          <ul class="list-none p-3 m-0">
-            <li v-for="item in menuItems" :key="item.path">
-              <router-link
-                v-ripple
-                :to="item.path"
-                class="admin-sidebar__link flex align-items-center cursor-pointer p-3 border-round transition-duration-150 transition-colors p-ripple"
-                active-class="admin-sidebar__link--active"
-              >
-                <i :class="[item.icon, 'mr-2']" />
-                <span class="font-medium">{{ item.label }}</span>
-              </router-link>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </template>
-  </Sidebar>
+  <nav class="admin-sidebar">
+    <div class="admin-sidebar__header">
+      <AppTitle class="admin-sidebar__title">管理メニュー</AppTitle>
+    </div>
+    <ul class="admin-sidebar__menu">
+      <li v-for="item in menuItems" :key="item.path" class="admin-sidebar__item">
+        <router-link
+          :to="item.path"
+          class="admin-sidebar__link"
+          active-class="admin-sidebar__link--active"
+        >
+          <i :class="[item.icon, 'admin-sidebar__icon']" />
+          <span>{{ item.label }}</span>
+        </router-link>
+      </li>
+    </ul>
+  </nav>
 </template>
 
 <script setup lang="ts">
-import Sidebar from 'primevue/sidebar'
-import Button from 'primevue/button'
 import AppTitle from '@/components/atoms/AppTitle.vue'
-
-/** サイドバーの表示状態（v-model:visible で制御） */
-const isVisible = defineModel<boolean>('visible', { default: true })
 
 /** サイドバーメニュー項目 */
 const menuItems = [
@@ -65,37 +37,81 @@ const menuItems = [
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
 
-.admin-sidebar {
-  &__container {
-    background-color: base.$header-background-color;
-    color: base.$base-100;
-    width: 100%;
-    height: 100%;
-  }
+/** サイドバー固有の配色 */
+$sidebar-bg:          #FFFFFF;
+$sidebar-border:      #e9ecef;
+$sidebar-text:        #6b7280;
+$sidebar-text-hover:  #111827;
+$sidebar-hover-bg:    #f1f3f5;
+$sidebar-active-bg:   #e5e7eb;
+$sidebar-active-text: #1f2937;
+$sidebar-active-bar:  #6b7280;
 
-  &__close {
-    color: base.$base-400 !important;
-    border-color: base.$base-600 !important;
+.admin-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background-color: $sidebar-bg;
+  color: $sidebar-text;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+
+  &__header {
+    padding: 16px;
+    border-bottom: 1px solid $sidebar-border;
+    flex-shrink: 0;
   }
 
   &__title {
-    color: base.$base-100;
+    color: base.$text-primary;
+    letter-spacing: 0.02em;
+  }
+
+  &__menu {
+    list-style: none;
+    margin: 0;
+    padding: 12px 8px;
+    flex: 1;
+  }
+
+  &__item {
+    margin-bottom: 2px;
   }
 
   &__link {
-    color: base.$base-300;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    color: $sidebar-text;
     text-decoration: none;
+    font-size: 14px;
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
 
     &:hover {
-      background-color: base.$header-border-color;
-      color: base.$base-100;
+      background-color: $sidebar-hover-bg;
+      color: $sidebar-text-hover;
     }
 
     &--active {
-      background-color: base.$header-border-color;
-      color: base.$base-100;
-      font-weight: bold;
+      background-color: $sidebar-active-bg;
+      color: $sidebar-active-text;
+      font-weight: 600;
+      border-left-color: $sidebar-active-bar;
     }
+  }
+
+  &__icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
   }
 }
 </style>

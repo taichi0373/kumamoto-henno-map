@@ -46,9 +46,10 @@ public class AdminCommunityBusController {
     @GetMapping
     public ResponseEntity<ApiResponseDto<AdminPagedResponseDto<CommunityBusEntity>>> getAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String routeName) {
         try {
-            var result = adminCommunityBusService.getAll(page, size);
+            var result = adminCommunityBusService.getAll(page, size, routeName);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("コミュニティバス路線一覧取得エラー", e);

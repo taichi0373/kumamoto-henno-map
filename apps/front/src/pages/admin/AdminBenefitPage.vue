@@ -2,21 +2,9 @@
   <div class="admin-benefit-page">
     <AppBlockUI :blocked="isLoading" />
     <AppToastMessage />
-    <AppTitle style="margin-bottom: 1rem">特典管理</AppTitle>
+    <AppTitle :size="'large'" style="margin-bottom: 1rem">特典管理</AppTitle>
 
-    <!-- 検索フィルター -->
-    <div class="admin-benefit-page__filter">
-      <AppTextField
-        v-model="filterMunicipalityCd"
-        placeholder="自治体コード"
-        :inputStyle="{ width: '160px' }"
-      />
-      <AppTextField
-        v-model="filterCategoryCd"
-        placeholder="カテゴリコード"
-        :inputStyle="{ width: '160px' }"
-      />
-      <AppButton label="検索" @click="fetchItems(0)" />
+    <div class="admin-benefit-page__actions">
       <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
     </div>
 
@@ -25,29 +13,36 @@
 
     <!-- データテーブル -->
     <AppDataTable
-      :value="items as Record<string, unknown>[]"
+      :value="items"
       :columns="columns"
       :loading="isLoading"
       :totalRecords="total"
       :rows="size"
       :first="page * size"
+      v-model:filters="filters"
+      filterDisplay="menu"
+      :globalFilterFields="['municipalityCd', 'categoryCd']"
       @page-change="onPageChange"
+      @filter="onFilter"
     >
+      <template #header>
+        <div class="table-header">
+          <AppButton label="クリア" icon="pi pi-filter-slash" @click="clearFilter" />
+          <IconField>
+            <InputIcon><i class="pi pi-search" /></InputIcon>
+            <InputText v-model="filters['global'].value" placeholder="キーワード検索" @input="onGlobalSearch" />
+          </IconField>
+        </div>
+      </template>
       <Column field="actions" header="操作">
         <template #body="{ data }">
-          <AppButton label="編集" icon="pi pi-pencil" @click="openEditDialog(data as BenefitAdminDto)" />
-          <AppButton label="削除" icon="pi pi-trash" @click="openDeleteDialog(data as BenefitAdminDto)" />
+          <div class="action-buttons">
+            <AppButton label="編集" icon="pi pi-pencil" @click="openEditDialog(data as BenefitAdminDto)" />
+            <AppButton label="削除" icon="pi pi-trash" @click="openDeleteDialog(data as BenefitAdminDto)" />
+          </div>
         </template>
       </Column>
     </AppDataTable>
-
-    <!-- ページネーション -->
-    <AppPaginator
-      :first="page * size"
-      :rows="size"
-      :totalRecords="total"
-      @page="onPageChange"
-    />
 
     <!-- 登録・編集ダイアログ -->
     <AppDialog
@@ -98,12 +93,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { FilterMatchMode } from '@primevue/core/api'
 import Column from 'primevue/column'
+import InputText from 'primevue/inputtext'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppDataTable from '@/components/atoms/AppDataTable.vue'
 import type { AppDataTableColumn } from '@/components/atoms/AppDataTable.vue'
-import AppPaginator from '@/components/atoms/AppPaginator.vue'
 import AppDialog from '@/components/atoms/AppDialog.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
@@ -112,6 +110,7 @@ import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import AppTitle from '@/components/atoms/AppTitle.vue'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import apiClient from '@/utils/api'
+import { codeConstant } from '@/utils/codeConstant'
 import type { BenefitAdminDto, AdminPagedResponse } from '@/dto/admin/adminDto'
 
 /** データ一覧 */
@@ -121,7 +120,7 @@ const total = ref(0)
 /** 現在ページ */
 const page = ref(0)
 /** 1ページあたり件数 */
-const size = ref(20)
+const size = ref(codeConstant.PAGINATION.ADMIN_PAGE_SIZE)
 /** ローディング中 */
 const isLoading = ref(false)
 /** エラーメッセージ */
@@ -137,15 +136,43 @@ const deleteTarget = ref<BenefitAdminDto | null>(null)
 /** フォームデータ */
 const form = ref<Partial<BenefitAdminDto>>({})
 
-/** フィルター */
-const filterMunicipalityCd = ref<string | null>(null)
-const filterCategoryCd = ref<string | null>(null)
+/** フィルター（global: キーワード検索、municipalityCd/categoryCd: カラムフィルター） */
+const filters = ref({
+  global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  municipalityCd: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  categoryCd: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+})
+
+/** フィルター初期化 */
+const initFilters = () => {
+  filters.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    municipalityCd: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    categoryCd: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  }
+}
+
+/** グローバル検索デバウンスタイマー */
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+/** フィルタークリア */
+const clearFilter = () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  initFilters()
+  fetchItems(0)
+}
+
+/** グローバルキーワード検索（デバウンス） */
+const onGlobalSearch = () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => fetchItems(0), 300)
+}
 
 /** テーブルカラム定義 */
 const columns: AppDataTableColumn[] = [
   { field: 'benefitId', header: '特典ID' },
-  { field: 'municipalityCd', header: '自治体コード' },
-  { field: 'categoryCd', header: 'カテゴリコード' },
+  { field: 'municipalityCd', header: '自治体コード', filterPlaceholder: '自治体コードで検索' },
+  { field: 'categoryCd', header: 'カテゴリコード', filterPlaceholder: 'カテゴリコードで検索' },
   { field: 'benefitName', header: '特典名称' },
   { field: 'expDetail', header: '有効期限' },
 ]
@@ -155,14 +182,15 @@ const fetchItems = async (targetPage: number) => {
   isLoading.value = true
   errorMessage.value = null
   try {
+    const keyword = filters.value.global?.value ?? null
     const response = await apiClient.get<{ data: AdminPagedResponse<BenefitAdminDto> }>(
       '/admin/benefits',
       {
         params: {
           page: targetPage,
           size: size.value,
-          municipalityCd: filterMunicipalityCd.value ?? undefined,
-          categoryCd: filterCategoryCd.value ?? undefined,
+          municipalityCd: filters.value.municipalityCd?.value ?? keyword ?? undefined,
+          categoryCd: filters.value.categoryCd?.value ?? keyword ?? undefined,
         },
       }
     )
@@ -175,6 +203,11 @@ const fetchItems = async (targetPage: number) => {
   } finally {
     isLoading.value = false
   }
+}
+
+/** フィルター変更時 */
+const onFilter = () => {
+  fetchItems(0)
 }
 
 /** ページ変更 */
@@ -249,19 +282,29 @@ onMounted(() => fetchItems(0))
 @use "@/assets/scss/base";
 
 .admin-benefit-page {
-  &__filter {
+  &__actions {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
     align-items: center;
     margin-bottom: 1rem;
-    flex-wrap: wrap;
   }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: 140px 1fr;
   gap: 0.5rem 1rem;
+  align-items: center;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 </style>

@@ -1,7 +1,5 @@
 package io.github.taichi0373.benefit_map.controller.admin;
 
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +12,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity;
 import io.github.taichi0373.benefit_map.service.admin.AdminBenefitCategoryService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -41,12 +41,15 @@ public class AdminBenefitCategoryController {
     private AdminBenefitCategoryService adminBenefitCategoryService;
 
     /**
-     * 特典カテゴリ全件を取得する（表示順ソート）
+     * 特典カテゴリ一覧を取得する（ページング）
      */
     @GetMapping
-    public ResponseEntity<ApiResponseDto<List<BenefitCategoryEntity>>> getAll() {
+    public ResponseEntity<ApiResponseDto<AdminPagedResponseDto<BenefitCategoryEntity>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String categoryName) {
         try {
-            var result = adminBenefitCategoryService.getAll();
+            var result = adminBenefitCategoryService.getAll(page, size, categoryName);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("特典カテゴリ一覧取得エラー", e);

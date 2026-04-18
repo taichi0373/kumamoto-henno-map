@@ -1,12 +1,12 @@
 package io.github.taichi0373.benefit_map.service.admin;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
 import io.github.taichi0373.benefit_map.repository.dao.BenefitCategoryDao;
 import io.github.taichi0373.benefit_map.repository.dao.BenefitDao;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity;
@@ -30,12 +30,18 @@ public class AdminBenefitCategoryService {
     private BenefitDao benefitDao;
 
     /**
-     * 特典カテゴリ全件を表示順で取得する（有効・無効を含む）
+     * 特典カテゴリ一覧をページング取得する（有効・無効を含む）
      *
-     * @return 特典カテゴリエンティティリスト
+     * @param page         ページ番号（0始まり）
+     * @param size         ページあたり件数
+     * @param categoryName カテゴリ名称フィルター（null の場合は全件）
+     * @return ページングレスポンス
      */
-    public List<BenefitCategoryEntity> getAll() {
-        return benefitCategoryDao.selectAllForAdmin();
+    public AdminPagedResponseDto<BenefitCategoryEntity> getAll(int page, int size, String categoryName) {
+        int offset = page * size;
+        var items = benefitCategoryDao.selectForAdmin(offset, size, categoryName);
+        long total = benefitCategoryDao.countForAdmin(categoryName);
+        return AdminPagedResponseDto.of(items, total, page, size);
     }
 
     /**

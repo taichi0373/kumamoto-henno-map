@@ -48,9 +48,10 @@ public class AdminAgencyController {
     @GetMapping
     public ResponseEntity<ApiResponseDto<AdminPagedResponseDto<AgencyEntity>>> getAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String agencyName) {
         try {
-            var result = adminAgencyService.getAll(page, size);
+            var result = adminAgencyService.getAll(page, size, agencyName);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("事業者一覧取得エラー", e);

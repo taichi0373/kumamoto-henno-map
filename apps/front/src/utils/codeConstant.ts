@@ -53,7 +53,12 @@ const codeConstant = {
     SEARCH_TYPE: {
         START: 'start',         // 出発地
         END: 'end',             // 目的地
-    }
+    },
+
+    // ページング
+    PAGINATION: {
+        ADMIN_PAGE_SIZE: 10,    // 管理者画面の1ページあたり表示件数
+    },
 
 } as const;
 

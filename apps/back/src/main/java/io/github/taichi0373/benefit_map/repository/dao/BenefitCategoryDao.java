@@ -12,6 +12,7 @@ import java.util.List;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity_;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * 特典カテゴリDAOインターフェース
@@ -63,29 +64,46 @@ public interface BenefitCategoryDao {
     // List<BenefitCategoryEntity> selectActive();
 
     /**
-     * 管理者向け全件取得（表示順ソート。有効・無効を含む）
+     * 管理者向けページング検索（カテゴリ名称でフィルター可。有効・無効を含む）
      *
+     * @param offset       オフセット
+     * @param limit        取得件数
+     * @param categoryName カテゴリ名称（null の場合は全件）
      * @return 特典カテゴリエンティティリスト
      */
-    default List<BenefitCategoryEntity> selectAllForAdmin() {
+    default List<BenefitCategoryEntity> selectForAdmin(int offset, int limit, String categoryName) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
         return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(categoryName)) {
+                        c.like(e.categoryName, "%" + categoryName + "%");
+                    }
+                })
                 .orderBy(c -> c.asc(e.displayOrder))
+                .offset(offset)
+                .limit(limit)
                 .fetch();
     }
 
     /**
-     * 管理者向け件数カウント
+     * 管理者向け件数カウント（カテゴリ名称でフィルター可）
      *
+     * @param categoryName カテゴリ名称（null の場合は全件）
      * @return 件数
      */
-    default long countAll() {
+    default long countForAdmin(String categoryName) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
-        return entityql.from(e).stream().count();
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(categoryName)) {
+                        c.like(e.categoryName, "%" + categoryName + "%");
+                    }
+                })
+                .stream().count();
     }
 
     /**

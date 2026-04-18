@@ -12,6 +12,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.AgencyEntity;
 import io.github.taichi0373.benefit_map.repository.entity.AgencyEntity_;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * 事業者情報DAOインターフェース
@@ -51,17 +52,23 @@ public interface AgencyDao {
     }
 
     /**
-     * 管理者向けページング検索
+     * 管理者向けページング検索（事業者名称でフィルター可）
      *
-     * @param offset オフセット
-     * @param limit  取得件数
+     * @param offset     オフセット
+     * @param limit      取得件数
+     * @param agencyName 事業者名称（null の場合は全件）
      * @return 事業者エンティティリスト
      */
-    default List<AgencyEntity> selectForAdmin(int offset, int limit) {
+    default List<AgencyEntity> selectForAdmin(int offset, int limit, String agencyName) {
         Entityql entityql = new Entityql(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
         return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(agencyName)) {
+                        c.like(e.agencyName, "%" + agencyName + "%");
+                    }
+                })
                 .orderBy(c -> c.asc(e.agencyId))
                 .offset(offset)
                 .limit(limit)
@@ -69,15 +76,22 @@ public interface AgencyDao {
     }
 
     /**
-     * 管理者向け件数カウント
+     * 管理者向け件数カウント（事業者名称でフィルター可）
      *
+     * @param agencyName 事業者名称（null の場合は全件）
      * @return 件数
      */
-    default long countAll() {
+    default long countForAdmin(String agencyName) {
         Entityql entityql = new Entityql(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
-        return entityql.from(e).stream().count();
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(agencyName)) {
+                        c.like(e.agencyName, "%" + agencyName + "%");
+                    }
+                })
+                .stream().count();
     }
 
     /**

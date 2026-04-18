@@ -12,6 +12,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.CommunityBusEntity;
 import io.github.taichi0373.benefit_map.repository.entity.CommunityBusEntity_;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * コミュニティバスDAOインターフェース
@@ -55,17 +56,23 @@ public interface CommunityBusDao {
     // List<CommunityBusEntity> selectAllOrderByName();
 
     /**
-     * 管理者向けページング検索
+     * 管理者向けページング検索（行先名称でフィルター可）
      *
-     * @param offset オフセット
-     * @param limit  取得件数
+     * @param offset    オフセット
+     * @param limit     取得件数
+     * @param routeName 行先名称（null の場合は全件）
      * @return コミュニティバスエンティティリスト
      */
-    default List<CommunityBusEntity> selectForAdmin(int offset, int limit) {
+    default List<CommunityBusEntity> selectForAdmin(int offset, int limit, String routeName) {
         Entityql entityql = new Entityql(Config.get(this));
         CommunityBusEntity_ e = new CommunityBusEntity_();
 
         return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(routeName)) {
+                        c.like(e.routeName, "%" + routeName + "%");
+                    }
+                })
                 .orderBy(c -> c.asc(e.routeId))
                 .offset(offset)
                 .limit(limit)
@@ -73,15 +80,22 @@ public interface CommunityBusDao {
     }
 
     /**
-     * 管理者向け件数カウント
+     * 管理者向け件数カウント（行先名称でフィルター可）
      *
+     * @param routeName 行先名称（null の場合は全件）
      * @return 件数
      */
-    default long countAll() {
+    default long countForAdmin(String routeName) {
         Entityql entityql = new Entityql(Config.get(this));
         CommunityBusEntity_ e = new CommunityBusEntity_();
 
-        return entityql.from(e).stream().count();
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(routeName)) {
+                        c.like(e.routeName, "%" + routeName + "%");
+                    }
+                })
+                .stream().count();
     }
 
     /**

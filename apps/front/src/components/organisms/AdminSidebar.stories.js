@@ -32,7 +32,7 @@ export const Default = {
             ☰ サイドバー切替
           </button>
           <h2 style="margin-top: 0;">メインコンテンツエリア</h2>
-          <p>PrimeVue Sidebar をラップした管理者サイドバーです。</p>
+          <p>PrimeVue Drawer をラップした管理者サイドバーです。</p>
           <p>左上のボタンでサイドバーの開閉を切り替えられます。</p>
         </div>
       </div>

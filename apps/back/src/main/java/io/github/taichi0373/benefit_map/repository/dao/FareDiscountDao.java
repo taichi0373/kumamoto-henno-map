@@ -12,6 +12,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.FareDiscountEntity;
 import io.github.taichi0373.benefit_map.repository.entity.FareDiscountEntity_;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * 運賃割引DAOインターフェース
@@ -38,17 +39,23 @@ public interface FareDiscountDao {
     }
 
     /**
-     * 管理者向けページング検索
+     * 管理者向けページング検索（特典IDでフィルター可）
      *
-     * @param offset オフセット
-     * @param limit  取得件数
+     * @param offset    オフセット
+     * @param limit     取得件数
+     * @param benefitId 特典ID（null の場合は全件）
      * @return 運賃割引エンティティリスト
      */
-    default List<FareDiscountEntity> selectForAdmin(int offset, int limit) {
+    default List<FareDiscountEntity> selectForAdmin(int offset, int limit, String benefitId) {
         Entityql entityql = new Entityql(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
         return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(benefitId)) {
+                        c.like(e.benefitId, "%" + benefitId + "%");
+                    }
+                })
                 .orderBy(c -> {
                     c.asc(e.benefitId);
                     c.asc(e.agencyId);
@@ -59,15 +66,22 @@ public interface FareDiscountDao {
     }
 
     /**
-     * 管理者向け件数カウント
+     * 管理者向け件数カウント（特典IDでフィルター可）
      *
+     * @param benefitId 特典ID（null の場合は全件）
      * @return 件数
      */
-    default long countAll() {
+    default long countForAdmin(String benefitId) {
         Entityql entityql = new Entityql(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
-        return entityql.from(e).stream().count();
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(benefitId)) {
+                        c.like(e.benefitId, "%" + benefitId + "%");
+                    }
+                })
+                .stream().count();
     }
 
     /**

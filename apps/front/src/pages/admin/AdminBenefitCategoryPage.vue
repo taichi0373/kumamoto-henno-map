@@ -4,17 +4,34 @@
     <AppToastMessage />
     <AppTitle :size="'large'" style="margin-bottom: 1rem">特典カテゴリ管理</AppTitle>
 
-    <div class="admin-page__filter">
+    <div class="admin-page__actions">
       <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
     </div>
 
     <AppMessageBar v-if="errorMessage" mode="error" :message="errorMessage" />
 
     <AppDataTable
-      :value="items as Record<string, unknown>[]"
+      :value="items"
       :columns="columns"
       :loading="isLoading"
+      :totalRecords="total"
+      :rows="size"
+      :first="page * size"
+      v-model:filters="filters"
+      filterDisplay="menu"
+      :globalFilterFields="['categoryName']"
+      @page-change="onPageChange"
+      @filter="onFilter"
     >
+      <template #header>
+        <div class="table-header">
+          <AppButton label="クリア" icon="pi pi-filter-slash" @click="clearFilter" />
+          <IconField>
+            <InputIcon><i class="pi pi-search" /></InputIcon>
+            <InputText v-model="filters['global'].value" placeholder="キーワード検索" @input="onGlobalSearch" />
+          </IconField>
+        </div>
+      </template>
       <Column field="isActive" header="有効">
         <template #body="{ data }">
           <span :class="['status-badge', data.isActive === '1' ? 'status-badge--active' : 'status-badge--inactive']">
@@ -24,8 +41,10 @@
       </Column>
       <Column field="actions" header="操作">
         <template #body="{ data }">
-          <AppButton label="編集" icon="pi pi-pencil" @click="openEditDialog(data as BenefitCategoryAdminDto)" />
-          <AppButton label="削除" icon="pi pi-trash" @click="openDeleteDialog(data as BenefitCategoryAdminDto)" />
+          <div class="action-buttons">
+            <AppButton label="編集" icon="pi pi-pencil" @click="openEditDialog(data as BenefitCategoryAdminDto)" />
+            <AppButton label="削除" icon="pi pi-trash" @click="openDeleteDialog(data as BenefitCategoryAdminDto)" />
+          </div>
         </template>
       </Column>
     </AppDataTable>
@@ -63,7 +82,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { FilterMatchMode } from '@primevue/core/api'
 import Column from 'primevue/column'
+import InputText from 'primevue/inputtext'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppDataTable from '@/components/atoms/AppDataTable.vue'
@@ -78,9 +101,17 @@ import AppTitle from '@/components/atoms/AppTitle.vue'
 import { SelectDto } from '@/dto/selectDto'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import apiClient from '@/utils/api'
-import type { BenefitCategoryAdminDto } from '@/dto/admin/adminDto'
+import { codeConstant } from '@/utils/codeConstant'
+import type { BenefitCategoryAdminDto, AdminPagedResponse } from '@/dto/admin/adminDto'
 
+/** データ一覧 */
 const items = ref<BenefitCategoryAdminDto[]>([])
+/** 総件数 */
+const total = ref(0)
+/** 現在ページ */
+const page = ref(0)
+/** 1ページあたり件数 */
+const size = ref(codeConstant.PAGINATION.ADMIN_PAGE_SIZE)
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const isDialogVisible = ref(false)
@@ -88,6 +119,36 @@ const isDeleteDialogVisible = ref(false)
 const editTarget = ref<BenefitCategoryAdminDto | null>(null)
 const deleteTarget = ref<BenefitCategoryAdminDto | null>(null)
 const form = ref<Partial<BenefitCategoryAdminDto>>({})
+
+/** フィルター（global: キーワード検索、categoryName: カラムフィルター） */
+const filters = ref({
+  global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  categoryName: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+})
+
+/** フィルター初期化 */
+const initFilters = () => {
+  filters.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    categoryName: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  }
+}
+
+/** グローバル検索デバウンスタイマー */
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+/** フィルタークリア */
+const clearFilter = () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  initFilters()
+  fetchItems(0)
+}
+
+/** グローバルキーワード検索（デバウンス） */
+const onGlobalSearch = () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => fetchItems(0), 300)
+}
 
 /** 有効フラグ選択肢 */
 const isActiveOptions: SelectDto[] = [
@@ -98,22 +159,44 @@ const isActiveOptions: SelectDto[] = [
 /** テーブルカラム定義 */
 const columns: AppDataTableColumn[] = [
   { field: 'categoryCd', header: 'カテゴリコード' },
-  { field: 'categoryName', header: 'カテゴリ名称' },
+  { field: 'categoryName', header: 'カテゴリ名称', filterPlaceholder: 'カテゴリ名称で検索' },
   { field: 'displayOrder', header: '表示順' },
 ]
 
 /** 一覧取得 */
-const fetchItems = async () => {
+const fetchItems = async (targetPage = page.value) => {
   isLoading.value = true
   errorMessage.value = null
   try {
-    const response = await apiClient.get<{ data: BenefitCategoryAdminDto[] }>('/admin/benefit-categories')
-    items.value = response.data?.data ?? []
+    const keyword = filters.value.global?.value ?? null
+    const response = await apiClient.get<{ data: AdminPagedResponse<BenefitCategoryAdminDto> }>('/admin/benefit-categories', {
+      params: {
+        page: targetPage,
+        size: size.value,
+        categoryName: filters.value.categoryName?.value ?? keyword ?? undefined,
+      },
+    })
+    const paged = response.data?.data
+    items.value = paged?.items ?? []
+    total.value = paged?.total ?? 0
+    page.value = targetPage
   } catch {
     errorMessage.value = '特典カテゴリ一覧の取得に失敗しました'
   } finally {
     isLoading.value = false
   }
+}
+
+/** フィルター変更時 */
+const onFilter = () => {
+  fetchItems(0)
+}
+
+/** ページ変更 */
+const onPageChange = (event: { first: number; rows: number }) => {
+  size.value = event.rows
+  page.value = Math.floor(event.first / event.rows)
+  fetchItems(page.value)
 }
 
 /** 新規登録ダイアログを開く */
@@ -175,15 +258,29 @@ const confirmDelete = async () => {
   }
 }
 
-onMounted(() => fetchItems())
+onMounted(() => fetchItems(0))
 </script>
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
 .admin-page {
-  &__filter { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+  &__actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+}
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
 .form-grid { display: grid; grid-template-columns: 140px 1fr; gap: 0.5rem 1rem; align-items: center; }
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .status-badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;

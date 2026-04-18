@@ -37,14 +37,15 @@ public class AdminMunicipalityService {
     /**
      * 自治体一覧をページング取得する
      *
-     * @param page ページ番号（0始まり）
-     * @param size ページあたり件数
+     * @param page             ページ番号（0始まり）
+     * @param size             ページあたり件数
+     * @param municipalityName 自治体名称フィルター（null の場合は全件）
      * @return ページングレスポンス
      */
-    public AdminPagedResponseDto<MunicipalityEntity> getAll(int page, int size) {
+    public AdminPagedResponseDto<MunicipalityEntity> getAll(int page, int size, String municipalityName) {
         int offset = page * size;
-        var items = municipalityDao.selectForAdmin(offset, size);
-        long total = municipalityDao.countAll();
+        var items = municipalityDao.selectForAdmin(offset, size, municipalityName);
+        long total = municipalityDao.countForAdmin(municipalityName);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

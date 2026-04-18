@@ -13,6 +13,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity;
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity_;
 import io.github.taichi0373.benefit_map.constants.CodeConstants;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * 市区町村DAOインターフェース
@@ -52,17 +53,23 @@ public interface MunicipalityDao {
 
 
     /**
-     * 管理者向けページング検索（全区分）
+     * 管理者向けページング検索（自治体名称でフィルター可）
      *
-     * @param offset オフセット
-     * @param limit  取得件数
+     * @param offset           オフセット
+     * @param limit            取得件数
+     * @param municipalityName 自治体名称（null の場合は全件）
      * @return 自治体エンティティリスト
      */
-    default List<MunicipalityEntity> selectForAdmin(int offset, int limit) {
+    default List<MunicipalityEntity> selectForAdmin(int offset, int limit, String municipalityName) {
         Entityql entityql = new Entityql(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
         return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(municipalityName)) {
+                        c.like(e.municipalityName, "%" + municipalityName + "%");
+                    }
+                })
                 .orderBy(c -> c.asc(e.municipalityCd))
                 .offset(offset)
                 .limit(limit)
@@ -70,15 +77,22 @@ public interface MunicipalityDao {
     }
 
     /**
-     * 管理者向け件数カウント
+     * 管理者向け件数カウント（自治体名称でフィルター可）
      *
+     * @param municipalityName 自治体名称（null の場合は全件）
      * @return 件数
      */
-    default long countAll() {
+    default long countForAdmin(String municipalityName) {
         Entityql entityql = new Entityql(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
-        return entityql.from(e).stream().count();
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(municipalityName)) {
+                        c.like(e.municipalityName, "%" + municipalityName + "%");
+                    }
+                })
+                .stream().count();
     }
 
     /**

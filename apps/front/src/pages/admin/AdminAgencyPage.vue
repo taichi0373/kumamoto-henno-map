@@ -4,30 +4,43 @@
     <AppToastMessage />
     <AppTitle :size="'large'" style="margin-bottom: 1rem">事業者管理</AppTitle>
 
-    <div class="admin-page__filter">
+    <div class="admin-page__actions">
       <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
     </div>
 
     <AppMessageBar v-if="errorMessage" mode="error" :message="errorMessage" />
 
     <AppDataTable
-      :value="items as Record<string, unknown>[]"
+      :value="items"
       :columns="columns"
       :loading="isLoading"
       :totalRecords="total"
       :rows="size"
       :first="page * size"
+      v-model:filters="filters"
+      filterDisplay="menu"
+      :globalFilterFields="['agencyName']"
       @page-change="onPageChange"
+      @filter="onFilter"
     >
+      <template #header>
+        <div class="table-header">
+          <AppButton label="クリア" icon="pi pi-filter-slash" @click="clearFilter" />
+          <IconField>
+            <InputIcon><i class="pi pi-search" /></InputIcon>
+            <InputText v-model="filters['global'].value" placeholder="キーワード検索" @input="onGlobalSearch" />
+          </IconField>
+        </div>
+      </template>
       <Column field="actions" header="操作">
         <template #body="{ data }">
-          <AppButton label="編集" icon="pi pi-pencil" @click="openEditDialog(data as AgencyAdminDto)" />
-          <AppButton label="削除" icon="pi pi-trash" @click="openDeleteDialog(data as AgencyAdminDto)" />
+          <div class="action-buttons">
+            <AppButton label="編集" icon="pi pi-pencil" @click="openEditDialog(data as AgencyAdminDto)" />
+            <AppButton label="削除" icon="pi pi-trash" @click="openDeleteDialog(data as AgencyAdminDto)" />
+          </div>
         </template>
       </Column>
     </AppDataTable>
-
-    <AppPaginator :first="page * size" :rows="size" :totalRecords="total" @page="onPageChange" />
 
     <AppDialog
       v-model="isDialogVisible"
@@ -66,12 +79,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { FilterMatchMode } from '@primevue/core/api'
 import Column from 'primevue/column'
+import InputText from 'primevue/inputtext'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppDataTable from '@/components/atoms/AppDataTable.vue'
 import type { AppDataTableColumn } from '@/components/atoms/AppDataTable.vue'
-import AppPaginator from '@/components/atoms/AppPaginator.vue'
 import AppDialog from '@/components/atoms/AppDialog.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
@@ -79,12 +95,14 @@ import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import AppTitle from '@/components/atoms/AppTitle.vue'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import apiClient from '@/utils/api'
+import { codeConstant } from '@/utils/codeConstant'
 import type { AgencyAdminDto, AdminPagedResponse } from '@/dto/admin/adminDto'
 
 const items = ref<AgencyAdminDto[]>([])
 const total = ref(0)
 const page = ref(0)
-const size = ref(20)
+/** 1ページあたり件数 */
+const size = ref(codeConstant.PAGINATION.ADMIN_PAGE_SIZE)
 const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const isDialogVisible = ref(false)
@@ -93,10 +111,40 @@ const editTarget = ref<AgencyAdminDto | null>(null)
 const deleteTarget = ref<AgencyAdminDto | null>(null)
 const form = ref<Partial<AgencyAdminDto>>({})
 
+/** フィルター（global: キーワード検索、agencyName: カラムフィルター） */
+const filters = ref({
+  global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  agencyName: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+})
+
+/** フィルター初期化 */
+const initFilters = () => {
+  filters.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    agencyName: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  }
+}
+
+/** グローバル検索デバウンスタイマー */
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+/** フィルタークリア */
+const clearFilter = () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  initFilters()
+  fetchItems(0)
+}
+
+/** グローバルキーワード検索（デバウンス） */
+const onGlobalSearch = () => {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => fetchItems(0), 300)
+}
+
 /** テーブルカラム定義 */
 const columns: AppDataTableColumn[] = [
   { field: 'agencyId', header: '事業者ID' },
-  { field: 'agencyName', header: '事業者名称' },
+  { field: 'agencyName', header: '事業者名称', filterPlaceholder: '事業者名称で検索' },
   { field: 'agencyKana', header: '事業者名称かな' },
   { field: 'phoneNumber', header: '電話番号' },
   { field: 'operatorId', header: '運行事業者ID' },
@@ -107,9 +155,16 @@ const fetchItems = async (targetPage: number) => {
   isLoading.value = true
   errorMessage.value = null
   try {
+    const keyword = filters.value.global?.value ?? null
     const response = await apiClient.get<{ data: AdminPagedResponse<AgencyAdminDto> }>(
       '/admin/agencies',
-      { params: { page: targetPage, size: size.value } }
+      {
+        params: {
+          page: targetPage,
+          size: size.value,
+          agencyName: filters.value.agencyName?.value ?? keyword ?? undefined,
+        },
+      }
     )
     const data = response.data?.data
     items.value = data?.items ?? []
@@ -120,6 +175,11 @@ const fetchItems = async (targetPage: number) => {
   } finally {
     isLoading.value = false
   }
+}
+
+/** フィルター変更時 */
+const onFilter = () => {
+  fetchItems(0)
 }
 
 /** ページ変更 */
@@ -193,7 +253,21 @@ onMounted(() => fetchItems(0))
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
 .admin-page {
-  &__filter { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+  &__actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+}
+.action-buttons {
+  display: flex;
+  gap: 8px;
 }
 .form-grid { display: grid; grid-template-columns: 140px 1fr; gap: 0.5rem 1rem; align-items: center; }
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 </style>

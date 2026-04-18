@@ -46,9 +46,10 @@ public class AdminMunicipalityController {
     @GetMapping
     public ResponseEntity<ApiResponseDto<AdminPagedResponseDto<MunicipalityEntity>>> getAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String municipalityName) {
         try {
-            var result = adminMunicipalityService.getAll(page, size);
+            var result = adminMunicipalityService.getAll(page, size, municipalityName);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("自治体一覧取得エラー", e);
