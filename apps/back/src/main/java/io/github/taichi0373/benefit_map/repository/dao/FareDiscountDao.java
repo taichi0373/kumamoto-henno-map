@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.repository.dao;
 
+import java.util.List;
+
 import org.seasar.doma.Dao;
 import org.seasar.doma.Delete;
 import org.seasar.doma.Insert;
@@ -33,6 +35,69 @@ public interface FareDiscountDao {
                       .where(c -> c.eq(e.benefitId, benefit_id))
                       .where(c -> c.eq(e.agencyId, agency_id))
                       .fetchOne();
+    }
+
+    /**
+     * 管理者向けページング検索
+     *
+     * @param offset オフセット
+     * @param limit  取得件数
+     * @return 運賃割引エンティティリスト
+     */
+    default List<FareDiscountEntity> selectForAdmin(int offset, int limit) {
+        Entityql entityql = new Entityql(Config.get(this));
+        FareDiscountEntity_ e = new FareDiscountEntity_();
+
+        return entityql.from(e)
+                .orderBy(c -> {
+                    c.asc(e.benefitId);
+                    c.asc(e.agencyId);
+                })
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント
+     *
+     * @return 件数
+     */
+    default long countAll() {
+        Entityql entityql = new Entityql(Config.get(this));
+        FareDiscountEntity_ e = new FareDiscountEntity_();
+
+        return entityql.from(e).stream().count();
+    }
+
+    /**
+     * 特典IDで検索（依存チェック用）
+     *
+     * @param benefitId 特典ID
+     * @return 運賃割引エンティティリスト
+     */
+    default List<FareDiscountEntity> selectByBenefitId(String benefitId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        FareDiscountEntity_ e = new FareDiscountEntity_();
+
+        return entityql.from(e)
+                .where(c -> c.eq(e.benefitId, benefitId))
+                .fetch();
+    }
+
+    /**
+     * 事業者IDで検索（依存チェック用）
+     *
+     * @param agencyId 事業者ID
+     * @return 運賃割引エンティティリスト
+     */
+    default List<FareDiscountEntity> selectByAgencyId(String agencyId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        FareDiscountEntity_ e = new FareDiscountEntity_();
+
+        return entityql.from(e)
+                .where(c -> c.eq(e.agencyId, agencyId))
+                .fetch();
     }
 
     /**

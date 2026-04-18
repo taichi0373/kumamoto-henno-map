@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.repository.dao;
 
+import java.util.List;
+
 import org.seasar.doma.Dao;
 import org.seasar.doma.Delete;
 import org.seasar.doma.Insert;
@@ -103,6 +105,72 @@ public interface UsersDao {
                           c.ne(e.userId, excludeUserId);
                       })
                       .fetchOne() != null;
+    }
+
+    /**
+     * 管理者向けページング検索（ユーザー名・メールアドレスでフィルター可）
+     *
+     * @param offset   オフセット
+     * @param limit    取得件数
+     * @param username ユーザー名の部分一致（null の場合は全件）
+     * @param email    メールアドレスの部分一致（null の場合は全件）
+     * @return ユーザーエンティティリスト
+     */
+    default List<UsersEntity> selectForAdmin(int offset, int limit, String username, String email) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (username != null && !username.isBlank()) {
+                        c.like(e.username, "%" + username + "%");
+                    }
+                    if (email != null && !email.isBlank()) {
+                        c.like(e.email, "%" + email + "%");
+                    }
+                })
+                .orderBy(c -> c.asc(e.userId))
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント
+     *
+     * @param username ユーザー名の部分一致（null の場合は全件）
+     * @param email    メールアドレスの部分一致（null の場合は全件）
+     * @return 件数
+     */
+    default long countForAdmin(String username, String email) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (username != null && !username.isBlank()) {
+                        c.like(e.username, "%" + username + "%");
+                    }
+                    if (email != null && !email.isBlank()) {
+                        c.like(e.email, "%" + email + "%");
+                    }
+                })
+                .stream().count();
+    }
+
+    /**
+     * 自治体コードで検索（依存チェック用）
+     *
+     * @param municipalityCd 自治体コード
+     * @return 該当ユーザーリスト（空の場合は依存なし）
+     */
+    default List<UsersEntity> selectByMunicipalityCd(String municipalityCd) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                .where(c -> c.eq(e.municipalityCd, municipalityCd))
+                .fetch();
     }
 
     /**

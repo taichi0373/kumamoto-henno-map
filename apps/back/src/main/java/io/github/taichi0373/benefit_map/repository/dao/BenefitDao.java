@@ -66,6 +66,72 @@ public interface BenefitDao {
     }
 
     /**
+     * 自治体コードで検索（依存チェック用）
+     *
+     * @param municipalityCd 自治体コード
+     * @return 特典エンティティリスト
+     */
+    default List<BenefitEntity> selectByMunicipalityCd(String municipalityCd) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitEntity_ e = new BenefitEntity_();
+
+        return entityql.from(e)
+                .where(c -> c.eq(e.municipalityCd, municipalityCd))
+                .fetch();
+    }
+
+    /**
+     * 管理者向けページング検索（自治体コード・カテゴリコードでフィルター可）
+     *
+     * @param offset       オフセット
+     * @param limit        取得件数
+     * @param municipalityCd 自治体コード（null の場合は全件）
+     * @param categoryCd   カテゴリコード（null の場合は全件）
+     * @return 特典エンティティリスト
+     */
+    default List<BenefitEntity> selectForAdmin(int offset, int limit, String municipalityCd, String categoryCd) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitEntity_ e = new BenefitEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
+                        c.eq(e.municipalityCd, municipalityCd);
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
+                        c.eq(e.categoryCd, categoryCd);
+                    }
+                })
+                .orderBy(c -> c.asc(e.benefitId))
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント（自治体コード・カテゴリコードでフィルター可）
+     *
+     * @param municipalityCd 自治体コード（null の場合は全件）
+     * @param categoryCd   カテゴリコード（null の場合は全件）
+     * @return 件数
+     */
+    default long countForAdmin(String municipalityCd, String categoryCd) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitEntity_ e = new BenefitEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
+                        c.eq(e.municipalityCd, municipalityCd);
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
+                        c.eq(e.categoryCd, categoryCd);
+                    }
+                })
+                .stream().count();
+    }
+
+    /**
      * 登録
      */
     @Insert

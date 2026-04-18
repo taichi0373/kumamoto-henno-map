@@ -37,6 +37,64 @@ public interface BenefitEligibilityDao {
     }
 
     /**
+     * IDで検索
+     *
+     * @param id ID
+     * @return 特典適用条件エンティティ
+     */
+    default BenefitEligibilityEntity selectById(Long id) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
+
+        return entityql.from(e)
+                .where(c -> c.eq(e.id, id))
+                .fetchOne();
+    }
+
+    /**
+     * 管理者向けページング検索（特典IDでフィルター可）
+     *
+     * @param offset    オフセット
+     * @param limit     取得件数
+     * @param benefitId 特典ID（null の場合は全件）
+     * @return 特典適用条件エンティティリスト
+     */
+    default List<BenefitEligibilityEntity> selectForAdmin(int offset, int limit, String benefitId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (benefitId != null && !benefitId.isBlank()) {
+                        c.eq(e.benefitId, benefitId);
+                    }
+                })
+                .orderBy(c -> c.asc(e.id))
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント
+     *
+     * @param benefitId 特典ID（null の場合は全件）
+     * @return 件数
+     */
+    default long countForAdmin(String benefitId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (benefitId != null && !benefitId.isBlank()) {
+                        c.eq(e.benefitId, benefitId);
+                    }
+                })
+                .stream().count();
+    }
+
+    /**
      * 登録
      */
     @Insert

@@ -7,6 +7,7 @@ export interface User {
   username?: string
   email?: string
   id?: string
+  isAdmin?: boolean
 }
 
 /** ストレージキー定数 */
@@ -57,7 +58,9 @@ export const useAuthStore = defineStore('auth', {
     /** ユーザー情報取得 */
     getUser: (state): User | null => state.user,
     /** トークン取得 */
-    getToken: (state): string | null => state.token
+    getToken: (state): string | null => state.token,
+    /** 管理者判定（ログインレスポンスのisAdminフラグで判断） */
+    isAdmin: (state): boolean => state.user?.isAdmin ?? false
   },
   actions: {
     /**

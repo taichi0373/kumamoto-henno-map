@@ -81,6 +81,8 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(authz -> authz
+                // /admin/** は ROLE_ADMIN のみアクセス可（既存ルールより前に配置）
+                .requestMatchers("/admin/**").hasRole("ADMIN")
                 // /auth/** は全て permitAll（login・refresh・logout・パスワードリセット）
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users/signup").permitAll()

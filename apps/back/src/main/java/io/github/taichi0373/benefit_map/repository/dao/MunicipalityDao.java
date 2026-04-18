@@ -52,6 +52,36 @@ public interface MunicipalityDao {
 
 
     /**
+     * 管理者向けページング検索（全区分）
+     *
+     * @param offset オフセット
+     * @param limit  取得件数
+     * @return 自治体エンティティリスト
+     */
+    default List<MunicipalityEntity> selectForAdmin(int offset, int limit) {
+        Entityql entityql = new Entityql(Config.get(this));
+        MunicipalityEntity_ e = new MunicipalityEntity_();
+
+        return entityql.from(e)
+                .orderBy(c -> c.asc(e.municipalityCd))
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント
+     *
+     * @return 件数
+     */
+    default long countAll() {
+        Entityql entityql = new Entityql(Config.get(this));
+        MunicipalityEntity_ e = new MunicipalityEntity_();
+
+        return entityql.from(e).stream().count();
+    }
+
+    /**
      * 登録
      */
     @Insert

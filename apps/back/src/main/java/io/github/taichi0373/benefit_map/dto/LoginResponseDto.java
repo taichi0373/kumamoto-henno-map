@@ -21,4 +21,8 @@ public class LoginResponseDto {
     /** ユーザー名 */
     @Schema(description = "ユーザー名", example = "taro")
     private String username;
+
+    /** 管理者フラグ */
+    @Schema(description = "管理者フラグ（trueの場合は管理者ユーザー）", example = "false")
+    private boolean isAdmin;
 }

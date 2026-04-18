@@ -97,6 +97,7 @@ public class AuthService implements UserDetailsService {
         response.setToken(token);
         response.setUserId(user.getUserId());
         response.setUsername(user.getUsername());
+        response.setAdmin("1".equals(user.getIsAdmin()));
         return response;
     }
 }

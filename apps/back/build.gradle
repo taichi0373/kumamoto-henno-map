@@ -74,6 +74,10 @@ javadoc {
     }
 }
 
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
 // ローカル開発時は dev プロファイルをデフォルトで有効にする
 // 本番環境では SPRING_PROFILES_ACTIVE 環境変数で上書きすること
 bootRun {

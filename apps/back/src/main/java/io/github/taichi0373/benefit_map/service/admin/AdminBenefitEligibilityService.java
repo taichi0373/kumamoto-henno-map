@@ -1,0 +1,108 @@
+package io.github.taichi0373.benefit_map.service.admin;
+
+import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
+import io.github.taichi0373.benefit_map.repository.dao.BenefitEligibilityDao;
+import io.github.taichi0373.benefit_map.repository.entity.BenefitEligibilityEntity;
+import io.github.taichi0373.benefit_map.repository.entity.SystemField;
+
+/**
+ * 特典条件管理サービス
+ * <p>
+ * 管理者向けの特典適用条件CRUD操作を提供する。
+ * </p>
+ */
+@Service
+public class AdminBenefitEligibilityService {
+
+    /** 特典適用条件DAO */
+    @Autowired
+    private BenefitEligibilityDao benefitEligibilityDao;
+
+    /**
+     * 特典条件一覧をページング取得する
+     *
+     * @param page      ページ番号（0始まり）
+     * @param size      ページあたり件数
+     * @param benefitId 特典IDフィルター（null可）
+     * @return ページングレスポンス
+     */
+    public AdminPagedResponseDto<BenefitEligibilityEntity> getAll(int page, int size, String benefitId) {
+        int offset = page * size;
+        var items = benefitEligibilityDao.selectForAdmin(offset, size, benefitId);
+        long total = benefitEligibilityDao.countForAdmin(benefitId);
+        return AdminPagedResponseDto.of(items, total, page, size);
+    }
+
+    /**
+     * 特典条件を新規登録する
+     * <p>
+     * MIN_AGE が MAX_AGE より大きい場合は IllegalArgumentException をスローする。
+     * </p>
+     *
+     * @param entity 登録する特典条件エンティティ
+     * @return 登録した特典条件エンティティ
+     * @throws IllegalArgumentException MIN_AGE > MAX_AGE の場合
+     */
+    public BenefitEligibilityEntity create(BenefitEligibilityEntity entity) {
+        validateAgeRange(entity);
+        LocalDateTime now = LocalDateTime.now();
+        entity.setSystemField(new SystemField(now, now));
+        benefitEligibilityDao.insert(entity);
+        return entity;
+    }
+
+    /**
+     * 特典条件を更新する
+     *
+     * @param id     特典条件ID
+     * @param entity 更新する特典条件エンティティ
+     * @return 更新した特典条件エンティティ
+     * @throws NoSuchElementException   特典条件が存在しない場合
+     * @throws IllegalArgumentException MIN_AGE > MAX_AGE の場合
+     */
+    public BenefitEligibilityEntity update(Long id, BenefitEligibilityEntity entity) {
+        BenefitEligibilityEntity existing = benefitEligibilityDao.selectById(id);
+        if (existing == null) {
+            throw new NoSuchElementException("特典条件が見つかりません: " + id);
+        }
+        validateAgeRange(entity);
+        entity.setId(id);
+        LocalDateTime createdAt = existing.getSystemField() != null ? existing.getSystemField().getSysCreatedAt() : null;
+        entity.setSystemField(new SystemField(createdAt, LocalDateTime.now()));
+        benefitEligibilityDao.update(entity);
+        return entity;
+    }
+
+    /**
+     * 特典条件を削除する
+     *
+     * @param id 特典条件ID
+     * @throws NoSuchElementException 特典条件が存在しない場合
+     */
+    public void delete(Long id) {
+        BenefitEligibilityEntity existing = benefitEligibilityDao.selectById(id);
+        if (existing == null) {
+            throw new NoSuchElementException("特典条件が見つかりません: " + id);
+        }
+        benefitEligibilityDao.delete(existing);
+    }
+
+    /**
+     * 年齢範囲のバリデーション
+     *
+     * @param entity バリデーション対象エンティティ
+     * @throws IllegalArgumentException MIN_AGE > MAX_AGE の場合
+     */
+    private void validateAgeRange(BenefitEligibilityEntity entity) {
+        if (entity.getMinAge() != null && entity.getMaxAge() != null
+                && entity.getMinAge() > entity.getMaxAge()) {
+            throw new IllegalArgumentException("最低年齢が最高年齢より大きい値です");
+        }
+    }
+}

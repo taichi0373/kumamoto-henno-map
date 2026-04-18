@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.repository.dao;
 
+import java.util.List;
+
 import org.seasar.doma.Dao;
 import org.seasar.doma.Delete;
 import org.seasar.doma.Insert;
@@ -51,6 +53,51 @@ public interface CommunityBusDao {
     //  */
     // @Select
     // List<CommunityBusEntity> selectAllOrderByName();
+
+    /**
+     * 管理者向けページング検索
+     *
+     * @param offset オフセット
+     * @param limit  取得件数
+     * @return コミュニティバスエンティティリスト
+     */
+    default List<CommunityBusEntity> selectForAdmin(int offset, int limit) {
+        Entityql entityql = new Entityql(Config.get(this));
+        CommunityBusEntity_ e = new CommunityBusEntity_();
+
+        return entityql.from(e)
+                .orderBy(c -> c.asc(e.routeId))
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント
+     *
+     * @return 件数
+     */
+    default long countAll() {
+        Entityql entityql = new Entityql(Config.get(this));
+        CommunityBusEntity_ e = new CommunityBusEntity_();
+
+        return entityql.from(e).stream().count();
+    }
+
+    /**
+     * コミュニティバスID（事業者ID）で検索（依存チェック用）
+     *
+     * @param communityBusId コミュニティバスID
+     * @return コミュニティバスエンティティリスト
+     */
+    default List<CommunityBusEntity> selectByCommunityBusId(String communityBusId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        CommunityBusEntity_ e = new CommunityBusEntity_();
+
+        return entityql.from(e)
+                .where(c -> c.eq(e.communityBusId, communityBusId))
+                .fetch();
+    }
 
     /**
      * 登録

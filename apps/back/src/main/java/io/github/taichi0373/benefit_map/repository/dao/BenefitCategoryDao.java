@@ -63,6 +63,32 @@ public interface BenefitCategoryDao {
     // List<BenefitCategoryEntity> selectActive();
 
     /**
+     * 管理者向け全件取得（表示順ソート。有効・無効を含む）
+     *
+     * @return 特典カテゴリエンティティリスト
+     */
+    default List<BenefitCategoryEntity> selectAllForAdmin() {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
+
+        return entityql.from(e)
+                .orderBy(c -> c.asc(e.displayOrder))
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント
+     *
+     * @return 件数
+     */
+    default long countAll() {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
+
+        return entityql.from(e).stream().count();
+    }
+
+    /**
      * 登録
      */
     @Insert
