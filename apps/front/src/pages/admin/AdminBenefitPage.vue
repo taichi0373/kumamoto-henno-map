@@ -2,7 +2,7 @@
   <div class="admin-benefit-page">
     <AppBlockUI :blocked="isLoading" />
     <AppToastMessage />
-    <h1 class="admin-benefit-page__title">特典管理</h1>
+    <AppTitle style="margin-bottom: 1rem">特典管理</AppTitle>
 
     <!-- 検索フィルター -->
     <div class="admin-benefit-page__filter">
@@ -109,6 +109,7 @@ import AppButton from '@/components/atoms/AppButton.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppTextarea from '@/components/atoms/AppTextarea.vue'
 import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
+import AppTitle from '@/components/atoms/AppTitle.vue'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import apiClient from '@/utils/api'
 import type { BenefitAdminDto, AdminPagedResponse } from '@/dto/admin/adminDto'
@@ -248,13 +249,6 @@ onMounted(() => fetchItems(0))
 @use "@/assets/scss/base";
 
 .admin-benefit-page {
-  &__title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    color: base.$base-700;
-  }
-
   &__filter {
     display: flex;
     gap: 0.5rem;

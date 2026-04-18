@@ -81,7 +81,7 @@ const onPageChange = (event: { first: number; rows: number }) => {
   }
 
   :deep(.p-datatable-thead > tr > th) {
-    background-color: base.$base-700;
+    background-color: base.$header-background-color;
     color: base.$base-100;
     font-weight: bold;
     padding: 0.75rem 1rem;

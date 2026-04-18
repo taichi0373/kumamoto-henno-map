@@ -2,7 +2,7 @@
   <div class="admin-page">
     <AppBlockUI :blocked="isLoading" />
     <AppToastMessage />
-    <h1 class="admin-page__title">ユーザー管理</h1>
+    <AppTitle :size="'large'" style="margin-bottom: 1rem">ユーザー管理</AppTitle>
 
     <div class="admin-page__filter">
       <AppTextField v-model="filterUsername" placeholder="ユーザー名" :inputStyle="{ width: '180px' }" />
@@ -79,6 +79,7 @@ import AppDialog from '@/components/atoms/AppDialog.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
+import AppTitle from '@/components/atoms/AppTitle.vue'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import apiClient from '@/utils/api'
 import type { UserAdminDto, AdminPagedResponse } from '@/dto/admin/adminDto'
@@ -196,7 +197,6 @@ onMounted(() => fetchItems(0))
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
 .admin-page {
-  &__title { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; color: base.$base-700; }
   &__filter { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
 }
 .form-grid { display: grid; grid-template-columns: 140px 1fr; gap: 0.5rem 1rem; align-items: center; }

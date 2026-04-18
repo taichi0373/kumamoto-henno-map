@@ -1,5 +1,6 @@
 package io.github.taichi0373.benefit_map.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -23,6 +24,7 @@ public class LoginResponseDto {
     private String username;
 
     /** 管理者フラグ */
+    @JsonProperty("isAdmin")
     @Schema(description = "管理者フラグ（trueの場合は管理者ユーザー）", example = "false")
     private boolean isAdmin;
 }
