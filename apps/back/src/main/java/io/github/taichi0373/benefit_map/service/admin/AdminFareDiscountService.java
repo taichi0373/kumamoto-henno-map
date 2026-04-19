@@ -1,12 +1,23 @@
 package io.github.taichi0373.benefit_map.service.admin;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
+import io.github.taichi0373.benefit_map.dto.admin.CsvImportResultDto;
 import io.github.taichi0373.benefit_map.repository.dao.AgencyDao;
 import io.github.taichi0373.benefit_map.repository.dao.BenefitDao;
 import io.github.taichi0373.benefit_map.repository.dao.FareDiscountDao;
@@ -107,6 +118,96 @@ public class AdminFareDiscountService {
             throw new NoSuchElementException("運賃割引が見つかりません: " + benefitId + "/" + agencyId);
         }
         fareDiscountDao.delete(existing);
+    }
+
+    /**
+     * CSVファイルから運賃割引を一括インポートする（upsert・複合PK）
+     * <p>
+     * CSVヘッダー: benefitId, agencyId, discountType, discountValue
+     * </p>
+     *
+     * @param file インポートするCSVファイル（UTF-8、1行目はヘッダー）
+     * @return インポート結果
+     * @throws IOException ファイル読み込みエラー
+     */
+    public CsvImportResultDto importCsv(MultipartFile file) throws IOException {
+        int inserted = 0, updated = 0, failed = 0;
+        List<String> errors = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+             CSVParser parser = CSVFormat.DEFAULT.builder()
+                     .setHeader()
+                     .setSkipHeaderRecord(true)
+                     .setIgnoreEmptyLines(true)
+                     .setTrim(true)
+                     .build()
+                     .parse(skipBom(reader))) {
+
+            for (CSVRecord record : parser) {
+                try {
+                    String benefitId = csvVal(record, "benefitId");
+                    String agencyId = csvVal(record, "agencyId");
+                    if (benefitId == null || agencyId == null) {
+                        errors.add("行 " + record.getRecordNumber() + ": 特典IDまたは事業者IDが空です");
+                        failed++;
+                        continue;
+                    }
+                    validateForeignKeys(benefitId, agencyId);
+
+                    FareDiscountEntity entity = new FareDiscountEntity();
+                    entity.setBenefitId(benefitId);
+                    entity.setAgencyId(agencyId);
+                    entity.setDiscountType(csvVal(record, "discountType"));
+                    entity.setDiscountValue(csvInt(record, "discountValue"));
+
+                    LocalDateTime now = LocalDateTime.now();
+                    FareDiscountEntity existing = fareDiscountDao.selectById(benefitId, agencyId);
+                    if (existing != null) {
+                        LocalDateTime createdAt = existing.getSystemField() != null
+                                ? existing.getSystemField().getSysCreatedAt() : now;
+                        entity.setSystemField(new SystemField(createdAt, now));
+                        fareDiscountDao.update(entity);
+                        updated++;
+                    } else {
+                        entity.setSystemField(new SystemField(now, now));
+                        fareDiscountDao.insert(entity);
+                        inserted++;
+                    }
+                } catch (Exception e) {
+                    failed++;
+                    errors.add("行 " + record.getRecordNumber() + ": " + e.getMessage());
+                }
+            }
+        }
+        return new CsvImportResultDto(inserted, updated, failed, errors);
+    }
+
+    private String csvVal(CSVRecord record, String column) {
+        try {
+            String val = record.get(column);
+            return (val == null || val.isBlank()) ? null : val.trim();
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private Integer csvInt(CSVRecord record, String column) {
+        String val = csvVal(record, column);
+        if (val == null) return null;
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("'" + column + "' の値が数値ではありません: " + val);
+        }
+    }
+
+    private BufferedReader skipBom(BufferedReader reader) throws IOException {
+        reader.mark(1);
+        if (reader.read() != '\uFEFF') {
+            reader.reset();
+        }
+        return reader;
     }
 
     /**

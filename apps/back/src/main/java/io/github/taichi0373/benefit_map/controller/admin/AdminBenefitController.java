@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
+import io.github.taichi0373.benefit_map.dto.admin.CsvImportResultDto;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitEntity;
 import io.github.taichi0373.benefit_map.service.admin.AdminBenefitService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -114,6 +116,28 @@ public class AdminBenefitController {
             log.error("特典更新エラー: {}", benefitId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("特典の更新に失敗しました: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * CSVファイルから特典を一括インポートする
+     *
+     * @param file CSVファイル（UTF-8、ヘッダー行必須）
+     * @return インポート結果（登録・更新・失敗件数）
+     */
+    @PostMapping("/import")
+    public ResponseEntity<ApiResponseDto<CsvImportResultDto>> importCsv(
+            @RequestParam("file") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponseDto.error("ファイルが空です"));
+            }
+            var result = adminBenefitService.importCsv(file);
+            return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (Exception e) {
+            log.error("特典CSVインポートエラー", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         }
     }
 

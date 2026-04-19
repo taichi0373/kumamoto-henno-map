@@ -12,6 +12,7 @@
 - 役割: PrimeVue を薄くラップした最小 UI 要素（ビジネスロジックなし）
 - 命名: `App` プレフィックス + PascalCase（例: `AppButton.vue`, `AppTextField.vue`）
 - 各コンポーネントに `.stories.js` を対応させる
+- 主なコンポーネント: `AppButton`, `AppTextField`, `AppNumberField`, `AppSelect`, `AppDataTable`, `AppDialog`, `AppFileUpload`, `AppToolbar`, `AppBlockUI`, `AppToastMessage`, `AppMessageBar`, `AppTitle`
 
 **molecules** (`components/molecules/`)
 - 役割: atoms を組み合わせたドメイン機能コンポーネント（例: `AppSearchBenefit.vue`）

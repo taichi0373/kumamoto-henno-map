@@ -180,3 +180,34 @@
   - 3 つのテストシナリオが Playwright でパスすることを確認できる
   - _Depends: 1.4, 2.2, 3.1, 4.1_
   - _Requirements: 1.1, 1.3, 2.1, 2.4, 2.8, 10.1, 10.2, 10.4_
+
+---
+
+- [x] 6. CSVインポート・エクスポート機能
+
+- [x] 6.1 バックエンド: commons-csv 依存追加 + CsvImportResultDto 実装
+  - `apps/back/build.gradle` に `implementation 'org.apache.commons:commons-csv:1.11.0'` を追加する
+  - `dto/admin/CsvImportResultDto.java` を `inserted / updated / failed / errors` フィールドを持つ Serializable DTO として実装する
+  - _Requirements: 10.1, 10.4_
+
+- [x] 6.2 (P) バックエンド: 全管理エンティティへの importCsv 追加（7エンティティ）
+  - `AdminBenefitService`, `AdminBenefitCategoryService`, `AdminBenefitEligibilityService`, `AdminMunicipalityService`, `AdminAgencyService`, `AdminFareDiscountService`, `AdminCommunityBusService` に `importCsv(MultipartFile file)` を実装する
+  - BOM（`\uFEFF`）スキップ・ヘッダー自動検出・1行エラーでも継続処理・upsert（PK 存在チェック）のパターンで実装する
+  - BENEFIT_ELIGIBILITY のみ常に INSERT（シーケンスPK自動採番）とする
+  - 各コントローラーに `POST /admin/{entity}/import` エンドポイント（`@RequestParam("file") MultipartFile file`）を追加する
+  - _Requirements: 10.2, 10.3, 10.5, 10.6_
+
+- [x] 6.3 フロントエンド: AppFileUpload atom コンポーネントの実装
+  - `components/atoms/AppFileUpload.vue` を PrimeVue `FileUpload`（`mode="basic"` / `customUpload`）の薄いラッパーとして実装し、`v-model`（`File | null`）・`accept`・`chooseLabel` props を持たせる
+  - `clear()` メソッドを `defineExpose` で公開しダイアログリセット時に呼び出せるようにする
+  - `AppFileUpload.stories.js` を作成し Default / WithAction / AllVariants ストーリーを定義する
+  - `AppToolbar.stories.js` を作成し Default / StartOnly / EndOnly / WithCenter ストーリーを定義する
+  - _Requirements: 10.7_
+
+- [x] 6.4 (P) フロントエンド: 全管理画面へのインポートダイアログ追加（7画面）
+  - `AdminBenefitPage.vue`, `AdminBenefitCategoryPage.vue`, `AdminBenefitEligibilityPage.vue`, `AdminMunicipalityPage.vue`, `AdminAgencyPage.vue`, `AdminFareDiscountPage.vue`, `AdminCommunityBusPage.vue` に以下を追加する:
+    - ツールバー end スロットに「インポート」ボタン（`pi pi-download`）
+    - `AppFileUpload` を使った CSVインポートダイアログ（列説明・ファイル選択・結果表示）
+    - `isImportDialogVisible / isImporting / importFile / importResult / fileUploadRef` の状態変数
+    - `openImportDialog / closeImportDialog / importCSV` 関数（`apiClient.axios.post` + `FormData` で multipart 送信）
+  - _Requirements: 10.1, 10.2, 10.4, 10.7_

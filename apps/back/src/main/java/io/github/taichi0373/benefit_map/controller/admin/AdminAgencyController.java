@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
 import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
+import io.github.taichi0373.benefit_map.dto.admin.CsvImportResultDto;
 import io.github.taichi0373.benefit_map.repository.entity.AgencyEntity;
 import io.github.taichi0373.benefit_map.service.admin.AdminAgencyService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -113,6 +115,25 @@ public class AdminAgencyController {
             log.error("事業者更新エラー: {}", agencyId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("事業者の更新に失敗しました: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * CSVファイルから事業者を一括インポートする
+     */
+    @PostMapping("/import")
+    public ResponseEntity<ApiResponseDto<CsvImportResultDto>> importCsv(
+            @RequestParam("file") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(ApiResponseDto.error("ファイルが空です"));
+            }
+            var result = adminAgencyService.importCsv(file);
+            return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (Exception e) {
+            log.error("事業者CSVインポートエラー", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         }
     }
 

@@ -11,6 +11,7 @@
 - **経路案内**: OTP（OpenTripPlanner）連携による公共交通機関の経路案内
 - **ユーザー管理**: 会員登録・ログイン・パスワード変更・パスワードリセット（メール）
 - **お気に入り管理**: ログインユーザーが特典施設をお気に入り登録
+- **管理者機能**: 8テーブル（BENEFIT・BENEFIT_ELIGIBILITY・BENEFIT_CATEGORY・MUNICIPALITY・AGENCY・FARE_DISCOUNT・COMMUNITY_BUS・USERS）の CRUD 管理画面。ページング・フィルタ・ソート・CSVエクスポート・CSVインポート（upsert）対応
 
 ## 対象ユーザー
 

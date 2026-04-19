@@ -152,7 +152,23 @@
 
 ---
 
-### 要件 10: 共通 UI・UX 要件
+### 要件 10: CSVインポート・エクスポート
+
+**Objective:** 管理者として、各管理画面でデータをCSVファイルで一括インポート・エクスポートしたい。そうすることで、大量データの初期投入やマスターデータ更新を効率的に行える。
+
+#### 受け入れ基準
+
+1. The 管理画面 shall 全管理エンティティ（BENEFIT・BENEFIT_ELIGIBILITY・BENEFIT_CATEGORY・MUNICIPALITY・AGENCY・FARE_DISCOUNT・COMMUNITY_BUS）の一覧をCSVファイルとしてエクスポートできる
+2. When 管理者がCSVインポートダイアログでCSVファイルを選択してインポート実行した場合, the 管理API shall ファイルをパースし各行をDBへ登録または更新（upsert）する
+3. The インポートCSV shall UTF-8（BOMあり・なし両対応）でエンコードされている必要がある
+4. When インポート処理が完了した場合, the 管理画面 shall 登録件数・更新件数・失敗件数とエラー詳細を結果として表示する
+5. If CSVの一部の行が不正なデータを含む場合, the 管理API shall 該当行をスキップして他の行の処理を継続し、エラー内容を結果に含める
+6. The BENEFIT_ELIGIBILITY テーブルへのインポートは shall 常に新規INSERT（シーケンスによる自動採番PK）とする
+7. The 管理画面 shall インポートダイアログにCSVの必須列・任意列を説明するガイダンスを表示する
+
+---
+
+### 要件 11: 共通 UI・UX 要件
 
 **Objective:** 管理者として、全管理画面で一貫した操作感を得たい。そうすることで、操作ミスを防ぎ効率的に管理業務を遂行できる。
 

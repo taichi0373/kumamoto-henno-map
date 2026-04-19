@@ -1,13 +1,23 @@
 package io.github.taichi0373.benefit_map.service.admin;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
+import io.github.taichi0373.benefit_map.dto.admin.CsvImportResultDto;
 import io.github.taichi0373.benefit_map.repository.dao.AgencyDao;
 import io.github.taichi0373.benefit_map.repository.dao.CommunityBusDao;
 import io.github.taichi0373.benefit_map.repository.dao.FareDiscountDao;
@@ -110,6 +120,85 @@ public class AdminAgencyService {
      * @throws NoSuchElementException 事業者が存在しない場合
      * @throws IllegalStateException  依存するレコードが存在する場合
      */
+    /**
+     * CSVファイルから事業者を一括インポートする（upsert）
+     * <p>
+     * CSVヘッダー: agencyId, agencyName, agencyKana, phoneNumber, agencyUrl, operatorId
+     * </p>
+     *
+     * @param file インポートするCSVファイル（UTF-8、1行目はヘッダー）
+     * @return インポート結果
+     * @throws IOException ファイル読み込みエラー
+     */
+    public CsvImportResultDto importCsv(MultipartFile file) throws IOException {
+        int inserted = 0, updated = 0, failed = 0;
+        List<String> errors = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
+             CSVParser parser = CSVFormat.DEFAULT.builder()
+                     .setHeader()
+                     .setSkipHeaderRecord(true)
+                     .setIgnoreEmptyLines(true)
+                     .setTrim(true)
+                     .build()
+                     .parse(skipBom(reader))) {
+
+            for (CSVRecord record : parser) {
+                try {
+                    String agencyId = csvVal(record, "agencyId");
+                    if (agencyId == null) {
+                        errors.add("行 " + record.getRecordNumber() + ": 事業者IDが空です");
+                        failed++;
+                        continue;
+                    }
+                    AgencyEntity entity = new AgencyEntity();
+                    entity.setAgencyId(agencyId);
+                    entity.setAgencyName(csvVal(record, "agencyName"));
+                    entity.setAgencyKana(csvVal(record, "agencyKana"));
+                    entity.setPhoneNumber(csvVal(record, "phoneNumber"));
+                    entity.setAgencyUrl(csvVal(record, "agencyUrl"));
+                    entity.setOperatorId(csvVal(record, "operatorId"));
+
+                    LocalDateTime now = LocalDateTime.now();
+                    AgencyEntity existing = agencyDao.selectById(agencyId);
+                    if (existing != null) {
+                        LocalDateTime createdAt = existing.getSystemField() != null
+                                ? existing.getSystemField().getSysCreatedAt() : now;
+                        entity.setSystemField(new SystemField(createdAt, now));
+                        agencyDao.update(entity);
+                        updated++;
+                    } else {
+                        entity.setSystemField(new SystemField(now, now));
+                        agencyDao.insert(entity);
+                        inserted++;
+                    }
+                } catch (Exception e) {
+                    failed++;
+                    errors.add("行 " + record.getRecordNumber() + ": " + e.getMessage());
+                }
+            }
+        }
+        return new CsvImportResultDto(inserted, updated, failed, errors);
+    }
+
+    private String csvVal(CSVRecord record, String column) {
+        try {
+            String val = record.get(column);
+            return (val == null || val.isBlank()) ? null : val.trim();
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private BufferedReader skipBom(BufferedReader reader) throws IOException {
+        reader.mark(1);
+        if (reader.read() != '\uFEFF') {
+            reader.reset();
+        }
+        return reader;
+    }
+
     public void delete(String agencyId) {
         AgencyEntity existing = agencyDao.selectById(agencyId);
         if (existing == null) {

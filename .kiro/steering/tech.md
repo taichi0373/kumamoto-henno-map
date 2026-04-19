@@ -22,6 +22,7 @@
 - **認証**: jjwt 0.12.6 / Spring Security
 - **ドキュメント**: SpringDoc OpenAPI 2（`/benefit-map/api/v3/api-docs.yaml`）
 - **メール**: Spring Mail（Mailtrap SMTP）
+- **CSV処理**: Apache Commons CSV 1.11.0（管理者向けCSVインポート）
 
 ### インフラ
 - **DB**: PostgreSQL（Docker Compose）

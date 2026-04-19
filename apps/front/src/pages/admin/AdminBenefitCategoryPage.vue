@@ -9,6 +9,7 @@
         <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
       </template>
       <template #end>
+        <AppButton label="インポート" icon="pi pi-download" @click="openImportDialog" style="margin-right: 8px" />
         <AppButton label="エクスポート" icon="pi pi-upload" @click="exportCSV" />
       </template>
     </AppToolbar>
@@ -89,6 +90,24 @@
         <AppButton label="削除" :primary="true" @click="confirmDelete" />
       </template>
     </AppDialog>
+
+    <AppDialog v-model="isImportDialogVisible" header="CSVインポート" :dialogStyle="{ width: '500px' }">
+      <p class="import-desc">CSVファイルを選択してインポートします。既存データは上書き更新されます。</p>
+      <p class="import-desc import-desc--columns">
+        必須列: <code>categoryCd</code> 任意列: categoryName / displayOrder / isActive
+      </p>
+      <AppFileUpload ref="fileUploadRef" v-model="importFile" accept=".csv" chooseLabel="CSVを選択" />
+      <div v-if="importResult" class="import-result">
+        <p>登録: {{ importResult.inserted }} 件 / 更新: {{ importResult.updated }} 件 / 失敗: {{ importResult.failed }} 件</p>
+        <ul v-if="importResult.errors.length" class="import-result__errors">
+          <li v-for="(err, i) in importResult.errors" :key="i">{{ err }}</li>
+        </ul>
+      </div>
+      <template #footer>
+        <AppButton label="キャンセル" @click="closeImportDialog" />
+        <AppButton label="インポート実行" icon="pi pi-upload" :primary="true" :disabled="!importFile || isImporting" @click="importCSV" />
+      </template>
+    </AppDialog>
   </div>
 </template>
 
@@ -108,6 +127,7 @@ import AppNumberField from '@/components/atoms/AppNumberField.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import AppTitle from '@/components/atoms/AppTitle.vue'
+import AppFileUpload from '@/components/atoms/AppFileUpload.vue'
 import { SelectDto } from '@/dto/selectDto'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import apiClient from '@/utils/api'
@@ -130,6 +150,11 @@ const editTarget = ref<BenefitCategoryAdminDto | null>(null)
 const deleteTarget = ref<BenefitCategoryAdminDto | null>(null)
 const form = ref<Partial<BenefitCategoryAdminDto>>({})
 const appDtRef = ref()
+const isImportDialogVisible = ref(false)
+const isImporting = ref(false)
+const importFile = ref<File | null>(null)
+const importResult = ref<{ inserted: number; updated: number; failed: number; errors: string[] } | null>(null)
+const fileUploadRef = ref()
 
 /** フィルター（global: キーワード検索、各カラムフィルター） */
 const filters = ref({
@@ -293,6 +318,42 @@ const exportCSV = () => {
   appDtRef.value?.exportCSV()
 }
 
+const openImportDialog = () => {
+  importFile.value = null
+  importResult.value = null
+  isImportDialogVisible.value = true
+}
+
+const closeImportDialog = () => {
+  isImportDialogVisible.value = false
+  fileUploadRef.value?.clear()
+}
+
+const importCSV = async () => {
+  if (!importFile.value) return
+  isImporting.value = true
+  importResult.value = null
+  try {
+    const formData = new FormData()
+    formData.append('file', importFile.value)
+    const response = await apiClient.axios.post<{ data: { inserted: number; updated: number; failed: number; errors: string[] } }>(
+      '/admin/benefit-categories/import',
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    )
+    importResult.value = response.data?.data
+    ToastMessageUtils.success(
+      `インポート完了: 登録 ${importResult.value?.inserted} 件 / 更新 ${importResult.value?.updated} 件`
+    )
+    await fetchItems()
+  } catch (error: unknown) {
+    const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+    errorMessage.value = msg ?? 'CSVインポートに失敗しました'
+  } finally {
+    isImporting.value = false
+  }
+}
+
 onMounted(() => fetchItems(0))
 </script>
 
@@ -321,4 +382,6 @@ onMounted(() => fetchItems(0))
   &--active { background: #d4edda; color: #155724; }
   &--inactive { background: #f8d7da; color: #721c24; opacity: 0.7; }
 }
+.import-desc { margin-bottom: 0.5rem; font-size: 0.875rem; &--columns { color: var(--p-text-color-secondary, #6c757d); } }
+.import-result { margin-top: 1rem; padding: 0.75rem; background: var(--p-surface-100, #f8f9fa); border-radius: 4px; font-size: 0.875rem; &__errors { margin-top: 0.5rem; padding-left: 1.25rem; color: var(--p-red-500, #ef4444); } }
 </style>
