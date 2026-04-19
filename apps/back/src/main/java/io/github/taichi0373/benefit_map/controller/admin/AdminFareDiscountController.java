@@ -48,9 +48,14 @@ public class AdminFareDiscountController {
     public ResponseEntity<ApiResponseDto<AdminPagedResponseDto<FareDiscountEntity>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String benefitId) {
+            @RequestParam(required = false) String benefitId,
+            @RequestParam(required = false) String agencyId,
+            @RequestParam(required = false) String discountType,
+            @RequestParam(required = false) String discountValue,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
         try {
-            var result = adminFareDiscountService.getAll(page, size, benefitId);
+            var result = adminFareDiscountService.getAll(page, size, benefitId, agencyId, discountType, discountValue, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("運賃割引一覧取得エラー", e);

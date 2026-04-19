@@ -52,14 +52,22 @@ public interface AgencyDao {
     }
 
     /**
-     * 管理者向けページング検索（事業者名称でフィルター可）
+     * 管理者向けページング検索（各フィールドでフィルター・ソート可）
      *
-     * @param offset     オフセット
-     * @param limit      取得件数
-     * @param agencyName 事業者名称（null の場合は全件）
+     * @param offset      オフセット
+     * @param limit       取得件数
+     * @param agencyName  事業者名称の部分一致（null の場合は全件）
+     * @param agencyId    事業者IDの部分一致（null の場合は全件）
+     * @param agencyKana  事業者カナの部分一致（null の場合は全件）
+     * @param phoneNumber 電話番号の部分一致（null の場合は全件）
+     * @param operatorId  オペレーターIDの部分一致（null の場合は全件）
+     * @param sort        ソートフィールド名
+     * @param order       ソート順（desc で降順）
      * @return 事業者エンティティリスト
      */
-    default List<AgencyEntity> selectForAdmin(int offset, int limit, String agencyName) {
+    default List<AgencyEntity> selectForAdmin(int offset, int limit, String agencyName,
+            String agencyId, String agencyKana, String phoneNumber, String operatorId,
+            String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
@@ -68,20 +76,47 @@ public interface AgencyDao {
                     if (!ValidateUtils.isNullOrEmpty(agencyName)) {
                         c.like(e.agencyName, "%" + agencyName + "%");
                     }
+                    if (!ValidateUtils.isNullOrEmpty(agencyId)) {
+                        c.like(e.agencyId, "%" + agencyId + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(agencyKana)) {
+                        c.like(e.agencyKana, "%" + agencyKana + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(phoneNumber)) {
+                        c.like(e.phoneNumber, "%" + phoneNumber + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(operatorId)) {
+                        c.like(e.operatorId, "%" + operatorId + "%");
+                    }
                 })
-                .orderBy(c -> c.asc(e.agencyId))
+                .orderBy(c -> {
+                    boolean desc = "desc".equalsIgnoreCase(order);
+                    switch (sort != null ? sort : "") {
+                        case "agencyId" -> { if (desc) c.desc(e.agencyId); else c.asc(e.agencyId); }
+                        case "agencyName" -> { if (desc) c.desc(e.agencyName); else c.asc(e.agencyName); }
+                        case "agencyKana" -> { if (desc) c.desc(e.agencyKana); else c.asc(e.agencyKana); }
+                        case "phoneNumber" -> { if (desc) c.desc(e.phoneNumber); else c.asc(e.phoneNumber); }
+                        case "operatorId" -> { if (desc) c.desc(e.operatorId); else c.asc(e.operatorId); }
+                        default -> c.asc(e.agencyId);
+                    }
+                })
                 .offset(offset)
                 .limit(limit)
                 .fetch();
     }
 
     /**
-     * 管理者向け件数カウント（事業者名称でフィルター可）
+     * 管理者向け件数カウント（各フィールドでフィルター可）
      *
-     * @param agencyName 事業者名称（null の場合は全件）
+     * @param agencyName  事業者名称の部分一致（null の場合は全件）
+     * @param agencyId    事業者IDの部分一致（null の場合は全件）
+     * @param agencyKana  事業者カナの部分一致（null の場合は全件）
+     * @param phoneNumber 電話番号の部分一致（null の場合は全件）
+     * @param operatorId  オペレーターIDの部分一致（null の場合は全件）
      * @return 件数
      */
-    default long countForAdmin(String agencyName) {
+    default long countForAdmin(String agencyName,
+            String agencyId, String agencyKana, String phoneNumber, String operatorId) {
         Entityql entityql = new Entityql(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
@@ -89,6 +124,18 @@ public interface AgencyDao {
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(agencyName)) {
                         c.like(e.agencyName, "%" + agencyName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(agencyId)) {
+                        c.like(e.agencyId, "%" + agencyId + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(agencyKana)) {
+                        c.like(e.agencyKana, "%" + agencyKana + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(phoneNumber)) {
+                        c.like(e.phoneNumber, "%" + phoneNumber + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(operatorId)) {
+                        c.like(e.operatorId, "%" + operatorId + "%");
                     }
                 })
                 .stream().count();

@@ -52,14 +52,23 @@ public interface BenefitEligibilityDao {
     }
 
     /**
-     * 管理者向けページング検索（特典IDでフィルター可）
+     * 管理者向けページング検索（各フィールドでフィルター・ソート可）
      *
-     * @param offset    オフセット
-     * @param limit     取得件数
-     * @param benefitId 特典ID（null の場合は全件）
+     * @param offset         オフセット
+     * @param limit          取得件数
+     * @param benefitId      特典IDの完全一致（null の場合は全件）
+     * @param id             IDの完全一致（null の場合は全件）
+     * @param licenseStatus  免許状況の部分一致（null の場合は全件）
+     * @param minAge         最低年齢の完全一致（null の場合は全件）
+     * @param maxAge         最高年齢の完全一致（null の場合は全件）
+     * @param municipalityCd 自治体コードの部分一致（null の場合は全件）
+     * @param sort           ソートフィールド名
+     * @param order          ソート順（desc で降順）
      * @return 特典適用条件エンティティリスト
      */
-    default List<BenefitEligibilityEntity> selectForAdmin(int offset, int limit, String benefitId) {
+    default List<BenefitEligibilityEntity> selectForAdmin(int offset, int limit, String benefitId,
+            String id, String licenseStatus, String minAge, String maxAge, String municipalityCd,
+            String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
@@ -68,8 +77,46 @@ public interface BenefitEligibilityDao {
                     if (benefitId != null && !benefitId.isBlank()) {
                         c.eq(e.benefitId, benefitId);
                     }
+                    if (id != null && !id.isBlank()) {
+                        try {
+                            c.eq(e.id, Long.parseLong(id));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
+                    if (licenseStatus != null && !licenseStatus.isBlank()) {
+                        c.like(e.licenseStatus, "%" + licenseStatus + "%");
+                    }
+                    if (minAge != null && !minAge.isBlank()) {
+                        try {
+                            c.eq(e.minAge, Integer.parseInt(minAge));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
+                    if (maxAge != null && !maxAge.isBlank()) {
+                        try {
+                            c.eq(e.maxAge, Integer.parseInt(maxAge));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
+                    if (municipalityCd != null && !municipalityCd.isBlank()) {
+                        c.like(e.municipalityCd, "%" + municipalityCd + "%");
+                    }
                 })
-                .orderBy(c -> c.asc(e.id))
+                .orderBy(c -> {
+                    boolean desc = "desc".equalsIgnoreCase(order);
+                    switch (sort != null ? sort : "") {
+                        case "id" -> { if (desc) c.desc(e.id); else c.asc(e.id); }
+                        case "benefitId" -> { if (desc) c.desc(e.benefitId); else c.asc(e.benefitId); }
+                        case "licenseStatus" -> { if (desc) c.desc(e.licenseStatus); else c.asc(e.licenseStatus); }
+                        case "minAge" -> { if (desc) c.desc(e.minAge); else c.asc(e.minAge); }
+                        case "maxAge" -> { if (desc) c.desc(e.maxAge); else c.asc(e.maxAge); }
+                        case "municipalityCd" -> { if (desc) c.desc(e.municipalityCd); else c.asc(e.municipalityCd); }
+                        default -> c.asc(e.id);
+                    }
+                })
                 .offset(offset)
                 .limit(limit)
                 .fetch();
@@ -78,10 +125,16 @@ public interface BenefitEligibilityDao {
     /**
      * 管理者向け件数カウント
      *
-     * @param benefitId 特典ID（null の場合は全件）
+     * @param benefitId      特典IDの完全一致（null の場合は全件）
+     * @param id             IDの完全一致（null の場合は全件）
+     * @param licenseStatus  免許状況の部分一致（null の場合は全件）
+     * @param minAge         最低年齢の完全一致（null の場合は全件）
+     * @param maxAge         最高年齢の完全一致（null の場合は全件）
+     * @param municipalityCd 自治体コードの部分一致（null の場合は全件）
      * @return 件数
      */
-    default long countForAdmin(String benefitId) {
+    default long countForAdmin(String benefitId, String id, String licenseStatus,
+            String minAge, String maxAge, String municipalityCd) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
@@ -89,6 +142,33 @@ public interface BenefitEligibilityDao {
                 .where(c -> {
                     if (benefitId != null && !benefitId.isBlank()) {
                         c.eq(e.benefitId, benefitId);
+                    }
+                    if (id != null && !id.isBlank()) {
+                        try {
+                            c.eq(e.id, Long.parseLong(id));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
+                    if (licenseStatus != null && !licenseStatus.isBlank()) {
+                        c.like(e.licenseStatus, "%" + licenseStatus + "%");
+                    }
+                    if (minAge != null && !minAge.isBlank()) {
+                        try {
+                            c.eq(e.minAge, Integer.parseInt(minAge));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
+                    if (maxAge != null && !maxAge.isBlank()) {
+                        try {
+                            c.eq(e.maxAge, Integer.parseInt(maxAge));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
+                    if (municipalityCd != null && !municipalityCd.isBlank()) {
+                        c.like(e.municipalityCd, "%" + municipalityCd + "%");
                     }
                 })
                 .stream().count();

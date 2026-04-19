@@ -47,6 +47,11 @@ public class AdminBenefitController {
      * @param size           ページあたり件数（デフォルト20）
      * @param municipalityCd 自治体コードフィルター（任意）
      * @param categoryCd     カテゴリコードフィルター（任意）
+     * @param benefitId      特典IDフィルター（任意）
+     * @param benefitName    特典名称フィルター（任意）
+     * @param expDetail      説明詳細フィルター（任意）
+     * @param sort           ソートフィールド名
+     * @param order          ソート順（desc で降順）
      * @return ページング付き特典一覧
      */
     @GetMapping
@@ -54,9 +59,14 @@ public class AdminBenefitController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String municipalityCd,
-            @RequestParam(required = false) String categoryCd) {
+            @RequestParam(required = false) String categoryCd,
+            @RequestParam(required = false) String benefitId,
+            @RequestParam(required = false) String benefitName,
+            @RequestParam(required = false) String expDetail,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
         try {
-            var result = adminBenefitService.getAll(page, size, municipalityCd, categoryCd);
+            var result = adminBenefitService.getAll(page, size, municipalityCd, categoryCd, benefitId, benefitName, expDetail, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("特典一覧取得エラー", e);

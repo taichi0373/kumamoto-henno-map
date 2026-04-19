@@ -5,12 +5,7 @@
     </div>
     <ul class="admin-sidebar__menu">
       <li v-for="item in menuItems" :key="item.path" class="admin-sidebar__item">
-        <router-link
-          :to="item.path"
-          class="admin-sidebar__link"
-          active-class="admin-sidebar__link--active"
-        >
-          <i :class="[item.icon, 'admin-sidebar__icon']" />
+        <router-link :to="item.path" class="admin-sidebar__link" active-class="admin-sidebar__link--active">
           <span>{{ item.label }}</span>
         </router-link>
       </li>
@@ -23,14 +18,14 @@ import AppTitle from '@/components/atoms/AppTitle.vue'
 
 /** サイドバーメニュー項目 */
 const menuItems = [
-  { path: '/admin/benefits',              label: '特典管理',                 icon: 'pi pi-gift'       },
-  { path: '/admin/benefit-eligibilities', label: '特典条件管理',             icon: 'pi pi-filter'     },
-  { path: '/admin/benefit-categories',    label: '特典カテゴリ管理',         icon: 'pi pi-tag'        },
-  { path: '/admin/municipalities',        label: '自治体管理',               icon: 'pi pi-building'   },
-  { path: '/admin/agencies',              label: '事業者管理',               icon: 'pi pi-briefcase'  },
-  { path: '/admin/fare-discounts',        label: '運賃割引管理',             icon: 'pi pi-percentage' },
-  { path: '/admin/community-buses',       label: 'コミュニティバス路線管理', icon: 'pi pi-map'        },
-  { path: '/admin/users',                 label: 'ユーザー管理',             icon: 'pi pi-users'      },
+  { path: '/admin/benefits', label: '特典管理', },
+  { path: '/admin/benefit-eligibilities', label: '特典条件管理', },
+  { path: '/admin/benefit-categories', label: '特典カテゴリ管理', },
+  { path: '/admin/municipalities', label: '自治体管理', },
+  { path: '/admin/agencies', label: '事業者管理', },
+  { path: '/admin/fare-discounts', label: '運賃割引管理', },
+  { path: '/admin/community-buses', label: 'コミュニティバス路線管理', },
+  { path: '/admin/users', label: 'ユーザー管理', },
 ]
 </script>
 
@@ -38,14 +33,14 @@ const menuItems = [
 @use "@/assets/scss/base";
 
 /** サイドバー固有の配色 */
-$sidebar-bg:          #FFFFFF;
-$sidebar-border:      #e9ecef;
-$sidebar-text:        #6b7280;
-$sidebar-text-hover:  #111827;
-$sidebar-hover-bg:    #f1f3f5;
-$sidebar-active-bg:   #e5e7eb;
-$sidebar-active-text: #1f2937;
-$sidebar-active-bar:  #6b7280;
+$sidebar-bg: base.$base-100;
+$sidebar-border: base.$base-400;
+$sidebar-text: base.$text-secondary;
+$sidebar-text-hover: base.$text-primary;
+$sidebar-hover-bg: base.$base-200;
+$sidebar-active-bg: base.$chose-200 !important;
+$sidebar-active-text: base.$text-primary !important;
+$sidebar-active-bar: base.$chose-100 !important;
 
 .admin-sidebar {
   width: 220px;

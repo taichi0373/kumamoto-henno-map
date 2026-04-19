@@ -39,14 +39,20 @@ public class AdminBenefitService {
      *
      * @param page           ページ番号（0始まり）
      * @param size           ページあたり件数
-     * @param municipalityCd 自治体コードフィルター（null可）
-     * @param categoryCd     カテゴリコードフィルター（null可）
+     * @param municipalityCd 自治体コードフィルター（null可・部分一致）
+     * @param categoryCd     カテゴリコードフィルター（null可・部分一致）
+     * @param benefitId      特典IDフィルター（null可・部分一致）
+     * @param benefitName    特典名称フィルター（null可・部分一致）
+     * @param expDetail      説明詳細フィルター（null可・部分一致）
+     * @param sort           ソートフィールド名
+     * @param order          ソート順（desc で降順）
      * @return ページングレスポンス
      */
-    public AdminPagedResponseDto<BenefitEntity> getAll(int page, int size, String municipalityCd, String categoryCd) {
+    public AdminPagedResponseDto<BenefitEntity> getAll(int page, int size, String municipalityCd, String categoryCd,
+            String benefitId, String benefitName, String expDetail, String sort, String order) {
         int offset = page * size;
-        var items = benefitDao.selectForAdmin(offset, size, municipalityCd, categoryCd);
-        long total = benefitDao.countForAdmin(municipalityCd, categoryCd);
+        var items = benefitDao.selectForAdmin(offset, size, municipalityCd, categoryCd, benefitId, benefitName, expDetail, sort, order);
+        long total = benefitDao.countForAdmin(municipalityCd, categoryCd, benefitId, benefitName, expDetail);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

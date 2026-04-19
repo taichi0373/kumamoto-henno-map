@@ -64,14 +64,19 @@ public interface BenefitCategoryDao {
     // List<BenefitCategoryEntity> selectActive();
 
     /**
-     * 管理者向けページング検索（カテゴリ名称でフィルター可。有効・無効を含む）
+     * 管理者向けページング検索（各フィールドでフィルター・ソート可。有効・無効を含む）
      *
      * @param offset       オフセット
      * @param limit        取得件数
-     * @param categoryName カテゴリ名称（null の場合は全件）
+     * @param categoryName カテゴリ名称の部分一致（null の場合は全件）
+     * @param categoryCd   カテゴリコードの部分一致（null の場合は全件）
+     * @param displayOrder 表示順の完全一致（null の場合は全件）
+     * @param sort         ソートフィールド名
+     * @param order        ソート順（desc で降順）
      * @return 特典カテゴリエンティティリスト
      */
-    default List<BenefitCategoryEntity> selectForAdmin(int offset, int limit, String categoryName) {
+    default List<BenefitCategoryEntity> selectForAdmin(int offset, int limit, String categoryName,
+            String categoryCd, String displayOrder, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
@@ -80,20 +85,40 @@ public interface BenefitCategoryDao {
                     if (!ValidateUtils.isNullOrEmpty(categoryName)) {
                         c.like(e.categoryName, "%" + categoryName + "%");
                     }
+                    if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
+                        c.like(e.categoryCd, "%" + categoryCd + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(displayOrder)) {
+                        try {
+                            c.eq(e.displayOrder, Integer.parseInt(displayOrder));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
                 })
-                .orderBy(c -> c.asc(e.displayOrder))
+                .orderBy(c -> {
+                    boolean desc = "desc".equalsIgnoreCase(order);
+                    switch (sort != null ? sort : "") {
+                        case "categoryCd" -> { if (desc) c.desc(e.categoryCd); else c.asc(e.categoryCd); }
+                        case "categoryName" -> { if (desc) c.desc(e.categoryName); else c.asc(e.categoryName); }
+                        case "displayOrder" -> { if (desc) c.desc(e.displayOrder); else c.asc(e.displayOrder); }
+                        default -> c.asc(e.displayOrder);
+                    }
+                })
                 .offset(offset)
                 .limit(limit)
                 .fetch();
     }
 
     /**
-     * 管理者向け件数カウント（カテゴリ名称でフィルター可）
+     * 管理者向け件数カウント（各フィールドでフィルター可）
      *
-     * @param categoryName カテゴリ名称（null の場合は全件）
+     * @param categoryName カテゴリ名称の部分一致（null の場合は全件）
+     * @param categoryCd   カテゴリコードの部分一致（null の場合は全件）
+     * @param displayOrder 表示順の完全一致（null の場合は全件）
      * @return 件数
      */
-    default long countForAdmin(String categoryName) {
+    default long countForAdmin(String categoryName, String categoryCd, String displayOrder) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
@@ -101,6 +126,16 @@ public interface BenefitCategoryDao {
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(categoryName)) {
                         c.like(e.categoryName, "%" + categoryName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
+                        c.like(e.categoryCd, "%" + categoryCd + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(displayOrder)) {
+                        try {
+                            c.eq(e.displayOrder, Integer.parseInt(displayOrder));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
                     }
                 })
                 .stream().count();

@@ -30,16 +30,24 @@ public class AdminUsersService {
     /**
      * ユーザー一覧をページング取得する
      *
-     * @param page     ページ番号（0始まり）
-     * @param size     ページあたり件数
-     * @param username ユーザー名フィルター（null可・部分一致）
-     * @param email    メールアドレスフィルター（null可・部分一致）
+     * @param page           ページ番号（0始まり）
+     * @param size           ページあたり件数
+     * @param username       ユーザー名フィルター（null可・部分一致）
+     * @param email          メールアドレスフィルター（null可・部分一致）
+     * @param userId         ユーザーIDフィルター（null可・完全一致）
+     * @param birthDate      生年月日フィルター（null可・完全一致）
+     * @param municipalityCd 自治体コードフィルター（null可・部分一致）
+     * @param licenseStatus  免許状況フィルター（null可・部分一致）
+     * @param sort           ソートフィールド名
+     * @param order          ソート順（desc で降順）
      * @return ページングレスポンス（パスワードハッシュを除く）
      */
-    public AdminPagedResponseDto<AdminUserResponseDto> getAll(int page, int size, String username, String email) {
+    public AdminPagedResponseDto<AdminUserResponseDto> getAll(int page, int size, String username, String email,
+            String userId, String birthDate, String municipalityCd, String licenseStatus,
+            String sort, String order) {
         int offset = page * size;
-        var entities = usersDao.selectForAdmin(offset, size, username, email);
-        long total = usersDao.countForAdmin(username, email);
+        var entities = usersDao.selectForAdmin(offset, size, username, email, userId, birthDate, municipalityCd, licenseStatus, sort, order);
+        long total = usersDao.countForAdmin(username, email, userId, birthDate, municipalityCd, licenseStatus);
         var items = entities.stream().map(this::toResponseDto).toList();
         return AdminPagedResponseDto.of(items, total, page, size);
     }

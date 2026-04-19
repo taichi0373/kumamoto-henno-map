@@ -32,15 +32,20 @@ public class AdminCommunityBusService {
     /**
      * コミュニティバス路線一覧をページング取得する
      *
-     * @param page      ページ番号（0始まり）
-     * @param size      ページあたり件数
-     * @param routeName 行先名称フィルター（null の場合は全件）
+     * @param page           ページ番号（0始まり）
+     * @param size           ページあたり件数
+     * @param routeName      行先名称フィルター（null の場合は全件）
+     * @param routeId        路線IDフィルター（null の場合は全件）
+     * @param communityBusId コミュニティバスIDフィルター（null の場合は全件）
+     * @param sort           ソートフィールド名
+     * @param order          ソート順（desc で降順）
      * @return ページングレスポンス
      */
-    public AdminPagedResponseDto<CommunityBusEntity> getAll(int page, int size, String routeName) {
+    public AdminPagedResponseDto<CommunityBusEntity> getAll(int page, int size, String routeName,
+            String routeId, String communityBusId, String sort, String order) {
         int offset = page * size;
-        var items = communityBusDao.selectForAdmin(offset, size, routeName);
-        long total = communityBusDao.countForAdmin(routeName);
+        var items = communityBusDao.selectForAdmin(offset, size, routeName, routeId, communityBusId, sort, order);
+        long total = communityBusDao.countForAdmin(routeName, routeId, communityBusId);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

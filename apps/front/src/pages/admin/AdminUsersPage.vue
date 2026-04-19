@@ -6,26 +6,51 @@
 
     <AppMessageBar v-if="errorMessage" mode="error" :message="errorMessage" />
 
+    <!-- ツールバー -->
+    <Toolbar class="mb-4">
+      <template #start>
+        <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" style="margin-right: 8px" />
+        <AppButton
+          label="削除"
+          icon="pi pi-trash"
+          :disabled="!selectedItems.length"
+          @click="isDeleteSelectedDialogVisible = true"
+        />
+      </template>
+      <template #end>
+        <AppButton label="エクスポート" icon="pi pi-upload" @click="exportCSV" />
+      </template>
+    </Toolbar>
+
     <AppDataTable
+      ref="appDtRef"
       :value="items"
       :columns="columns"
+      exportFilename="admin-users"
       :loading="isLoading"
       :totalRecords="total"
       :rows="size"
       :first="page * size"
       v-model:filters="filters"
+      v-model:selection="selectedItems"
       filterDisplay="menu"
       :globalFilterFields="['username', 'email']"
+      :sortField="sortField"
+      :sortOrder="sortOrder"
+      dataKey="userId"
       @page-change="onPageChange"
       @filter="onFilter"
+      @sort="onSort"
     >
       <template #header>
         <div class="table-header">
           <AppButton label="クリア" icon="pi pi-filter-slash" @click="clearFilter" />
-          <IconField>
-            <InputIcon><i class="pi pi-search" /></InputIcon>
-            <InputText v-model="filters['global'].value" placeholder="キーワード検索" @input="onGlobalSearch" />
-          </IconField>
+          <AppTextField
+            v-model="filters['global'].value"
+            class="table-header__search"
+            placeholder="キーワード検索"
+            @input="onGlobalSearch"
+          />
         </div>
       </template>
       <Column field="actions" header="操作">
@@ -71,6 +96,15 @@
         <AppButton label="削除" :primary="true" @click="confirmDelete" />
       </template>
     </AppDialog>
+
+    <!-- 一括削除確認ダイアログ -->
+    <AppDialog v-model="isDeleteSelectedDialogVisible" header="一括削除確認" :dialogStyle="{ width: '400px' }">
+      <p>選択した {{ selectedItems.length }} 件を削除しますか？</p>
+      <template #footer>
+        <AppButton label="キャンセル" @click="isDeleteSelectedDialogVisible = false" />
+        <AppButton label="削除" :primary="true" @click="deleteSelectedItems" />
+      </template>
+    </AppDialog>
   </div>
 </template>
 
@@ -78,9 +112,7 @@
 import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import Column from 'primevue/column'
-import InputText from 'primevue/inputtext'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+import Toolbar from 'primevue/toolbar'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppDataTable from '@/components/atoms/AppDataTable.vue'
@@ -104,25 +136,44 @@ const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const isDialogVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
+/** 一括削除確認ダイアログ表示 */
+const isDeleteSelectedDialogVisible = ref(false)
 const editTarget = ref<UserAdminDto | null>(null)
 const deleteTarget = ref<UserAdminDto | null>(null)
 const form = ref<Partial<UserAdminDto>>({})
+/** 選択中の行 */
+const selectedItems = ref<UserAdminDto[]>([])
+/** AppDataTable の ref（exportCSV 呼び出し用） */
+const appDtRef = ref()
 
-/** フィルター（global: キーワード検索、username/email: カラムフィルター） */
+/** フィルター（global: キーワード検索、各カラムフィルター） */
 const filters = ref({
   global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  userId: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
   username: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
   email: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  birthDate: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  municipalityCd: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  licenseStatus: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
 })
 
 /** フィルター初期化 */
 const initFilters = () => {
   filters.value = {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    userId: { value: null, matchMode: FilterMatchMode.CONTAINS },
     username: { value: null, matchMode: FilterMatchMode.CONTAINS },
     email: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    birthDate: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    municipalityCd: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    licenseStatus: { value: null, matchMode: FilterMatchMode.CONTAINS },
   }
 }
+
+/** ソートフィールド */
+const sortField = ref<string | undefined>(undefined)
+/** ソート順（1: 昇順, -1: 降順） */
+const sortOrder = ref<number>(0)
 
 /** グローバル検索デバウンスタイマー */
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -142,12 +193,12 @@ const onGlobalSearch = () => {
 
 /** テーブルカラム定義（パスワードハッシュ・管理者フラグは表示しない） */
 const columns: AppDataTableColumn[] = [
-  { field: 'userId', header: 'ユーザーID' },
-  { field: 'username', header: 'ユーザー名', filterPlaceholder: 'ユーザー名で検索' },
-  { field: 'email', header: 'メールアドレス', filterPlaceholder: 'メールアドレスで検索' },
-  { field: 'birthDate', header: '生年月日' },
-  { field: 'municipalityCd', header: '自治体コード' },
-  { field: 'licenseStatus', header: '免許状況' },
+  { field: 'userId', header: 'ユーザーID', sortable: true, filterPlaceholder: 'ユーザーIDで検索' },
+  { field: 'username', header: 'ユーザー名', sortable: true, filterPlaceholder: 'ユーザー名で検索' },
+  { field: 'email', header: 'メールアドレス', sortable: true, filterPlaceholder: 'メールアドレスで検索' },
+  { field: 'birthDate', header: '生年月日', sortable: true, filterPlaceholder: '生年月日で検索' },
+  { field: 'municipalityCd', header: '自治体コード', sortable: true, filterPlaceholder: '自治体コードで検索' },
+  { field: 'licenseStatus', header: '免許状況', sortable: true, filterPlaceholder: '免許状況で検索' },
 ]
 
 /** 一覧取得 */
@@ -162,8 +213,14 @@ const fetchItems = async (targetPage: number) => {
         params: {
           page: targetPage,
           size: size.value,
+          userId: filters.value.userId?.value ?? undefined,
           username: filters.value.username?.value ?? keyword ?? undefined,
           email: filters.value.email?.value ?? keyword ?? undefined,
+          birthDate: filters.value.birthDate?.value ?? undefined,
+          municipalityCd: filters.value.municipalityCd?.value ?? undefined,
+          licenseStatus: filters.value.licenseStatus?.value ?? undefined,
+          sort: sortField.value ?? undefined,
+          order: sortOrder.value === 1 ? 'asc' : sortOrder.value === -1 ? 'desc' : undefined,
         },
       }
     )
@@ -180,6 +237,13 @@ const fetchItems = async (targetPage: number) => {
 
 /** フィルター変更時 */
 const onFilter = () => {
+  fetchItems(0)
+}
+
+/** ソート変更時 */
+const onSort = (event: { sortField: string; sortOrder: number }) => {
+  sortField.value = event.sortField
+  sortOrder.value = event.sortOrder
   fetchItems(0)
 }
 
@@ -237,6 +301,35 @@ const confirmDelete = async () => {
   }
 }
 
+/** 一括削除実行 */
+const deleteSelectedItems = async () => {
+  isLoading.value = true
+  let successCount = 0
+  let failCount = 0
+  for (const item of selectedItems.value) {
+    try {
+      await apiClient.delete(`/admin/users/${item.userId}`)
+      successCount++
+    } catch {
+      failCount++
+    }
+  }
+  selectedItems.value = []
+  isDeleteSelectedDialogVisible.value = false
+  await fetchItems(page.value)
+  isLoading.value = false
+  if (failCount === 0) {
+    ToastMessageUtils.success(`${successCount}件を削除しました`)
+  } else {
+    errorMessage.value = `${successCount}件削除成功、${failCount}件失敗しました`
+  }
+}
+
+/** CSVエクスポート */
+const exportCSV = () => {
+  appDtRef.value?.exportCSV()
+}
+
 onMounted(() => fetchItems(0))
 </script>
 
@@ -251,5 +344,9 @@ onMounted(() => fetchItems(0))
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.table-header__search {
+  width: 16rem;
+  max-width: 100%;
 }
 </style>

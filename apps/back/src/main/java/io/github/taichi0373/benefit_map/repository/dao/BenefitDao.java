@@ -81,51 +81,89 @@ public interface BenefitDao {
     }
 
     /**
-     * 管理者向けページング検索（自治体コード・カテゴリコードでフィルター可）
+     * 管理者向けページング検索（各フィールドでフィルター・ソート可）
      *
-     * @param offset       オフセット
-     * @param limit        取得件数
-     * @param municipalityCd 自治体コード（null の場合は全件）
-     * @param categoryCd   カテゴリコード（null の場合は全件）
+     * @param offset         オフセット
+     * @param limit          取得件数
+     * @param municipalityCd 自治体コードの部分一致（null の場合は全件）
+     * @param categoryCd     カテゴリコードの部分一致（null の場合は全件）
+     * @param benefitId      特典IDの部分一致（null の場合は全件）
+     * @param benefitName    特典名称の部分一致（null の場合は全件）
+     * @param expDetail      説明詳細の部分一致（null の場合は全件）
+     * @param sort           ソートフィールド名
+     * @param order          ソート順（desc で降順）
      * @return 特典エンティティリスト
      */
-    default List<BenefitEntity> selectForAdmin(int offset, int limit, String municipalityCd, String categoryCd) {
+    default List<BenefitEntity> selectForAdmin(int offset, int limit, String municipalityCd, String categoryCd,
+            String benefitId, String benefitName, String expDetail, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
 
         return entityql.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
-                        c.eq(e.municipalityCd, municipalityCd);
+                        c.like(e.municipalityCd, "%" + municipalityCd + "%");
                     }
                     if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
-                        c.eq(e.categoryCd, categoryCd);
+                        c.like(e.categoryCd, "%" + categoryCd + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(benefitId)) {
+                        c.like(e.benefitId, "%" + benefitId + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(benefitName)) {
+                        c.like(e.benefitName, "%" + benefitName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(expDetail)) {
+                        c.like(e.expDetail, "%" + expDetail + "%");
                     }
                 })
-                .orderBy(c -> c.asc(e.benefitId))
+                .orderBy(c -> {
+                    boolean desc = "desc".equalsIgnoreCase(order);
+                    switch (sort != null ? sort : "") {
+                        case "benefitId" -> { if (desc) c.desc(e.benefitId); else c.asc(e.benefitId); }
+                        case "municipalityCd" -> { if (desc) c.desc(e.municipalityCd); else c.asc(e.municipalityCd); }
+                        case "categoryCd" -> { if (desc) c.desc(e.categoryCd); else c.asc(e.categoryCd); }
+                        case "benefitName" -> { if (desc) c.desc(e.benefitName); else c.asc(e.benefitName); }
+                        case "expDetail" -> { if (desc) c.desc(e.expDetail); else c.asc(e.expDetail); }
+                        default -> c.asc(e.benefitId);
+                    }
+                })
                 .offset(offset)
                 .limit(limit)
                 .fetch();
     }
 
     /**
-     * 管理者向け件数カウント（自治体コード・カテゴリコードでフィルター可）
+     * 管理者向け件数カウント（各フィールドでフィルター可）
      *
-     * @param municipalityCd 自治体コード（null の場合は全件）
-     * @param categoryCd   カテゴリコード（null の場合は全件）
+     * @param municipalityCd 自治体コードの部分一致（null の場合は全件）
+     * @param categoryCd     カテゴリコードの部分一致（null の場合は全件）
+     * @param benefitId      特典IDの部分一致（null の場合は全件）
+     * @param benefitName    特典名称の部分一致（null の場合は全件）
+     * @param expDetail      説明詳細の部分一致（null の場合は全件）
      * @return 件数
      */
-    default long countForAdmin(String municipalityCd, String categoryCd) {
+    default long countForAdmin(String municipalityCd, String categoryCd,
+            String benefitId, String benefitName, String expDetail) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
 
         return entityql.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
-                        c.eq(e.municipalityCd, municipalityCd);
+                        c.like(e.municipalityCd, "%" + municipalityCd + "%");
                     }
                     if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
-                        c.eq(e.categoryCd, categoryCd);
+                        c.like(e.categoryCd, "%" + categoryCd + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(benefitId)) {
+                        c.like(e.benefitId, "%" + benefitId + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(benefitName)) {
+                        c.like(e.benefitName, "%" + benefitName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(expDetail)) {
+                        c.like(e.expDetail, "%" + expDetail + "%");
                     }
                 })
                 .stream().count();

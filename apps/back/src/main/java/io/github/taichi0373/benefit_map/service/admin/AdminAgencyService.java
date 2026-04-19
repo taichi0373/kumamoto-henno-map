@@ -38,15 +38,23 @@ public class AdminAgencyService {
     /**
      * 事業者一覧をページング取得する
      *
-     * @param page       ページ番号（0始まり）
-     * @param size       ページあたり件数
-     * @param agencyName 事業者名称フィルター（null の場合は全件）
+     * @param page        ページ番号（0始まり）
+     * @param size        ページあたり件数
+     * @param agencyName  事業者名称フィルター（null の場合は全件）
+     * @param agencyId    事業者IDフィルター（null の場合は全件）
+     * @param agencyKana  事業者カナフィルター（null の場合は全件）
+     * @param phoneNumber 電話番号フィルター（null の場合は全件）
+     * @param operatorId  オペレーターIDフィルター（null の場合は全件）
+     * @param sort        ソートフィールド名
+     * @param order       ソート順（desc で降順）
      * @return ページングレスポンス
      */
-    public AdminPagedResponseDto<AgencyEntity> getAll(int page, int size, String agencyName) {
+    public AdminPagedResponseDto<AgencyEntity> getAll(int page, int size, String agencyName,
+            String agencyId, String agencyKana, String phoneNumber, String operatorId,
+            String sort, String order) {
         int offset = page * size;
-        var items = agencyDao.selectForAdmin(offset, size, agencyName);
-        long total = agencyDao.countForAdmin(agencyName);
+        var items = agencyDao.selectForAdmin(offset, size, agencyName, agencyId, agencyKana, phoneNumber, operatorId, sort, order);
+        long total = agencyDao.countForAdmin(agencyName, agencyId, agencyKana, phoneNumber, operatorId);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

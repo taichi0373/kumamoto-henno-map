@@ -47,9 +47,16 @@ public class AdminBenefitEligibilityController {
     public ResponseEntity<ApiResponseDto<AdminPagedResponseDto<BenefitEligibilityEntity>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String benefitId) {
+            @RequestParam(required = false) String benefitId,
+            @RequestParam(required = false) String id,
+            @RequestParam(required = false) String licenseStatus,
+            @RequestParam(required = false) String minAge,
+            @RequestParam(required = false) String maxAge,
+            @RequestParam(required = false) String municipalityCd,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
         try {
-            var result = adminBenefitEligibilityService.getAll(page, size, benefitId);
+            var result = adminBenefitEligibilityService.getAll(page, size, benefitId, id, licenseStatus, minAge, maxAge, municipalityCd, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("特典条件一覧取得エラー", e);

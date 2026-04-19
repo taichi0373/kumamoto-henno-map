@@ -4,15 +4,22 @@
     <AppToastMessage />
     <AppTitle :size="'large'" style="margin-bottom: 1rem">特典カテゴリ管理</AppTitle>
 
-    <div class="admin-page__actions">
-      <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
-    </div>
+    <Toolbar class="mb-4">
+      <template #start>
+        <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
+      </template>
+      <template #end>
+        <AppButton label="エクスポート" icon="pi pi-upload" @click="exportCSV" />
+      </template>
+    </Toolbar>
 
     <AppMessageBar v-if="errorMessage" mode="error" :message="errorMessage" />
 
     <AppDataTable
+      ref="appDtRef"
       :value="items"
       :columns="columns"
+      exportFilename="admin-benefit-categories"
       :loading="isLoading"
       :totalRecords="total"
       :rows="size"
@@ -20,16 +27,21 @@
       v-model:filters="filters"
       filterDisplay="menu"
       :globalFilterFields="['categoryName']"
+      :sortField="sortField"
+      :sortOrder="sortOrder"
       @page-change="onPageChange"
       @filter="onFilter"
+      @sort="onSort"
     >
       <template #header>
         <div class="table-header">
           <AppButton label="クリア" icon="pi pi-filter-slash" @click="clearFilter" />
-          <IconField>
-            <InputIcon><i class="pi pi-search" /></InputIcon>
-            <InputText v-model="filters['global'].value" placeholder="キーワード検索" @input="onGlobalSearch" />
-          </IconField>
+          <AppTextField
+            v-model="filters['global'].value"
+            class="table-header__search"
+            placeholder="キーワード検索"
+            @input="onGlobalSearch"
+          />
         </div>
       </template>
       <Column field="isActive" header="有効">
@@ -84,9 +96,7 @@
 import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import Column from 'primevue/column'
-import InputText from 'primevue/inputtext'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+import Toolbar from 'primevue/toolbar'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppDataTable from '@/components/atoms/AppDataTable.vue'
@@ -119,20 +129,30 @@ const isDeleteDialogVisible = ref(false)
 const editTarget = ref<BenefitCategoryAdminDto | null>(null)
 const deleteTarget = ref<BenefitCategoryAdminDto | null>(null)
 const form = ref<Partial<BenefitCategoryAdminDto>>({})
+const appDtRef = ref()
 
-/** フィルター（global: キーワード検索、categoryName: カラムフィルター） */
+/** フィルター（global: キーワード検索、各カラムフィルター） */
 const filters = ref({
   global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  categoryCd: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
   categoryName: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  displayOrder: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
 })
 
 /** フィルター初期化 */
 const initFilters = () => {
   filters.value = {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    categoryCd: { value: null, matchMode: FilterMatchMode.CONTAINS },
     categoryName: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    displayOrder: { value: null, matchMode: FilterMatchMode.CONTAINS },
   }
 }
+
+/** ソートフィールド */
+const sortField = ref<string | undefined>(undefined)
+/** ソート順（1: 昇順, -1: 降順） */
+const sortOrder = ref<number>(0)
 
 /** グローバル検索デバウンスタイマー */
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -158,9 +178,9 @@ const isActiveOptions: SelectDto[] = [
 
 /** テーブルカラム定義 */
 const columns: AppDataTableColumn[] = [
-  { field: 'categoryCd', header: 'カテゴリコード' },
-  { field: 'categoryName', header: 'カテゴリ名称', filterPlaceholder: 'カテゴリ名称で検索' },
-  { field: 'displayOrder', header: '表示順' },
+  { field: 'categoryCd', header: 'カテゴリコード', sortable: true, filterPlaceholder: 'カテゴリコードで検索' },
+  { field: 'categoryName', header: 'カテゴリ名称', sortable: true, filterPlaceholder: 'カテゴリ名称で検索' },
+  { field: 'displayOrder', header: '表示順', sortable: true, filterPlaceholder: '表示順で検索' },
 ]
 
 /** 一覧取得 */
@@ -173,7 +193,11 @@ const fetchItems = async (targetPage = page.value) => {
       params: {
         page: targetPage,
         size: size.value,
+        categoryCd: filters.value.categoryCd?.value ?? undefined,
         categoryName: filters.value.categoryName?.value ?? keyword ?? undefined,
+        displayOrder: filters.value.displayOrder?.value ?? undefined,
+        sort: sortField.value ?? undefined,
+        order: sortOrder.value === 1 ? 'asc' : sortOrder.value === -1 ? 'desc' : undefined,
       },
     })
     const paged = response.data?.data
@@ -189,6 +213,13 @@ const fetchItems = async (targetPage = page.value) => {
 
 /** フィルター変更時 */
 const onFilter = () => {
+  fetchItems(0)
+}
+
+/** ソート変更時 */
+const onSort = (event: { sortField: string; sortOrder: number }) => {
+  sortField.value = event.sortField
+  sortOrder.value = event.sortOrder
   fetchItems(0)
 }
 
@@ -258,19 +289,15 @@ const confirmDelete = async () => {
   }
 }
 
+const exportCSV = () => {
+  appDtRef.value?.exportCSV()
+}
+
 onMounted(() => fetchItems(0))
 </script>
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
-.admin-page {
-  &__actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-}
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -280,6 +307,10 @@ onMounted(() => fetchItems(0))
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.table-header__search {
+  width: 16rem;
+  max-width: 100%;
 }
 .status-badge {
   display: inline-block;

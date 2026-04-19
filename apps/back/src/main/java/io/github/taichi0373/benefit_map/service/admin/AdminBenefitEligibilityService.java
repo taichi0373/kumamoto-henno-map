@@ -27,15 +27,24 @@ public class AdminBenefitEligibilityService {
     /**
      * 特典条件一覧をページング取得する
      *
-     * @param page      ページ番号（0始まり）
-     * @param size      ページあたり件数
-     * @param benefitId 特典IDフィルター（null可）
+     * @param page           ページ番号（0始まり）
+     * @param size           ページあたり件数
+     * @param benefitId      特典IDフィルター（null可）
+     * @param id             IDフィルター（null可）
+     * @param licenseStatus  免許状況フィルター（null可）
+     * @param minAge         最低年齢フィルター（null可）
+     * @param maxAge         最高年齢フィルター（null可）
+     * @param municipalityCd 自治体コードフィルター（null可）
+     * @param sort           ソートフィールド名
+     * @param order          ソート順（desc で降順）
      * @return ページングレスポンス
      */
-    public AdminPagedResponseDto<BenefitEligibilityEntity> getAll(int page, int size, String benefitId) {
+    public AdminPagedResponseDto<BenefitEligibilityEntity> getAll(int page, int size, String benefitId,
+            String id, String licenseStatus, String minAge, String maxAge, String municipalityCd,
+            String sort, String order) {
         int offset = page * size;
-        var items = benefitEligibilityDao.selectForAdmin(offset, size, benefitId);
-        long total = benefitEligibilityDao.countForAdmin(benefitId);
+        var items = benefitEligibilityDao.selectForAdmin(offset, size, benefitId, id, licenseStatus, minAge, maxAge, municipalityCd, sort, order);
+        long total = benefitEligibilityDao.countForAdmin(benefitId, id, licenseStatus, minAge, maxAge, municipalityCd);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

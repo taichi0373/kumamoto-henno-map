@@ -53,14 +53,21 @@ public interface MunicipalityDao {
 
 
     /**
-     * 管理者向けページング検索（自治体名称でフィルター可）
+     * 管理者向けページング検索（各フィールドでフィルター・ソート可）
      *
      * @param offset           オフセット
      * @param limit            取得件数
-     * @param municipalityName 自治体名称（null の場合は全件）
+     * @param municipalityName 自治体名称の部分一致（null の場合は全件）
+     * @param municipalityCd   自治体コードの部分一致（null の場合は全件）
+     * @param municipalityKana 自治体カナの部分一致（null の場合は全件）
+     * @param municipalityType 自治体区分の部分一致（null の場合は全件）
+     * @param sort             ソートフィールド名
+     * @param order            ソート順（desc で降順）
      * @return 自治体エンティティリスト
      */
-    default List<MunicipalityEntity> selectForAdmin(int offset, int limit, String municipalityName) {
+    default List<MunicipalityEntity> selectForAdmin(int offset, int limit, String municipalityName,
+            String municipalityCd, String municipalityKana, String municipalityType,
+            String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
@@ -69,20 +76,42 @@ public interface MunicipalityDao {
                     if (!ValidateUtils.isNullOrEmpty(municipalityName)) {
                         c.like(e.municipalityName, "%" + municipalityName + "%");
                     }
+                    if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
+                        c.like(e.municipalityCd, "%" + municipalityCd + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(municipalityKana)) {
+                        c.like(e.municipalityKana, "%" + municipalityKana + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(municipalityType)) {
+                        c.like(e.municipalityType, "%" + municipalityType + "%");
+                    }
                 })
-                .orderBy(c -> c.asc(e.municipalityCd))
+                .orderBy(c -> {
+                    boolean desc = "desc".equalsIgnoreCase(order);
+                    switch (sort != null ? sort : "") {
+                        case "municipalityCd" -> { if (desc) c.desc(e.municipalityCd); else c.asc(e.municipalityCd); }
+                        case "municipalityName" -> { if (desc) c.desc(e.municipalityName); else c.asc(e.municipalityName); }
+                        case "municipalityKana" -> { if (desc) c.desc(e.municipalityKana); else c.asc(e.municipalityKana); }
+                        case "municipalityType" -> { if (desc) c.desc(e.municipalityType); else c.asc(e.municipalityType); }
+                        default -> c.asc(e.municipalityCd);
+                    }
+                })
                 .offset(offset)
                 .limit(limit)
                 .fetch();
     }
 
     /**
-     * 管理者向け件数カウント（自治体名称でフィルター可）
+     * 管理者向け件数カウント（各フィールドでフィルター可）
      *
-     * @param municipalityName 自治体名称（null の場合は全件）
+     * @param municipalityName 自治体名称の部分一致（null の場合は全件）
+     * @param municipalityCd   自治体コードの部分一致（null の場合は全件）
+     * @param municipalityKana 自治体カナの部分一致（null の場合は全件）
+     * @param municipalityType 自治体区分の部分一致（null の場合は全件）
      * @return 件数
      */
-    default long countForAdmin(String municipalityName) {
+    default long countForAdmin(String municipalityName,
+            String municipalityCd, String municipalityKana, String municipalityType) {
         Entityql entityql = new Entityql(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
@@ -90,6 +119,15 @@ public interface MunicipalityDao {
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(municipalityName)) {
                         c.like(e.municipalityName, "%" + municipalityName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
+                        c.like(e.municipalityCd, "%" + municipalityCd + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(municipalityKana)) {
+                        c.like(e.municipalityKana, "%" + municipalityKana + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(municipalityType)) {
+                        c.like(e.municipalityType, "%" + municipalityType + "%");
                     }
                 })
                 .stream().count();

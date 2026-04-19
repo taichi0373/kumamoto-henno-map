@@ -37,15 +37,21 @@ public class AdminFareDiscountService {
     /**
      * 運賃割引一覧をページング取得する
      *
-     * @param page      ページ番号（0始まり）
-     * @param size      ページあたり件数
-     * @param benefitId 特典IDフィルター（null の場合は全件）
+     * @param page          ページ番号（0始まり）
+     * @param size          ページあたり件数
+     * @param benefitId     特典IDフィルター（null の場合は全件）
+     * @param agencyId      事業者IDフィルター（null の場合は全件）
+     * @param discountType  割引種別フィルター（null の場合は全件）
+     * @param discountValue 割引額フィルター（null の場合は全件）
+     * @param sort          ソートフィールド名
+     * @param order         ソート順（desc で降順）
      * @return ページングレスポンス
      */
-    public AdminPagedResponseDto<FareDiscountEntity> getAll(int page, int size, String benefitId) {
+    public AdminPagedResponseDto<FareDiscountEntity> getAll(int page, int size, String benefitId,
+            String agencyId, String discountType, String discountValue, String sort, String order) {
         int offset = page * size;
-        var items = fareDiscountDao.selectForAdmin(offset, size, benefitId);
-        long total = fareDiscountDao.countForAdmin(benefitId);
+        var items = fareDiscountDao.selectForAdmin(offset, size, benefitId, agencyId, discountType, discountValue, sort, order);
+        long total = fareDiscountDao.countForAdmin(benefitId, agencyId, discountType, discountValue);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

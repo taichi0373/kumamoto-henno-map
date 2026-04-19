@@ -47,9 +47,13 @@ public class AdminCommunityBusController {
     public ResponseEntity<ApiResponseDto<AdminPagedResponseDto<CommunityBusEntity>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String routeName) {
+            @RequestParam(required = false) String routeName,
+            @RequestParam(required = false) String routeId,
+            @RequestParam(required = false) String communityBusId,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
         try {
-            var result = adminCommunityBusService.getAll(page, size, routeName);
+            var result = adminCommunityBusService.getAll(page, size, routeName, routeId, communityBusId, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("コミュニティバス路線一覧取得エラー", e);

@@ -35,12 +35,17 @@ public class AdminBenefitCategoryService {
      * @param page         ページ番号（0始まり）
      * @param size         ページあたり件数
      * @param categoryName カテゴリ名称フィルター（null の場合は全件）
+     * @param categoryCd   カテゴリコードフィルター（null の場合は全件）
+     * @param displayOrder 表示順フィルター（null の場合は全件）
+     * @param sort         ソートフィールド名
+     * @param order        ソート順（desc で降順）
      * @return ページングレスポンス
      */
-    public AdminPagedResponseDto<BenefitCategoryEntity> getAll(int page, int size, String categoryName) {
+    public AdminPagedResponseDto<BenefitCategoryEntity> getAll(int page, int size, String categoryName,
+            String categoryCd, String displayOrder, String sort, String order) {
         int offset = page * size;
-        var items = benefitCategoryDao.selectForAdmin(offset, size, categoryName);
-        long total = benefitCategoryDao.countForAdmin(categoryName);
+        var items = benefitCategoryDao.selectForAdmin(offset, size, categoryName, categoryCd, displayOrder, sort, order);
+        long total = benefitCategoryDao.countForAdmin(categoryName, categoryCd, displayOrder);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

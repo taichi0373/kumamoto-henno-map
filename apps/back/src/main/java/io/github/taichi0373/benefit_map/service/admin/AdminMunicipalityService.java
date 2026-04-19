@@ -40,12 +40,19 @@ public class AdminMunicipalityService {
      * @param page             ページ番号（0始まり）
      * @param size             ページあたり件数
      * @param municipalityName 自治体名称フィルター（null の場合は全件）
+     * @param municipalityCd   自治体コードフィルター（null の場合は全件）
+     * @param municipalityKana 自治体カナフィルター（null の場合は全件）
+     * @param municipalityType 自治体区分フィルター（null の場合は全件）
+     * @param sort             ソートフィールド名
+     * @param order            ソート順（desc で降順）
      * @return ページングレスポンス
      */
-    public AdminPagedResponseDto<MunicipalityEntity> getAll(int page, int size, String municipalityName) {
+    public AdminPagedResponseDto<MunicipalityEntity> getAll(int page, int size, String municipalityName,
+            String municipalityCd, String municipalityKana, String municipalityType,
+            String sort, String order) {
         int offset = page * size;
-        var items = municipalityDao.selectForAdmin(offset, size, municipalityName);
-        long total = municipalityDao.countForAdmin(municipalityName);
+        var items = municipalityDao.selectForAdmin(offset, size, municipalityName, municipalityCd, municipalityKana, municipalityType, sort, order);
+        long total = municipalityDao.countForAdmin(municipalityName, municipalityCd, municipalityKana, municipalityType);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

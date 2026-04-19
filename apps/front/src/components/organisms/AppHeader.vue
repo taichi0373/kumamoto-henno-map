@@ -29,6 +29,8 @@ const auth = useAuthStore()
 
 /** ログイン状態（ストアから算出） */
 const isLoggedIn = computed(() => auth.isLoggedIn)
+/** 管理者権限有無 */
+const isAdmin = computed(() => auth.isAdmin)
 /** ユーザー名（ストアから算出） */
 const currentUsername = computed(() => auth.user?.username || '')
 
@@ -54,6 +56,13 @@ const menuItems = computed(() => [
     icon: 'pi pi-home',
     command: () => navigateTo('/')
   },
+  ...(isAdmin.value ? [
+    {
+      label: '管理者画面',
+      icon: 'pi pi-shield',
+      command: () => navigateTo('/admin/benefits')
+    }
+  ] : []),
   // ログイン状態に応じて表示されるメニュー項目
   ...(isLoggedIn.value ? [
     {

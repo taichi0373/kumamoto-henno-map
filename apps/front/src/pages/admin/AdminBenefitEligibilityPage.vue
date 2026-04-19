@@ -4,15 +4,22 @@
     <AppToastMessage />
     <AppTitle :size="'large'" style="margin-bottom: 1rem">特典条件管理</AppTitle>
 
-    <div class="admin-page__actions">
-      <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
-    </div>
+    <Toolbar class="mb-4">
+      <template #start>
+        <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
+      </template>
+      <template #end>
+        <AppButton label="エクスポート" icon="pi pi-upload" @click="exportCSV" />
+      </template>
+    </Toolbar>
 
     <AppMessageBar v-if="errorMessage" mode="error" :message="errorMessage" />
 
     <AppDataTable
+      ref="appDtRef"
       :value="items"
       :columns="columns"
+      exportFilename="admin-benefit-eligibilities"
       :loading="isLoading"
       :totalRecords="total"
       :rows="size"
@@ -20,16 +27,21 @@
       v-model:filters="filters"
       filterDisplay="menu"
       :globalFilterFields="['benefitId']"
+      :sortField="sortField"
+      :sortOrder="sortOrder"
       @page-change="onPageChange"
       @filter="onFilter"
+      @sort="onSort"
     >
       <template #header>
         <div class="table-header">
           <AppButton label="クリア" icon="pi pi-filter-slash" @click="clearFilter" />
-          <IconField>
-            <InputIcon><i class="pi pi-search" /></InputIcon>
-            <InputText v-model="filters['global'].value" placeholder="キーワード検索" @input="onGlobalSearch" />
-          </IconField>
+          <AppTextField
+            v-model="filters['global'].value"
+            class="table-header__search"
+            placeholder="キーワード検索"
+            @input="onGlobalSearch"
+          />
         </div>
       </template>
       <Column field="actions" header="操作">
@@ -77,9 +89,7 @@
 import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import Column from 'primevue/column'
-import InputText from 'primevue/inputtext'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+import Toolbar from 'primevue/toolbar'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppDataTable from '@/components/atoms/AppDataTable.vue'
@@ -107,20 +117,36 @@ const isDeleteDialogVisible = ref(false)
 const editTarget = ref<BenefitEligibilityAdminDto | null>(null)
 const deleteTarget = ref<BenefitEligibilityAdminDto | null>(null)
 const form = ref<Partial<BenefitEligibilityAdminDto>>({})
+const appDtRef = ref()
 
-/** フィルター（global: キーワード検索、benefitId: カラムフィルター） */
+/** フィルター（global: キーワード検索、各カラムフィルター） */
 const filters = ref({
   global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  id: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
   benefitId: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  licenseStatus: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  minAge: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  maxAge: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  municipalityCd: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
 })
 
 /** フィルター初期化 */
 const initFilters = () => {
   filters.value = {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    id: { value: null, matchMode: FilterMatchMode.CONTAINS },
     benefitId: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    licenseStatus: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    minAge: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    maxAge: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    municipalityCd: { value: null, matchMode: FilterMatchMode.CONTAINS },
   }
 }
+
+/** ソートフィールド */
+const sortField = ref<string | undefined>(undefined)
+/** ソート順（1: 昇順, -1: 降順） */
+const sortOrder = ref<number>(0)
 
 /** グローバル検索デバウンスタイマー */
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -139,12 +165,12 @@ const onGlobalSearch = () => {
 }
 
 const columns: AppDataTableColumn[] = [
-  { field: 'id', header: 'ID' },
-  { field: 'benefitId', header: '特典ID', filterPlaceholder: '特典IDで検索' },
-  { field: 'licenseStatus', header: '免許状況' },
-  { field: 'minAge', header: '最低年齢' },
-  { field: 'maxAge', header: '最高年齢' },
-  { field: 'municipalityCd', header: '自治体コード' },
+  { field: 'id', header: 'ID', sortable: true, filterPlaceholder: 'IDで検索' },
+  { field: 'benefitId', header: '特典ID', sortable: true, filterPlaceholder: '特典IDで検索' },
+  { field: 'licenseStatus', header: '免許状況', sortable: true, filterPlaceholder: '免許状況で検索' },
+  { field: 'minAge', header: '最低年齢', sortable: true, filterPlaceholder: '最低年齢で検索' },
+  { field: 'maxAge', header: '最高年齢', sortable: true, filterPlaceholder: '最高年齢で検索' },
+  { field: 'municipalityCd', header: '自治体コード', sortable: true, filterPlaceholder: '自治体コードで検索' },
 ]
 
 const fetchItems = async (targetPage: number) => {
@@ -158,7 +184,14 @@ const fetchItems = async (targetPage: number) => {
         params: {
           page: targetPage,
           size: size.value,
+          id: filters.value.id?.value ?? undefined,
           benefitId: filters.value.benefitId?.value ?? keyword ?? undefined,
+          licenseStatus: filters.value.licenseStatus?.value ?? undefined,
+          minAge: filters.value.minAge?.value ?? undefined,
+          maxAge: filters.value.maxAge?.value ?? undefined,
+          municipalityCd: filters.value.municipalityCd?.value ?? undefined,
+          sort: sortField.value ?? undefined,
+          order: sortOrder.value === 1 ? 'asc' : sortOrder.value === -1 ? 'desc' : undefined,
         },
       }
     )
@@ -175,6 +208,13 @@ const fetchItems = async (targetPage: number) => {
 
 /** フィルター変更時 */
 const onFilter = () => {
+  fetchItems(0)
+}
+
+/** ソート変更時 */
+const onSort = (event: { sortField: string; sortOrder: number }) => {
+  sortField.value = event.sortField
+  sortOrder.value = event.sortOrder
   fetchItems(0)
 }
 
@@ -242,19 +282,15 @@ const confirmDelete = async () => {
   }
 }
 
+const exportCSV = () => {
+  appDtRef.value?.exportCSV()
+}
+
 onMounted(() => fetchItems(0))
 </script>
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
-.admin-page {
-  &__actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-}
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -264,5 +300,9 @@ onMounted(() => fetchItems(0))
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.table-header__search {
+  width: 16rem;
+  max-width: 100%;
 }
 </style>

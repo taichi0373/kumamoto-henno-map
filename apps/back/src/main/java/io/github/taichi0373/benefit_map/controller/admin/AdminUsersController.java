@@ -50,9 +50,15 @@ public class AdminUsersController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String username,
-            @RequestParam(required = false) String email) {
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String userId,
+            @RequestParam(required = false) String birthDate,
+            @RequestParam(required = false) String municipalityCd,
+            @RequestParam(required = false) String licenseStatus,
+            @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String order) {
         try {
-            var result = adminUsersService.getAll(page, size, username, email);
+            var result = adminUsersService.getAll(page, size, username, email, userId, birthDate, municipalityCd, licenseStatus, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("ユーザー一覧取得エラー", e);

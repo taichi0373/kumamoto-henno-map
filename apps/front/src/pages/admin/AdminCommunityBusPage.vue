@@ -4,15 +4,22 @@
     <AppToastMessage />
     <AppTitle :size="'large'" style="margin-bottom: 1rem">コミュニティバス路線管理</AppTitle>
 
-    <div class="admin-page__actions">
-      <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
-    </div>
+    <Toolbar class="mb-4">
+      <template #start>
+        <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
+      </template>
+      <template #end>
+        <AppButton label="エクスポート" icon="pi pi-upload" @click="exportCSV" />
+      </template>
+    </Toolbar>
 
     <AppMessageBar v-if="errorMessage" mode="error" :message="errorMessage" />
 
     <AppDataTable
+      ref="appDtRef"
       :value="items"
       :columns="columns"
+      exportFilename="admin-community-buses"
       :loading="isLoading"
       :totalRecords="total"
       :rows="size"
@@ -20,16 +27,21 @@
       v-model:filters="filters"
       filterDisplay="menu"
       :globalFilterFields="['routeName']"
+      :sortField="sortField"
+      :sortOrder="sortOrder"
       @page-change="onPageChange"
       @filter="onFilter"
+      @sort="onSort"
     >
       <template #header>
         <div class="table-header">
           <AppButton label="クリア" icon="pi pi-filter-slash" @click="clearFilter" />
-          <IconField>
-            <InputIcon><i class="pi pi-search" /></InputIcon>
-            <InputText v-model="filters['global'].value" placeholder="キーワード検索" @input="onGlobalSearch" />
-          </IconField>
+          <AppTextField
+            v-model="filters['global'].value"
+            class="table-header__search"
+            placeholder="キーワード検索"
+            @input="onGlobalSearch"
+          />
         </div>
       </template>
       <Column field="actions" header="操作">
@@ -81,9 +93,7 @@
 import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import Column from 'primevue/column'
-import InputText from 'primevue/inputtext'
-import IconField from 'primevue/iconfield'
-import InputIcon from 'primevue/inputicon'
+import Toolbar from 'primevue/toolbar'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppDataTable from '@/components/atoms/AppDataTable.vue'
@@ -112,10 +122,13 @@ const isDeleteDialogVisible = ref(false)
 const editTarget = ref<CommunityBusAdminDto | null>(null)
 const deleteTarget = ref<CommunityBusAdminDto | null>(null)
 const form = ref<Partial<CommunityBusAdminDto>>({})
+const appDtRef = ref()
 
-/** フィルター（global: キーワード検索、routeName: カラムフィルター） */
+/** フィルター（global: キーワード検索、各カラムフィルター） */
 const filters = ref({
   global: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  routeId: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
+  communityBusId: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
   routeName: { value: null as string | null, matchMode: FilterMatchMode.CONTAINS },
 })
 
@@ -123,9 +136,16 @@ const filters = ref({
 const initFilters = () => {
   filters.value = {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    routeId: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    communityBusId: { value: null, matchMode: FilterMatchMode.CONTAINS },
     routeName: { value: null, matchMode: FilterMatchMode.CONTAINS },
   }
 }
+
+/** ソートフィールド */
+const sortField = ref<string | undefined>(undefined)
+/** ソート順（1: 昇順, -1: 降順） */
+const sortOrder = ref<number>(0)
 
 /** グローバル検索デバウンスタイマー */
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -148,9 +168,9 @@ const agencyOptions = ref<SelectDto[]>([])
 
 /** テーブルカラム定義 */
 const columns: AppDataTableColumn[] = [
-  { field: 'routeId', header: '路線ID' },
-  { field: 'communityBusId', header: '事業者ID' },
-  { field: 'routeName', header: '行先名称', filterPlaceholder: '行先名称で検索' },
+  { field: 'routeId', header: '路線ID', sortable: true, filterPlaceholder: '路線IDで検索' },
+  { field: 'communityBusId', header: '事業者ID', sortable: true, filterPlaceholder: '事業者IDで検索' },
+  { field: 'routeName', header: '行先名称', sortable: true, filterPlaceholder: '行先名称で検索' },
 ]
 
 /** 事業者一覧を取得してセレクト選択肢を生成する */
@@ -178,7 +198,11 @@ const fetchItems = async (targetPage: number) => {
         params: {
           page: targetPage,
           size: size.value,
+          routeId: filters.value.routeId?.value ?? undefined,
+          communityBusId: filters.value.communityBusId?.value ?? undefined,
           routeName: filters.value.routeName?.value ?? keyword ?? undefined,
+          sort: sortField.value ?? undefined,
+          order: sortOrder.value === 1 ? 'asc' : sortOrder.value === -1 ? 'desc' : undefined,
         },
       }
     )
@@ -195,6 +219,13 @@ const fetchItems = async (targetPage: number) => {
 
 /** フィルター変更時 */
 const onFilter = () => {
+  fetchItems(0)
+}
+
+/** ソート変更時 */
+const onSort = (event: { sortField: string; sortOrder: number }) => {
+  sortField.value = event.sortField
+  sortOrder.value = event.sortOrder
   fetchItems(0)
 }
 
@@ -263,6 +294,10 @@ const confirmDelete = async () => {
   }
 }
 
+const exportCSV = () => {
+  appDtRef.value?.exportCSV()
+}
+
 onMounted(async () => {
   await fetchAgencies()
   await fetchItems(0)
@@ -271,14 +306,6 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
-.admin-page {
-  &__actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-}
 .action-buttons {
   display: flex;
   gap: 8px;
@@ -288,5 +315,9 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.table-header__search {
+  width: 16rem;
+  max-width: 100%;
 }
 </style>
