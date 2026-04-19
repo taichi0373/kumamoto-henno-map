@@ -19,10 +19,9 @@ ip addr show eth0
 
 ## Docker 初期化
 
-### コンテナ停止・ボリューム削除
+### コンテナ削除・ボリューム削除
 ```bash
-docker compose down
-docker volume prune
+docker compose down -v
 ```
 
 ## Docker 起動

@@ -4,14 +4,14 @@
     <AppToastMessage />
     <AppTitle :size="'large'" style="margin-bottom: 1rem">運賃割引管理</AppTitle>
 
-    <Toolbar class="mb-4">
+    <AppToolbar class="mb-4">
       <template #start>
         <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
       </template>
       <template #end>
         <AppButton label="エクスポート" icon="pi pi-upload" @click="exportCSV" />
       </template>
-    </Toolbar>
+    </AppToolbar>
 
     <AppMessageBar v-if="errorMessage" mode="error" :message="errorMessage" />
 
@@ -94,7 +94,7 @@
 import { ref, onMounted } from 'vue'
 import { FilterMatchMode } from '@primevue/core/api'
 import Column from 'primevue/column'
-import Toolbar from 'primevue/toolbar'
+import AppToolbar from '@/components/atoms/AppToolbar.vue'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppDataTable from '@/components/atoms/AppDataTable.vue'
