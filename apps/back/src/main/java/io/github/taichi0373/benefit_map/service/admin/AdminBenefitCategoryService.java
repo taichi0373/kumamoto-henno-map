@@ -14,6 +14,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
@@ -113,8 +114,9 @@ public class AdminBenefitCategoryService {
      * @return インポート結果
      * @throws IOException ファイル読み込みエラー
      */
+    @Transactional
     public CsvImportResultDto importCsv(MultipartFile file) throws IOException {
-        int inserted = 0, updated = 0, failed = 0;
+        List<BenefitCategoryEntity> toInsert = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(
@@ -127,12 +129,12 @@ public class AdminBenefitCategoryService {
                      .build()
                      .parse(skipBom(reader))) {
 
+            LocalDateTime now = LocalDateTime.now();
             for (CSVRecord record : parser) {
                 try {
                     String categoryCd = csvVal(record, "categoryCd");
                     if (categoryCd == null) {
                         errors.add("行 " + record.getRecordNumber() + ": カテゴリコードが空です");
-                        failed++;
                         continue;
                     }
                     BenefitCategoryEntity entity = new BenefitCategoryEntity();
@@ -141,26 +143,18 @@ public class AdminBenefitCategoryService {
                     entity.setDisplayOrder(csvInt(record, "displayOrder"));
                     entity.setIsActive(csvVal(record, "isActive"));
 
-                    LocalDateTime now = LocalDateTime.now();
-                    BenefitCategoryEntity existing = benefitCategoryDao.selectById(categoryCd);
-                    if (existing != null) {
-                        LocalDateTime createdAt = existing.getSystemField() != null
-                                ? existing.getSystemField().getSysCreatedAt() : now;
-                        entity.setSystemField(new SystemField(createdAt, now));
-                        benefitCategoryDao.update(entity);
-                        updated++;
-                    } else {
-                        entity.setSystemField(new SystemField(now, now));
-                        benefitCategoryDao.insert(entity);
-                        inserted++;
-                    }
+                    entity.setSystemField(new SystemField(now, now));
+                    toInsert.add(entity);
                 } catch (Exception e) {
-                    failed++;
                     errors.add("行 " + record.getRecordNumber() + ": " + e.getMessage());
                 }
             }
         }
-        return new CsvImportResultDto(inserted, updated, failed, errors);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(String.join("\n", errors));
+        }
+        toInsert.forEach(benefitCategoryDao::insert);
+        return new CsvImportResultDto(toInsert.size(), 0, 0, List.of());
     }
 
     private String csvVal(CSVRecord record, String column) {

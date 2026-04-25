@@ -121,18 +121,33 @@
     </AppDialog>
 
     <!-- CSVインポートダイアログ -->
-    <AppDialog v-model="isImportDialogVisible" header="CSVインポート" :dialogStyle="{ width: '500px' }">
-      <p class="import-desc">CSVファイルを選択してインポートします。既存データは上書き更新されます。</p>
-      <p class="import-desc import-desc--columns">
-        必須列: <code>benefitId</code> 任意列: municipalityCd / categoryCd / benefitName /
-        benefitShortName / benefitDetail / expDetail / phoneNumber / benefitUrl
-      </p>
-      <AppFileUpload ref="fileUploadRef" v-model="importFile" accept=".csv" chooseLabel="CSVを選択" />
-      <div v-if="importResult" class="import-result">
-        <p>登録: {{ importResult.inserted }} 件 / 更新: {{ importResult.updated }} 件 / 失敗: {{ importResult.failed }} 件</p>
-        <ul v-if="importResult.errors.length" class="import-result__errors">
-          <li v-for="(err, i) in importResult.errors" :key="i">{{ err }}</li>
-        </ul>
+    <AppDialog v-model="isImportDialogVisible" header="CSVインポート" :dialogStyle="{ width: '520px' }">
+      <div class="import-dialog">
+        <p class="import-dialog__desc">CSVファイルを選択してインポートします。</p>
+        <div class="import-dialog__columns">
+          <div class="import-dialog__columns-row">
+            <span class="import-dialog__columns-badge import-dialog__columns-badge--required">必須</span>
+            <div class="import-dialog__columns-tags">
+              <code>benefitId</code>
+            </div>
+          </div>
+          <div class="import-dialog__columns-row">
+            <span class="import-dialog__columns-badge">任意</span>
+            <div class="import-dialog__columns-tags">
+              <code>municipalityCd</code>
+              <code>categoryCd</code>
+              <code>benefitName</code>
+              <code>benefitShortName</code>
+              <code>benefitDetail</code>
+              <code>expDetail</code>
+              <code>phoneNumber</code>
+              <code>benefitUrl</code>
+            </div>
+          </div>
+        </div>
+        <div class="import-dialog__upload">
+          <AppFileUpload ref="fileUploadRef" v-model="importFile" accept=".csv" chooseLabel="CSVを選択" />
+        </div>
       </div>
       <template #footer>
         <AppButton label="キャンセル" @click="closeImportDialog" />
@@ -197,8 +212,6 @@ const isImportDialogVisible = ref(false)
 const isImporting = ref(false)
 /** 選択中のインポートファイル */
 const importFile = ref<File | null>(null)
-/** インポート結果 */
-const importResult = ref<{ inserted: number; updated: number; failed: number; errors: string[] } | null>(null)
 /** AppFileUpload の ref */
 const fileUploadRef = ref()
 
@@ -396,7 +409,6 @@ const exportCSV = () => {
 /** インポートダイアログを開く */
 const openImportDialog = () => {
   importFile.value = null
-  importResult.value = null
   isImportDialogVisible.value = true
 }
 
@@ -410,23 +422,23 @@ const closeImportDialog = () => {
 const importCSV = async () => {
   if (!importFile.value) return
   isImporting.value = true
-  importResult.value = null
   try {
     const formData = new FormData()
     formData.append('file', importFile.value)
-    const response = await apiClient.axios.post<{ data: { inserted: number; updated: number; failed: number; errors: string[] } }>(
+    const response = await apiClient.axios.post<{ data: { inserted: number; updated: number } }>(
       '/admin/benefits/import',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     )
-    importResult.value = response.data?.data
+    const result = response.data?.data
     ToastMessageUtils.success(
-      `インポート完了: 登録 ${importResult.value?.inserted} 件 / 更新 ${importResult.value?.updated} 件`
+      `インポート完了: 登録 ${result?.inserted ?? 0} 件`
     )
+    closeImportDialog()
     await fetchItems(page.value)
   } catch (error: unknown) {
     const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
-    errorMessage.value = msg ?? 'CSVインポートに失敗しました'
+    ToastMessageUtils.error('登録に失敗しました')
   } finally {
     isImporting.value = false
   }
@@ -460,26 +472,65 @@ onMounted(() => fetchItems(0))
   max-width: 100%;
 }
 
-.import-desc {
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
+.import-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 
-  &--columns {
+  &__desc {
+    margin: 0;
+    font-size: 0.875rem;
     color: var(--p-text-color-secondary, #6c757d);
   }
-}
 
-.import-result {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: var(--p-surface-100, #f8f9fa);
-  border-radius: 4px;
-  font-size: 0.875rem;
+  &__columns {
+    padding: 0.75rem;
+    background: var(--p-surface-50, #f9fafb);
+    border: 1px solid var(--p-surface-200, #e5e7eb);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 
-  &__errors {
-    margin-top: 0.5rem;
-    padding-left: 1.25rem;
-    color: var(--p-red-500, #ef4444);
+  &__columns-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  &__columns-badge {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    background: var(--p-surface-300, #d1d5db);
+    color: var(--p-text-color-secondary, #6c757d);
+    margin-top: 2px;
+
+    &--required {
+      background: var(--p-red-100, #fee2e2);
+      color: var(--p-red-700, #b91c1c);
+    }
+  }
+
+  &__columns-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+
+    code {
+      font-size: 0.8rem;
+      padding: 0.1rem 0.35rem;
+      background: var(--p-surface-200, #e5e7eb);
+      border-radius: 3px;
+    }
+  }
+
+  &__upload {
+    display: flex;
+    align-items: center;
   }
 }
 </style>

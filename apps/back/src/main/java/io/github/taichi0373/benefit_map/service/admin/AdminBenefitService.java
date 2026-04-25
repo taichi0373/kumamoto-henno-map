@@ -14,6 +14,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
@@ -122,8 +123,9 @@ public class AdminBenefitService {
      * @return インポート結果（登録・更新・失敗件数）
      * @throws IOException ファイル読み込みエラー
      */
+    @Transactional
     public CsvImportResultDto importCsv(MultipartFile file) throws IOException {
-        int inserted = 0, updated = 0, failed = 0;
+        List<BenefitEntity> toInsert = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(
@@ -136,12 +138,12 @@ public class AdminBenefitService {
                      .build()
                      .parse(skipBom(reader))) {
 
+            LocalDateTime now = LocalDateTime.now();
             for (CSVRecord record : parser) {
                 try {
                     String benefitId = record.get("benefitId");
                     if (benefitId == null || benefitId.isBlank()) {
                         errors.add("行 " + record.getRecordNumber() + ": 特典IDが空です");
-                        failed++;
                         continue;
                     }
                     BenefitEntity entity = new BenefitEntity();
@@ -155,26 +157,18 @@ public class AdminBenefitService {
                     entity.setPhoneNumber(csvVal(record, "phoneNumber"));
                     entity.setBenefitUrl(csvVal(record, "benefitUrl"));
 
-                    LocalDateTime now = LocalDateTime.now();
-                    BenefitEntity existing = benefitDao.selectById(benefitId);
-                    if (existing != null) {
-                        LocalDateTime createdAt = existing.getSystemField() != null
-                                ? existing.getSystemField().getSysCreatedAt() : now;
-                        entity.setSystemField(new SystemField(createdAt, now));
-                        benefitDao.update(entity);
-                        updated++;
-                    } else {
-                        entity.setSystemField(new SystemField(now, now));
-                        benefitDao.insert(entity);
-                        inserted++;
-                    }
+                    entity.setSystemField(new SystemField(now, now));
+                    toInsert.add(entity);
                 } catch (Exception e) {
-                    failed++;
                     errors.add("行 " + record.getRecordNumber() + ": " + e.getMessage());
                 }
             }
         }
-        return new CsvImportResultDto(inserted, updated, failed, errors);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(String.join("\n", errors));
+        }
+        toInsert.forEach(benefitDao::insert);
+        return new CsvImportResultDto(toInsert.size(), 0, 0, List.of());
     }
 
     /** CSV値取得（列が存在しない場合・空の場合はnullを返す） */

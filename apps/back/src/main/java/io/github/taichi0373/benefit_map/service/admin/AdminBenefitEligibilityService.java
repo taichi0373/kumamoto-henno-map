@@ -14,6 +14,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
@@ -115,8 +116,9 @@ public class AdminBenefitEligibilityService {
      * @return インポート結果
      * @throws IOException ファイル読み込みエラー
      */
+    @Transactional
     public CsvImportResultDto importCsv(MultipartFile file) throws IOException {
-        int inserted = 0, failed = 0;
+        List<BenefitEligibilityEntity> toInsert = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(
@@ -129,6 +131,7 @@ public class AdminBenefitEligibilityService {
                      .build()
                      .parse(skipBom(reader))) {
 
+            LocalDateTime now = LocalDateTime.now();
             for (CSVRecord record : parser) {
                 try {
                     BenefitEligibilityEntity entity = new BenefitEligibilityEntity();
@@ -140,17 +143,18 @@ public class AdminBenefitEligibilityService {
                     entity.setNote(csvVal(record, "note"));
 
                     validateAgeRange(entity);
-                    LocalDateTime now = LocalDateTime.now();
                     entity.setSystemField(new SystemField(now, now));
-                    benefitEligibilityDao.insert(entity);
-                    inserted++;
+                    toInsert.add(entity);
                 } catch (Exception e) {
-                    failed++;
                     errors.add("行 " + record.getRecordNumber() + ": " + e.getMessage());
                 }
             }
         }
-        return new CsvImportResultDto(inserted, 0, failed, errors);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(String.join("\n", errors));
+        }
+        toInsert.forEach(benefitEligibilityDao::insert);
+        return new CsvImportResultDto(toInsert.size(), 0, 0, List.of());
     }
 
     private String csvVal(CSVRecord record, String column) {

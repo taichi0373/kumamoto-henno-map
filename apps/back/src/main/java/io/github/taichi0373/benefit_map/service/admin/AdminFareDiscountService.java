@@ -14,6 +14,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import io.github.taichi0373.benefit_map.dto.admin.AdminPagedResponseDto;
@@ -130,8 +131,9 @@ public class AdminFareDiscountService {
      * @return インポート結果
      * @throws IOException ファイル読み込みエラー
      */
+    @Transactional
     public CsvImportResultDto importCsv(MultipartFile file) throws IOException {
-        int inserted = 0, updated = 0, failed = 0;
+        List<FareDiscountEntity> toInsert = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(
@@ -144,13 +146,13 @@ public class AdminFareDiscountService {
                      .build()
                      .parse(skipBom(reader))) {
 
+            LocalDateTime now = LocalDateTime.now();
             for (CSVRecord record : parser) {
                 try {
                     String benefitId = csvVal(record, "benefitId");
                     String agencyId = csvVal(record, "agencyId");
                     if (benefitId == null || agencyId == null) {
                         errors.add("行 " + record.getRecordNumber() + ": 特典IDまたは事業者IDが空です");
-                        failed++;
                         continue;
                     }
                     validateForeignKeys(benefitId, agencyId);
@@ -161,26 +163,18 @@ public class AdminFareDiscountService {
                     entity.setDiscountType(csvVal(record, "discountType"));
                     entity.setDiscountValue(csvInt(record, "discountValue"));
 
-                    LocalDateTime now = LocalDateTime.now();
-                    FareDiscountEntity existing = fareDiscountDao.selectById(benefitId, agencyId);
-                    if (existing != null) {
-                        LocalDateTime createdAt = existing.getSystemField() != null
-                                ? existing.getSystemField().getSysCreatedAt() : now;
-                        entity.setSystemField(new SystemField(createdAt, now));
-                        fareDiscountDao.update(entity);
-                        updated++;
-                    } else {
-                        entity.setSystemField(new SystemField(now, now));
-                        fareDiscountDao.insert(entity);
-                        inserted++;
-                    }
+                    entity.setSystemField(new SystemField(now, now));
+                    toInsert.add(entity);
                 } catch (Exception e) {
-                    failed++;
                     errors.add("行 " + record.getRecordNumber() + ": " + e.getMessage());
                 }
             }
         }
-        return new CsvImportResultDto(inserted, updated, failed, errors);
+        if (!errors.isEmpty()) {
+            throw new IllegalArgumentException(String.join("\n", errors));
+        }
+        toInsert.forEach(fareDiscountDao::insert);
+        return new CsvImportResultDto(toInsert.size(), 0, 0, List.of());
     }
 
     private String csvVal(CSVRecord record, String column) {
