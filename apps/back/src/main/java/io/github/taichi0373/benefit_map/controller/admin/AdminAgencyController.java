@@ -56,10 +56,11 @@ public class AdminAgencyController {
             @RequestParam(required = false) String agencyKana,
             @RequestParam(required = false) String phoneNumber,
             @RequestParam(required = false) String operatorId,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         try {
-            var result = adminAgencyService.getAll(page, size, agencyName, agencyId, agencyKana, phoneNumber, operatorId, sort, order);
+            var result = adminAgencyService.getAll(page, size, agencyName, agencyId, agencyKana, phoneNumber, operatorId, keyword, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("事業者一覧取得エラー", e);

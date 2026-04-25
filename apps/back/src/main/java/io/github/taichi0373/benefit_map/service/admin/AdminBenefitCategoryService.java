@@ -54,10 +54,10 @@ public class AdminBenefitCategoryService {
      * @return ページングレスポンス
      */
     public AdminPagedResponseDto<BenefitCategoryEntity> getAll(int page, int size, String categoryName,
-            String categoryCd, String displayOrder, String sort, String order) {
+            String categoryCd, String displayOrder, String keyword, String sort, String order) {
         int offset = page * size;
-        var items = benefitCategoryDao.selectForAdmin(offset, size, categoryName, categoryCd, displayOrder, sort, order);
-        long total = benefitCategoryDao.countForAdmin(categoryName, categoryCd, displayOrder);
+        var items = benefitCategoryDao.selectForAdmin(offset, size, categoryName, categoryCd, displayOrder, keyword, sort, order);
+        long total = benefitCategoryDao.countForAdmin(categoryName, categoryCd, displayOrder, keyword);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

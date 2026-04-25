@@ -37,7 +37,7 @@
       v-model:filters="filters"
       v-model:selection="selectedItems"
       filterDisplay="menu"
-      :globalFilterFields="['municipalityCd', 'categoryCd']"
+      :globalFilterFields="['benefitId', 'municipalityCd', 'categoryCd', 'benefitName', 'expDetail']"
       :sortField="sortField"
       :sortOrder="sortOrder"
       dataKey="benefitId"
@@ -280,9 +280,10 @@ const fetchItems = async (targetPage: number) => {
           page: targetPage,
           size: size.value,
           benefitId: filters.value.benefitId?.value ?? undefined,
-          municipalityCd: filters.value.municipalityCd?.value ?? keyword ?? undefined,
-          categoryCd: filters.value.categoryCd?.value ?? keyword ?? undefined,
+          municipalityCd: filters.value.municipalityCd?.value ?? undefined,
+          categoryCd: filters.value.categoryCd?.value ?? undefined,
           benefitName: filters.value.benefitName?.value ?? undefined,
+          keyword: keyword ?? undefined,
           expDetail: filters.value.expDetail?.value ?? undefined,
           sort: sortField.value ?? undefined,
           order: sortOrder.value === 1 ? 'asc' : sortOrder.value === -1 ? 'desc' : undefined,

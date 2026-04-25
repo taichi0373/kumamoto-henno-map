@@ -27,7 +27,7 @@
       :first="page * size"
       v-model:filters="filters"
       filterDisplay="menu"
-      :globalFilterFields="['categoryName']"
+      :globalFilterFields="['categoryCd', 'categoryName']"
       :sortField="sortField"
       :sortOrder="sortOrder"
       @page-change="onPageChange"
@@ -229,8 +229,9 @@ const fetchItems = async (targetPage = page.value) => {
         page: targetPage,
         size: size.value,
         categoryCd: filters.value.categoryCd?.value ?? undefined,
-        categoryName: filters.value.categoryName?.value ?? keyword ?? undefined,
+        categoryName: filters.value.categoryName?.value ?? undefined,
         displayOrder: filters.value.displayOrder?.value ?? undefined,
+        keyword: keyword ?? undefined,
         sort: sortField.value ?? undefined,
         order: sortOrder.value === 1 ? 'asc' : sortOrder.value === -1 ? 'desc' : undefined,
       },

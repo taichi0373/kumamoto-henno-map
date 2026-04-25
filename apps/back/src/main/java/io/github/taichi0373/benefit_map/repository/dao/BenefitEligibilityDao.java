@@ -68,12 +68,19 @@ public interface BenefitEligibilityDao {
      */
     default List<BenefitEligibilityEntity> selectForAdmin(int offset, int limit, String benefitId,
             String id, String licenseStatus, String minAge, String maxAge, String municipalityCd,
-            String sort, String order) {
+            String keyword, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (keyword != null && !keyword.isBlank()) {
+                        c.and(() -> {
+                            c.like(e.benefitId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.licenseStatus, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.municipalityCd, "%" + keyword + "%"));
+                        });
+                    }
                     if (benefitId != null && !benefitId.isBlank()) {
                         c.eq(e.benefitId, benefitId);
                     }
@@ -134,12 +141,19 @@ public interface BenefitEligibilityDao {
      * @return 件数
      */
     default long countForAdmin(String benefitId, String id, String licenseStatus,
-            String minAge, String maxAge, String municipalityCd) {
+            String minAge, String maxAge, String municipalityCd, String keyword) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (keyword != null && !keyword.isBlank()) {
+                        c.and(() -> {
+                            c.like(e.benefitId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.licenseStatus, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.municipalityCd, "%" + keyword + "%"));
+                        });
+                    }
                     if (benefitId != null && !benefitId.isBlank()) {
                         c.eq(e.benefitId, benefitId);
                     }

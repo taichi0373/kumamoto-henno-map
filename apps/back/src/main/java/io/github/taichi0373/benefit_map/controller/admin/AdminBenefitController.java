@@ -65,10 +65,11 @@ public class AdminBenefitController {
             @RequestParam(required = false) String benefitId,
             @RequestParam(required = false) String benefitName,
             @RequestParam(required = false) String expDetail,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         try {
-            var result = adminBenefitService.getAll(page, size, municipalityCd, categoryCd, benefitId, benefitName, expDetail, sort, order);
+            var result = adminBenefitService.getAll(page, size, municipalityCd, categoryCd, benefitId, benefitName, expDetail, keyword, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("特典一覧取得エラー", e);

@@ -62,10 +62,10 @@ public class AdminAgencyService {
      */
     public AdminPagedResponseDto<AgencyEntity> getAll(int page, int size, String agencyName,
             String agencyId, String agencyKana, String phoneNumber, String operatorId,
-            String sort, String order) {
+            String keyword, String sort, String order) {
         int offset = page * size;
-        var items = agencyDao.selectForAdmin(offset, size, agencyName, agencyId, agencyKana, phoneNumber, operatorId, sort, order);
-        long total = agencyDao.countForAdmin(agencyName, agencyId, agencyKana, phoneNumber, operatorId);
+        var items = agencyDao.selectForAdmin(offset, size, agencyName, agencyId, agencyKana, phoneNumber, operatorId, keyword, sort, order);
+        long total = agencyDao.countForAdmin(agencyName, agencyId, agencyKana, phoneNumber, operatorId, keyword);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

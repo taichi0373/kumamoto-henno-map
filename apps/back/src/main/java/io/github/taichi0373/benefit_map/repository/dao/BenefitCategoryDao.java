@@ -76,12 +76,18 @@ public interface BenefitCategoryDao {
      * @return 特典カテゴリエンティティリスト
      */
     default List<BenefitCategoryEntity> selectForAdmin(int offset, int limit, String categoryName,
-            String categoryCd, String displayOrder, String sort, String order) {
+            String categoryCd, String displayOrder, String keyword, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.categoryName, "%" + keyword + "%");
+                            c.or(() -> c.like(e.categoryCd, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(categoryName)) {
                         c.like(e.categoryName, "%" + categoryName + "%");
                     }
@@ -118,12 +124,18 @@ public interface BenefitCategoryDao {
      * @param displayOrder 表示順の完全一致（null の場合は全件）
      * @return 件数
      */
-    default long countForAdmin(String categoryName, String categoryCd, String displayOrder) {
+    default long countForAdmin(String categoryName, String categoryCd, String displayOrder, String keyword) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.categoryName, "%" + keyword + "%");
+                            c.or(() -> c.like(e.categoryCd, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(categoryName)) {
                         c.like(e.categoryName, "%" + categoryName + "%");
                     }

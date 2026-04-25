@@ -67,12 +67,20 @@ public interface MunicipalityDao {
      */
     default List<MunicipalityEntity> selectForAdmin(int offset, int limit, String municipalityName,
             String municipalityCd, String municipalityKana, String municipalityType,
-            String sort, String order) {
+            String keyword, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.municipalityName, "%" + keyword + "%");
+                            c.or(() -> c.like(e.municipalityCd, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.municipalityKana, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.municipalityType, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(municipalityName)) {
                         c.like(e.municipalityName, "%" + municipalityName + "%");
                     }
@@ -111,12 +119,21 @@ public interface MunicipalityDao {
      * @return 件数
      */
     default long countForAdmin(String municipalityName,
-            String municipalityCd, String municipalityKana, String municipalityType) {
+            String municipalityCd, String municipalityKana, String municipalityType,
+            String keyword) {
         Entityql entityql = new Entityql(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.municipalityName, "%" + keyword + "%");
+                            c.or(() -> c.like(e.municipalityCd, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.municipalityKana, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.municipalityType, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(municipalityName)) {
                         c.like(e.municipalityName, "%" + municipalityName + "%");
                     }

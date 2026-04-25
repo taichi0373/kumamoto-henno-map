@@ -67,12 +67,21 @@ public interface AgencyDao {
      */
     default List<AgencyEntity> selectForAdmin(int offset, int limit, String agencyName,
             String agencyId, String agencyKana, String phoneNumber, String operatorId,
-            String sort, String order) {
+            String keyword, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.agencyId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.agencyName, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.agencyKana, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.phoneNumber, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.operatorId, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(agencyName)) {
                         c.like(e.agencyName, "%" + agencyName + "%");
                     }
@@ -116,12 +125,21 @@ public interface AgencyDao {
      * @return 件数
      */
     default long countForAdmin(String agencyName,
-            String agencyId, String agencyKana, String phoneNumber, String operatorId) {
+            String agencyId, String agencyKana, String phoneNumber, String operatorId, String keyword) {
         Entityql entityql = new Entityql(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.agencyId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.agencyName, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.agencyKana, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.phoneNumber, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.operatorId, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(agencyName)) {
                         c.like(e.agencyName, "%" + agencyName + "%");
                     }

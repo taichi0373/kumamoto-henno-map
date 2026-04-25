@@ -52,12 +52,19 @@ public interface FareDiscountDao {
      * @return 運賃割引エンティティリスト
      */
     default List<FareDiscountEntity> selectForAdmin(int offset, int limit, String benefitId,
-            String agencyId, String discountType, String discountValue, String sort, String order) {
+            String agencyId, String discountType, String discountValue, String keyword, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.benefitId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.agencyId, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.discountType, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(benefitId)) {
                         c.like(e.benefitId, "%" + benefitId + "%");
                     }
@@ -102,12 +109,19 @@ public interface FareDiscountDao {
      * @param discountValue 割引額の完全一致（null の場合は全件）
      * @return 件数
      */
-    default long countForAdmin(String benefitId, String agencyId, String discountType, String discountValue) {
+    default long countForAdmin(String benefitId, String agencyId, String discountType, String discountValue, String keyword) {
         Entityql entityql = new Entityql(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.benefitId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.agencyId, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.discountType, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(benefitId)) {
                         c.like(e.benefitId, "%" + benefitId + "%");
                     }

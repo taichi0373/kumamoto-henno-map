@@ -95,12 +95,21 @@ public interface BenefitDao {
      * @return 特典エンティティリスト
      */
     default List<BenefitEntity> selectForAdmin(int offset, int limit, String municipalityCd, String categoryCd,
-            String benefitId, String benefitName, String expDetail, String sort, String order) {
+            String benefitId, String benefitName, String expDetail, String keyword, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.benefitId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.municipalityCd, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.categoryCd, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.benefitName, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.expDetail, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
                         c.like(e.municipalityCd, "%" + municipalityCd + "%");
                     }
@@ -144,12 +153,21 @@ public interface BenefitDao {
      * @return 件数
      */
     default long countForAdmin(String municipalityCd, String categoryCd,
-            String benefitId, String benefitName, String expDetail) {
+            String benefitId, String benefitName, String expDetail, String keyword) {
         Entityql entityql = new Entityql(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.benefitId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.municipalityCd, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.categoryCd, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.benefitName, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.expDetail, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
                         c.like(e.municipalityCd, "%" + municipalityCd + "%");
                     }

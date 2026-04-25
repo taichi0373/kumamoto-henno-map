@@ -27,7 +27,7 @@
       :first="page * size"
       v-model:filters="filters"
       filterDisplay="menu"
-      :globalFilterFields="['routeName']"
+      :globalFilterFields="['routeId', 'communityBusId', 'routeName']"
       :sortField="sortField"
       :sortOrder="sortOrder"
       @page-change="onPageChange"
@@ -234,7 +234,8 @@ const fetchItems = async (targetPage: number) => {
           size: size.value,
           routeId: filters.value.routeId?.value ?? undefined,
           communityBusId: filters.value.communityBusId?.value ?? undefined,
-          routeName: filters.value.routeName?.value ?? keyword ?? undefined,
+          routeName: filters.value.routeName?.value ?? undefined,
+          keyword: keyword ?? undefined,
           sort: sortField.value ?? undefined,
           order: sortOrder.value === 1 ? 'asc' : sortOrder.value === -1 ? 'desc' : undefined,
         },

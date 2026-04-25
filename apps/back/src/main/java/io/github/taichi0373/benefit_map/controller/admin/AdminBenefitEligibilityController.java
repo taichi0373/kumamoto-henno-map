@@ -55,10 +55,11 @@ public class AdminBenefitEligibilityController {
             @RequestParam(required = false) String minAge,
             @RequestParam(required = false) String maxAge,
             @RequestParam(required = false) String municipalityCd,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         try {
-            var result = adminBenefitEligibilityService.getAll(page, size, benefitId, id, licenseStatus, minAge, maxAge, municipalityCd, sort, order);
+            var result = adminBenefitEligibilityService.getAll(page, size, benefitId, id, licenseStatus, minAge, maxAge, municipalityCd, keyword, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("特典条件一覧取得エラー", e);

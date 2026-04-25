@@ -36,7 +36,7 @@
       v-model:filters="filters"
       v-model:selection="selectedItems"
       filterDisplay="menu"
-      :globalFilterFields="['municipalityName']"
+      :globalFilterFields="['municipalityCd', 'municipalityName', 'municipalityKana', 'municipalityType']"
       :sortField="sortField"
       :sortOrder="sortOrder"
       dataKey="municipalityCd"
@@ -253,8 +253,9 @@ const fetchItems = async (targetPage: number) => {
           page: targetPage,
           size: size.value,
           municipalityCd: filters.value.municipalityCd?.value ?? undefined,
-          municipalityName: filters.value.municipalityName?.value ?? keyword ?? undefined,
+          municipalityName: filters.value.municipalityName?.value ?? undefined,
           municipalityKana: filters.value.municipalityKana?.value ?? undefined,
+          keyword: keyword ?? undefined,
           municipalityType: filters.value.municipalityType?.value ?? undefined,
           sort: sortField.value ?? undefined,
           order: sortOrder.value === 1 ? 'asc' : sortOrder.value === -1 ? 'desc' : undefined,

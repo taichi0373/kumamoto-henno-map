@@ -54,10 +54,10 @@ public class AdminCommunityBusService {
      * @return ページングレスポンス
      */
     public AdminPagedResponseDto<CommunityBusEntity> getAll(int page, int size, String routeName,
-            String routeId, String communityBusId, String sort, String order) {
+            String routeId, String communityBusId, String keyword, String sort, String order) {
         int offset = page * size;
-        var items = communityBusDao.selectForAdmin(offset, size, routeName, routeId, communityBusId, sort, order);
-        long total = communityBusDao.countForAdmin(routeName, routeId, communityBusId);
+        var items = communityBusDao.selectForAdmin(offset, size, routeName, routeId, communityBusId, keyword, sort, order);
+        long total = communityBusDao.countForAdmin(routeName, routeId, communityBusId, keyword);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

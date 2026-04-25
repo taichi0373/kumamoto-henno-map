@@ -27,7 +27,7 @@
       :first="page * size"
       v-model:filters="filters"
       filterDisplay="menu"
-      :globalFilterFields="['benefitId']"
+      :globalFilterFields="['benefitId', 'licenseStatus', 'municipalityCd']"
       :sortField="sortField"
       :sortOrder="sortOrder"
       @page-change="onPageChange"
@@ -217,8 +217,9 @@ const fetchItems = async (targetPage: number) => {
           page: targetPage,
           size: size.value,
           id: filters.value.id?.value ?? undefined,
-          benefitId: filters.value.benefitId?.value ?? keyword ?? undefined,
+          benefitId: filters.value.benefitId?.value ?? undefined,
           licenseStatus: filters.value.licenseStatus?.value ?? undefined,
+          keyword: keyword ?? undefined,
           minAge: filters.value.minAge?.value ?? undefined,
           maxAge: filters.value.maxAge?.value ?? undefined,
           municipalityCd: filters.value.municipalityCd?.value ?? undefined,

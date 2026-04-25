@@ -53,10 +53,11 @@ public class AdminMunicipalityController {
             @RequestParam(required = false) String municipalityCd,
             @RequestParam(required = false) String municipalityKana,
             @RequestParam(required = false) String municipalityType,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         try {
-            var result = adminMunicipalityService.getAll(page, size, municipalityName, municipalityCd, municipalityKana, municipalityType, sort, order);
+            var result = adminMunicipalityService.getAll(page, size, municipalityName, municipalityCd, municipalityKana, municipalityType, keyword, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("自治体一覧取得エラー", e);

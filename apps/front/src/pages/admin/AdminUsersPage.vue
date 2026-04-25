@@ -34,7 +34,7 @@
       v-model:filters="filters"
       v-model:selection="selectedItems"
       filterDisplay="menu"
-      :globalFilterFields="['username', 'email']"
+      :globalFilterFields="['username', 'email', 'municipalityCd', 'licenseStatus']"
       :sortField="sortField"
       :sortOrder="sortOrder"
       dataKey="userId"
@@ -214,8 +214,9 @@ const fetchItems = async (targetPage: number) => {
           page: targetPage,
           size: size.value,
           userId: filters.value.userId?.value ?? undefined,
-          username: filters.value.username?.value ?? keyword ?? undefined,
-          email: filters.value.email?.value ?? keyword ?? undefined,
+          username: filters.value.username?.value ?? undefined,
+          email: filters.value.email?.value ?? undefined,
+          keyword: keyword ?? undefined,
           birthDate: filters.value.birthDate?.value ?? undefined,
           municipalityCd: filters.value.municipalityCd?.value ?? undefined,
           licenseStatus: filters.value.licenseStatus?.value ?? undefined,

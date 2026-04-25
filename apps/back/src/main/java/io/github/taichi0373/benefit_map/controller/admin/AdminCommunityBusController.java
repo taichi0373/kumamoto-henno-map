@@ -52,10 +52,11 @@ public class AdminCommunityBusController {
             @RequestParam(required = false) String routeName,
             @RequestParam(required = false) String routeId,
             @RequestParam(required = false) String communityBusId,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         try {
-            var result = adminCommunityBusService.getAll(page, size, routeName, routeId, communityBusId, sort, order);
+            var result = adminCommunityBusService.getAll(page, size, routeName, routeId, communityBusId, keyword, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("コミュニティバス路線一覧取得エラー", e);

@@ -53,10 +53,10 @@ public class AdminBenefitEligibilityService {
      */
     public AdminPagedResponseDto<BenefitEligibilityEntity> getAll(int page, int size, String benefitId,
             String id, String licenseStatus, String minAge, String maxAge, String municipalityCd,
-            String sort, String order) {
+            String keyword, String sort, String order) {
         int offset = page * size;
-        var items = benefitEligibilityDao.selectForAdmin(offset, size, benefitId, id, licenseStatus, minAge, maxAge, municipalityCd, sort, order);
-        long total = benefitEligibilityDao.countForAdmin(benefitId, id, licenseStatus, minAge, maxAge, municipalityCd);
+        var items = benefitEligibilityDao.selectForAdmin(offset, size, benefitId, id, licenseStatus, minAge, maxAge, municipalityCd, keyword, sort, order);
+        long total = benefitEligibilityDao.countForAdmin(benefitId, id, licenseStatus, minAge, maxAge, municipalityCd, keyword);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

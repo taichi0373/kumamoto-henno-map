@@ -68,12 +68,19 @@ public interface CommunityBusDao {
      * @return コミュニティバスエンティティリスト
      */
     default List<CommunityBusEntity> selectForAdmin(int offset, int limit, String routeName,
-            String routeId, String communityBusId, String sort, String order) {
+            String routeId, String communityBusId, String keyword, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         CommunityBusEntity_ e = new CommunityBusEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.routeId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.communityBusId, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.routeName, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(routeName)) {
                         c.like(e.routeName, "%" + routeName + "%");
                     }
@@ -106,12 +113,19 @@ public interface CommunityBusDao {
      * @param communityBusId コミュニティバスIDの部分一致（null の場合は全件）
      * @return 件数
      */
-    default long countForAdmin(String routeName, String routeId, String communityBusId) {
+    default long countForAdmin(String routeName, String routeId, String communityBusId, String keyword) {
         Entityql entityql = new Entityql(Config.get(this));
         CommunityBusEntity_ e = new CommunityBusEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.routeId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.communityBusId, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.routeName, "%" + keyword + "%"));
+                        });
+                    }
                     if (!ValidateUtils.isNullOrEmpty(routeName)) {
                         c.like(e.routeName, "%" + routeName + "%");
                     }

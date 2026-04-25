@@ -27,7 +27,7 @@
       :first="page * size"
       v-model:filters="filters"
       filterDisplay="menu"
-      :globalFilterFields="['benefitId']"
+      :globalFilterFields="['benefitId', 'agencyId', 'discountType']"
       :sortField="sortField"
       :sortOrder="sortOrder"
       @page-change="onPageChange"
@@ -228,8 +228,9 @@ const fetchItems = async (targetPage: number) => {
         params: {
           page: targetPage,
           size: size.value,
-          benefitId: filters.value.benefitId?.value ?? keyword ?? undefined,
+          benefitId: filters.value.benefitId?.value ?? undefined,
           agencyId: filters.value.agencyId?.value ?? undefined,
+          keyword: keyword ?? undefined,
           discountType: filters.value.discountType?.value ?? undefined,
           discountValue: filters.value.discountValue?.value ?? undefined,
           sort: sortField.value ?? undefined,

@@ -54,10 +54,11 @@ public class AdminFareDiscountController {
             @RequestParam(required = false) String agencyId,
             @RequestParam(required = false) String discountType,
             @RequestParam(required = false) String discountValue,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         try {
-            var result = adminFareDiscountService.getAll(page, size, benefitId, agencyId, discountType, discountValue, sort, order);
+            var result = adminFareDiscountService.getAll(page, size, benefitId, agencyId, discountType, discountValue, keyword, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("運賃割引一覧取得エラー", e);

@@ -52,10 +52,11 @@ public class AdminBenefitCategoryController {
             @RequestParam(required = false) String categoryName,
             @RequestParam(required = false) String categoryCd,
             @RequestParam(required = false) String displayOrder,
+            @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) String order) {
         try {
-            var result = adminBenefitCategoryService.getAll(page, size, categoryName, categoryCd, displayOrder, sort, order);
+            var result = adminBenefitCategoryService.getAll(page, size, categoryName, categoryCd, displayOrder, keyword, sort, order);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             log.error("特典カテゴリ一覧取得エラー", e);

@@ -61,10 +61,10 @@ public class AdminMunicipalityService {
      */
     public AdminPagedResponseDto<MunicipalityEntity> getAll(int page, int size, String municipalityName,
             String municipalityCd, String municipalityKana, String municipalityType,
-            String sort, String order) {
+            String keyword, String sort, String order) {
         int offset = page * size;
-        var items = municipalityDao.selectForAdmin(offset, size, municipalityName, municipalityCd, municipalityKana, municipalityType, sort, order);
-        long total = municipalityDao.countForAdmin(municipalityName, municipalityCd, municipalityKana, municipalityType);
+        var items = municipalityDao.selectForAdmin(offset, size, municipalityName, municipalityCd, municipalityKana, municipalityType, keyword, sort, order);
+        long total = municipalityDao.countForAdmin(municipalityName, municipalityCd, municipalityKana, municipalityType, keyword);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 

@@ -44,10 +44,10 @@ public class AdminUsersService {
      */
     public AdminPagedResponseDto<AdminUserResponseDto> getAll(int page, int size, String username, String email,
             String userId, String birthDate, String municipalityCd, String licenseStatus,
-            String sort, String order) {
+            String keyword, String sort, String order) {
         int offset = page * size;
-        var entities = usersDao.selectForAdmin(offset, size, username, email, userId, birthDate, municipalityCd, licenseStatus, sort, order);
-        long total = usersDao.countForAdmin(username, email, userId, birthDate, municipalityCd, licenseStatus);
+        var entities = usersDao.selectForAdmin(offset, size, username, email, userId, birthDate, municipalityCd, licenseStatus, keyword, sort, order);
+        long total = usersDao.countForAdmin(username, email, userId, birthDate, municipalityCd, licenseStatus, keyword);
         var items = entities.stream().map(this::toResponseDto).toList();
         return AdminPagedResponseDto.of(items, total, page, size);
     }

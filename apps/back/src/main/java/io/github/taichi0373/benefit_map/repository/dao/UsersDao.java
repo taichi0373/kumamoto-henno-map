@@ -119,18 +119,27 @@ public interface UsersDao {
      * @param birthDate      生年月日の完全一致（null の場合は全件）
      * @param municipalityCd 自治体コードの部分一致（null の場合は全件）
      * @param licenseStatus  免許状況の部分一致（null の場合は全件）
+     * @param keyword        キーワード全フィールドOR検索（null の場合は無視）
      * @param sort           ソートフィールド名
      * @param order          ソート順（desc で降順）
      * @return ユーザーエンティティリスト
      */
     default List<UsersEntity> selectForAdmin(int offset, int limit, String username, String email,
             String userId, String birthDate, String municipalityCd, String licenseStatus,
-            String sort, String order) {
+            String keyword, String sort, String order) {
         Entityql entityql = new Entityql(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (keyword != null && !keyword.isBlank()) {
+                        c.and(() -> {
+                            c.like(e.username, "%" + keyword + "%");
+                            c.or(() -> c.like(e.email, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.municipalityCd, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.licenseStatus, "%" + keyword + "%"));
+                        });
+                    }
                     if (username != null && !username.isBlank()) {
                         c.like(e.username, "%" + username + "%");
                     }
@@ -184,15 +193,25 @@ public interface UsersDao {
      * @param birthDate      生年月日の完全一致（null の場合は全件）
      * @param municipalityCd 自治体コードの部分一致（null の場合は全件）
      * @param licenseStatus  免許状況の部分一致（null の場合は全件）
+     * @param keyword        キーワード全フィールドOR検索（null の場合は無視）
      * @return 件数
      */
     default long countForAdmin(String username, String email,
-            String userId, String birthDate, String municipalityCd, String licenseStatus) {
+            String userId, String birthDate, String municipalityCd, String licenseStatus,
+            String keyword) {
         Entityql entityql = new Entityql(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
         return entityql.from(e)
                 .where(c -> {
+                    if (keyword != null && !keyword.isBlank()) {
+                        c.and(() -> {
+                            c.like(e.username, "%" + keyword + "%");
+                            c.or(() -> c.like(e.email, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.municipalityCd, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.licenseStatus, "%" + keyword + "%"));
+                        });
+                    }
                     if (username != null && !username.isBlank()) {
                         c.like(e.username, "%" + username + "%");
                     }

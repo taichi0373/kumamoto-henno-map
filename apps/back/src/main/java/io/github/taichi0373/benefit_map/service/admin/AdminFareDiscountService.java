@@ -60,10 +60,10 @@ public class AdminFareDiscountService {
      * @return ページングレスポンス
      */
     public AdminPagedResponseDto<FareDiscountEntity> getAll(int page, int size, String benefitId,
-            String agencyId, String discountType, String discountValue, String sort, String order) {
+            String agencyId, String discountType, String discountValue, String keyword, String sort, String order) {
         int offset = page * size;
-        var items = fareDiscountDao.selectForAdmin(offset, size, benefitId, agencyId, discountType, discountValue, sort, order);
-        long total = fareDiscountDao.countForAdmin(benefitId, agencyId, discountType, discountValue);
+        var items = fareDiscountDao.selectForAdmin(offset, size, benefitId, agencyId, discountType, discountValue, keyword, sort, order);
+        long total = fareDiscountDao.countForAdmin(benefitId, agencyId, discountType, discountValue, keyword);
         return AdminPagedResponseDto.of(items, total, page, size);
     }
 
