@@ -188,7 +188,6 @@ watch(modelValue, () => {
 .p-field :deep(.p-inputtext) {
   width: 100%;
   height: base.$input-height;
-  border-color: base.$base-400;
   border-radius: 6px;
   padding: 4px 4px 4px 12px;
 

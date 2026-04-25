@@ -67,6 +67,10 @@ public class UsersEntity implements Serializable {
     @Column(name = "license_surrendered_at")
     LocalDate licenseSurrenderedAt;
 
+    /** 管理者フラグ（1:管理者,0:一般ユーザー） */
+    @Column(name = "is_admin")
+    String isAdmin;
+
     /** システム共通フィールド */
     private SystemField systemField;
 
