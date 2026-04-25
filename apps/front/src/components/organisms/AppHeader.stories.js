@@ -1,0 +1,69 @@
+import { createPinia, setActivePinia } from 'pinia';
+import { useAuthStore } from '@/stores/auth';
+import AppHeader from './AppHeader.vue';
+
+export default {
+  title: 'Design System/Organisms/AppHeader',
+  component: AppHeader,
+  parameters: {
+    layout: 'fullscreen',
+  },
+  tags: ['autodocs'],
+};
+
+export const Default = {
+  render: () => ({
+    components: { AppHeader },
+    template: `
+      <div>
+        <AppHeader />
+        <div style="padding: 20px; margin-top: 20px; background: #f8f9fa; min-height: 400px;">
+          <h2>メインコンテンツエリア</h2>
+          <p>ヘッダーコンポーネントの表示例です。</p>
+          <p>このコンポーネントは認証状態やユーザー情報を内部的に管理しています。</p>
+        </div>
+      </div>
+    `,
+  }),
+};
+
+export const LoggedIn = {
+  render: () => ({
+    components: { AppHeader },
+    setup() {
+      setActivePinia(createPinia());
+      const auth = useAuthStore();
+      auth.login({ username: 'テストユーザー', id: '1' }, 'mock-token');
+    },
+    template: `
+      <div>
+        <AppHeader />
+        <div style="padding: 20px; margin-top: 20px; background: #f8f9fa; min-height: 400px;">
+          <h2>メインコンテンツエリア（ログイン状態）</h2>
+          <p>ログイン済みの状態でのヘッダー表示例です。</p>
+          <p>ドロップダウンメニューやユーザー名が表示されます。</p>
+        </div>
+      </div>
+    `,
+  }),
+};
+
+export const LoggedOut = {
+  render: () => ({
+    components: { AppHeader },
+    setup() {
+      setActivePinia(createPinia());
+      // 新しい Pinia インスタンスのため初期状態がログアウト状態
+    },
+    template: `
+      <div>
+        <AppHeader />
+        <div style="padding: 20px; margin-top: 20px; background: #f8f9fa; min-height: 400px;">
+          <h2>メインコンテンツエリア（ログアウト状態）</h2>
+          <p>ログアウト状態でのヘッダー表示例です。</p>
+          <p>ログインリンクが表示され、ユーザー情報は非表示になります。</p>
+        </div>
+      </div>
+    `,
+  }),
+};

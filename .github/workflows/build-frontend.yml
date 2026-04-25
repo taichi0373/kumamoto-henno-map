@@ -1,0 +1,87 @@
+name: Build for frontend
+
+# ワークフロー共有設定
+on:
+  workflow_call:
+    inputs:
+      timeout-minutes:
+        description: 'タイムアウト（分）'
+        type: number
+        default: 10
+
+      frontend-dir:
+        description: 'フロントエンドディレクトリ'
+        type: string
+        default: 'apps/front'
+
+      npm-install-command:
+        description: 'npm installコマンド'
+        type: string
+        default: 'npm ci'
+
+      node-version:
+        description: 'nodeバージョン'
+        type: string
+        default: '22'
+
+env:
+  TZ: Asia/Tokyo
+  FRONTEND_DIR: ${{ inputs.frontend-dir }}
+
+# jobs: 動作内容
+jobs:
+  # フロントエンドのビルド処理（tsdoc, Storybook）
+  frontend-build:
+    name: Frontend Build
+    # Github-hosted runner を使用
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    env:
+      GITHUB_USERNAME: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.FRONTEND_DIR }}
+
+    # steps: 動作手順
+    steps:
+
+      # リポジトリ取得
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Node.js セットアップ
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      # 依存関係インストール
+      - name: Install dependencies
+        run: ${{ inputs.npm-install-command }}
+
+      # # TSDoc 生成
+      # - name: Generate TSDoc
+      #   run: npm run typedoc
+
+      # - name: Upload TSDoc
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: frontend-tsdoc
+      #     path: ${{ env.FRONTEND_DIR }}/docs
+
+      # Storybook ビルド
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Upload Storybook
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-storybook
+          path: ${{ env.FRONTEND_DIR }}/storybook-static
