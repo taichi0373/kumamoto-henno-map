@@ -46,6 +46,18 @@ async function globalSetup() {
     // RESTART IDENTITY: USER_IDのシーケンスを1からリセット
     await client.query('TRUNCATE TABLE USERS RESTART IDENTITY CASCADE');
     console.log('[global-setup] USERSテーブルを初期化しました');
+
+    // 管理者ユーザーの再投入（USERSテーブルTRUNCATEにより削除されるため再挿入）
+    // パスワード: admin (BCrypt強度10)
+    await client.query(`
+      INSERT INTO USERS (USERNAME, PASSWORD_HASH, EMAIL, IS_ADMIN, SYS_CREATED_AT, SYS_UPDATED_AT)
+      VALUES ('admin', '$2a$10$5SxwI1xYqdHgVMge2aZt2./kfkYNYI5ee3KokZW6ec1WFJVeWSfni', 'admin@example.com', '1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `);
+    console.log('[global-setup] 管理者ユーザーを再投入しました');
+
+    // 管理者E2EテストのCRUDフロー用残留データをクリーンアップ
+    await client.query(`DELETE FROM BENEFIT_CATEGORY WHERE CATEGORY_CD LIKE 'E2E%'`);
+    console.log('[global-setup] E2Eテスト用カテゴリをクリーンアップしました');
   } finally {
     await client.end();
   }

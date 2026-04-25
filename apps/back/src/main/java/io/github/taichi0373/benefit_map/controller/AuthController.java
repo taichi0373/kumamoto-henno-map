@@ -175,13 +175,18 @@ public class AuthController {
                     .body(ApiResponseDto.error("リフレッシュトークンが無効または期限切れです。再ログインしてください。"));
         }
 
-        // 新しいアクセストークンを生成
-        String newAccessToken = authService.generateAccessToken(result.userId());
+        // 新しいアクセストークンとユーザー情報を生成
+        AuthService.AccessTokenResult tokenResult = authService.generateAccessTokenWithUser(result.userId());
+        RefreshResponseDto.UserInfo userInfo = new RefreshResponseDto.UserInfo(
+                String.valueOf(tokenResult.user().getUserId()),
+                tokenResult.user().getUsername(),
+                "1".equals(tokenResult.user().getIsAdmin())
+        );
 
         // ローテーションされた新リフレッシュトークンをCookieにセット
         setRefreshTokenCookie(httpResponse, result.newPlainToken());
 
-        return ResponseEntity.ok(ApiResponseDto.success(new RefreshResponseDto(newAccessToken)));
+        return ResponseEntity.ok(ApiResponseDto.success(new RefreshResponseDto(tokenResult.token(), userInfo)));
     }
 
     /**

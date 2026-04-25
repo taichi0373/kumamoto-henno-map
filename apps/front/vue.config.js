@@ -31,10 +31,10 @@ module.exports = defineConfig({
   },
   
   // 本番ビルドの出力ディレクトリ
-  outputDir: '../../dist',
-  
+  outputDir: 'dist',
+
   // 公開パスの設定
-  publicPath: process.env.NODE_ENV === 'production' ? '/navi_project/dist/' : '/',
+  publicPath: '/',
   
   // CSS関連の設定
   css: {
