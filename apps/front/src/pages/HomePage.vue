@@ -1,5 +1,5 @@
 <template>
-  <main>
+  <div class="page">
     <!-- サイドバー -->
     <div class="sidebar" id="sidebar" :class="{ collapsed: sidebarCollapsed }">
       <template v-if="!sidebarCollapsed">
@@ -47,8 +47,10 @@
     <!-- マップ -->
     <div id="map">
       <!-- サイドバー開閉ボタン -->
-      <AppButton :label="''" :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'"
-        tooltip="サイドバーの表示切替" aria-label="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
+      <div class="sidebar-toggle-container">
+        <AppButton :label="''" :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'"
+          tooltip="サイドバーの表示切替" aria-label="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
+      </div>
       <!-- マップ上のボタン -->
       <div class="map-button-container">
         <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" aria-label="自主返納支援制度とは"
@@ -63,7 +65,7 @@
         </div>
       </div>
     </div>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -463,19 +465,20 @@ const clearSuggestions = () => {
 <style scoped lang="scss">
 @use "@/assets/scss/base";
 
-$sidebar-width: 380px;
+$sidebar-width: clamp(280px, 34vw, 380px);
 
-/* メインレイアウト: サイドバー左 + マップ右 */
-main {
+/* レイアウト: サイドバー左 + マップ右 */
+.page {
   display: flex;
   flex: 1;
+  height: calc(100vh - base.$header-height);
   overflow: hidden;
   position: relative;
 }
 
 /* サイドバー */
 .sidebar {
-  width: $sidebar-width;
+  width: min($sidebar-width, calc(100vw - 56px));
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
@@ -492,13 +495,16 @@ main {
   }
 }
 
-/* サイドバー開閉ボタン */
-.sidebar-toggle-btn {
-  position: absolute;
-  top: 40%;
-  width: 30px;
-  height: 46px;
-  z-index: 2;
+@media (max-width: 960px) {
+  .sidebar {
+    width: min(86vw, 340px);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: min(86vw, 340px);
+  }
 }
 
 /* サイドバー内ページ */
@@ -514,11 +520,27 @@ main {
   position: relative;
 }
 
+/* サイドバー開閉ボタン */
+.sidebar-toggle-container {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  top: 40%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.sidebar-toggle-btn {
+  width: 30px;
+  height: 46px;
+  pointer-events: all;
+}
+
 /* マップ上ボタン群 */
 .map-button-container {
   position: absolute;
   top: 12px;
-  right: 12px;
+  right: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
