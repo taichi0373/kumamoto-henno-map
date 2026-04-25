@@ -4,9 +4,11 @@
 
 | 変数名 | 説明 | 設定例 |
 |--------|------|--------|
-| `VUE_APP_API_BASE_URL` | バックエンドAPIのベースURL | `https://your-back.onrender.com/benefit-map/api` |
+| `VUE_APP_API_BASE_URL` | バックエンドAPIのベースURL | `/benefit-map/api` |
 
 ---
+
+> **注意**: 本番環境では `VUE_APP_API_BASE_URL` にバックエンドの絶対URLを直接設定せず、相対パスのまま使用して同一オリジン構成に統一してください。例として、Vercel側で `/benefit-map/api/**` をバックエンドへリライト/プロキシする構成を推奨します。バックエンドのリフレッシュトークンCookieが `SameSite=Lax` 前提の場合、クロスオリジンXHRではCookieが送信されず、認証更新が破綻する可能性があります。クロスオリジン運用を行う場合は、Cookie属性（`SameSite=None; Secure` など）・CORS・`credentials` の設計も合わせて見直してください。
 
 ## バックエンド（Render）
 
