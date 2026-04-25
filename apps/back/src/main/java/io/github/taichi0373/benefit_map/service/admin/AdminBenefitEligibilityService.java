@@ -101,12 +101,6 @@ public class AdminBenefitEligibilityService {
     }
 
     /**
-     * 特典条件を削除する
-     *
-     * @param id 特典条件ID
-     * @throws NoSuchElementException 特典条件が存在しない場合
-     */
-    /**
      * CSVファイルから特典条件を一括インポートする（常にINSERT・IDは自動採番）
      * <p>
      * CSVヘッダー: benefitId, licenseStatus, minAge, maxAge, municipalityCd, note
@@ -184,6 +178,12 @@ public class AdminBenefitEligibilityService {
         return reader;
     }
 
+    /**
+     * 特典条件を削除する
+     *
+     * @param id 特典条件ID
+     * @throws NoSuchElementException 特典条件が存在しない場合
+     */
     public void delete(Long id) {
         BenefitEligibilityEntity existing = benefitEligibilityDao.selectById(id);
         if (existing == null) {

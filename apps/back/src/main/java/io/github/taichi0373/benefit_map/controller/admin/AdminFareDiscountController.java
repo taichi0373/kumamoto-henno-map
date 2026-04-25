@@ -110,7 +110,7 @@ public class AdminFareDiscountController {
     }
 
     /**
-     * CSVファイルから運賃割引を一括インポートする（upsert・複合PK）
+     * CSVファイルから運賃割引を一括インポートする
      */
     @PostMapping("/import")
     public ResponseEntity<ApiResponseDto<CsvImportResultDto>> importCsv(

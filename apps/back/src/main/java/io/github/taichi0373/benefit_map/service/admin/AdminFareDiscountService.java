@@ -122,7 +122,7 @@ public class AdminFareDiscountService {
     }
 
     /**
-     * CSVファイルから運賃割引を一括インポートする（upsert・複合PK）
+     * CSVファイルから運賃割引を一括インポートする
      * <p>
      * CSVヘッダー: benefitId, agencyId, discountType, discountValue
      * </p>

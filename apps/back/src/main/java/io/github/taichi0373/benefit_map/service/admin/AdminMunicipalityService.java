@@ -102,17 +102,7 @@ public class AdminMunicipalityService {
     }
 
     /**
-     * 自治体を削除する
-     * <p>
-     * 紐付く BENEFIT または USERS が存在する場合は IllegalStateException をスローする。
-     * </p>
-     *
-     * @param municipalityCd 自治体コード
-     * @throws NoSuchElementException 自治体が存在しない場合
-     * @throws IllegalStateException  依存するレコードが存在する場合
-     */
-    /**
-     * CSVファイルから自治体を一括インポートする（upsert）
+     * CSVファイルから自治体を一括インポートする
      * <p>
      * CSVヘッダー: municipalityCd, municipalityName, municipalityKana, municipalityType
      * </p>
@@ -181,6 +171,16 @@ public class AdminMunicipalityService {
         return reader;
     }
 
+    /**
+     * 自治体を削除する
+     * <p>
+     * 紐付く BENEFIT または USERS が存在する場合は IllegalStateException をスローする。
+     * </p>
+     *
+     * @param municipalityCd 自治体コード
+     * @throws NoSuchElementException 自治体が存在しない場合
+     * @throws IllegalStateException  依存するレコードが存在する場合
+     */
     public void delete(String municipalityCd) {
         MunicipalityEntity existing = municipalityDao.selectById(municipalityCd);
         if (existing == null) {

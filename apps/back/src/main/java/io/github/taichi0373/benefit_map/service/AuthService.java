@@ -64,16 +64,37 @@ public class AuthService implements UserDetailsService {
     }
 
     /**
-     * ユーザーIDからアクセストークンを生成する（リフレッシュ時に使用）
-     * @param userId ユーザーID
-     * @return JWTアクセストークン
+     * アクセストークン生成結果レコード
+     * <p>
+     * トークンとユーザーエンティティをまとめて返すことでDB照会を1回に抑える。
+     * </p>
+     * @param token JWTアクセストークン
+     * @param user  ユーザーエンティティ
      */
-    public String generateAccessToken(Long userId) {
+    public record AccessTokenResult(String token, UsersEntity user) {}
+
+    /**
+     * ユーザーIDからアクセストークンとユーザー情報を生成する（リフレッシュ時に使用）
+     * @param userId ユーザーID
+     * @return アクセストークンとユーザーエンティティ
+     * @throws UsernameNotFoundException ユーザーが見つからない場合
+     */
+    public AccessTokenResult generateAccessTokenWithUser(Long userId) {
         UsersEntity user = usersDao.selectById(userId);
         if (user == null) {
             throw new UsernameNotFoundException("ユーザーが見つかりません: " + userId);
         }
-        return jwtUtil.generateToken(new CustomUserDetails(user));
+        String token = jwtUtil.generateToken(new CustomUserDetails(user));
+        return new AccessTokenResult(token, user);
+    }
+
+    /**
+     * ユーザーIDからアクセストークンを生成する
+     * @param userId ユーザーID
+     * @return JWTアクセストークン
+     */
+    public String generateAccessToken(Long userId) {
+        return generateAccessTokenWithUser(userId).token();
     }
 
     /**

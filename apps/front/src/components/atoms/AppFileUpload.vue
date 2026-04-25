@@ -38,7 +38,12 @@ const emit = defineEmits<{
   (e: 'update:modelValue', file: File | null): void
 }>()
 
-const fileUploadRef = ref()
+/** FileUpload の公開メソッド（利用分のみ） */
+interface FileUploadWithClear {
+  clear: () => void
+}
+
+const fileUploadRef = ref<FileUploadWithClear | null>(null)
 
 /** ファイル選択時 */
 const onSelect = (event: { files: File[] }) => {

@@ -99,13 +99,7 @@ public class AdminCommunityBusService {
     }
 
     /**
-     * コミュニティバス路線を削除する
-     *
-     * @param routeId 路線ID
-     * @throws NoSuchElementException 路線が存在しない場合
-     */
-    /**
-     * CSVファイルからコミュニティバス路線を一括インポートする（upsert）
+     * CSVファイルからコミュニティバス路線を一括インポートする
      * <p>
      * CSVヘッダー: routeId, communityBusId, routeName
      * </p>
@@ -176,6 +170,12 @@ public class AdminCommunityBusService {
         return reader;
     }
 
+    /**
+     * コミュニティバス路線を削除する
+     *
+     * @param routeId 路線ID
+     * @throws NoSuchElementException 路線が存在しない場合
+     */
     public void delete(String routeId) {
         CommunityBusEntity existing = communityBusDao.selectById(routeId);
         if (existing == null) {

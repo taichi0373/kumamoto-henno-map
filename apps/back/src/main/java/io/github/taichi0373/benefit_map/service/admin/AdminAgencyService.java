@@ -112,17 +112,7 @@ public class AdminAgencyService {
     }
 
     /**
-     * 事業者を削除する
-     * <p>
-     * 紐付く FARE_DISCOUNT または COMMUNITY_BUS が存在する場合は IllegalStateException をスローする。
-     * </p>
-     *
-     * @param agencyId 事業者ID
-     * @throws NoSuchElementException 事業者が存在しない場合
-     * @throws IllegalStateException  依存するレコードが存在する場合
-     */
-    /**
-     * CSVファイルから事業者を一括インポートする（upsert）
+     * CSVファイルから事業者を一括インポートする
      * <p>
      * CSVヘッダー: agencyId, agencyName, agencyKana, phoneNumber, agencyUrl, operatorId
      * </p>
@@ -193,6 +183,16 @@ public class AdminAgencyService {
         return reader;
     }
 
+    /**
+     * 事業者を削除する
+     * <p>
+     * 紐付く FARE_DISCOUNT または COMMUNITY_BUS が存在する場合は IllegalStateException をスローする。
+     * </p>
+     *
+     * @param agencyId 事業者ID
+     * @throws NoSuchElementException 事業者が存在しない場合
+     * @throws IllegalStateException  依存するレコードが存在する場合
+     */
     public void delete(String agencyId) {
         AgencyEntity existing = agencyDao.selectById(agencyId);
         if (existing == null) {

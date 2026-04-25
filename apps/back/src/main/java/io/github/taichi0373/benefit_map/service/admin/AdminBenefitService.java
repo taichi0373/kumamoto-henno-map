@@ -102,18 +102,7 @@ public class AdminBenefitService {
     }
 
     /**
-     * 特典を削除する
-     * <p>
-     * BENEFIT_ELIGIBILITY または FARE_DISCOUNT に依存するレコードが存在する場合は
-     * IllegalStateException をスローする。
-     * </p>
-     *
-     * @param benefitId 特典ID
-     * @throws NoSuchElementException  特典が存在しない場合
-     * @throws IllegalStateException   依存レコードが存在する場合
-     */
-    /**
-     * CSVファイルから特典を一括インポートする（upsert）
+     * CSVファイルから特典を一括インポートする
      * <p>
      * CSVヘッダー: benefitId, municipalityCd, categoryCd, benefitName,
      * benefitShortName, benefitDetail, expDetail, phoneNumber, benefitUrl
@@ -190,6 +179,17 @@ public class AdminBenefitService {
         return reader;
     }
 
+    /**
+     * 特典を削除する
+     * <p>
+     * BENEFIT_ELIGIBILITY または FARE_DISCOUNT に依存するレコードが存在する場合は
+     * IllegalStateException をスローする。
+     * </p>
+     *
+     * @param benefitId 特典ID
+     * @throws NoSuchElementException  特典が存在しない場合
+     * @throws IllegalStateException   依存レコードが存在する場合
+     */
     public void delete(String benefitId) {
         BenefitEntity existing = benefitDao.selectById(benefitId);
         if (existing == null) {

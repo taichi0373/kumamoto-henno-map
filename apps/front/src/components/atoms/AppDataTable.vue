@@ -140,7 +140,7 @@ const emit = defineEmits<{
 }>()
 
 /** DataTable の内部 ref（exportCSV 呼び出し用） */
-const dtRef = ref()
+const dtRef = ref<InstanceType<typeof DataTable> | null>(null)
 
 /** フィルターをv-modelで双方向バインディング */
 const proxyFilters = computed({

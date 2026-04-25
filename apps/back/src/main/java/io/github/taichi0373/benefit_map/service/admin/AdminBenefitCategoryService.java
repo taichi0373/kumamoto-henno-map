@@ -95,17 +95,7 @@ public class AdminBenefitCategoryService {
     }
 
     /**
-     * 特典カテゴリを削除する
-     * <p>
-     * 紐付く BENEFIT レコードが存在する場合は IllegalStateException をスローする。
-     * </p>
-     *
-     * @param categoryCd カテゴリコード
-     * @throws NoSuchElementException カテゴリが存在しない場合
-     * @throws IllegalStateException  依存する特典が存在する場合
-     */
-    /**
-     * CSVファイルから特典カテゴリを一括インポートする（upsert）
+     * CSVファイルから特典カテゴリを一括インポートする
      * <p>
      * CSVヘッダー: categoryCd, categoryName, displayOrder, isActive
      * </p>
@@ -184,6 +174,16 @@ public class AdminBenefitCategoryService {
         return reader;
     }
 
+    /**
+     * 特典カテゴリを削除する
+     * <p>
+     * 紐付く BENEFIT レコードが存在する場合は IllegalStateException をスローする。
+     * </p>
+     *
+     * @param categoryCd カテゴリコード
+     * @throws NoSuchElementException カテゴリが存在しない場合
+     * @throws IllegalStateException  依存する特典が存在する場合
+     */
     public void delete(String categoryCd) {
         BenefitCategoryEntity existing = benefitCategoryDao.selectById(categoryCd);
         if (existing == null) {
