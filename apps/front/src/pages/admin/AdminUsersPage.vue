@@ -7,7 +7,7 @@
     <AppMessageBar v-if="errorMessage" mode="error" :message="errorMessage" />
 
     <!-- ツールバー -->
-    <AppToolbar class="mb-4">
+    <AppToolbar>
       <template #start>
         <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" style="margin-right: 8px" />
         <AppButton

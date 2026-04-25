@@ -12,11 +12,13 @@
       :paginator="true"
       :lazy="true"
       :rowHover="true"
+      paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+      currentPageReportTemplate="全 {totalRecords} 件"
       :filterDisplay="filterDisplay"
       :globalFilterFields="globalFilterFields"
       :dataKey="dataKey"
       :exportFilename="exportFilename"
-      tableStyle="min-width: 1300px"
+      tableStyle="min-width: 80rem"
       stripedRows
       class="app-data-table"
       v-model:filters="proxyFilters"
@@ -171,6 +173,13 @@ defineExpose({
 }
 
 .app-data-table {
+  :deep(.p-datatable-thead > tr > th),
+  :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.4rem 0.6rem;
+  }
+  :deep(.action-buttons) {
+    min-width: 140px;
+  }
   :deep(.p-datatable-filter-buttonbar) {
     background-color: #ff8888;
   }

@@ -4,7 +4,8 @@
     <AppToastMessage />
     <AppTitle :size="'large'" style="margin-bottom: 1rem">特典条件管理</AppTitle>
 
-    <AppToolbar class="mb-4">
+    <!-- ツールバー -->
+    <AppToolbar>
       <template #start>
         <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" style="margin-right: 8px" />
         <AppButton
