@@ -2,44 +2,44 @@
   <div class="support-info-page">
     <div class="container">
       <div class="page-header">
-        <h1 class="page-title">自主返納支援制度とは</h1>
+        <AppTitle size="large" class="page-title">自主返納支援制度とは</AppTitle>
       </div>
-      
+
       <div class="content-sections">
         <!-- 制度について -->
-        <div class="info-section">
+        <AppCard class="info-section" :hoverable="true">
           <h2 class="section-title">運転免許証の自主返納制度について</h2>
           <p class="section-description">
             運転免許証の自主返納制度は、加齢に伴う身体機能の変化等により、
             自動車等の運転に不安を感じる方が、運転免許証を自主的に返納できる制度です。
           </p>
-        </div>
-        
+        </AppCard>
+
         <!-- メリット -->
-        <div class="info-section">
+        <AppCard class="info-section" :hoverable="true">
           <h2 class="section-title">自主返納のメリット</h2>
           <div class="merit-list">
             <div class="merit-item">
-              <i class="pi pi-shield"></i>
+              <AppIcon iconName="pi-shield" size="large" color="chose-100" />
               <span>交通事故のリスクを減らすことができます</span>
             </div>
             <div class="merit-item">
-              <i class="pi pi-gift"></i>
+              <AppIcon iconName="pi-gift" size="large" color="chose-100" />
               <span>様々な特典やサービスを利用できます</span>
             </div>
             <div class="merit-item">
-              <i class="pi pi-truck"></i>
+              <AppIcon iconName="pi-truck" size="large" color="chose-100" />
               <span>公共交通機関の利用促進に繋がります</span>
             </div>
             <div class="merit-item">
-              <i class="pi pi-heart"></i>
+              <AppIcon iconName="pi-heart" size="large" color="chose-100" />
               <span>地域社会の安全向上に貢献できます</span>
             </div>
           </div>
-        </div>
-        
+        </AppCard>
+
         <!-- 返納手続き -->
-        <div class="info-section">
+        <AppCard class="info-section" :hoverable="true">
           <h2 class="section-title">返納手続きについて</h2>
           <div class="procedure-steps">
             <div class="step-card">
@@ -49,7 +49,7 @@
                 <p class="step-description">運転免許証、本人確認書類を準備してください。</p>
               </div>
             </div>
-            
+
             <div class="step-card">
               <div class="step-number">2</div>
               <div class="step-content">
@@ -57,7 +57,7 @@
                 <p class="step-description">最寄りの警察署または運転免許センターで手続きを行います。</p>
               </div>
             </div>
-            
+
             <div class="step-card">
               <div class="step-number">3</div>
               <div class="step-content">
@@ -66,70 +66,68 @@
               </div>
             </div>
           </div>
-        </div>
-        
+        </AppCard>
+
         <!-- 特典について -->
-        <div class="info-section">
+        <AppCard class="info-section" :hoverable="true">
           <h2 class="section-title">特典について</h2>
           <p class="section-description">
             運転免許証を自主返納された方には、熊本県内の多くの店舗や施設で
             様々な特典やサービスをご利用いただけます。
           </p>
-          
+
           <div class="benefit-categories">
             <div class="category-card">
               <div class="category-icon">🛒</div>
               <h3 class="category-title">ショッピング</h3>
               <p class="category-description">商品割引、配送サービスなど</p>
             </div>
-            
+
             <div class="category-card">
               <div class="category-icon">🍽️</div>
               <h3 class="category-title">飲食店</h3>
               <p class="category-description">料金割引、ドリンクサービスなど</p>
             </div>
-            
+
             <div class="category-card">
               <div class="category-icon">🏨</div>
               <h3 class="category-title">宿泊・温泉</h3>
               <p class="category-description">宿泊料金割引、入浴料割引など</p>
             </div>
-            
+
             <div class="category-card">
               <div class="category-icon">🚌</div>
               <h3 class="category-title">交通機関</h3>
               <p class="category-description">運賃割引、回数券特典など</p>
             </div>
           </div>
-        </div>
-        
+        </AppCard>
+
         <!-- お問い合わせ -->
-        <div class="info-section">
+        <AppCard class="info-section" :hoverable="true">
           <h2 class="section-title">お問い合わせ</h2>
           <div class="contact-card">
             <h3 class="contact-title">熊本県警察本部 運転免許課</h3>
             <div class="contact-details">
               <div class="contact-item">
-                <i class="pi pi-phone"></i>
+                <AppIcon iconName="pi-phone" color="chose-100" />
                 <span>電話：096-233-0110</span>
               </div>
               <div class="contact-item">
-                <i class="pi pi-clock"></i>
+                <AppIcon iconName="pi-clock" color="chose-100" />
                 <span>受付時間：平日 8:30-17:15</span>
               </div>
             </div>
           </div>
-        </div>
-        
+        </AppCard>
+
         <!-- 戻るボタン -->
         <div class="back-section">
           <AppButton
-            type="button"
+            :primary="true"
             label="マップに戻る"
-            severity="primary"
-            size="large"
             icon="pi pi-map"
-            @click="$router.push('/')"
+            @click="goToMap"
           />
         </div>
       </div>
@@ -138,14 +136,28 @@
 </template>
 
 <script setup lang="ts">
-import AppButton from '../components/atoms/AppButton.vue'
+import { useRouter } from 'vue-router'
+import AppButton from '@/components/atoms/AppButton.vue'
+import AppCard from '@/components/atoms/AppCard.vue'
+import AppTitle from '@/components/atoms/AppTitle.vue'
+import AppIcon from '@/components/atoms/AppIcon.vue'
+
+/** ルーター */
+const router = useRouter()
+
+/**
+ * マップページへ遷移
+ */
+const goToMap = () => {
+  router.push('/')
+}
 </script>
 
 <style scoped lang="scss">
 @use "@/assets/scss/base";
 
 .support-info-page {
-  height: calc(100vh - 60px);
+  height: calc(100vh - base.$header-height);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   overflow-y: auto;
   padding: 0;
@@ -160,7 +172,9 @@ import AppButton from '../components/atoms/AppButton.vue'
 }
 
 .page-header {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 40px;
   padding: 30px 0;
   background: white;
@@ -169,25 +183,22 @@ import AppButton from '../components/atoms/AppButton.vue'
   border: 1px solid #e2e8f0;
 }
 
+/* AppTitle の中央揃えと装飾ライン */
 .page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0;
+  justify-content: center;
   position: relative;
-  display: inline-block;
-}
 
-.page-title::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 2px;
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+  }
 }
 
 .content-sections {
@@ -196,18 +207,9 @@ import AppButton from '../components/atoms/AppButton.vue'
   gap: 25px;
 }
 
+/* AppCard のアニメーション */
 .info-section {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.info-section:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+  animation: fadeInUp 0.6s ease-out;
 }
 
 .section-title {
@@ -249,22 +251,16 @@ import AppButton from '../components/atoms/AppButton.vue'
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   transition: all 0.2s ease;
-}
 
-.merit-item:hover {
-  background: #edf2f7;
-  transform: translateX(5px);
-}
+  &:hover {
+    background: #edf2f7;
+    transform: translateX(5px);
+  }
 
-.merit-item i {
-  color: #4299e1;
-  font-size: 18px;
-  width: 20px;
-}
-
-.merit-item span {
-  color: #4a5568;
-  font-weight: 500;
+  span {
+    color: #4a5568;
+    font-weight: 500;
+  }
 }
 
 /* 手続きステップ */
@@ -285,22 +281,22 @@ import AppButton from '../components/atoms/AppButton.vue'
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-}
 
-.step-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
 
-.step-card:hover {
-  background: #edf2f7;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  &:hover {
+    background: #edf2f7;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .step-number {
@@ -352,21 +348,21 @@ import AppButton from '../components/atoms/AppButton.vue'
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-}
 
-.category-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
 
-.category-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .category-icon {
@@ -398,11 +394,13 @@ import AppButton from '../components/atoms/AppButton.vue'
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   transition: all 0.2s ease;
+
+  &:hover {
+    background: #edf2f7;
+    transform: translateY(-2px);
+  }
 }
-.contact-card:hover {
-  background: #edf2f7;
-  transform: translateY(-2px);
-}
+
 .contact-title {
   font-size: 16px;
   font-weight: 600;
@@ -427,11 +425,6 @@ import AppButton from '../components/atoms/AppButton.vue'
   font-size: 14px;
 }
 
-.contact-item i {
-  color: #4299e1;
-  width: 16px;
-}
-
 /* 戻るボタンセクション */
 .back-section {
   text-align: center;
@@ -451,61 +444,41 @@ import AppButton from '../components/atoms/AppButton.vue'
   }
 }
 
-.info-section {
-  animation: fadeInUp 0.6s ease-out;
-}
-
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
   .container {
     padding: 0 15px;
   }
-  
-  .page-title {
-    font-size: 24px;
-  }
-  
-  .info-section {
-    padding: 20px;
-  }
-  
+
   .step-card {
     flex-direction: column;
     text-align: center;
     gap: 15px;
   }
-  
+
   .benefit-categories {
     grid-template-columns: 1fr;
   }
-  
+
   .contact-details {
     text-align: center;
   }
-  
+
   .contact-item {
     justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .support-info-page {
-    padding: 10px 0;
-  }
-  
   .page-header {
     margin-bottom: 20px;
     padding: 20px 0;
   }
-  
+
   .content-sections {
     gap: 15px;
   }
-  
-  .info-section {
-    padding: 15px;
-  }
-  
+
   .section-title {
     font-size: 18px;
   }
