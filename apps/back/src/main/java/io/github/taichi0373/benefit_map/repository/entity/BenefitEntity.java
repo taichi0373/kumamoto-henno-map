@@ -9,10 +9,15 @@ import org.seasar.doma.Id;
 import org.seasar.doma.Metamodel;
 import org.seasar.doma.Table;
 
-import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 特典エンティティ
+ * <p>
+ * 運転免許自主返納者向け特典の情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "benefit")
 @Getter

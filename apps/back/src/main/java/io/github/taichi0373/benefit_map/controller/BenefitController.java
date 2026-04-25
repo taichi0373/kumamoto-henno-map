@@ -1,84 +1,126 @@
 package io.github.taichi0373.benefit_map.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
-import io.github.taichi0373.benefit_map.dto.BenefitSearchRequest;
+import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.BenefitCategoryDto;
+import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
+import io.github.taichi0373.benefit_map.dto.BenefitListResponse;
+import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.BenefitService;
-import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
+import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+/**
+ * 特典情報コントローラー
+ * <p>
+ * 特典の検索・取得に関するエンドポイントを提供する。
+ * </p>
+ */
+@Tag(name = "特典", description = "特典情報の検索・取得")
 @RestController
 @RequestMapping("/benefit")
-@RequiredArgsConstructor
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:6006", "http://127.0.0.1:3000", "http://127.0.0.1:6006"}, allowCredentials = "true")
 public class BenefitController {
-    
-    private static final Logger log = LoggerFactory.getLogger(BenefitController.class);
-    
-    private final BenefitService benefitService;
-    
+
     /**
-     * 特典検索
+     * 特典情報サービス
      */
-    @PostMapping("/search")
-    public ResponseEntity<Map<String, Object>> searchBenefits(@RequestBody BenefitSearchRequest request) {
+    @Autowired
+    private BenefitService benefitService;
+
+    /**
+     * 有効なカテゴリ一覧を取得
+     */
+    @Operation(summary = "カテゴリ一覧取得", description = "有効な特典カテゴリ一覧を表示順で取得する。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @GetMapping("/categories")
+    public ResponseEntity<ApiResponseDto<List<BenefitCategoryDto>>> getCategories() {
         try {
-            log.info("特典検索リクエスト: {}", request);
-            Map<String, Object> result = benefitService.searchBenefits(request);
-            return ResponseEntity.ok(result);
+            List<BenefitCategoryDto> categories = benefitService.getCategories();
+            return ResponseEntity.ok(ApiResponseDto.success(categories));
         } catch (Exception e) {
-            log.error("特典検索エラー", e);
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "特典検索中にエラーが発生しました: " + e.getMessage());
-            errorResponse.put("benefits", new ArrayList<>());
-            return ResponseEntity.status(500).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("カテゴリ一覧の取得に失敗しました"));
         }
     }
-    
+
     /**
-     * ユーザー特典取得
+     * 検索条件（年齢・運転免許所持状況・自治体コード）から特典を検索
      */
-    @GetMapping("/users/{userId}")
-    public ResponseEntity<Map<String, Object>> getUserBenefits(@PathVariable String userId, HttpSession session) {
+    @Operation(summary = "特典検索", description = "年齢・免許状態・自治体コードを指定して特典一覧を取得する。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "検索成功",
+                    content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @PostMapping("/search")
+    public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
         try {
-            log.info("ユーザー特典取得: userId={}", userId);
-            
-            // セッション認証チェック
-            Object sessionUserId = session.getAttribute("user_id");
-            if (sessionUserId == null) {
-                log.warn("未認証のユーザーがユーザー特典情報にアクセスしようとしました");
-                return ResponseEntity.status(401).build();
-            }
-            
-            // ユーザーIDの一致確認（自分の情報のみアクセス可能）
-            if (!userId.equals(sessionUserId.toString())) {
-                log.warn("ユーザー {} が他のユーザー {} の特典情報にアクセスしようとしました", sessionUserId, userId);
-                return ResponseEntity.status(403).build();
-            }
-            
-            Map<String, Object> result = benefitService.getUserBenefits(userId);
-            return ResponseEntity.ok(result);
+            List<BenefitDetailEntity> benefits = benefitService.searchBenefits(request);
+            return ResponseEntity.ok(ApiResponseDto.success(benefits));
         } catch (Exception e) {
-            log.error("ユーザー特典取得エラー: userId={}", userId, e);
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("success", false);
-            errorResponse.put("message", "ユーザー特典情報の取得に失敗しました");
-            errorResponse.put("benefits", new ArrayList<>());
-            return ResponseEntity.status(500).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("特典検索中にエラーが発生しました"));
+        }
+    }
+
+    /**
+     * ユーザーIDからユーザーが受けられる特典を検索
+     */
+    @Operation(summary = "ユーザー特典取得", description = "ユーザーのプロフィール情報（年齢・免許状態・居住自治体）を元に受けられる特典一覧を取得する。JWT 認証必須。")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
+            @ApiResponse(responseCode = "401", description = "未認証",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> getUsersBenefits(@PathVariable Long userId, Authentication auth) {
+        try {
+            // JWT認証チェック
+            if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("認証が必要です"));
+            }
+
+            // ユーザーIDの一致確認
+            CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal();
+            if (!userId.equals(principal.getUserId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponseDto.error("アクセス権限がありません"));
+            }
+
+            List<BenefitDetailEntity> benefits = benefitService.getUsersBenefits(userId);
+            return ResponseEntity.ok(ApiResponseDto.success(benefits));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("ユーザー特典情報の取得に失敗しました"));
         }
     }
 }

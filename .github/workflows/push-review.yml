@@ -2,8 +2,7 @@ name: Push Review
 
 on:
   push:
-    branches:
-      - develop-oci
+    branches: ["develop", "develop-oci"]
     paths:
       - 'docs/**'
       - 'apps/front/**'
@@ -31,32 +30,28 @@ jobs:
     name: Frontend Build
     needs: precheck
     if: >
-      needs.precheck.outputs.frontend-changed != '' ||
-      needs.precheck.outputs.component-changed != ''
+      needs.precheck.outputs.frontend-changed == 'true' ||
+      needs.precheck.outputs.component-changed == 'true'
     uses: ./.github/workflows/build-frontend.yml
 
   # バックエンドの変更がある場合のみビルド
   backend-build:
     name: Backend Build
     needs: precheck
-    if: needs.precheck.outputs.backend-changed != ''
+    if: needs.precheck.outputs.backend-changed == 'true'
     uses: ./.github/workflows/build-backend.yml
 
-  # OpenAPI チェック（任意）
-  # openapi-check:
-  #   name: OpenAPI Check
-  #   needs: precheck
-  #   if: needs.precheck.outputs.openapi-changed != ''
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - run: echo "Run OpenAPI validation here"
-
-  # ドキュメントの変更がある場合、ビルドして公開
-  document-build:
-    name: Document Build and Deploy
+  # ドキュメント・コンポーネント・バックエンドのいずれかに変更がある場合、ビルドして公開
+  deploy-pages:
+    name: Deploy Pages
     needs: precheck
-    if: needs.precheck.outputs.document-changed != ''
-    uses: ./.github/workflows/build-document.yml
+    if: >
+      needs.precheck.outputs.document-changed == 'true' ||
+      needs.precheck.outputs.component-changed == 'true' ||
+      needs.precheck.outputs.backend-changed == 'true'
+    uses: ./.github/workflows/deploy-pages.yml
+    with:
+      is-deploy: true
     permissions:
       contents: read
       pages: write

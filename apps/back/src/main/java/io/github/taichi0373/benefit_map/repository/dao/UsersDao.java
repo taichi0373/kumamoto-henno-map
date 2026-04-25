@@ -1,11 +1,8 @@
 package io.github.taichi0373.benefit_map.repository.dao;
 
-import java.util.List;
-
 import org.seasar.doma.Dao;
 import org.seasar.doma.Delete;
 import org.seasar.doma.Insert;
-import org.seasar.doma.Select;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
@@ -14,6 +11,12 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity_;
 
+/**
+ * ユーザーDAOインターフェース
+ * <p>
+ * ユーザー情報の登録・更新・削除・検索操作を提供する。
+ * </p>
+ */
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")
@@ -22,7 +25,7 @@ public interface UsersDao {
     /** 
      * 主キー検索
      */
-    default UsersEntity selectById(String userId) {
+    default UsersEntity selectById(Long userId) {
         Entityql entityql = new Entityql(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
@@ -41,6 +44,65 @@ public interface UsersDao {
         return entityql.from(e)
                       .where(c -> c.eq(e.username, username))
                       .fetchOne();
+    }
+
+    /**
+     * メールアドレスで検索
+     * @param email メールアドレス
+     * @return 該当ユーザーエンティティ、存在しない場合はnull
+     */
+    default UsersEntity selectByEmail(String email) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                      .where(c -> c.eq(e.email, email))
+                      .fetchOne();
+    }
+
+    /**
+     * メールアドレスの存在確認（新規登録用）
+     * @param email メールアドレス
+     * @return 同一メールアドレスを持つユーザーが存在する場合はtrue
+     */
+    default boolean existsByEmail(String email) {
+        return selectByEmail(email) != null;
+    }
+
+    /**
+     * ユーザー名の存在確認（プロフィール更新用: 自分自身を除外）
+     * @param username ユーザー名
+     * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）
+     * @return 自分以外に同一ユーザー名を持つユーザーが存在する場合はtrue
+     */
+    default boolean existsByUsernameExcluding(String username, Long excludeUserId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                      .where(c -> {
+                          c.eq(e.username, username);
+                          c.ne(e.userId, excludeUserId);
+                      })
+                      .fetchOne() != null;
+    }
+
+    /**
+     * メールアドレスの存在確認（プロフィール更新用: 自分自身を除外）
+     * @param email メールアドレス
+     * @param excludeUserId 除外するユーザーID（更新対象ユーザー自身）
+     * @return 自分以外に同一メールアドレスを持つユーザーが存在する場合はtrue
+     */
+    default boolean existsByEmailExcluding(String email, Long excludeUserId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return entityql.from(e)
+                      .where(c -> {
+                          c.eq(e.email, email);
+                          c.ne(e.userId, excludeUserId);
+                      })
+                      .fetchOne() != null;
     }
 
     /**
