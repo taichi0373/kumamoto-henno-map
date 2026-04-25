@@ -6,7 +6,13 @@
 
     <AppToolbar class="mb-4">
       <template #start>
-        <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
+        <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" style="margin-right: 8px" />
+        <AppButton
+          label="削除"
+          icon="pi pi-trash"
+          :disabled="!selectedItems.length"
+          @click="isDeleteSelectedDialogVisible = true"
+        />
       </template>
       <template #end>
         <AppButton label="インポート" icon="pi pi-download" @click="openImportDialog" style="margin-right: 8px" />
@@ -26,8 +32,10 @@
       :rows="size"
       :first="page * size"
       v-model:filters="filters"
+      v-model:selection="selectedItems"
       filterDisplay="menu"
       :globalFilterFields="['benefitId', 'agencyId', 'discountType']"
+      dataKey="_rowKey"
       :sortField="sortField"
       :sortOrder="sortOrder"
       @page-change="onPageChange"
@@ -89,6 +97,15 @@
       </template>
     </AppDialog>
 
+    <!-- 一括削除確認ダイアログ -->
+    <AppDialog v-model="isDeleteSelectedDialogVisible" header="一括削除確認" :dialogStyle="{ width: '400px' }">
+      <p>選択した {{ selectedItems.length }} 件を削除しますか？</p>
+      <template #footer>
+        <AppButton label="キャンセル" @click="isDeleteSelectedDialogVisible = false" />
+        <AppButton label="削除" :primary="true" @click="deleteSelectedItems" />
+      </template>
+    </AppDialog>
+
     <AppDialog v-model="isImportDialogVisible" header="CSVインポート" :dialogStyle="{ width: '520px' }">
       <div class="import-dialog">
         <p class="import-dialog__desc">CSVファイルを選択してインポートします。</p>
@@ -143,7 +160,10 @@ import apiClient from '@/utils/api'
 import { codeConstant } from '@/utils/codeConstant'
 import type { FareDiscountAdminDto, AdminPagedResponse } from '@/dto/admin/adminDto'
 
-const items = ref<FareDiscountAdminDto[]>([])
+/** 複合PKのための合成キー付き運賃割引型 */
+type FareDiscountRow = FareDiscountAdminDto & { _rowKey: string }
+
+const items = ref<FareDiscountRow[]>([])
 const total = ref(0)
 const page = ref(0)
 /** 1ページあたり件数 */
@@ -152,9 +172,13 @@ const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const isDialogVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
+/** 一括削除確認ダイアログ表示 */
+const isDeleteSelectedDialogVisible = ref(false)
 const editTarget = ref<FareDiscountAdminDto | null>(null)
 const deleteTarget = ref<FareDiscountAdminDto | null>(null)
 const form = ref<Partial<FareDiscountAdminDto>>({})
+/** 選択中の行 */
+const selectedItems = ref<FareDiscountRow[]>([])
 const appDtRef = ref()
 const isImportDialogVisible = ref(false)
 const isImporting = ref(false)
@@ -239,7 +263,7 @@ const fetchItems = async (targetPage: number) => {
       }
     )
     const data = response.data?.data
-    items.value = data?.items ?? []
+    items.value = (data?.items ?? []).map(item => ({ ...item, _rowKey: `${item.benefitId}_${item.agencyId}` }))
     total.value = data?.total ?? 0
     page.value = targetPage
   } catch {
@@ -326,6 +350,30 @@ const confirmDelete = async () => {
     isDeleteDialogVisible.value = false
   } finally {
     isLoading.value = false
+  }
+}
+
+/** 一括削除実行 */
+const deleteSelectedItems = async () => {
+  isLoading.value = true
+  let successCount = 0
+  let failCount = 0
+  for (const item of selectedItems.value) {
+    try {
+      await apiClient.delete(`/admin/fare-discounts/${item.benefitId}/${item.agencyId}`)
+      successCount++
+    } catch {
+      failCount++
+    }
+  }
+  selectedItems.value = []
+  isDeleteSelectedDialogVisible.value = false
+  await fetchItems(page.value)
+  isLoading.value = false
+  if (failCount === 0) {
+    ToastMessageUtils.success(`${successCount}件を削除しました`)
+  } else {
+    errorMessage.value = `${successCount}件削除成功、${failCount}件失敗しました`
   }
 }
 

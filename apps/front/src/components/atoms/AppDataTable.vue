@@ -1,28 +1,30 @@
 <template>
-  <DataTable
-    ref="dtRef"
-    :value="value"
-    :loading="loading"
-    :totalRecords="totalRecords"
-    :rows="rows"
-    :first="first"
-    :sortField="sortField"
-    :sortOrder="sortOrder"
-    :paginator="true"
-    :lazy="true"
-    :rowHover="true"
-    :filterDisplay="filterDisplay"
-    :globalFilterFields="globalFilterFields"
-    :dataKey="dataKey"
-    :exportFilename="exportFilename"
-    stripedRows
-    class="app-data-table"
-    v-model:filters="proxyFilters"
-    v-model:selection="proxySelection"
-    @page="onPageChange"
-    @filter="$emit('filter', $event)"
-    @sort="$emit('sort', $event)"
-  >
+  <div class="app-data-table-wrapper">
+    <DataTable
+      ref="dtRef"
+      :value="value"
+      :loading="loading"
+      :totalRecords="totalRecords"
+      :rows="rows"
+      :first="first"
+      :sortField="sortField"
+      :sortOrder="sortOrder"
+      :paginator="true"
+      :lazy="true"
+      :rowHover="true"
+      :filterDisplay="filterDisplay"
+      :globalFilterFields="globalFilterFields"
+      :dataKey="dataKey"
+      :exportFilename="exportFilename"
+      tableStyle="min-width: 1300px"
+      stripedRows
+      class="app-data-table"
+      v-model:filters="proxyFilters"
+      v-model:selection="proxySelection"
+      @page="onPageChange"
+      @filter="$emit('filter', $event)"
+      @sort="$emit('sort', $event)"
+    >
     <template #header>
       <slot name="header" />
     </template>
@@ -58,6 +60,7 @@
     </template>
     <slot />
   </DataTable>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -162,6 +165,10 @@ defineExpose({
 
 <style lang="scss" scoped>
 @use "@/assets/scss/base";
+
+.app-data-table-wrapper {
+  overflow-x: auto;
+}
 
 .app-data-table {
   :deep(.p-datatable-filter-buttonbar) {

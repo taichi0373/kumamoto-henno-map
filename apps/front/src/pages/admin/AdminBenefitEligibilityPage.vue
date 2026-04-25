@@ -6,7 +6,13 @@
 
     <AppToolbar class="mb-4">
       <template #start>
-        <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" />
+        <AppButton label="新規登録" :primary="true" icon="pi pi-plus" @click="openCreateDialog" style="margin-right: 8px" />
+        <AppButton
+          label="削除"
+          icon="pi pi-trash"
+          :disabled="!selectedItems.length"
+          @click="isDeleteSelectedDialogVisible = true"
+        />
       </template>
       <template #end>
         <AppButton label="インポート" icon="pi pi-download" @click="openImportDialog" style="margin-right: 8px" />
@@ -26,8 +32,10 @@
       :rows="size"
       :first="page * size"
       v-model:filters="filters"
+      v-model:selection="selectedItems"
       filterDisplay="menu"
       :globalFilterFields="['benefitId', 'licenseStatus', 'municipalityCd']"
+      dataKey="id"
       :sortField="sortField"
       :sortOrder="sortOrder"
       @page-change="onPageChange"
@@ -81,6 +89,15 @@
       <template #footer>
         <AppButton label="キャンセル" @click="isDeleteDialogVisible = false" />
         <AppButton label="削除" :primary="true" @click="confirmDelete" />
+      </template>
+    </AppDialog>
+
+    <!-- 一括削除確認ダイアログ -->
+    <AppDialog v-model="isDeleteSelectedDialogVisible" header="一括削除確認" :dialogStyle="{ width: '400px' }">
+      <p>選択した {{ selectedItems.length }} 件を削除しますか？</p>
+      <template #footer>
+        <AppButton label="キャンセル" @click="isDeleteSelectedDialogVisible = false" />
+        <AppButton label="削除" :primary="true" @click="deleteSelectedItems" />
       </template>
     </AppDialog>
 
@@ -142,9 +159,13 @@ const isLoading = ref(false)
 const errorMessage = ref<string | null>(null)
 const isDialogVisible = ref(false)
 const isDeleteDialogVisible = ref(false)
+/** 一括削除確認ダイアログ表示 */
+const isDeleteSelectedDialogVisible = ref(false)
 const editTarget = ref<BenefitEligibilityAdminDto | null>(null)
 const deleteTarget = ref<BenefitEligibilityAdminDto | null>(null)
 const form = ref<Partial<BenefitEligibilityAdminDto>>({})
+/** 選択中の行 */
+const selectedItems = ref<BenefitEligibilityAdminDto[]>([])
 const appDtRef = ref()
 const isImportDialogVisible = ref(false)
 const isImporting = ref(false)
@@ -312,6 +333,30 @@ const confirmDelete = async () => {
     isDeleteDialogVisible.value = false
   } finally {
     isLoading.value = false
+  }
+}
+
+/** 一括削除実行 */
+const deleteSelectedItems = async () => {
+  isLoading.value = true
+  let successCount = 0
+  let failCount = 0
+  for (const item of selectedItems.value) {
+    try {
+      await apiClient.delete(`/admin/benefit-eligibilities/${item.id}`)
+      successCount++
+    } catch {
+      failCount++
+    }
+  }
+  selectedItems.value = []
+  isDeleteSelectedDialogVisible.value = false
+  await fetchItems(page.value)
+  isLoading.value = false
+  if (failCount === 0) {
+    ToastMessageUtils.success(`${successCount}件を削除しました`)
+  } else {
+    errorMessage.value = `${successCount}件削除成功、${failCount}件失敗しました`
   }
 }
 
