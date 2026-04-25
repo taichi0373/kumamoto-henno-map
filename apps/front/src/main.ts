@@ -11,6 +11,7 @@ import ToastService from 'primevue/toastservice'
 import Ripple from 'primevue/ripple'
 import BadgeDirective from 'primevue/badgedirective'
 import Aura from '@primevue/themes/aura'
+import { definePreset } from '@primeuix/themes';
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
 
@@ -36,17 +37,43 @@ setUnauthorizedHandler(() => {
   })
 })
 
-// ページ直叩き（例: /profile）時、router.beforeEach はマウント前に実行されるため
-// ここでセッションを復元してから mount する。
-// こうすることでルートガードが token の有無を正しく判定できる。
-;(async () => {
-  await authStore.restoreSession()
+const MyPreset = definePreset(Aura, {
+  semantic: {
+    primary: {
+      50: '{cyan.50}',
+      100: '{cyan.50}',
+      200: '{cyan.100}',
+      300: '{cyan.200}',
+      400: '{cyan.300}',
+      500: '{cyan.400}',
+      600: '{cyan.500}',
+      700: '{cyan.600}',
+      800: '{cyan.700}',
+      900: '{cyan.800}'
+    }
+  }
+})
 
-  app.use(router)
-  app.use(PrimeVue, { ripple: true, theme: { preset: Aura } })
-  app.use(ToastService)
-  app.directive('ripple', Ripple)
-  app.directive('badge', BadgeDirective)
+  // ページ直叩き（例: /profile）時、router.beforeEach はマウント前に実行されるため
+  // ここでセッションを復元してから mount する。
+  // こうすることでルートガードが token の有無を正しく判定できる。
+  ; (async () => {
+    await authStore.restoreSession()
 
-  app.mount('#app')
-})()
+    app.use(router)
+    app.use(PrimeVue, {
+      ripple: true,
+      // ダークモード設定
+      theme: {
+        preset: MyPreset,
+        options: {
+          darkModeSelector: '.my-app-dark',
+        }
+      },
+    })
+    app.use(ToastService)
+    app.directive('ripple', Ripple)
+    app.directive('badge', BadgeDirective)
+
+    app.mount('#app')
+  })()

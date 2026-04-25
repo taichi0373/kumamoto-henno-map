@@ -1,5 +1,5 @@
 <template>
-  <div class="support-info-page">
+  <div class="page">
     <div class="container">
       <div class="page-header">
         <h1 class="page-title">自主返納支援制度とは</h1>
@@ -144,7 +144,7 @@ import AppButton from '../components/atoms/AppButton.vue'
 <style scoped lang="scss">
 @use "@/assets/scss/base";
 
-.support-info-page {
+.page {
   height: calc(100vh - 60px);
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   overflow-y: auto;
@@ -489,7 +489,7 @@ import AppButton from '../components/atoms/AppButton.vue'
 }
 
 @media (max-width: 480px) {
-  .support-info-page {
+  .page {
     padding: 10px 0;
   }
   

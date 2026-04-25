@@ -12,6 +12,7 @@ import java.util.List;
 
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitCategoryEntity_;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * 特典カテゴリDAOインターフェース
@@ -61,6 +62,96 @@ public interface BenefitCategoryDao {
     //  */
     // @Select
     // List<BenefitCategoryEntity> selectActive();
+
+    /**
+     * 管理者向けページング検索（各フィールドでフィルター・ソート可。有効・無効を含む）
+     *
+     * @param offset       オフセット
+     * @param limit        取得件数
+     * @param categoryName カテゴリ名称の部分一致（null の場合は全件）
+     * @param categoryCd   カテゴリコードの部分一致（null の場合は全件）
+     * @param displayOrder 表示順の完全一致（null の場合は全件）
+     * @param sort         ソートフィールド名
+     * @param order        ソート順（desc で降順）
+     * @return 特典カテゴリエンティティリスト
+     */
+    default List<BenefitCategoryEntity> selectForAdmin(int offset, int limit, String categoryName,
+            String categoryCd, String displayOrder, String keyword, String sort, String order) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.categoryName, "%" + keyword + "%");
+                            c.or(() -> c.like(e.categoryCd, "%" + keyword + "%"));
+                        });
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(categoryName)) {
+                        c.like(e.categoryName, "%" + categoryName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
+                        c.like(e.categoryCd, "%" + categoryCd + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(displayOrder)) {
+                        try {
+                            c.eq(e.displayOrder, Integer.parseInt(displayOrder));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
+                })
+                .orderBy(c -> {
+                    boolean desc = "desc".equalsIgnoreCase(order);
+                    switch (sort != null ? sort : "") {
+                        case "categoryCd" -> { if (desc) c.desc(e.categoryCd); else c.asc(e.categoryCd); }
+                        case "categoryName" -> { if (desc) c.desc(e.categoryName); else c.asc(e.categoryName); }
+                        case "displayOrder" -> { if (desc) c.desc(e.displayOrder); else c.asc(e.displayOrder); }
+                        default -> c.asc(e.displayOrder);
+                    }
+                })
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント（各フィールドでフィルター可）
+     *
+     * @param categoryName カテゴリ名称の部分一致（null の場合は全件）
+     * @param categoryCd   カテゴリコードの部分一致（null の場合は全件）
+     * @param displayOrder 表示順の完全一致（null の場合は全件）
+     * @return 件数
+     */
+    default long countForAdmin(String categoryName, String categoryCd, String displayOrder, String keyword) {
+        Entityql entityql = new Entityql(Config.get(this));
+        BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.categoryName, "%" + keyword + "%");
+                            c.or(() -> c.like(e.categoryCd, "%" + keyword + "%"));
+                        });
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(categoryName)) {
+                        c.like(e.categoryName, "%" + categoryName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
+                        c.like(e.categoryCd, "%" + categoryCd + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(displayOrder)) {
+                        try {
+                            c.eq(e.displayOrder, Integer.parseInt(displayOrder));
+                        } catch (NumberFormatException ignored) {
+                            // 無効な数値は無視
+                        }
+                    }
+                })
+                .stream().count();
+    }
 
     /**
      * 登録

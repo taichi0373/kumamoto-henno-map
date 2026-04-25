@@ -59,6 +59,7 @@ export const createMapInstance = (containerId: string, config: Partial<MapConfig
   
   return new maplibregl.Map({
     container: containerId,
+    attributionControl: false,
     ...mapConfig
   })
 }
@@ -66,6 +67,18 @@ export const createMapInstance = (containerId: string, config: Partial<MapConfig
 // マップ基本設定関数（コントロール、境界、現在地取得）
 export const setupMapControls = (map: Map): void => {
   map.on('load', function () {
+    // 著作権表示
+    const attributionControl = new maplibregl.AttributionControl({
+      compact: true,
+    })
+    map.addControl(attributionControl, 'bottom-right')
+
+    // 初期表示時はラベルを非表示
+    const attrEl = map.getContainer().querySelector('.maplibregl-ctrl-attrib')
+    if (attrEl) {
+      attrEl.classList.remove('maplibregl-compact-show')
+    }
+
     // コントロールを右下に配置
     const navControl: NavigationControl = new maplibregl.NavigationControl()
     map.addControl(navControl, 'bottom-right')

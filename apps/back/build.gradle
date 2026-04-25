@@ -37,6 +37,7 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
     implementation 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'org.apache.commons:commons-csv:1.11.0'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -72,6 +73,10 @@ javadoc {
             options.addStringOption('-add-stylesheet', customCss.absolutePath)
         }
     }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
 
 // ローカル開発時は dev プロファイルをデフォルトで有効にする
