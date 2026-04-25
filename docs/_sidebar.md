@@ -4,6 +4,7 @@
 * [アプリケーション概要](01_overview/overview.md)
 * [技術スタック](01_overview/tech_stack.md)
 * [命名規則](01_overview/naming_conventions.md)
+* [デプロイ環境変数一覧](01_overview/deploy_env_vars.md)
 
 **2. 機能・画面仕様**
 * [機能一覧](02_functions/feature_list.md)
