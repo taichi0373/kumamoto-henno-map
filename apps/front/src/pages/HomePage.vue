@@ -52,10 +52,10 @@
           tooltip="サイドバーの表示切替" aria-label="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
       </div>
       <!-- マップ上のボタン -->
-      <div class="map-button-container">
+      <!-- <div class="map-button-container">
         <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" aria-label="自主返納支援制度とは"
           @click="router.push('/support_info')" />
-      </div>
+      </div> -->
       <!-- クロスヘア -->
       <div v-if="showCrossHair" class="map-select-ui">
         <div class="crosshair"></div>

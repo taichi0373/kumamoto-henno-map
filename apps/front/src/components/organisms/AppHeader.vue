@@ -56,6 +56,13 @@ const menuItems = computed(() => [
     icon: 'pi pi-home',
     command: () => navigateTo('/')
   },
+  // 自主返納支援制度とは
+  {
+    label: '自主返納支援制度とは',
+    icon: 'pi pi-info-circle',
+    command: () => navigateTo('/support_info')
+  },
+  // 管理者権限がある場合
   ...(isAdmin.value ? [
     {
       label: '管理者画面',
@@ -63,7 +70,7 @@ const menuItems = computed(() => [
       command: () => navigateTo('/admin/benefits')
     }
   ] : []),
-  // ログイン状態に応じて表示されるメニュー項目
+  // ログイン済みの場合
   ...(isLoggedIn.value ? [
     {
       label: 'マイページ',
@@ -75,11 +82,6 @@ const menuItems = computed(() => [
           command: () => navigateTo('/profile')
         },
         {
-          label: '設定',
-          icon: 'pi pi-cog',
-          command: () => navigateTo('/settings')
-        },
-        {
           label: 'ログアウト',
           icon: 'pi pi-sign-out',
           command: handleLogout
@@ -87,6 +89,7 @@ const menuItems = computed(() => [
       ]
     }
   ] : [
+    // ログインしていない場合
     {
       label: '新規登録',
       icon: 'pi pi-user-plus',
