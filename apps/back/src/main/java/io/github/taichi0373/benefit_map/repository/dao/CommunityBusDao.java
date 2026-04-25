@@ -1,5 +1,7 @@
 package io.github.taichi0373.benefit_map.repository.dao;
 
+import java.util.List;
+
 import org.seasar.doma.Dao;
 import org.seasar.doma.Delete;
 import org.seasar.doma.Insert;
@@ -10,6 +12,7 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 
 import io.github.taichi0373.benefit_map.repository.entity.CommunityBusEntity;
 import io.github.taichi0373.benefit_map.repository.entity.CommunityBusEntity_;
+import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * コミュニティバスDAOインターフェース
@@ -51,6 +54,105 @@ public interface CommunityBusDao {
     //  */
     // @Select
     // List<CommunityBusEntity> selectAllOrderByName();
+
+    /**
+     * 管理者向けページング検索（各フィールドでフィルター・ソート可）
+     *
+     * @param offset         オフセット
+     * @param limit          取得件数
+     * @param routeName      行先名称の部分一致（null の場合は全件）
+     * @param routeId        路線IDの部分一致（null の場合は全件）
+     * @param communityBusId コミュニティバスIDの部分一致（null の場合は全件）
+     * @param sort           ソートフィールド名
+     * @param order          ソート順（desc で降順）
+     * @return コミュニティバスエンティティリスト
+     */
+    default List<CommunityBusEntity> selectForAdmin(int offset, int limit, String routeName,
+            String routeId, String communityBusId, String keyword, String sort, String order) {
+        Entityql entityql = new Entityql(Config.get(this));
+        CommunityBusEntity_ e = new CommunityBusEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.routeId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.communityBusId, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.routeName, "%" + keyword + "%"));
+                        });
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(routeName)) {
+                        c.like(e.routeName, "%" + routeName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(routeId)) {
+                        c.like(e.routeId, "%" + routeId + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(communityBusId)) {
+                        c.like(e.communityBusId, "%" + communityBusId + "%");
+                    }
+                })
+                .orderBy(c -> {
+                    boolean desc = "desc".equalsIgnoreCase(order);
+                    switch (sort != null ? sort : "") {
+                        case "routeId" -> { if (desc) c.desc(e.routeId); else c.asc(e.routeId); }
+                        case "communityBusId" -> { if (desc) c.desc(e.communityBusId); else c.asc(e.communityBusId); }
+                        case "routeName" -> { if (desc) c.desc(e.routeName); else c.asc(e.routeName); }
+                        default -> c.asc(e.routeId);
+                    }
+                })
+                .offset(offset)
+                .limit(limit)
+                .fetch();
+    }
+
+    /**
+     * 管理者向け件数カウント（各フィールドでフィルター可）
+     *
+     * @param routeName      行先名称の部分一致（null の場合は全件）
+     * @param routeId        路線IDの部分一致（null の場合は全件）
+     * @param communityBusId コミュニティバスIDの部分一致（null の場合は全件）
+     * @return 件数
+     */
+    default long countForAdmin(String routeName, String routeId, String communityBusId, String keyword) {
+        Entityql entityql = new Entityql(Config.get(this));
+        CommunityBusEntity_ e = new CommunityBusEntity_();
+
+        return entityql.from(e)
+                .where(c -> {
+                    if (!ValidateUtils.isNullOrEmpty(keyword)) {
+                        c.and(() -> {
+                            c.like(e.routeId, "%" + keyword + "%");
+                            c.or(() -> c.like(e.communityBusId, "%" + keyword + "%"));
+                            c.or(() -> c.like(e.routeName, "%" + keyword + "%"));
+                        });
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(routeName)) {
+                        c.like(e.routeName, "%" + routeName + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(routeId)) {
+                        c.like(e.routeId, "%" + routeId + "%");
+                    }
+                    if (!ValidateUtils.isNullOrEmpty(communityBusId)) {
+                        c.like(e.communityBusId, "%" + communityBusId + "%");
+                    }
+                })
+                .stream().count();
+    }
+
+    /**
+     * コミュニティバスID（事業者ID）で検索（依存チェック用）
+     *
+     * @param communityBusId コミュニティバスID
+     * @return コミュニティバスエンティティリスト
+     */
+    default List<CommunityBusEntity> selectByCommunityBusId(String communityBusId) {
+        Entityql entityql = new Entityql(Config.get(this));
+        CommunityBusEntity_ e = new CommunityBusEntity_();
+
+        return entityql.from(e)
+                .where(c -> c.eq(e.communityBusId, communityBusId))
+                .fetch();
+    }
 
     /**
      * 登録

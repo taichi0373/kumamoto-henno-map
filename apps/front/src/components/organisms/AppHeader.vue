@@ -29,6 +29,8 @@ const auth = useAuthStore()
 
 /** ログイン状態（ストアから算出） */
 const isLoggedIn = computed(() => auth.isLoggedIn)
+/** 管理者権限有無 */
+const isAdmin = computed(() => auth.isAdmin)
 /** ユーザー名（ストアから算出） */
 const currentUsername = computed(() => auth.user?.username || '')
 
@@ -54,7 +56,21 @@ const menuItems = computed(() => [
     icon: 'pi pi-home',
     command: () => navigateTo('/')
   },
-  // ログイン状態に応じて表示されるメニュー項目
+  // 自主返納支援制度とは
+  {
+    label: '自主返納支援制度とは',
+    icon: 'pi pi-info-circle',
+    command: () => navigateTo('/support_info')
+  },
+  // 管理者権限がある場合
+  ...(isAdmin.value ? [
+    {
+      label: '管理者画面',
+      icon: 'pi pi-shield',
+      command: () => navigateTo('/admin/benefits')
+    }
+  ] : []),
+  // ログイン済みの場合
   ...(isLoggedIn.value ? [
     {
       label: 'マイページ',
@@ -66,11 +82,6 @@ const menuItems = computed(() => [
           command: () => navigateTo('/profile')
         },
         {
-          label: '設定',
-          icon: 'pi pi-cog',
-          command: () => navigateTo('/settings')
-        },
-        {
           label: 'ログアウト',
           icon: 'pi pi-sign-out',
           command: handleLogout
@@ -78,6 +89,7 @@ const menuItems = computed(() => [
       ]
     }
   ] : [
+    // ログインしていない場合
     {
       label: '新規登録',
       icon: 'pi pi-user-plus',
@@ -99,6 +111,7 @@ const menuItems = computed(() => [
   height: 60px;
   color: base.$base-100;
   background-color: base.$header-background-color;
+  border: none;
   border-radius: 0px;
   position: relative;
   z-index: 1000;

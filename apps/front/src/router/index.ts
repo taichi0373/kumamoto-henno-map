@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { checkAdminRouteAccess } from './adminGuard'
 
 // コンポーネント
 import HomePage from '../pages/HomePage.vue'
@@ -10,6 +11,7 @@ import SupportInfoPage from '../pages/SupportInfoPage.vue'
 import ChangePasswordPage from '../pages/ChangePasswordPage.vue'
 import ForgotPasswordPage from '../pages/ForgotPasswordPage.vue'
 import ResetPasswordPage from '../pages/ResetPasswordPage.vue'
+import AdminLayout from '../layouts/AdminLayout.vue'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -53,6 +55,53 @@ const routes: RouteRecordRaw[] = [
     path: '/reset-password',
     name: 'ResetPasswordPage',
     component: ResetPasswordPage
+  },
+  {
+    path: '/admin',
+    component: AdminLayout,
+    meta: { requiresAdmin: true },
+    children: [
+      {
+        path: 'benefits',
+        name: 'AdminBenefitPage',
+        component: () => import('@/pages/admin/AdminBenefitPage.vue')
+      },
+      {
+        path: 'benefit-eligibilities',
+        name: 'AdminBenefitEligibilityPage',
+        component: () => import('@/pages/admin/AdminBenefitEligibilityPage.vue')
+      },
+      {
+        path: 'benefit-categories',
+        name: 'AdminBenefitCategoryPage',
+        component: () => import('@/pages/admin/AdminBenefitCategoryPage.vue')
+      },
+      {
+        path: 'municipalities',
+        name: 'AdminMunicipalityPage',
+        component: () => import('@/pages/admin/AdminMunicipalityPage.vue')
+      },
+      {
+        path: 'agencies',
+        name: 'AdminAgencyPage',
+        component: () => import('@/pages/admin/AdminAgencyPage.vue')
+      },
+      {
+        path: 'fare-discounts',
+        name: 'AdminFareDiscountPage',
+        component: () => import('@/pages/admin/AdminFareDiscountPage.vue')
+      },
+      {
+        path: 'community-buses',
+        name: 'AdminCommunityBusPage',
+        component: () => import('@/pages/admin/AdminCommunityBusPage.vue')
+      },
+      {
+        path: 'users',
+        name: 'AdminUsersPage',
+        component: () => import('@/pages/admin/AdminUsersPage.vue')
+      }
+    ]
   }
 ]
 
@@ -64,7 +113,11 @@ const router = createRouter({
 // ルートガード
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore()
-  if (to.matched.some(record => record.meta?.requiresAuth) && !auth.isLoggedIn) {
+  const requiresAdmin = to.matched.some(record => record.meta?.requiresAdmin)
+  const adminRedirect = checkAdminRouteAccess(requiresAdmin, auth.isAdmin)
+  if (adminRedirect) {
+    next({ path: adminRedirect })
+  } else if (to.matched.some(record => record.meta?.requiresAuth) && !auth.isLoggedIn) {
     next({ path: '/login', query: { redirect: to.fullPath } })
   } else {
     next()
