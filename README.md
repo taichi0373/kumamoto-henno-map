@@ -19,7 +19,7 @@ ip addr show eth0
 
 ## Docker 初期化
 
-### コンテナ削除・ボリューム削除
+### コンテナの停止と削除
 ```bash
 docker compose down -v
 ```
