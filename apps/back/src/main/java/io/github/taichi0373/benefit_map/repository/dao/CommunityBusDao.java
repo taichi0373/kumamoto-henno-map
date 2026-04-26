@@ -25,8 +25,11 @@ import io.github.taichi0373.benefit_map.util.ValidateUtils;
 @SuppressWarnings("PMD.TooManyMethods")
 public interface CommunityBusDao {
 
-    /** 
+    /**
      * 主キー検索
+     *
+     * @param routeId 路線ID
+     * @return コミュニティバスエンティティ、存在しない場合はnull
      */
     default CommunityBusEntity selectById(String routeId) {
         Entityql entityql = new Entityql(Config.get(this));

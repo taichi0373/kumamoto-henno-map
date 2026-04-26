@@ -25,8 +25,11 @@ import io.github.taichi0373.benefit_map.repository.entity.UsersEntity_;
 @SuppressWarnings("PMD.TooManyMethods")
 public interface UsersDao {
 
-    /** 
+    /**
      * 主キー検索
+     *
+     * @param userId ユーザーID
+     * @return ユーザーエンティティ、存在しない場合はnull
      */
     default UsersEntity selectById(Long userId) {
         Entityql entityql = new Entityql(Config.get(this));
@@ -39,6 +42,9 @@ public interface UsersDao {
 
     /**
      * ユーザー名で検索
+     *
+     * @param username ユーザー名
+     * @return ユーザーエンティティ、存在しない場合はnull
      */
     default UsersEntity selectByUsername(String username) {
         Entityql entityql = new Entityql(Config.get(this));

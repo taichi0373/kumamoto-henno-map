@@ -35,6 +35,13 @@ import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.util.AgeUtils;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
+/**
+ * 経路探索サービス
+ * <p>
+ * OpenTripPlanner（OTP）APIを呼び出して公共交通機関の経路を探索し、
+ * ユーザーの割引資格に応じた運賃割引情報を付加して返す。
+ * </p>
+ */
 @Service
 public class RouteService {
 

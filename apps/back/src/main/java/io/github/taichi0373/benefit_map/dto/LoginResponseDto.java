@@ -6,6 +6,9 @@ import lombok.Data;
 
 /**
  * ログインレスポンスDTO
+ * <p>
+ * ログイン成功時にクライアントへ返すJWTアクセストークン・ユーザーID・ユーザー名・管理者フラグを保持する。
+ * </p>
  */
 @Schema(description = "ログインレスポンス")
 @Data

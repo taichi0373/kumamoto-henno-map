@@ -658,6 +658,523 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 ---
 
+## 6. ヘルスチェック (`/health`)
+
+### GET /health
+
+サーバーの稼働確認用エンドポイント。Renderのスリープ対策として、GASから定期的にアクセスする用途で使用する。
+
+- **認証**: 不要
+
+**レスポンス 200 OK**（ボディ: `"OK"` テキスト）
+
+---
+
+## 7. 管理API (`/admin`)
+
+管理者アカウントによるデータ管理用APIです。
+
+### 認証
+
+全管理APIは `Authorization: Bearer <token>` ヘッダーが必須です（管理者アカウントのJWTトークン）。
+
+### ページングリクエスト共通パラメータ
+
+一覧取得エンドポイント（`GET /admin/{resource}`）で共通して使用できるクエリパラメータ:
+
+| パラメータ | 型 | デフォルト | 説明 |
+|---|---|---|---|
+| page | Integer | 0 | ページ番号（0始まり） |
+| size | Integer | 20 | 1ページのサイズ |
+| sort | String | - | ソート対象カラム名 |
+| order | String | - | ソート方向（`asc` / `desc`） |
+| keyword | String | - | 横断フリーワード検索 |
+
+各エンドポイントには上記共通パラメータに加え、リソース固有の絞り込みパラメータが存在します。
+
+### ページングレスポンス形式
+
+```json
+{
+  "success": true,
+  "data": {
+    "content": [...],
+    "totalElements": 100,
+    "totalPages": 5,
+    "currentPage": 0,
+    "pageSize": 20
+  }
+}
+```
+
+### CSVインポートレスポンス形式
+
+```json
+{
+  "success": true,
+  "data": {
+    "successCount": 10,
+    "updateCount": 2,
+    "failureCount": 1,
+    "errors": ["行3: benefitIdが重複しています"]
+  }
+}
+```
+
+---
+
+### GET /admin/agencies
+
+交通事業者一覧をページング取得する。
+
+- **認証**: 必須
+- **固有パラメータ**: `agencyId`, `agencyName`, `agencyKana`, `phoneNumber`, `operatorId`
+
+**レスポンス 200 OK** — ページングレスポンス形式（`content` に `AgencyEntity` の配列）
+
+---
+
+### GET /admin/agencies/all
+
+セレクトボックス用に全事業者を一括取得する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+```json
+{
+  "success": true,
+  "data": [
+    { "agencyId": "A001", "agencyName": "熊本バス", ... }
+  ]
+}
+```
+
+---
+
+### POST /admin/agencies
+
+事業者を新規作成する。
+
+- **認証**: 必須
+
+**リクエスト**: `AgencyEntity` 形式のJSONボディ
+
+**レスポンス 200 OK** — 作成した `AgencyEntity`
+
+---
+
+### PUT /admin/agencies/{agencyId}
+
+事業者情報を更新する。
+
+- **認証**: 必須
+
+| パスパラメータ | 型 | 説明 |
+|---|---|---|
+| agencyId | String | 更新対象の事業者ID |
+
+**リクエスト**: `AgencyEntity` 形式のJSONボディ
+
+**レスポンス 200 OK** — 更新後の `AgencyEntity`
+
+---
+
+### DELETE /admin/agencies/{agencyId}
+
+事業者を削除する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+---
+
+### POST /admin/agencies/import
+
+CSVファイルで事業者を一括登録・更新する。
+
+- **認証**: 必須
+- **リクエスト**: `multipart/form-data`（`file` パラメータ）
+
+**レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### GET /admin/benefit-categories
+
+特典カテゴリ一覧をページング取得する。
+
+- **認証**: 必須
+- **固有パラメータ**: `categoryCd`, `categoryName`, `displayOrder`
+
+**レスポンス 200 OK** — ページングレスポンス形式（`content` に `BenefitCategoryEntity` の配列）
+
+---
+
+### POST /admin/benefit-categories
+
+特典カテゴリを新規作成する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 作成した `BenefitCategoryEntity`
+
+---
+
+### PUT /admin/benefit-categories/{categoryCd}
+
+特典カテゴリを更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 更新後の `BenefitCategoryEntity`
+
+---
+
+### DELETE /admin/benefit-categories/{categoryCd}
+
+特典カテゴリを削除する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+---
+
+### POST /admin/benefit-categories/import
+
+CSVファイルで特典カテゴリを一括登録・更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### GET /admin/benefits
+
+特典一覧をページング取得する。
+
+- **認証**: 必須
+- **固有パラメータ**: `benefitId`, `benefitName`, `municipalityCd`, `categoryCd`, `expDetail`
+
+**レスポンス 200 OK** — ページングレスポンス形式（`content` に `BenefitEntity` の配列）
+
+---
+
+### POST /admin/benefits
+
+特典を新規作成する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 作成した `BenefitEntity`
+
+---
+
+### PUT /admin/benefits/{benefitId}
+
+特典情報を更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 更新後の `BenefitEntity`
+
+---
+
+### DELETE /admin/benefits/{benefitId}
+
+特典を削除する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+---
+
+### POST /admin/benefits/import
+
+CSVファイルで特典を一括登録・更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### GET /admin/benefit-eligibilities
+
+特典利用条件一覧をページング取得する。
+
+- **認証**: 必須
+- **固有パラメータ**: `id`, `benefitId`, `licenseStatus`, `minAge`, `maxAge`, `municipalityCd`
+
+**レスポンス 200 OK** — ページングレスポンス形式（`content` に `BenefitEligibilityEntity` の配列）
+
+---
+
+### POST /admin/benefit-eligibilities
+
+特典利用条件を新規作成する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 作成した `BenefitEligibilityEntity`
+
+---
+
+### PUT /admin/benefit-eligibilities/{id}
+
+特典利用条件を更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 更新後の `BenefitEligibilityEntity`
+
+---
+
+### DELETE /admin/benefit-eligibilities/{id}
+
+特典利用条件を削除する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+---
+
+### POST /admin/benefit-eligibilities/import
+
+CSVファイルで特典利用条件を一括登録・更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### GET /admin/community-buses
+
+コミュニティバス路線一覧をページング取得する。
+
+- **認証**: 必須
+- **固有パラメータ**: `routeId`, `routeName`, `communityBusId`
+
+**レスポンス 200 OK** — ページングレスポンス形式（`content` に `CommunityBusEntity` の配列）
+
+---
+
+### POST /admin/community-buses
+
+コミュニティバス路線を新規作成する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 作成した `CommunityBusEntity`
+
+---
+
+### PUT /admin/community-buses/{routeId}
+
+コミュニティバス路線を更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 更新後の `CommunityBusEntity`
+
+---
+
+### DELETE /admin/community-buses/{routeId}
+
+コミュニティバス路線を削除する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+---
+
+### POST /admin/community-buses/import
+
+CSVファイルでコミュニティバス路線を一括登録・更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### GET /admin/fare-discounts
+
+運賃割引一覧をページング取得する。
+
+- **認証**: 必須
+- **固有パラメータ**: `benefitId`, `agencyId`, `discountType`, `discountValue`
+
+**レスポンス 200 OK** — ページングレスポンス形式（`content` に `FareDiscountEntity` の配列）
+
+---
+
+### POST /admin/fare-discounts
+
+運賃割引を新規作成する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 作成した `FareDiscountEntity`
+
+---
+
+### PUT /admin/fare-discounts/{benefitId}/{agencyId}
+
+運賃割引を更新する。複合主キー（`benefitId` + `agencyId`）を使用。
+
+- **認証**: 必須
+
+| パスパラメータ | 型 | 説明 |
+|---|---|---|
+| benefitId | String | 対象の特典ID |
+| agencyId | String | 対象の事業者ID |
+
+**レスポンス 200 OK** — 更新後の `FareDiscountEntity`
+
+---
+
+### DELETE /admin/fare-discounts/{benefitId}/{agencyId}
+
+運賃割引を削除する。複合主キー（`benefitId` + `agencyId`）を使用。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+---
+
+### POST /admin/fare-discounts/import
+
+CSVファイルで運賃割引を一括登録・更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### GET /admin/municipalities
+
+自治体一覧をページング取得する。
+
+- **認証**: 必須
+- **固有パラメータ**: `municipalityCd`, `municipalityName`, `municipalityKana`, `municipalityType`
+
+**レスポンス 200 OK** — ページングレスポンス形式（`content` に `MunicipalityEntity` の配列）
+
+---
+
+### POST /admin/municipalities
+
+自治体を新規作成する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 作成した `MunicipalityEntity`
+
+---
+
+### PUT /admin/municipalities/{municipalityCd}
+
+自治体情報を更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — 更新後の `MunicipalityEntity`
+
+---
+
+### DELETE /admin/municipalities/{municipalityCd}
+
+自治体を削除する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+---
+
+### POST /admin/municipalities/import
+
+CSVファイルで自治体を一括登録・更新する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### GET /admin/users
+
+ユーザー一覧をページング取得する。
+
+- **認証**: 必須
+- **固有パラメータ**: `userId`, `username`, `email`, `birthDate`, `municipalityCd`, `licenseStatus`
+
+**レスポンス 200 OK** — ページングレスポンス形式（`content` に `AdminUserResponseDto` の配列）
+
+---
+
+### GET /admin/users/{userId}
+
+特定ユーザーの詳細情報を取得する。
+
+- **認証**: 必須
+
+| パスパラメータ | 型 | 説明 |
+|---|---|---|
+| userId | Long | 取得対象ユーザーID |
+
+**レスポンス 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "userId": 1,
+    "username": "taro",
+    "email": "taro@example.com",
+    "birthDate": "2000-01-01",
+    "address": "43100",
+    "licenseStatus": "2",
+    "licenseSurrenderedAt": "2024-04-01"
+  }
+}
+```
+
+---
+
+### PUT /admin/users/{userId}
+
+ユーザー情報を管理者権限で更新する。
+
+- **認証**: 必須
+
+**リクエスト**: `UsersEntity` 形式のJSONボディ
+
+**レスポンス 200 OK** — 更新後の `AdminUserResponseDto`
+
+---
+
+### DELETE /admin/users/{userId}
+
+ユーザーアカウントを削除する。
+
+- **認証**: 必須
+
+**レスポンス 200 OK**
+
+---
+
 ## エラーコード一覧
 
 | HTTP ステータス | 主な原因 |

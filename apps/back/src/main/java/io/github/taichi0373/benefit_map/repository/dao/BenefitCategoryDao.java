@@ -41,6 +41,9 @@ public interface BenefitCategoryDao {
 
     /**
      * 主キー検索
+     *
+     * @param categoryCd カテゴリコード
+     * @return 特典カテゴリエンティティ、存在しない場合はnull
      */
     default BenefitCategoryEntity selectById(String categoryCd) {
         Entityql entityql = new Entityql(Config.get(this));
