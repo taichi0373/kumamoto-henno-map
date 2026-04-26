@@ -33,6 +33,13 @@ public class CorsConfig implements WebMvcConfigurer {
     @Value("${cors.allow-credentials}")
     private boolean allowCredentials;
 
+    /**
+     * Spring MVC のCORSマッピングを設定する
+     * <p>
+     * 全パス（/**）に対して、許可オリジン・メソッド・ヘッダー・認証情報の設定を行う。
+     * </p>
+     * @param registry CorsRegistry
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -43,6 +50,14 @@ public class CorsConfig implements WebMvcConfigurer {
                 .maxAge(3600);
     }
 
+    /**
+     * Spring Security で使用するCORS設定ソースBean
+     * <p>
+     * 全パス（/**）に対して、許可オリジン・メソッド・ヘッダー・認証情報のCORS設定を返す。
+     * SecurityConfig に注入して使用する。
+     * </p>
+     * @return CorsConfigurationSource
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

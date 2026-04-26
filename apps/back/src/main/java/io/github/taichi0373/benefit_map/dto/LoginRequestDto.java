@@ -5,6 +5,9 @@ import lombok.Data;
 
 /**
  * ログインリクエストDTO
+ * <p>
+ * ユーザー名とパスワードを保持し、ログイン認証APIへのリクエストデータとして使用する。
+ * </p>
  */
 @Schema(description = "ログインリクエスト")
 @Data

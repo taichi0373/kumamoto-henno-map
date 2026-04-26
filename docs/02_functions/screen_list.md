@@ -29,6 +29,23 @@
 |--------|--------|-----------|------|
 | S021 | サポート情報画面 | SupportInfoPage.vue | ヘルプとサポート情報画面 |
 
+### 2. 管理者向け画面
+
+管理者アカウントでログイン後にアクセス可能な管理画面。全画面で `Authorization: Bearer <token>` による認証が必須。
+
+| 画面ID | 画面名 | ファイル名 | 概要 | 認証 |
+|--------|--------|-----------|------|------|
+| SA001 | 事業者管理画面 | AdminAgencyPage.vue | 交通事業者のCRUD管理・CSVインポート | 必須 |
+| SA002 | 特典種別管理画面 | AdminBenefitCategoryPage.vue | 特典カテゴリのCRUD管理・CSVインポート | 必須 |
+| SA003 | 特典管理画面 | AdminBenefitPage.vue | 特典情報のCRUD管理・CSVインポート | 必須 |
+| SA004 | 特典条件管理画面 | AdminBenefitEligibilityPage.vue | 特典利用条件のCRUD管理・CSVインポート | 必須 |
+| SA005 | コミュニティバス路線管理画面 | AdminCommunityBusPage.vue | コミュニティバス路線のCRUD管理・CSVインポート | 必須 |
+| SA006 | 運賃割引管理画面 | AdminFareDiscountPage.vue | 運賃割引情報のCRUD管理・CSVインポート | 必須 |
+| SA007 | 自治体管理画面 | AdminMunicipalityPage.vue | 自治体情報のCRUD管理・CSVインポート | 必須 |
+| SA008 | ユーザー管理画面 | AdminUsersPage.vue | ユーザーアカウントの管理・編集・削除 | 必須 |
+
+---
+
 ## 画面別詳細仕様
 
 ### S001: ホーム画面（HomePage.vue）
