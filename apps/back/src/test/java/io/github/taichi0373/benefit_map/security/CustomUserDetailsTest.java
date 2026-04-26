@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.GrantedAuthority;
 
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 
 /**
@@ -22,7 +23,7 @@ class CustomUserDetailsTest {
         UsersEntity user = new UsersEntity();
         user.setUsername("admin");
         user.setPasswordHash("hash");
-        user.setIsAdmin("1");
+        user.setIsAdmin(CodeConstants.UserType.ADMIN);
 
         CustomUserDetails details = new CustomUserDetails(user);
         Collection<? extends GrantedAuthority> authorities = details.getAuthorities();
@@ -40,7 +41,7 @@ class CustomUserDetailsTest {
         UsersEntity user = new UsersEntity();
         user.setUsername("user");
         user.setPasswordHash("hash");
-        user.setIsAdmin("0");
+        user.setIsAdmin(CodeConstants.UserType.GENERAL);
 
         CustomUserDetails details = new CustomUserDetails(user);
         Collection<? extends GrantedAuthority> authorities = details.getAuthorities();
