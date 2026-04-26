@@ -26,8 +26,11 @@ import io.github.taichi0373.benefit_map.util.ValidateUtils;
 @SuppressWarnings("PMD.TooManyMethods")
 public interface MunicipalityDao {
 
-    /** 
+    /**
      * 自治体コードから市区町村を取得
+     *
+     * @param municipalityCd 自治体コード
+     * @return 市区町村エンティティ、存在しない場合はnull
      */
     default MunicipalityEntity selectById(String municipalityCd) {
         Entityql entityql = new Entityql(Config.get(this));

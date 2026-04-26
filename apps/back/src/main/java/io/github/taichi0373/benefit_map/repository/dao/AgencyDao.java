@@ -27,6 +27,9 @@ public interface AgencyDao {
 
     /**
      * 主キー検索
+     *
+     * @param agencyId 事業者ID
+     * @return 事業者エンティティ、存在しない場合はnull
      */
     default AgencyEntity selectById(String agencyId) {
         Entityql entityql = new Entityql(Config.get(this));

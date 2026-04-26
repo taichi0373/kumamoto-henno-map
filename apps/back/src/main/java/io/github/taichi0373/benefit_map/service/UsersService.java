@@ -16,6 +16,13 @@ import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
+/**
+ * ユーザーサービス
+ * <p>
+ * ユーザーの新規登録・情報取得・情報更新・パスワード変更・重複チェックなど
+ * ユーザー管理に関するビジネスロジックを提供する。
+ * </p>
+ */
 @Service
 public class UsersService {
 
@@ -194,6 +201,12 @@ public class UsersService {
 
     /**
      * ユーザー情報の更新
+     * <p>
+     * 指定されたユーザーIDのユーザー情報を更新する。
+     * ユーザーが存在しない場合はnullを返す。
+     * </p>
+     * @param users 更新するユーザー情報DTO
+     * @return 更新件数（ユーザーが存在しない場合はnull、エラー時もnull）
      */
     public Integer updateUsersInfo(UsersDto users) {
         try {

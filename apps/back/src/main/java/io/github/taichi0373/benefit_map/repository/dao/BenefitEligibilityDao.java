@@ -26,6 +26,9 @@ public interface BenefitEligibilityDao {
 
     /**
      * 特典IDで検索
+     *
+     * @param benefitId 特典ID
+     * @return 特典適用条件エンティティリスト
      */
     default List<BenefitEligibilityEntity> selectByBenefitId(String benefitId) {
         Entityql entityql = new Entityql(Config.get(this));

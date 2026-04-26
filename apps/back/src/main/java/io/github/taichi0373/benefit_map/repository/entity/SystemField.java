@@ -12,10 +12,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-/** 
- * システム共通フィールド 
+/**
+ * システム共通フィールド。
+ * 全エンティティに共通する作成日時・更新日時を保持するDomaの埋め込みオブジェクト。
  */
-
 @Embeddable
 @Getter
 @NoArgsConstructor

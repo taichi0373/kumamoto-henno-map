@@ -103,6 +103,83 @@ graph TD
     class MailSent externalStyle
 ```
 
+## 管理者向けフロー詳細
+
+### 5. 管理者ログイン・画面遷移フロー
+
+```mermaid
+graph TD
+    AdminLogin[S011: ログイン画面\n管理者アカウントで認証] --> AdminDash{管理メニュー選択}
+
+    AdminDash --> SA001[SA001: 事業者管理画面]
+    AdminDash --> SA002[SA002: 特典種別管理画面]
+    AdminDash --> SA003[SA003: 特典管理画面]
+    AdminDash --> SA004[SA004: 特典条件管理画面]
+    AdminDash --> SA005[SA005: コミュニティバス路線管理画面]
+    AdminDash --> SA006[SA006: 運賃割引管理画面]
+    AdminDash --> SA007[SA007: 自治体管理画面]
+    AdminDash --> SA008[SA008: ユーザー管理画面]
+
+    SA001 -- CRUD/CSVインポート --> SA001
+    SA002 -- CRUD/CSVインポート --> SA002
+    SA003 -- CRUD/CSVインポート --> SA003
+    SA004 -- CRUD/CSVインポート --> SA004
+    SA005 -- CRUD/CSVインポート --> SA005
+    SA006 -- CRUD/CSVインポート --> SA006
+    SA007 -- CRUD/CSVインポート --> SA007
+    SA008 -- 参照・編集・削除 --> SA008
+
+    SA001 --> AdminDash
+    SA002 --> AdminDash
+    SA003 --> AdminDash
+    SA004 --> AdminDash
+    SA005 --> AdminDash
+    SA006 --> AdminDash
+    SA007 --> AdminDash
+    SA008 --> AdminDash
+
+    classDef authStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef adminStyle fill:#e8eaf6,stroke:#283593,stroke-width:2px
+    classDef menuStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+
+    class AdminLogin authStyle
+    class AdminDash menuStyle
+    class SA001,SA002,SA003,SA004,SA005,SA006,SA007,SA008 adminStyle
+```
+
+### 6. 管理画面共通操作フロー
+
+```mermaid
+sequenceDiagram
+    participant Admin as 管理者
+    participant List as 一覧画面
+    participant Form as 編集フォーム
+    participant API as Backend API
+
+    Admin->>List: 一覧画面にアクセス
+    List->>API: GET /admin/{resource}?page=0&size=20
+    API-->>List: ページングデータ返却
+
+    Admin->>List: キーワード・条件で絞り込み
+    List->>API: GET /admin/{resource}?keyword=...
+    API-->>List: 絞り込み結果
+
+    Admin->>Form: 新規作成 / 編集ボタン
+    Form->>API: POST or PUT /admin/{resource}
+    API-->>Form: 作成・更新結果
+    Form-->>List: 一覧に戻る
+
+    Admin->>List: CSVインポート
+    List->>API: POST /admin/{resource}/import (multipart)
+    API-->>List: インポート結果（成功件数・失敗件数・エラー詳細）
+
+    Admin->>List: 削除ボタン
+    List->>API: DELETE /admin/{resource}/{id}
+    API-->>List: 削除完了
+```
+
+---
+
 ## 画面遷移の詳細仕様
 
 ### 遷移方法の種類

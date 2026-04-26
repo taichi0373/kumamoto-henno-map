@@ -25,8 +25,11 @@ import io.github.taichi0373.benefit_map.util.ValidateUtils;
 @SuppressWarnings("PMD.TooManyMethods")
 public interface BenefitDao {
 
-    /** 
+    /**
      * 主キー検索
+     *
+     * @param benefitId 特典ID
+     * @return 特典エンティティ、存在しない場合はnull
      */
     default BenefitEntity selectById(String benefitId) {
         Entityql entityql = new Entityql(Config.get(this));
@@ -39,6 +42,9 @@ public interface BenefitDao {
 
     /**
      * 特典IDリストで検索
+     *
+     * @param benefitIds 特典IDリスト
+     * @return 特典エンティティリスト（リストが空の場合は空リストを返す）
      */
     default List<BenefitEntity> selectByIds(List<String> benefitIds) {
         if (ValidateUtils.isNullOrEmpty(benefitIds)) {
@@ -55,6 +61,9 @@ public interface BenefitDao {
 
     /**
      * カテゴリコードで検索
+     *
+     * @param categoryCd カテゴリコード
+     * @return 特典エンティティリスト
      */
     default List<BenefitEntity> selectByCategoryCd(String categoryCd) {
         Entityql entityql = new Entityql(Config.get(this));
