@@ -8,6 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 
 /**
  * Spring Security 用のカスタムユーザー詳細クラス
@@ -49,7 +50,7 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        String role = "1".equals(user.getIsAdmin()) ? "ROLE_ADMIN" : "ROLE_USER";
+        String role = CodeConstants.UserType.ADMIN.equals(user.getIsAdmin()) ? "ROLE_ADMIN" : "ROLE_USER";
         return List.of(new SimpleGrantedAuthority(role));
     }
 

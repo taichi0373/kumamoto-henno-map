@@ -32,4 +32,16 @@ public class CodeConstants {
         /** 市町村 */
         public static final String CITY = "3";
     }
+
+    /**
+     * * ユーザー区分
+     */
+    public static class UserType {
+
+        /** 一般ユーザー */
+        public static final String GENERAL = "0";
+
+        /** 管理者ユーザー */
+        public static final String ADMIN = "1";
+    }
 }

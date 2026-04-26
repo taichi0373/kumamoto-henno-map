@@ -128,8 +128,13 @@ public class AdminBenefitEligibilityService {
             LocalDateTime now = LocalDateTime.now();
             for (CSVRecord record : parser) {
                 try {
+                    String benefitId = csvVal(record, "benefitId");
+                    if (benefitId == null) {
+                        errors.add("行 " + record.getRecordNumber() + ": 特典IDが空です");
+                        continue;
+                    }
                     BenefitEligibilityEntity entity = new BenefitEligibilityEntity();
-                    entity.setBenefitId(csvVal(record, "benefitId"));
+                    entity.setBenefitId(benefitId);
                     entity.setLicenseStatus(csvVal(record, "licenseStatus"));
                     entity.setMinAge(csvInt(record, "minAge"));
                     entity.setMaxAge(csvInt(record, "maxAge"));

@@ -26,6 +26,7 @@ import io.github.taichi0373.benefit_map.service.LoginAttemptService;
 import io.github.taichi0373.benefit_map.service.PasswordResetService;
 import io.github.taichi0373.benefit_map.service.RefreshTokenService;
 import io.github.taichi0373.benefit_map.service.RefreshTokenService.RotationResult;
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.util.RequestUtils;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 import jakarta.servlet.http.Cookie;
@@ -180,7 +181,7 @@ public class AuthController {
         RefreshResponseDto.UserInfo userInfo = new RefreshResponseDto.UserInfo(
                 String.valueOf(tokenResult.user().getUserId()),
                 tokenResult.user().getUsername(),
-                "1".equals(tokenResult.user().getIsAdmin())
+                CodeConstants.UserType.ADMIN.equals(tokenResult.user().getIsAdmin())
         );
 
         // ローテーションされた新リフレッシュトークンをCookieにセット
