@@ -127,9 +127,14 @@ public class AdminBenefitCategoryService {
                         errors.add("行 " + record.getRecordNumber() + ": カテゴリコードが空です");
                         continue;
                     }
+                    String categoryName = csvVal(record, "categoryName");
+                    if (categoryName == null) {
+                        errors.add("行 " + record.getRecordNumber() + ": カテゴリ名称が空です");
+                        continue;
+                    }
                     BenefitCategoryEntity entity = new BenefitCategoryEntity();
                     entity.setCategoryCd(categoryCd);
-                    entity.setCategoryName(csvVal(record, "categoryName"));
+                    entity.setCategoryName(categoryName);
                     entity.setDisplayOrder(csvInt(record, "displayOrder"));
                     entity.setIsActive(csvVal(record, "isActive"));
 

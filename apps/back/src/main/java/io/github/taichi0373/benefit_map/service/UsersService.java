@@ -13,6 +13,7 @@ import io.github.taichi0373.benefit_map.exception.DuplicateUserException;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
 import io.github.taichi0373.benefit_map.repository.entity.SystemField;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 @Service
@@ -49,6 +50,7 @@ public class UsersService {
             newUser.setMunicipalityCd(users.getAddress());
             newUser.setLicenseStatus(users.getLicenseStatus());
             newUser.setLicenseSurrenderedAt(users.getLicenseSurrenderedAt());
+            newUser.setIsAdmin(CodeConstants.UserType.GENERAL);
             LocalDateTime now = LocalDateTime.now();
             newUser.setSystemField(new SystemField(now, now));
 
