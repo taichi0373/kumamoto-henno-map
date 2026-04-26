@@ -34,7 +34,7 @@ public class CodeConstants {
     }
 
     /**
-     * * ユーザー区分
+     * ユーザー区分
      */
     public static class UserType {
 
