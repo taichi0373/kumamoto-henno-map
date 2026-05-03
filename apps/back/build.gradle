@@ -54,6 +54,7 @@ sourceSets {
 }
 
 compileJava {
+    options.encoding = 'UTF-8'
     options.compilerArgs += ['-Adoma.resources.dir=' + file('src/main/resources')]
 }
 
