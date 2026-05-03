@@ -67,7 +67,7 @@ public class RouteService {
     // 最大徒歩距離
     private static final int MAX_WALK_DISTANCE = 1000;
     // 取得経路数
-    private static final int NUM_ITINERARIES = 5;
+    private static final int NUM_ITINERARIES = 3;
     // ロケール
     private static final String LOCALE = "ja";
     // 最適化設定
@@ -179,9 +179,7 @@ public class RouteService {
                 return Long.compare(endTimeA, endTimeB);
             });
 
-            int maxResults = Math.min(3, sortedItineraries.size());
-            for (int i = 0; i < maxResults; i++) {
-                JsonNode itinerary = sortedItineraries.get(i);
+                for (JsonNode itinerary : sortedItineraries) {
                 Map<String, Object> processedItinerary = processItinerary(itinerary, discountMap);
                 processedItineraries.add(processedItinerary);
             }
