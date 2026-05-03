@@ -1,45 +1,42 @@
-## Gradle
+## バックエンド
 
-### 基本コマンド
+Java 21 + Spring Boot 3 + Doma 2 による REST API サーバーです。
+
+### Gradle コマンド
 
 ```bash
-# ビルドとコンパイル
-.\gradlew clean compileJava
+# コンパイル
+./gradlew compileJava
 
-# ビルド（テストも含む）
-.\gradlew clean build
+# ビルド（テスト含む）
+./gradlew build
 
-# アプリケーションの実行
-.\gradlew bootRun
+# 開発サーバー起動（http://localhost:8081）
+./gradlew bootRun
 
 # テストのみ実行
-.\gradlew test
+./gradlew test
 
-# 実行可能JARファイルの作成
-.\gradlew bootJar
+# 実行可能JARの作成
+./gradlew bootJar
 
 # 依存関係の確認
-.\gradlew dependencies
-
-# プロジェクト情報の確認
-.\gradlew projects
+./gradlew dependencies
 ```
 
 ### OpenAPI YAML の生成
 
-springdoc-openapi-gradle-plugin を使い、Spring Boot を一時起動して `/v3/api-docs.yaml` を取得する。
+springdoc-openapi-gradle-plugin を使い、Spring Boot を一時起動して `/v3/api-docs.yaml` を取得します。
 
-**前提条件:** PostgreSQL が起動していること（`docker compose up -d` 等）
+**前提条件:** PostgreSQL が起動していること（`docker compose up -d`）
 
 ```bash
-.\gradlew generateOpenApiDocs
+./gradlew generateOpenApiDocs
 ```
 
 出力先: `build/openapi/openapi.yaml`
 
-> **補足**
-> - dev プロファイルで起動するため、DB 接続情報は `application.properties` のデフォルト値（`localhost:5432/benefit_map`、ユーザー `user`、パスワード `pass`）が使われる
-> - 生成した YAML を Redoc で HTML に変換する場合:
->   ```bash
->   npx @redocly/cli build-docs build/openapi/openapi.yaml --output openapi.html
->   ```
+> ReDoc で HTML に変換する場合:
+> ```bash
+> npx @redocly/cli build-docs build/openapi/openapi.yaml --output openapi.html
+> ```

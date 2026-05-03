@@ -2,93 +2,87 @@
 
 熊本県の運転免許自主返納者向け特典情報を地図上で表示・検索するWebアプリです。
 
-## 環境構成
+## サービス構成
 
 | サービス | URL |
 |---------|-----|
 | フロントエンド | http://localhost:3000 |
-| Storybook | http://localhost:6006 |
 | バックエンド | http://localhost:8081 |
 | PostgreSQL | localhost:5432 |
 | pgAdmin | http://localhost:65432 |
 | OTP | http://localhost:8080 |
+| Storybook | http://localhost:6006 |
 
-## セットアップ
+## 環境構築
 
-### Docker 起動
+### 1. Docker 起動
+
+PostgreSQL・pgAdmin・OTP を起動します。
 
 ```bash
 docker compose up -d
 ```
 
-### ログ確認
+### 2. バックエンド起動
 
 ```bash
-docker compose logs -f
+cd apps/back
+./gradlew bootRun
 ```
 
-### Docker 停止・削除
+### 3. フロントエンド起動
 
 ```bash
+cd apps/front
+npm install
+npm run serve
+```
+
+## Docker 操作
+
+```bash
+# ログ確認
+docker compose logs -f
+
+# 停止・ボリューム削除
 docker compose down -v
 ```
 
-## DB 接続確認
+## DB 操作
 
-DB接続情報は `docker-compose.yml` を参照してください。
-
-```bash
-docker compose exec db bash
-psql -U <DB_USERNAME> -d benefit_map
-```
-
-### テーブル確認
+接続情報は `docker-compose.yml` の `POSTGRES_USER` / `POSTGRES_PASSWORD` を参照してください。
 
 ```bash
-\dt
+docker compose exec db psql -U user -d benefit_map
 ```
 
-### ビュー確認
-
-```bash
-\dv
-```
+| psql コマンド | 説明 |
+|--------------|------|
+| `\dt` | テーブル一覧 |
+| `\dv` | ビュー一覧 |
 
 ## pgAdmin 接続設定
 
 | 項目 | 値 |
 |------|-----|
-| 名前 | benefit_map_db |
 | ホスト名/アドレス | db |
 | ポート番号 | 5432 |
 | 管理用データベース | benefit_map |
-| ユーザー名 | `docker-compose.yml` の `POSTGRES_USER` を参照 |
-| パスワード | `docker-compose.yml` の `POSTGRES_PASSWORD` を参照 |
+| ユーザー名 / パスワード | `docker-compose.yml` の `POSTGRES_USER` / `POSTGRES_PASSWORD` を参照 |
 
 ## テスト用DB（benefit_map_test）
 
-E2Eテスト（Playwright）用のDBとして `benefit_map_test` が自動作成されます。
-
-`docker compose up -d` の **初回起動時** に `config/database/setup-test.sh` が自動実行され、DDL・マスターデータが適用されます。
-
-### テスト用DB接続確認
-
-```bash
-docker compose exec db psql -U <DB_USERNAME> -d benefit_map_test
-```
-
-### テスト用DBの再作成
+`docker compose up -d` の初回起動時に `config/database/setup-test.sh` が自動実行され、`benefit_map_test` が作成されます。
 
 スキーマ変更時はボリュームごと削除して再起動してください。
 
 ```bash
-docker compose down -v
-docker compose up -d
+docker compose down -v && docker compose up -d
 ```
 
 ### E2Eテスト実行前の設定
 
-`apps/front/.env.test` に以下を設定してください（`DB_NAME` は `_test` で終わることが必須）。
+`apps/front/.env.test` を作成して以下を設定してください（`DB_NAME` は `_test` で終わることが必須）。
 
 ```
 DB_HOST=<WSL IPアドレス>
