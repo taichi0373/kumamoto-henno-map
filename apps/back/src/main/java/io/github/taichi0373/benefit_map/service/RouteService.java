@@ -179,7 +179,9 @@ public class RouteService {
                 return Long.compare(endTimeA, endTimeB);
             });
 
-                for (JsonNode itinerary : sortedItineraries) {
+             int itineraryCount = Math.min(NUM_ITINERARIES, sortedItineraries.size());
+             for (int i = 0; i < itineraryCount; i++) {
+                 JsonNode itinerary = sortedItineraries.get(i);
                 Map<String, Object> processedItinerary = processItinerary(itinerary, discountMap);
                 processedItineraries.add(processedItinerary);
             }

@@ -79,8 +79,8 @@ declare -A GTFS_URLS=(
 echo "---------- ファイルの初期化 ----------"
 for bus in "${BUS_NAMES[@]}"; do
   rm -rf \
-    "$bus" \
-    "${bus}.gtfs"
+    "${bus}.gtfs" \
+    "${bus}.gtfs_tmp"
 done
 find . -type f -name "*.zip" -delete
 find . -type f -name "*.pbf" -delete
@@ -114,8 +114,6 @@ fix_gtfs_structure() {
     done
     
     rm -rf temp_extract
-    
-    cp -r "$final_dir" "$extract_dir"
 }
 
 # 各GTFSファイルを解凍
@@ -125,8 +123,10 @@ done
 
 echo "---------- GTFSデータ加工処理 ----------"
 for bus in "${BUS_NAMES[@]}"; do
-  python3 formatted.py "$bus"
-  python3 upgrade_translations.py "$bus"
+  python3 formatted.py "${bus}.gtfs"
+  python3 upgrade_translations.py "${bus}.gtfs" "${bus}.gtfs_tmp"
+  rm -rf "${bus}.gtfs"
+  mv "${bus}.gtfs_tmp" "${bus}.gtfs"
 done
 
 echo "---------- feed_id の設定 ----------"
@@ -196,9 +196,9 @@ osmconvert kyushu-latest.osm.pbf -b=129.923336,32.096306,131.3318,33.1896 --comp
 echo "---------- 不要ファイルの削除 ----------"
 for bus in "${BUS_NAMES[@]}"; do
   rm -rf \
-    "$bus" \
     "${bus}.zip" \
-    "${bus}.gtfs"
+    "${bus}.gtfs" \
+    "${bus}.gtfs_tmp"
 done
 
 rm -f kyushu-latest.osm.pbf

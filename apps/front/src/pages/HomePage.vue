@@ -272,14 +272,6 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       // 全経路を色分けして地図に描画（空配列の場合は既存ラインをクリア）
       const routeLegs = routes.map(r => r.legs ?? [])
       addRouteLines(routeLegs)
-      // 経路に含まれる transit leg の routeId を抽出（"feedId:rawId" → "rawId"）
-      const ids = new Set<string>()
-      routes.forEach(r => r.legs?.forEach(leg => {
-        if (leg.transitLeg && leg.routeId) {
-          const raw = leg.routeId.includes(':') ? leg.routeId.split(':')[1] : leg.routeId
-          if (raw) ids.add(raw)
-        }
-      }))
     } else {
       addRouteLines([])
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)

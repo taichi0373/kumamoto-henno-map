@@ -38,7 +38,6 @@ dependencies {
 
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.apache.commons:commons-csv:1.11.0'
-    implementation 'org.onebusaway:onebusaway-gtfs-realtime-api:1.2.0'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
