@@ -179,9 +179,9 @@ public class RouteService {
                 return Long.compare(endTimeA, endTimeB);
             });
 
-             int itineraryCount = Math.min(NUM_ITINERARIES, sortedItineraries.size());
-             for (int i = 0; i < itineraryCount; i++) {
-                 JsonNode itinerary = sortedItineraries.get(i);
+            int itineraryCount = Math.min(NUM_ITINERARIES, sortedItineraries.size());
+            for (int i = 0; i < itineraryCount; i++) {
+                JsonNode itinerary = sortedItineraries.get(i);
                 Map<String, Object> processedItinerary = processItinerary(itinerary, discountMap);
                 processedItineraries.add(processedItinerary);
             }
@@ -329,7 +329,7 @@ public class RouteService {
         legData.put("legGeometry", leg.has("legGeometry") ? leg.get("legGeometry") : null);
         legData.put("transitLeg", leg.has("transitLeg") ? leg.get("transitLeg").asBoolean() : false);
         legData.put("isRealtime", leg.has("realTime") && leg.get("realTime").asBoolean(false));
-        legData.put("arrivalDelay", leg.has("arrivalDelay") ? leg.get("arrivalDelay").asInt(0) : 0);
+        legData.put("arrivalDelay", leg.hasNonNull("arrivalDelay") ? leg.get("arrivalDelay").asInt() : null);
         legData.put("benefitUrl", "");
         legData.put("benefitId", "");
         legData.put("freePass", "");

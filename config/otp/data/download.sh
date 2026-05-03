@@ -132,10 +132,19 @@ done
 echo "---------- feed_id の設定 ----------"
 for bus in "${BUS_NAMES[@]}"; do
   python3 - "$bus" "${bus}.gtfs/feed_info.txt" << 'PYEOF'
-import csv, sys
+import csv, os, sys
 
 bus = sys.argv[1]
 path = sys.argv[2]
+
+if not os.path.exists(path):
+    # feed_info.txt が存在しない場合は feed_id のみを持つ最小構成で新規作成する
+    with open(path, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['feed_id'])
+        writer.writeheader()
+        writer.writerow({'feed_id': bus})
+    print(f'feed_info.txt が存在しなかったため新規作成し feed_id={bus} を設定しました')
+    sys.exit(0)
 
 with open(path, 'r', encoding='utf-8-sig') as f:
     reader = csv.DictReader(f)

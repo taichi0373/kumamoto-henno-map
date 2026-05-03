@@ -238,7 +238,7 @@ export const RealtimeOnTime = {
             discountFare: 300,
             agencyName: '産交バス',
             isRealtime: true,
-            arrivalDelay: 30,
+            arrivalDelay: 0,
           },
           {
             mode: 'WALK',

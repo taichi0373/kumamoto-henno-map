@@ -30,7 +30,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - JAVA_TOOL_OPTIONS=-Xmx2g
+      - JAVA_TOOL_OPTIONS=-Xmx${OTP_HEAP_SIZE:-3g}
     command: ["--load", "--serve"]
 
 volumes:

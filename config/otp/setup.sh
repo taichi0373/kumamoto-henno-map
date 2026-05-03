@@ -20,5 +20,5 @@ bash build-graph.sh
 echo ""
 echo "=========================================="
 echo " 全ての処理が完了しました"
-echo " 生成物: config/otp/data/graph.obj"
+echo " 生成物: data/graph.obj"
 echo "=========================================="
