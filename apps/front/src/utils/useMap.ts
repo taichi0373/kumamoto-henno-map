@@ -11,6 +11,15 @@ import { MarkerManager } from '../utils/markerConfig'
 import type { RouteLeg } from '../dto/routeDto'
 
 
+/** バス車両位置情報インターフェース */
+export interface VehiclePosition {
+  vehicleId: string
+  lat: number
+  lon: number
+  agencyName?: string
+  routeId?: string
+}
+
 export interface UseMapReturn {
   /* マップインスタンス */
   mapInstance: Ref<Map | null>
@@ -26,6 +35,10 @@ export interface UseMapReturn {
   removeRouteLines: (layerId: string) => void
   /* アクティブ経路を切り替える関数 */
   setActiveRoute: (routeIndex: number) => void
+  /* バスマーカーを更新する関数 */
+  updateBusMarkers: (vehicles: VehiclePosition[]) => void
+  /* バスマーカーを全削除する関数 */
+  clearBusMarkers: () => void
   /* クリーンアップ関数 */
   cleanup: () => void
 }
@@ -223,6 +236,32 @@ export const useMap = (): UseMapReturn => {
     }
   }
 
+  /** バスマーカーを作成 */
+  const createBusMarkerElement = (agencyName: string): HTMLElement => {
+    const el = document.createElement('div')
+    el.className = 'bus-marker'
+    el.textContent = '🚌'
+    el.title = agencyName
+    return el
+  }
+
+  /** バスマーカーを更新（既存を削除して再配置） */
+  const updateBusMarkers = (vehicles: VehiclePosition[]): void => {
+    const map = mapInstance.value
+    if (!map) return
+    markerManager.value.removeMarkersByType('bus-')
+    vehicles.forEach(v => {
+      const el = createBusMarkerElement(v.agencyName ?? '')
+      const marker = new maplibregl.Marker({ element: el }).setLngLat([v.lon, v.lat])
+      markerManager.value.addMarker(`bus-${v.vehicleId}`, marker, map)
+    })
+  }
+
+  /** バスマーカーを全削除 */
+  const clearBusMarkers = (): void => {
+    markerManager.value.removeMarkersByType('bus-')
+  }
+
   /** マップ上のすべてのリソースを初期化 */
   const cleanup = (): void => {
     if (mapInstance.value) {
@@ -240,6 +279,8 @@ export const useMap = (): UseMapReturn => {
     addRouteLines,
     removeRouteLines,
     setActiveRoute,
+    updateBusMarkers,
+    clearBusMarkers,
     cleanup
   }
 }

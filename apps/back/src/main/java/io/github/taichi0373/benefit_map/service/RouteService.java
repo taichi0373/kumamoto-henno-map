@@ -329,6 +329,7 @@ public class RouteService {
         legData.put("legGeometry", leg.has("legGeometry") ? leg.get("legGeometry") : null);
         legData.put("transitLeg", leg.has("transitLeg") ? leg.get("transitLeg").asBoolean() : false);
         legData.put("isRealtime", leg.has("realTime") && leg.get("realTime").asBoolean(false));
+        legData.put("arrivalDelay", leg.has("arrivalDelay") ? leg.get("arrivalDelay").asInt(0) : 0);
         legData.put("benefitUrl", "");
         legData.put("benefitId", "");
         legData.put("freePass", "");

@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
@@ -132,7 +132,10 @@ const mapSelectedLocation = ref<MarkerDto | null>(null)
 const currentUserLocation = ref<{ lat: number; lon: number } | null>(null)
 
 /** マップ */
-const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLines, setActiveRoute } = useMap()
+const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLines, setActiveRoute, updateBusMarkers, clearBusMarkers } = useMap()
+
+/** バス位置ポーリングのインターバルID */
+const busPollingInterval = ref<ReturnType<typeof setInterval> | null>(null)
 
 // クロスヘア表示フラグ
 const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
@@ -158,6 +161,16 @@ onMounted(() => {
   }
   // マップの初期化
   initializeMap('map')
+  // バス位置を初回取得してからポーリング開始
+  fetchVehiclePositions()
+  busPollingInterval.value = setInterval(fetchVehiclePositions, 30000)
+})
+
+onUnmounted(() => {
+  if (busPollingInterval.value !== null) {
+    clearInterval(busPollingInterval.value)
+  }
+  clearBusMarkers()
 })
 
 /** マップ中心座標を取得 */
@@ -451,6 +464,18 @@ const setCurrentLocation = (type: string) => {
     },
     { timeout: 10000 }
   )
+}
+
+/** バス車両位置を取得してマップに反映 */
+const fetchVehiclePositions = async () => {
+  if (!mapInstance.value) return
+  try {
+    const response = await apiClient.get('/route/vehicles')
+    const vehicles = ((response.data as unknown) as { data: { vehicleId: string; lat: number; lon: number; agencyName?: string; routeId?: string }[] }).data ?? []
+    updateBusMarkers(vehicles)
+  } catch {
+    // 車両位置取得失敗は無視（地図上のバスマーカーは前回表示のまま）
+  }
 }
 
 /** 候補リストのクリア */

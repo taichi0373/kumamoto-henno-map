@@ -72,6 +72,9 @@
                         ({{ formatJapaneseTime(leg.startTime) }} ~ {{ formatJapaneseTime(leg.endTime) }})
                       </span>
                       <span v-if="leg.isRealtime" class="leg-segment__realtime-badge">リアルタイム</span>
+                      <span v-if="leg.isRealtime && leg.arrivalDelay && leg.arrivalDelay > 60" class="leg-segment__delay-badge">
+                        {{ Math.round((leg.arrivalDelay ?? 0) / 60) }}分遅れ
+                      </span>
                     </div>
                   </template>
                   <!-- 3段目：運賃 + 割引運賃 -->
@@ -355,6 +358,16 @@ const formatJapaneseTime = (time: string | null | undefined): string => {
     font-size: 10px;
     color: base.$base-100;
     background-color: base.$chose-100;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  &__delay-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 10px;
+    color: base.$base-100;
+    background-color: base.$end-marker-color;
     border-radius: 3px;
     white-space: nowrap;
   }
