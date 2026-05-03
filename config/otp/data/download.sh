@@ -145,26 +145,26 @@ with open(path, 'r', encoding='utf-8-sig') as f:
 if 'feed_id' not in fieldnames:
     fieldnames = ['feed_id'] + fieldnames
 
- mismatched_feed_ids = sorted({
-     row.get('feed_id', '')
-     for row in rows
-     if row.get('feed_id', '') not in ('', bus)
- })
+mismatched_feed_ids = sorted({
+    row.get('feed_id', '')
+    for row in rows
+    if row.get('feed_id', '') not in ('', bus)
+})
 
- for row in rows:
-     row['feed_id'] = bus
+for row in rows:
+    row['feed_id'] = bus
 
 with open(path, 'w', encoding='utf-8', newline='') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows(rows)
 
- if mismatched_feed_ids:
-     print(
-         f'警告: {path} に bus 名と一致しない既存の feed_id が含まれていたため '
-         f'{bus} に統一しました: {", ".join(mismatched_feed_ids)}',
-         file=sys.stderr
-     )
+if mismatched_feed_ids:
+    print(
+        f'警告: {path} に bus 名と一致しない既存の feed_id が含まれていたため '
+        f'{bus} に統一しました: {", ".join(mismatched_feed_ids)}',
+        file=sys.stderr
+    )
 
 print(f'feed_id={bus} を {path} に設定しました')
 PYEOF
