@@ -63,8 +63,8 @@
                       <span v-if="leg.agencyName" class="leg-segment__agency">{{ leg.agencyName }}</span>
                     </div>
                     <!-- 2段目：所要時間(出発時間 ~ 到着時間) -->
-                    <div 
-                      v-if="leg.duration && leg.startTime && leg.endTime" 
+                    <div
+                      v-if="leg.duration && leg.startTime && leg.endTime"
                       class="leg-segment__info-row leg-segment__info-row--indented"
                     >
                       <span class="leg-segment__duration">{{ leg.duration }}分</span>
@@ -72,8 +72,18 @@
                         ({{ formatJapaneseTime(leg.startTime) }} ~ {{ formatJapaneseTime(leg.endTime) }})
                       </span>
                     </div>
+                    <!-- 3段目：リアルタイム／遅延バッジ -->
+                    <div
+                      v-if="leg.isRealtime"
+                      class="leg-segment__info-row leg-segment__info-row--indented"
+                    >
+                      <span class="leg-segment__realtime-badge">リアルタイム</span>
+                      <span v-if="leg.arrivalDelay && leg.arrivalDelay > 60" class="leg-segment__delay-badge">
+                        {{ Math.round((leg.arrivalDelay ?? 0) / 60) }}分遅れ
+                      </span>
+                    </div>
                   </template>
-                  <!-- 3段目：運賃 + 割引運賃 -->
+                  <!-- 4段目：運賃 + 割引運賃 -->
                   <div 
                     v-if="leg.fare && leg.fare > 0" 
                     class="leg-segment__info-row leg-segment__info-row--indented"
@@ -346,6 +356,26 @@ const formatJapaneseTime = (time: string | null | undefined): string => {
   &__discount {
     color: base.$end-marker-color;
     font-weight: 600;
+  }
+
+  &__realtime-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 10px;
+    color: base.$base-100;
+    background-color: base.$chose-100;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  &__delay-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 10px;
+    color: base.$base-100;
+    background-color: base.$end-marker-color;
+    border-radius: 3px;
+    white-space: nowrap;
   }
 }
 </style>

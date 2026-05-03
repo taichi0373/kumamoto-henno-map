@@ -1,0 +1,60 @@
+{
+  "updaters": [
+    {
+      "type": "stop-time-updater",
+      "feedId": "sankobus",
+      "url": "https://km.bus-vision.jp/realtime/sankobus_trip_update.bin",
+      "frequencySec": 30,
+      "backwardsDelayPropagation": true,
+      "fuzzyTripMatching": true
+    },
+    {
+      "type": "real-time-alerts",
+      "feedId": "sankobus",
+      "url": "https://km.bus-vision.jp/realtime/sankobus_alrt_update.bin",
+      "frequencySec": 60
+    },
+    {
+      "type": "stop-time-updater",
+      "feedId": "dentetsubus",
+      "url": "https://km.bus-vision.jp/realtime/dentetsu_trip_update.bin",
+      "frequencySec": 30,
+      "backwardsDelayPropagation": true,
+      "fuzzyTripMatching": true
+    },
+    {
+      "type": "real-time-alerts",
+      "feedId": "dentetsubus",
+      "url": "https://km.bus-vision.jp/realtime/dentetsu_alrt_update.bin",
+      "frequencySec": 60
+    },
+    {
+      "type": "stop-time-updater",
+      "feedId": "kumabus",
+      "url": "https://km.bus-vision.jp/realtime/kumabus_trip_update.bin",
+      "frequencySec": 30,
+      "backwardsDelayPropagation": true,
+      "fuzzyTripMatching": true
+    },
+    {
+      "type": "real-time-alerts",
+      "feedId": "kumabus",
+      "url": "https://km.bus-vision.jp/realtime/kumabus_alrt_update.bin",
+      "frequencySec": 60
+    },
+    {
+      "type": "stop-time-updater",
+      "feedId": "toshibus",
+      "url": "https://km.bus-vision.jp/realtime/toshibus_trip_update.bin",
+      "frequencySec": 30,
+      "backwardsDelayPropagation": true,
+      "fuzzyTripMatching": true
+    },
+    {
+      "type": "real-time-alerts",
+      "feedId": "toshibus",
+      "url": "https://km.bus-vision.jp/realtime/toshibus_alrt_update.bin",
+      "frequencySec": 60
+    }
+  ]
+}

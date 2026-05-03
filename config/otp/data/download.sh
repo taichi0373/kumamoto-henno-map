@@ -79,8 +79,8 @@ declare -A GTFS_URLS=(
 echo "---------- ファイルの初期化 ----------"
 for bus in "${BUS_NAMES[@]}"; do
   rm -rf \
-    "$bus" \
-    "${bus}.gtfs"
+    "${bus}.gtfs" \
+    "${bus}.gtfs_tmp"
 done
 find . -type f -name "*.zip" -delete
 find . -type f -name "*.pbf" -delete
@@ -114,8 +114,6 @@ fix_gtfs_structure() {
     done
     
     rm -rf temp_extract
-    
-    cp -r "$final_dir" "$extract_dir"
 }
 
 # 各GTFSファイルを解凍
@@ -125,8 +123,60 @@ done
 
 echo "---------- GTFSデータ加工処理 ----------"
 for bus in "${BUS_NAMES[@]}"; do
-  python3 formatted.py "$bus"
-  python3 upgrade_translations.py "$bus"
+  python3 formatted.py "${bus}.gtfs"
+  python3 upgrade_translations.py "${bus}.gtfs" "${bus}.gtfs_tmp"
+  rm -rf "${bus}.gtfs"
+  mv "${bus}.gtfs_tmp" "${bus}.gtfs"
+done
+
+echo "---------- feed_id の設定 ----------"
+for bus in "${BUS_NAMES[@]}"; do
+  python3 - "$bus" "${bus}.gtfs/feed_info.txt" << 'PYEOF'
+import csv, os, sys
+
+bus = sys.argv[1]
+path = sys.argv[2]
+
+if not os.path.exists(path):
+    # feed_info.txt が存在しない場合は feed_id のみを持つ最小構成で新規作成する
+    with open(path, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['feed_id'])
+        writer.writeheader()
+        writer.writerow({'feed_id': bus})
+    print(f'feed_info.txt が存在しなかったため新規作成し feed_id={bus} を設定しました')
+    sys.exit(0)
+
+with open(path, 'r', encoding='utf-8-sig') as f:
+    reader = csv.DictReader(f)
+    rows = list(reader)
+    fieldnames = list(reader.fieldnames or [])
+
+if 'feed_id' not in fieldnames:
+    fieldnames = ['feed_id'] + fieldnames
+
+mismatched_feed_ids = sorted({
+    row.get('feed_id', '')
+    for row in rows
+    if row.get('feed_id', '') not in ('', bus)
+})
+
+for row in rows:
+    row['feed_id'] = bus
+
+with open(path, 'w', encoding='utf-8', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+
+if mismatched_feed_ids:
+    print(
+        f'警告: {path} に bus 名と一致しない既存の feed_id が含まれていたため '
+        f'{bus} に統一しました: {", ".join(mismatched_feed_ids)}',
+        file=sys.stderr
+    )
+
+print(f'feed_id={bus} を {path} に設定しました')
+PYEOF
 done
 
 echo "---------- GTFSデータzipファイル化 ----------"
@@ -155,9 +205,9 @@ osmconvert kyushu-latest.osm.pbf -b=129.923336,32.096306,131.3318,33.1896 --comp
 echo "---------- 不要ファイルの削除 ----------"
 for bus in "${BUS_NAMES[@]}"; do
   rm -rf \
-    "$bus" \
     "${bus}.zip" \
-    "${bus}.gtfs"
+    "${bus}.gtfs" \
+    "${bus}.gtfs_tmp"
 done
 
 rm -f kyushu-latest.osm.pbf

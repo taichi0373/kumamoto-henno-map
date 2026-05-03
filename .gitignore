@@ -14,26 +14,14 @@ Thumbs.db
 *.iws
 *.ipr
 .vscode/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
 
 ### Eclipse / STS ###
 .project
 .classpath
 .settings/
-.apt_generated/
-.factorypath
 .springBeans
 .sts4-cache/
-
-### NetBeans ###
-nbproject/private/
-nbbuild/
-nbdist/
-.nb-gradle/
 
 ### Logs ###
 *.log
@@ -50,10 +38,8 @@ node_modules/
 ### dist ###
 dist
 
-### HonKit build output ###
-_book/
-
 ### otp data ###
-config/otp/data/*.gtfs.zip
+config/otp/data/*.zip
+config/otp/data/*.pbf
 config/otp/data/*.obj
 config/otp/data/.venv

@@ -459,7 +459,6 @@ const clearSuggestions = () => {
   endSuggestions.value = []
 }
 
-
 </script>
 
 <style scoped lang="scss">
