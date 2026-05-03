@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * GTFS-RT 車両位置情報サービス
@@ -45,17 +46,21 @@ public class VehiclePositionService {
     );
 
     /**
-     * 全バス事業者の車両位置情報を取得する
+     * 指定した routeId に一致するバス車両位置情報を取得する
      *
+     * @param routeIds 表示対象の routeId セット（空の場合は空リストを返す）
      * @return 車両位置情報リスト。各要素は vehicleId / lat / lon / agencyName / routeId を持つ
      */
-    public List<Map<String, Object>> fetchVehiclePositions() {
+    public List<Map<String, Object>> fetchVehiclePositions(Set<String> routeIds) {
+        if (routeIds.isEmpty()) {
+            return List.of();
+        }
         List<Map<String, Object>> result = new ArrayList<>();
         for (Map.Entry<String, String> entry : FEED_URLS.entrySet()) {
             String feedId = entry.getKey();
             String feedUrl = entry.getValue();
             try {
-                result.addAll(fetchFeed(feedId, feedUrl));
+                result.addAll(fetchFeed(feedId, feedUrl, routeIds));
             } catch (Exception e) {
                 log.warn("GTFS-RT 車両位置取得失敗: feedId={}", feedId, e);
             }
@@ -64,13 +69,14 @@ public class VehiclePositionService {
     }
 
     /**
-     * 指定フィードから GTFS-RT プロトバッファを取得・解析して車両位置リストを返す
+     * 指定フィードから GTFS-RT プロトバッファを取得・解析し、routeIds に一致する車両位置を返す
      *
-     * @param feedId  フィードID（事業者識別子）
-     * @param feedUrl フィードURL
+     * @param feedId   フィードID（事業者識別子）
+     * @param feedUrl  フィードURL
+     * @param routeIds 取得対象の routeId セット
      * @return 車両位置情報リスト
      */
-    private List<Map<String, Object>> fetchFeed(String feedId, String feedUrl) throws Exception {
+    private List<Map<String, Object>> fetchFeed(String feedId, String feedUrl, Set<String> routeIds) throws Exception {
         HttpURLConnection conn = (HttpURLConnection) new URL(feedUrl).openConnection();
         conn.setConnectTimeout(CONNECT_TIMEOUT_MS);
         conn.setReadTimeout(READ_TIMEOUT_MS);
@@ -86,6 +92,12 @@ public class VehiclePositionService {
                 }
                 GtfsRealtime.VehiclePosition vp = entity.getVehicle();
                 if (!vp.hasPosition()) {
+                    continue;
+                }
+
+                // 対象 routeId と一致しない車両はスキップ
+                String routeId = vp.hasTrip() ? vp.getTrip().getRouteId() : "";
+                if (!routeIds.contains(routeId)) {
                     continue;
                 }
 
@@ -105,7 +117,7 @@ public class VehiclePositionService {
                 vehicle.put("lat", lat);
                 vehicle.put("lon", lon);
                 vehicle.put("agencyName", agencyName);
-                vehicle.put("routeId", vp.hasTrip() ? vp.getTrip().getRouteId() : "");
+                vehicle.put("routeId", routeId);
                 result.add(vehicle);
             }
         }

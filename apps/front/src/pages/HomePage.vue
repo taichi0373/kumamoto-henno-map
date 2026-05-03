@@ -90,7 +90,7 @@ import { MarkerDto } from '@/dto/markerDto'
 import { SuggestionDto } from '@/dto/suggestionDto'
 import { RouteDto } from '@/dto/routeDto'
 import { TabDto } from '@/dto/tabDto'
-import type { RouteInterface } from '@/dto/routeDto'
+import type { RouteInterface, RouteLeg } from '@/dto/routeDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { TypeConvertUtils } from '@/utils/typeConvertUtils'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
@@ -136,6 +136,8 @@ const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLin
 
 /** バス位置ポーリングのインターバルID */
 const busPollingInterval = ref<ReturnType<typeof setInterval> | null>(null)
+/** 経路探索結果に含まれる routeId セット（feedId: プレフィックス除去済み） */
+const activeRouteIds = ref<Set<string>>(new Set())
 
 // クロスヘア表示フラグ
 const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
@@ -163,7 +165,7 @@ onMounted(() => {
   initializeMap('map')
   // バス位置を初回取得してからポーリング開始
   fetchVehiclePositions()
-  busPollingInterval.value = setInterval(fetchVehiclePositions, 30000)
+  busPollingInterval.value = setInterval(fetchVehiclePositions, 15000)
 })
 
 onUnmounted(() => {
@@ -285,8 +287,18 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       // 全経路を色分けして地図に描画（空配列の場合は既存ラインをクリア）
       const routeLegs = routes.map(r => r.legs ?? [])
       addRouteLines(routeLegs)
+      // 経路に含まれる transit leg の routeId を抽出（"feedId:rawId" → "rawId"）
+      const ids = new Set<string>()
+      routes.forEach(r => r.legs?.forEach(leg => {
+        if (leg.transitLeg && leg.routeId) {
+          const raw = leg.routeId.includes(':') ? leg.routeId.split(':')[1] : leg.routeId
+          if (raw) ids.add(raw)
+        }
+      }))
+      activeRouteIds.value = ids
     } else {
       addRouteLines([])
+      activeRouteIds.value = new Set()
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
     }
   } catch (error) {
@@ -303,6 +315,8 @@ const handleClearRoutes = () => {
   markerManager.value.removeMarker('route-end')
   routeResults.value = []
   addRouteLines([])
+  activeRouteIds.value = new Set()
+  clearBusMarkers()
 }
 
 /** ユーザー特典データを取得 */
@@ -474,13 +488,37 @@ const setCurrentLocation = (type: string) => {
    return response.data ?? []
  }
 
+/** routeId（rawId）→ transit leg のマップを作成 */
+const buildLegMap = (): Map<string, RouteLeg> => {
+  const map = new Map<string, RouteLeg>()
+  routeResults.value.forEach(r => {
+    r.legs?.forEach(leg => {
+      if (leg.transitLeg && leg.routeId) {
+        const raw = leg.routeId.includes(':') ? leg.routeId.split(':')[1] : leg.routeId
+        if (raw && !map.has(raw)) map.set(raw, leg)
+      }
+    })
+  })
+  return map
+}
+
 /** バス車両位置を取得してマップに反映 */
 const fetchVehiclePositions = async () => {
-  if (!mapInstance.value) return
+  if (!mapInstance.value || activeRouteIds.value.size === 0) {
+    clearBusMarkers()
+    return
+  }
   try {
-    const response = await apiClient.get('/route/vehicles')
+    const routeIds = Array.from(activeRouteIds.value).join(',')
+    const response = await apiClient.get('/route/vehicles', { params: { routeIds } })
     const vehicles = parseVehiclePositionsResponse(response.data)
-    updateBusMarkers(vehicles)
+    // 経路探索結果の leg 情報を車両データに合成してポップアップ用に使う
+    const legMap = buildLegMap()
+    const enriched = vehicles.map(v => {
+      const leg = v.routeId ? legMap.get(v.routeId) : undefined
+      return { ...v, from: leg?.from ?? undefined, to: leg?.to ?? undefined, startTime: leg?.startTime ?? undefined, endTime: leg?.endTime ?? undefined }
+    })
+    updateBusMarkers(enriched)
   } catch {
     // 車両位置取得失敗は無視（地図上のバスマーカーは前回表示のまま）
   }
