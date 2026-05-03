@@ -129,6 +129,33 @@ for bus in "${BUS_NAMES[@]}"; do
   python3 upgrade_translations.py "$bus"
 done
 
+echo "---------- feed_id の設定 ----------"
+for bus in "${BUS_NAMES[@]}"; do
+  python3 - "$bus" "${bus}.gtfs/feed_info.txt" << 'PYEOF'
+import csv, sys
+
+bus = sys.argv[1]
+path = sys.argv[2]
+
+with open(path, 'r', encoding='utf-8-sig') as f:
+    reader = csv.DictReader(f)
+    rows = list(reader)
+    fieldnames = list(reader.fieldnames)
+
+if 'feed_id' not in fieldnames:
+    fieldnames = ['feed_id'] + fieldnames
+    for row in rows:
+        row['feed_id'] = bus
+
+with open(path, 'w', encoding='utf-8', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+
+print(f'feed_id={bus} を {path} に設定しました')
+PYEOF
+done
+
 echo "---------- GTFSデータzipファイル化 ----------"
 for bus in "${BUS_NAMES[@]}"; do
   (
