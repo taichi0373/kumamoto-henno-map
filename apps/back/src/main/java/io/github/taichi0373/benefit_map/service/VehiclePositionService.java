@@ -1,17 +1,21 @@
 package io.github.taichi0373.benefit_map.service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +41,14 @@ public class VehiclePositionService {
 
     @Value("${otp.api.url}")
     private String otpApiUrl;
+
+    /** OTP GraphQL 接続タイムアウト */
+    @Value("${otp.graphql.connect-timeout:3s}")
+    private Duration otpGraphqlConnectTimeout;
+
+    /** OTP GraphQL 応答タイムアウト */
+    @Value("${otp.graphql.response-timeout:10s}")
+    private Duration otpGraphqlResponseTimeout;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -64,9 +76,12 @@ public class VehiclePositionService {
         String graphqlUrl = buildGraphqlUrl();
         String requestBody = "{\"query\":\"" + GRAPHQL_QUERY + "\"}";
 
-        try (CloseableHttpClient client = HttpClients.createDefault()) {
+        try (CloseableHttpClient client = createHttpClient()) {
             HttpPost post = new HttpPost(graphqlUrl);
             post.setHeader("Content-Type", "application/json");
+            post.setConfig(RequestConfig.custom()
+                    .setResponseTimeout(Timeout.ofMilliseconds(otpGraphqlResponseTimeout.toMillis()))
+                    .build());
             post.setEntity(new StringEntity(requestBody, ContentType.APPLICATION_JSON));
 
             return client.execute(post, response -> {
@@ -82,6 +97,25 @@ public class VehiclePositionService {
             return new ArrayList<>();
         }
     }
+
+            /**
+             * OTP GraphQL 呼び出し用の HTTP クライアントを生成する
+             *
+             * @return タイムアウト設定済み HTTP クライアント
+             */
+            private CloseableHttpClient createHttpClient() {
+            ConnectionConfig connectionConfig = ConnectionConfig.custom()
+                .setConnectTimeout(Timeout.ofMilliseconds(otpGraphqlConnectTimeout.toMillis()))
+                .build();
+            RequestConfig requestConfig = RequestConfig.custom()
+                .setResponseTimeout(Timeout.ofMilliseconds(otpGraphqlResponseTimeout.toMillis()))
+                .build();
+
+            return HttpClients.custom()
+                .setDefaultConnectionConfig(connectionConfig)
+                .setDefaultRequestConfig(requestConfig)
+                .build();
+            }
 
     /**
      * GraphQL レスポンスから車両位置リストを生成する
@@ -99,13 +133,19 @@ public class VehiclePositionService {
         for (JsonNode vp : positions) {
             double lat = vp.path("lat").asDouble(0);
             double lon = vp.path("lon").asDouble(0);
+            String vehicleId = vp.path("vehicleId").asText("");
+
+            if (vehicleId.isBlank()) {
+                continue;
+            }
+
             // 座標が取得できない車両はスキップ
             if (lat == 0 && lon == 0) {
                 continue;
             }
 
             Map<String, Object> vehicle = new HashMap<>();
-            vehicle.put("vehicleId", vp.path("vehicleId").asText(""));
+            vehicle.put("vehicleId", vehicleId);
             vehicle.put("lat", lat);
             vehicle.put("lon", lon);
 

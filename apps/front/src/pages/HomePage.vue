@@ -466,12 +466,20 @@ const setCurrentLocation = (type: string) => {
   )
 }
 
+ /** `updateBusMarkers` が受け取る車両位置配列型 */
+ type VehiclePositions = Parameters<typeof updateBusMarkers>[0]
+ /** 車両位置レスポンスをマーカー更新用の型へ変換 */
+ const parseVehiclePositionsResponse = (data: unknown): VehiclePositions => {
+   const response = data as { data?: VehiclePositions }
+   return response.data ?? []
+ }
+
 /** バス車両位置を取得してマップに反映 */
 const fetchVehiclePositions = async () => {
   if (!mapInstance.value) return
   try {
     const response = await apiClient.get('/route/vehicles')
-    const vehicles = ((response.data as unknown) as { data: { vehicleId: string; lat: number; lon: number; agencyName?: string; routeId?: string }[] }).data ?? []
+    const vehicles = parseVehiclePositionsResponse(response.data)
     updateBusMarkers(vehicles)
   } catch {
     // 車両位置取得失敗は無視（地図上のバスマーカーは前回表示のまま）

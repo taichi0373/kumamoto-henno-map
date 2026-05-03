@@ -245,16 +245,37 @@ export const useMap = (): UseMapReturn => {
     return el
   }
 
-  /** バスマーカーを更新（既存を削除して再配置） */
+  /** バスマーカーIDを生成 */
+  const getBusMarkerId = (vehicleId: string): string => {
+    return `bus-${vehicleId}`
+  }
+
+  /** バスマーカーを差分更新する */
   const updateBusMarkers = (vehicles: VehiclePosition[]): void => {
     const map = mapInstance.value
     if (!map) return
-    markerManager.value.removeMarkersByType('bus-')
+
+    const activeMarkerIds = new Set<string>()
+
     vehicles.forEach(v => {
+      const markerId = getBusMarkerId(v.vehicleId)
+      activeMarkerIds.add(markerId)
+
+      const existingMarker = markerManager.value.getMarker(markerId)
+      if (existingMarker) {
+        existingMarker.setLngLat([v.lon, v.lat])
+        existingMarker.getElement().title = v.agencyName ?? ''
+        return
+      }
+
       const el = createBusMarkerElement(v.agencyName ?? '')
       const marker = new maplibregl.Marker({ element: el }).setLngLat([v.lon, v.lat])
-      markerManager.value.addMarker(`bus-${v.vehicleId}`, marker, map)
+      markerManager.value.addMarker(markerId, marker, map)
     })
+
+    Object.keys(markerManager.value.markers)
+      .filter(id => id.startsWith('bus-') && !activeMarkerIds.has(id))
+      .forEach(id => markerManager.value.removeMarker(id))
   }
 
   /** バスマーカーを全削除 */
