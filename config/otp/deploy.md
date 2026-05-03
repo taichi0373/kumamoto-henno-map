@@ -112,7 +112,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - JAVA_TOOL_OPTIONS=-Xmx${OTP_HEAP_SIZE:-4500m}
+      - JAVA_TOOL_OPTIONS=-Xmx${OTP_HEAP_SIZE:-3g}
     command: ["--load", "--serve"]
 EOF
 ```
