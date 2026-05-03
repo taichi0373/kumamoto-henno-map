@@ -48,6 +48,8 @@ export interface RouteLeg {
     routeId?: string | null;
     /** 交通機関フラグ */
     transitLeg?: boolean | null;
+    /** リアルタイムデータフラグ */
+    isRealtime?: boolean | null;
 }
 
 /**
