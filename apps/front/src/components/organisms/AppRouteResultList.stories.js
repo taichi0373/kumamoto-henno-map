@@ -201,3 +201,137 @@ export const SecondRouteActive = {
     `,
   }),
 };
+
+/** リアルタイムラベルのみ（遅延なし）— カードをクリックして「詳細」を開くと確認できます */
+export const RealtimeOnTime = {
+  args: {
+    routes: [
+      {
+        duration: 22,
+        startTime: '09:10',
+        endTime: '09:32',
+        totalFare: 350,
+        totalDiscountFare: 300,
+        transfers: 0,
+        legs: [
+          {
+            mode: 'WALK',
+            from: '熊本駅',
+            to: '熊本駅前バス停',
+            startTime: '09:10',
+            endTime: '09:12',
+            duration: 2,
+            fare: null,
+            discountFare: null,
+            agencyName: null,
+            isRealtime: false,
+            arrivalDelay: null,
+          },
+          {
+            mode: 'BUS',
+            from: '熊本駅前バス停',
+            to: '通町筋バス停',
+            startTime: '09:15',
+            endTime: '09:30',
+            duration: 15,
+            fare: 350,
+            discountFare: 300,
+            agencyName: '産交バス',
+            isRealtime: true,
+            arrivalDelay: 30,
+          },
+          {
+            mode: 'WALK',
+            from: '通町筋バス停',
+            to: '熊本市役所',
+            startTime: '09:30',
+            endTime: '09:32',
+            duration: 2,
+            fare: null,
+            discountFare: null,
+            agencyName: null,
+            isRealtime: false,
+            arrivalDelay: null,
+          },
+        ],
+      },
+    ],
+    activeRouteIndex: 0,
+  },
+  render: (args) => ({
+    components: { AppRouteResultList },
+    setup() { return { args }; },
+    template: `
+      <div style="width: 380px;">
+        <AppRouteResultList v-bind="args" />
+      </div>
+    `,
+  }),
+};
+
+/** リアルタイムラベル ＋ 遅延ラベル — カードをクリックして「詳細」を開くと確認できます */
+export const RealtimeWithDelay = {
+  args: {
+    routes: [
+      {
+        duration: 25,
+        startTime: '10:00',
+        endTime: '10:25',
+        totalFare: 230,
+        totalDiscountFare: null,
+        transfers: 0,
+        legs: [
+          {
+            mode: 'WALK',
+            from: '水前寺公園駅',
+            to: '水前寺公園バス停',
+            startTime: '10:00',
+            endTime: '10:03',
+            duration: 3,
+            fare: null,
+            discountFare: null,
+            agencyName: null,
+            isRealtime: false,
+            arrivalDelay: null,
+          },
+          {
+            mode: 'BUS',
+            from: '水前寺公園バス停',
+            to: '熊本駅前バス停',
+            startTime: '10:05',
+            endTime: '10:23',
+            duration: 18,
+            fare: 230,
+            discountFare: null,
+            agencyName: '熊本電鉄バス',
+            isRealtime: true,
+            arrivalDelay: 300,
+          },
+          {
+            mode: 'WALK',
+            from: '熊本駅前バス停',
+            to: '熊本駅',
+            startTime: '10:23',
+            endTime: '10:25',
+            duration: 2,
+            fare: null,
+            discountFare: null,
+            agencyName: null,
+            isRealtime: false,
+            arrivalDelay: null,
+          },
+        ],
+      },
+    ],
+    activeRouteIndex: 0,
+  },
+  render: (args) => ({
+    components: { AppRouteResultList },
+    setup() { return { args }; },
+    template: `
+      <div style="width: 380px;">
+        <AppRouteResultList v-bind="args" />
+      </div>
+    `,
+  }),
+};

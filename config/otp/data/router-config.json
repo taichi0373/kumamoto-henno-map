@@ -4,15 +4,9 @@
       "type": "stop-time-updater",
       "feedId": "sankobus",
       "url": "https://km.bus-vision.jp/realtime/sankobus_trip_update.bin",
-      "frequencySec": 15,
+      "frequencySec": 30,
       "backwardsDelayPropagation": true,
       "fuzzyTripMatching": true
-    },
-    {
-      "type": "vehicle-positions",
-      "feedId": "sankobus",
-      "url": "https://km.bus-vision.jp/realtime/sankobus_vpos_update.bin",
-      "frequencySec": 15
     },
     {
       "type": "real-time-alerts",
@@ -24,15 +18,9 @@
       "type": "stop-time-updater",
       "feedId": "dentetsubus",
       "url": "https://km.bus-vision.jp/realtime/dentetsu_trip_update.bin",
-      "frequencySec": 15,
+      "frequencySec": 30,
       "backwardsDelayPropagation": true,
       "fuzzyTripMatching": true
-    },
-    {
-      "type": "vehicle-positions",
-      "feedId": "dentetsubus",
-      "url": "https://km.bus-vision.jp/realtime/dentetsu_vpos_update.bin",
-      "frequencySec": 15
     },
     {
       "type": "real-time-alerts",
@@ -44,15 +32,9 @@
       "type": "stop-time-updater",
       "feedId": "kumabus",
       "url": "https://km.bus-vision.jp/realtime/kumabus_trip_update.bin",
-      "frequencySec": 15,
+      "frequencySec": 30,
       "backwardsDelayPropagation": true,
       "fuzzyTripMatching": true
-    },
-    {
-      "type": "vehicle-positions",
-      "feedId": "kumabus",
-      "url": "https://km.bus-vision.jp/realtime/kumabus_vpos_update.bin",
-      "frequencySec": 15
     },
     {
       "type": "real-time-alerts",
@@ -64,15 +46,9 @@
       "type": "stop-time-updater",
       "feedId": "toshibus",
       "url": "https://km.bus-vision.jp/realtime/toshibus_trip_update.bin",
-      "frequencySec": 15,
+      "frequencySec": 30,
       "backwardsDelayPropagation": true,
       "fuzzyTripMatching": true
-    },
-    {
-      "type": "vehicle-positions",
-      "feedId": "toshibus",
-      "url": "https://km.bus-vision.jp/realtime/toshibus_vpos_update.bin",
-      "frequencySec": 15
     },
     {
       "type": "real-time-alerts",

@@ -71,13 +71,19 @@
                       <span class="leg-segment__time-range">
                         ({{ formatJapaneseTime(leg.startTime) }} ~ {{ formatJapaneseTime(leg.endTime) }})
                       </span>
-                      <span v-if="leg.isRealtime" class="leg-segment__realtime-badge">リアルタイム</span>
-                      <span v-if="leg.isRealtime && leg.arrivalDelay && leg.arrivalDelay > 60" class="leg-segment__delay-badge">
+                    </div>
+                    <!-- 3段目：リアルタイム／遅延バッジ -->
+                    <div
+                      v-if="leg.isRealtime"
+                      class="leg-segment__info-row leg-segment__info-row--indented"
+                    >
+                      <span class="leg-segment__realtime-badge">リアルタイム</span>
+                      <span v-if="leg.arrivalDelay && leg.arrivalDelay > 60" class="leg-segment__delay-badge">
                         {{ Math.round((leg.arrivalDelay ?? 0) / 60) }}分遅れ
                       </span>
                     </div>
                   </template>
-                  <!-- 3段目：運賃 + 割引運賃 -->
+                  <!-- 4段目：運賃 + 割引運賃 -->
                   <div 
                     v-if="leg.fare && leg.fare > 0" 
                     class="leg-segment__info-row leg-segment__info-row--indented"

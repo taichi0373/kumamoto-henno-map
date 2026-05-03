@@ -11,23 +11,6 @@ import { MarkerManager } from '../utils/markerConfig'
 import type { RouteLeg } from '../dto/routeDto'
 
 
-/** バス車両位置情報インターフェース */
-export interface VehiclePosition {
-  vehicleId: string
-  lat: number
-  lon: number
-  agencyName?: string
-  routeId?: string
-  /** ポップアップ用: 出発地名 */
-  from?: string
-  /** ポップアップ用: 目的地名 */
-  to?: string
-  /** ポップアップ用: 出発時刻 */
-  startTime?: string
-  /** ポップアップ用: 到着時刻 */
-  endTime?: string
-}
-
 export interface UseMapReturn {
   /* マップインスタンス */
   mapInstance: Ref<Map | null>
@@ -43,10 +26,6 @@ export interface UseMapReturn {
   removeRouteLines: (layerId: string) => void
   /* アクティブ経路を切り替える関数 */
   setActiveRoute: (routeIndex: number) => void
-  /* バスマーカーを更新する関数 */
-  updateBusMarkers: (vehicles: VehiclePosition[]) => void
-  /* バスマーカーを全削除する関数 */
-  clearBusMarkers: () => void
   /* クリーンアップ関数 */
   cleanup: () => void
 }
@@ -244,67 +223,6 @@ export const useMap = (): UseMapReturn => {
     }
   }
 
-  /** バスマーカーのDOM要素を作成 */
-  const createBusMarkerElement = (agencyName: string): HTMLElement => {
-    const el = document.createElement('div')
-    el.className = 'bus-marker'
-    el.textContent = '🚌'
-    el.title = agencyName
-    return el
-  }
-
-  /** バスマーカーのポップアップHTMLを生成 */
-  const buildBusPopupHtml = (v: VehiclePosition): string => {
-    const rows: string[] = []
-    if (v.agencyName) rows.push(`<div class="bus-popup__row bus-popup__agency">${v.agencyName}</div>`)
-    if (v.routeId)    rows.push(`<div class="bus-popup__row">路線ID: ${v.routeId}</div>`)
-    if (v.from || v.to) rows.push(`<div class="bus-popup__row">${v.from ?? ''} → ${v.to ?? ''}</div>`)
-    if (v.startTime && v.endTime) rows.push(`<div class="bus-popup__row">${v.startTime} ～ ${v.endTime}</div>`)
-    return `<div class="bus-popup">${rows.join('')}</div>`
-  }
-
-  /** バスマーカーIDを生成 */
-  const getBusMarkerId = (vehicleId: string): string => {
-    return `bus-${vehicleId}`
-  }
-
-  /** バスマーカーを差分更新する */
-  const updateBusMarkers = (vehicles: VehiclePosition[]): void => {
-    const map = mapInstance.value
-    if (!map) return
-
-    const activeMarkerIds = new Set<string>()
-
-    vehicles.forEach(v => {
-      const markerId = getBusMarkerId(v.vehicleId)
-      activeMarkerIds.add(markerId)
-
-      const existingMarker = markerManager.value.getMarker(markerId)
-      if (existingMarker) {
-        existingMarker.setLngLat([v.lon, v.lat])
-        existingMarker.getElement().title = v.agencyName ?? ''
-        return
-      }
-
-      const el = createBusMarkerElement(v.agencyName ?? '')
-      const popup = new maplibregl.Popup({ offset: 25, closeButton: false, maxWidth: '220px' })
-        .setHTML(buildBusPopupHtml(v))
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([v.lon, v.lat])
-        .setPopup(popup)
-      markerManager.value.addMarker(markerId, marker, map)
-    })
-
-    Object.keys(markerManager.value.markers)
-      .filter(id => id.startsWith('bus-') && !activeMarkerIds.has(id))
-      .forEach(id => markerManager.value.removeMarker(id))
-  }
-
-  /** バスマーカーを全削除 */
-  const clearBusMarkers = (): void => {
-    markerManager.value.removeMarkersByType('bus-')
-  }
-
   /** マップ上のすべてのリソースを初期化 */
   const cleanup = (): void => {
     if (mapInstance.value) {
@@ -322,8 +240,6 @@ export const useMap = (): UseMapReturn => {
     addRouteLines,
     removeRouteLines,
     setActiveRoute,
-    updateBusMarkers,
-    clearBusMarkers,
     cleanup
   }
 }

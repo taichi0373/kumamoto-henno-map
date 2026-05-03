@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
@@ -90,7 +90,7 @@ import { MarkerDto } from '@/dto/markerDto'
 import { SuggestionDto } from '@/dto/suggestionDto'
 import { RouteDto } from '@/dto/routeDto'
 import { TabDto } from '@/dto/tabDto'
-import type { RouteInterface, RouteLeg } from '@/dto/routeDto'
+import type { RouteInterface } from '@/dto/routeDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { TypeConvertUtils } from '@/utils/typeConvertUtils'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
@@ -132,12 +132,7 @@ const mapSelectedLocation = ref<MarkerDto | null>(null)
 const currentUserLocation = ref<{ lat: number; lon: number } | null>(null)
 
 /** マップ */
-const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLines, setActiveRoute, updateBusMarkers, clearBusMarkers } = useMap()
-
-/** バス位置ポーリングのインターバルID */
-const busPollingInterval = ref<ReturnType<typeof setInterval> | null>(null)
-/** 経路探索結果に含まれる routeId セット（feedId: プレフィックス除去済み） */
-const activeRouteIds = ref<Set<string>>(new Set())
+const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLines, setActiveRoute } = useMap()
 
 // クロスヘア表示フラグ
 const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
@@ -163,16 +158,6 @@ onMounted(() => {
   }
   // マップの初期化
   initializeMap('map')
-  // バス位置を初回取得してからポーリング開始
-  fetchVehiclePositions()
-  busPollingInterval.value = setInterval(fetchVehiclePositions, 15000)
-})
-
-onUnmounted(() => {
-  if (busPollingInterval.value !== null) {
-    clearInterval(busPollingInterval.value)
-  }
-  clearBusMarkers()
 })
 
 /** マップ中心座標を取得 */
@@ -295,10 +280,8 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
           if (raw) ids.add(raw)
         }
       }))
-      activeRouteIds.value = ids
     } else {
       addRouteLines([])
-      activeRouteIds.value = new Set()
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
     }
   } catch (error) {
@@ -315,8 +298,6 @@ const handleClearRoutes = () => {
   markerManager.value.removeMarker('route-end')
   routeResults.value = []
   addRouteLines([])
-  activeRouteIds.value = new Set()
-  clearBusMarkers()
 }
 
 /** ユーザー特典データを取得 */
@@ -480,56 +461,11 @@ const setCurrentLocation = (type: string) => {
   )
 }
 
- /** `updateBusMarkers` が受け取る車両位置配列型 */
- type VehiclePositions = Parameters<typeof updateBusMarkers>[0]
- /** 車両位置レスポンスをマーカー更新用の型へ変換 */
- const parseVehiclePositionsResponse = (data: unknown): VehiclePositions => {
-   const response = data as { data?: VehiclePositions }
-   return response.data ?? []
- }
-
-/** routeId（rawId）→ transit leg のマップを作成 */
-const buildLegMap = (): Map<string, RouteLeg> => {
-  const map = new Map<string, RouteLeg>()
-  routeResults.value.forEach(r => {
-    r.legs?.forEach(leg => {
-      if (leg.transitLeg && leg.routeId) {
-        const raw = leg.routeId.includes(':') ? leg.routeId.split(':')[1] : leg.routeId
-        if (raw && !map.has(raw)) map.set(raw, leg)
-      }
-    })
-  })
-  return map
-}
-
-/** バス車両位置を取得してマップに反映 */
-const fetchVehiclePositions = async () => {
-  if (!mapInstance.value || activeRouteIds.value.size === 0) {
-    clearBusMarkers()
-    return
-  }
-  try {
-    const routeIds = Array.from(activeRouteIds.value).join(',')
-    const response = await apiClient.get('/route/vehicles', { params: { routeIds } })
-    const vehicles = parseVehiclePositionsResponse(response.data)
-    // 経路探索結果の leg 情報を車両データに合成してポップアップ用に使う
-    const legMap = buildLegMap()
-    const enriched = vehicles.map(v => {
-      const leg = v.routeId ? legMap.get(v.routeId) : undefined
-      return { ...v, from: leg?.from ?? undefined, to: leg?.to ?? undefined, startTime: leg?.startTime ?? undefined, endTime: leg?.endTime ?? undefined }
-    })
-    updateBusMarkers(enriched)
-  } catch {
-    // 車両位置取得失敗は無視（地図上のバスマーカーは前回表示のまま）
-  }
-}
-
 /** 候補リストのクリア */
 const clearSuggestions = () => {
   startSuggestions.value = []
   endSuggestions.value = []
 }
-
 
 </script>
 
