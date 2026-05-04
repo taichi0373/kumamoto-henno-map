@@ -1,0 +1,100 @@
+name: Build for HonKit and deploy Pages
+
+# ワークフロー共有設定
+on:
+  workflow_call:
+    inputs:
+      timeout-minutes:
+        description: 'タイムアウト（分）'
+        type: number
+        default: 10
+
+      document-dir:
+        description: 'ドキュメントディレクトリ'
+        type: string
+        default: 'docs'
+
+      npm-install-command:
+        description: 'npm installコマンド'
+        type: string
+        default: 'npm ci'
+
+      node-version:
+        description: 'nodeバージョン'
+        type: string
+        default: '22'
+
+      is-deploy:
+        description: 'デプロイ実行フラグ'
+        type: boolean
+        default: false
+
+env:
+  TZ: Asia/Tokyo
+  DOCUMENT_DIR: ${{ inputs.document-dir }}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# jobs: 動作内容
+jobs:
+  # ドキュメントのビルド処理
+  document-build:
+    name: Document Build
+    # Github-hosted runner を使用
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    env:
+      GITHUB_USERNAME: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    defaults:
+      run:
+        working-directory: ${{ env.DOCUMENT_DIR }}
+
+    # steps: 動作手順
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ env.DOCUMENT_DIR }}/package-lock.json
+
+      # 依存関係はルートでインストール
+      - name: Install dependencies
+        run: ${{ inputs.npm-install-command }}
+
+      # HonKit ビルド
+      - name: Build HonKit
+        run: npx honkit build . ./_book
+
+      # HTML整形
+      - name: Format HTML
+        run: npm run format || echo "skip format"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.DOCUMENT_DIR }}/_book
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: document-build
+    if: ${{ inputs.is-deploy }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,53 @@
+name: Check on pull request
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'apps/front/**'
+      - 'apps/back/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# jobs: 動作内容
+jobs:
+  # 前処理（差分チェック）
+  precheck:
+    name: Precheck
+    uses: ./.github/workflows/review-precheck.yml
+    with:
+      frontend-dir: apps/front
+      component-dir: apps/front/src/components
+      backend-dir: apps/back
+      document-dir: docs
+
+  # フロントエンドの変更がある場合のみビルド
+  frontend-build:
+    name: Frontend Build
+    needs: precheck
+    if: >
+      needs.precheck.outputs.frontend-changed != '' ||
+      needs.precheck.outputs.component-changed != ''
+    uses: ./.github/workflows/build-frontend.yml
+
+  # バックエンドの変更がある場合のみビルド
+  backend-build:
+    name: Backend Build
+    needs: precheck
+    if: needs.precheck.outputs.backend-changed != ''
+    uses: ./.github/workflows/build-backend.yml
+
+  # ドキュメントの変更がある場合、ビルドのみ実行
+  document-build:
+    name: Document Build
+    needs: precheck
+    if: needs.precheck.outputs.document-changed != ''
+    uses: ./.github/workflows/build-document.yml
+    with:
+      is-deploy: false
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
