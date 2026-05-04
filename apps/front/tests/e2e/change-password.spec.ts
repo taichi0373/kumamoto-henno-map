@@ -18,7 +18,7 @@ test.describe('パスワード変更画面', () => {
    * UI操作による待ち時間を避けるため、request fixture でサインアップAPIを呼ぶ
    */
   test.beforeAll(async ({ request }) => {
-    const response = await request.post('/benefit-map/api/users/signup', {
+    const response = await request.post('/kumamoto-henno-map/api/users/signup', {
       data: {
         username: USERNAME,
         password: PASSWORD,

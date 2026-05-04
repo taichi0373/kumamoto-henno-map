@@ -2,63 +2,52 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { checkAdminRouteAccess } from './adminGuard'
 
-// コンポーネント
-import HomePage from '../pages/HomePage.vue'
-import LoginPage from '../pages/LoginPage.vue'
-import SignupPage from '../pages/SignupPage.vue'
-import ProfilePage from '../pages/ProfilePage.vue'
-import SupportInfoPage from '../pages/SupportInfoPage.vue'
-import ChangePasswordPage from '../pages/ChangePasswordPage.vue'
-import ForgotPasswordPage from '../pages/ForgotPasswordPage.vue'
-import ResetPasswordPage from '../pages/ResetPasswordPage.vue'
-import AdminLayout from '../layouts/AdminLayout.vue'
-
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'HomePage',
-    component: HomePage
+    component: () => import('../pages/HomePage.vue')
   },
   {
     path: '/login',
     name: 'LoginPage',
-    component: LoginPage
+    component: () => import('../pages/LoginPage.vue')
   },
   {
     path: '/signup',
     name: 'SignupPage',
-    component: SignupPage
+    component: () => import('../pages/SignupPage.vue')
   },
   {
     path: '/profile',
     name: 'ProfilePage',
-    component: ProfilePage,
+    component: () => import('../pages/ProfilePage.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/support_info',
     name: 'SupportInfoPage',
-    component: SupportInfoPage
+    component: () => import('../pages/SupportInfoPage.vue')
   },
   {
     path: '/change-password',
     name: 'ChangePasswordPage',
-    component: ChangePasswordPage,
+    component: () => import('../pages/ChangePasswordPage.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/forgot-password',
     name: 'ForgotPasswordPage',
-    component: ForgotPasswordPage
+    component: () => import('../pages/ForgotPasswordPage.vue')
   },
   {
     path: '/reset-password',
     name: 'ResetPasswordPage',
-    component: ResetPasswordPage
+    component: () => import('../pages/ResetPasswordPage.vue')
   },
   {
     path: '/admin',
-    component: AdminLayout,
+    component: () => import('../layouts/AdminLayout.vue'),
     meta: { requiresAdmin: true },
     children: [
       {

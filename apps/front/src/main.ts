@@ -18,8 +18,6 @@ import 'primeflex/primeflex.css'
 // SCSS Import
 import './assets/scss/base.scss'
 
-// MapLibre GL CSS Import
-import 'maplibre-gl/dist/maplibre-gl.css'
 
 const app = createApp(App)
 const pinia = createPinia()

@@ -6,4 +6,6 @@ storybook-static
 
 ### test-results ###
 test-results
+
+### vercel ###
 .vercel

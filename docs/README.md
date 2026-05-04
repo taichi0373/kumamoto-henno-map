@@ -1,8 +1,4 @@
-# 自主返納特典マップ
-
-## システム概要
-
-熊本県の自主返納特典情報を地図上で表示・検索できるWebアプリケーション。特典情報の表示、条件絞り込み検索、経路探索機能を提供。
+# 自主返納特典マップ 設計書
 
 ## ドキュメント構成
 
@@ -22,12 +18,12 @@
 - [ER図](03_database/er_diagram.md)
 
 ### 4. UIコンポーネント
-- [コンポーネント仕様書](https://taichi0373.github.io/benefit-map/storybook/)
+- [コンポーネント仕様書](https://taichi0373.github.io/kumamoto-henno-map/storybook/)
 
 ### 5. API仕様
-* [API仕様書](04_interfaces/api_spec.md)
-* [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
-* [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
+- [API仕様書](04_interfaces/api_spec.md)
+- [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/kumamoto-henno-map/openapi/)
+- [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/kumamoto-henno-map/javadoc/)
 
 ## 技術スタック
 
@@ -44,7 +40,7 @@
 ## プロジェクト構成
 
 ```
-benefit_map/
+kumamoto-henno-map/
 ├── apps/front/         # フロントエンド（Vue 3 + TypeScript + Vue CLI）
 ├── apps/back/          # バックエンド（Java 21 + Spring Boot + Doma 2）
 ├── config/database/    # データベース設定
