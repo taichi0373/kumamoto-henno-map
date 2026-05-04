@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import io.github.taichi0373.benefit_map.dto.LoginResponseDto;
 import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
+import io.github.taichi0373.benefit_map.constants.CodeConstants;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.util.JwtUtil;
 
@@ -118,7 +119,7 @@ public class AuthService implements UserDetailsService {
         response.setToken(token);
         response.setUserId(user.getUserId());
         response.setUsername(user.getUsername());
-        response.setAdmin("1".equals(user.getIsAdmin()));
+        response.setAdmin(CodeConstants.UserType.ADMIN.equals(user.getIsAdmin()));
         return response;
     }
 }
