@@ -1,20 +1,22 @@
 -- 1. DDL
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/AGENCY.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/BENEFIT_CATEGORY.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/MUNICIPALITY.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/BENEFIT.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/BENEFIT_ELIGIBILITY.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/FARE_DISCOUNT.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/COMMUNITY_BUS.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/TABLE/USERS.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/VIEW/V_BENEFIT_DETAIL.SQL';
-\i '/docker-entrypoint-initdb.d/DDL/VIEW/V_FARE_DISCOUNT_ELIGIBILITY.SQL';
+\ir 'DDL/TABLE/AGENCY.SQL'
+\ir 'DDL/TABLE/BENEFIT_CATEGORY.SQL'
+\ir 'DDL/TABLE/MUNICIPALITY.SQL'
+\ir 'DDL/TABLE/BENEFIT.SQL'
+\ir 'DDL/TABLE/BENEFIT_ELIGIBILITY.SQL'
+\ir 'DDL/TABLE/FARE_DISCOUNT.SQL'
+\ir 'DDL/TABLE/COMMUNITY_BUS.SQL'
+\ir 'DDL/TABLE/USERS.SQL'
+\ir 'DDL/TABLE/PASSWORD_RESET_TOKENS.SQL'
+\ir 'DDL/TABLE/REFRESH_TOKENS.SQL'
+\ir 'DDL/VIEW/V_BENEFIT_DETAIL.SQL'
+\ir 'DDL/VIEW/V_FARE_DISCOUNT_ELIGIBILITY.SQL'
 
 -- 2. DML
-\i '/docker-entrypoint-initdb.d/DML/TABLE/AGENCY.SQL';
-\i '/docker-entrypoint-initdb.d/DML/TABLE/BENEFIT_CATEGORY.SQL';
-\i '/docker-entrypoint-initdb.d/DML/TABLE/MUNICIPALITY.SQL';
-\i '/docker-entrypoint-initdb.d/DML/TABLE/BENEFIT.SQL';
-\i '/docker-entrypoint-initdb.d/DML/TABLE/BENEFIT_ELIGIBILITY.SQL';
-\i '/docker-entrypoint-initdb.d/DML/TABLE/FARE_DISCOUNT.SQL';
-\i '/docker-entrypoint-initdb.d/DML/TABLE/COMMUNITY_BUS.SQL';
+\ir 'DML/TABLE/AGENCY.SQL'
+\ir 'DML/TABLE/BENEFIT_CATEGORY.SQL'
+\ir 'DML/TABLE/MUNICIPALITY.SQL'
+\ir 'DML/TABLE/BENEFIT.SQL'
+\ir 'DML/TABLE/BENEFIT_ELIGIBILITY.SQL'
+\ir 'DML/TABLE/FARE_DISCOUNT.SQL'
+\ir 'DML/TABLE/COMMUNITY_BUS.SQL'

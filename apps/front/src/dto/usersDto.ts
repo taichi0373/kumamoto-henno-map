@@ -18,9 +18,11 @@ interface UsersInterface {
     address: string | null;
     /** 運転免許の所持状況 */
     licenseStatus: string | null;
+    /** 運転免許返納日 */
+    licenseSurrenderedAt: string | Date | null;
 }
 
-/** 
+/**
  * ユーザー情報DTO
 */
 class UsersDto {
@@ -40,6 +42,8 @@ class UsersDto {
     address: string | null;
     /** 運転免許の所持状況 */
     licenseStatus: string | null;
+    /** 運転免許返納日 */
+    licenseSurrenderedAt: string | Date | null;
     /**
      * コンストラクタ
      * @param usersInterface ユーザー情報インタフェース
@@ -54,6 +58,7 @@ class UsersDto {
             this.birthDate = usersInterface.birthDate != null ? usersInterface.birthDate : null;
             this.address = usersInterface.address != null ? usersInterface.address : null;
             this.licenseStatus = usersInterface.licenseStatus != null ? usersInterface.licenseStatus : null;
+            this.licenseSurrenderedAt = usersInterface.licenseSurrenderedAt != null ? usersInterface.licenseSurrenderedAt : null;
         } else {
             this.userId = null;
             this.username = null;
@@ -63,6 +68,7 @@ class UsersDto {
             this.birthDate = null;
             this.address = null;
             this.licenseStatus = null;
+            this.licenseSurrenderedAt = null;
         }
     }
 }

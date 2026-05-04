@@ -1,3 +1,5 @@
+import { createPinia, setActivePinia } from 'pinia';
+import { useAuthStore } from '@/stores/auth';
 import AppHeader from './AppHeader.vue';
 
 export default {
@@ -28,10 +30,10 @@ export const Default = {
 export const LoggedIn = {
   render: () => ({
     components: { AppHeader },
-    beforeCreate() {
-      // モック認証状態の設定
-      sessionStorage.setItem('authToken', 'mock-token');
-      sessionStorage.setItem('username', 'テストユーザー');
+    setup() {
+      setActivePinia(createPinia());
+      const auth = useAuthStore();
+      auth.login({ username: 'テストユーザー', id: '1' }, 'mock-token');
     },
     template: `
       <div>
@@ -40,9 +42,6 @@ export const LoggedIn = {
           <h2>メインコンテンツエリア（ログイン状態）</h2>
           <p>ログイン済みの状態でのヘッダー表示例です。</p>
           <p>ドロップダウンメニューやユーザー名が表示されます。</p>
-          <div style="background: #d4edda; padding: 16px; border-radius: 8px; margin-top: 20px;">
-            <strong>注意:</strong> この例では、StorybookでのテストのためにモックのSessionStorageを使用しています。
-          </div>
         </div>
       </div>
     `,
@@ -52,10 +51,9 @@ export const LoggedIn = {
 export const LoggedOut = {
   render: () => ({
     components: { AppHeader },
-    beforeCreate() {
-      // セッションストレージをクリア（ログアウト状態）
-      sessionStorage.removeItem('authToken');
-      sessionStorage.removeItem('username');
+    setup() {
+      setActivePinia(createPinia());
+      // 新しい Pinia インスタンスのため初期状態がログアウト状態
     },
     template: `
       <div>

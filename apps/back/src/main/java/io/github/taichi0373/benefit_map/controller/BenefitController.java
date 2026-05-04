@@ -14,10 +14,19 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import io.github.taichi0373.benefit_map.dto.ApiResponseDto;
+import io.github.taichi0373.benefit_map.dto.BenefitCategoryDto;
 import io.github.taichi0373.benefit_map.dto.BenefitEligibilityDto;
+import io.github.taichi0373.benefit_map.dto.BenefitListResponse;
 import io.github.taichi0373.benefit_map.security.CustomUserDetails;
 import io.github.taichi0373.benefit_map.service.BenefitService;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * 特典情報コントローラー
@@ -25,6 +34,7 @@ import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
  * 特典の検索・取得に関するエンドポイントを提供する。
  * </p>
  */
+@Tag(name = "特典", description = "特典情報の検索・取得")
 @RestController
 @RequestMapping("/benefit")
 public class BenefitController {
@@ -36,10 +46,38 @@ public class BenefitController {
     private BenefitService benefitService;
 
     /**
+     * 有効なカテゴリ一覧を取得
+     */
+    @Operation(summary = "カテゴリ一覧取得", description = "有効な特典カテゴリ一覧を表示順で取得する。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @GetMapping("/categories")
+    public ResponseEntity<ApiResponseDto<List<BenefitCategoryDto>>> getCategories() {
+        try {
+            List<BenefitCategoryDto> categories = benefitService.getCategories();
+            return ResponseEntity.ok(ApiResponseDto.success(categories));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("カテゴリ一覧の取得に失敗しました"));
+        }
+    }
+
+    /**
      * 検索条件（年齢・運転免許所持状況・自治体コード）から特典を検索
      */
+    @Operation(summary = "特典検索", description = "年齢・免許状態・自治体コードを指定して特典一覧を取得する。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "検索成功",
+                    content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PostMapping("/search")
-    public ResponseEntity<ApiResponseDto<?>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
+    public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
         try {
             List<BenefitDetailEntity> benefits = benefitService.searchBenefits(request);
             return ResponseEntity.ok(ApiResponseDto.success(benefits));
@@ -52,8 +90,18 @@ public class BenefitController {
     /**
      * ユーザーIDからユーザーが受けられる特典を検索
      */
+    @Operation(summary = "ユーザー特典取得", description = "ユーザーのプロフィール情報（年齢・免許状態・居住自治体）を元に受けられる特典一覧を取得する。JWT 認証必須。")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
+            @ApiResponse(responseCode = "401", description = "未認証",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "403", description = "他ユーザーへのアクセス",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @GetMapping("/users/{userId}")
-    public ResponseEntity<ApiResponseDto<?>> getUsersBenefits(@PathVariable Long userId, Authentication auth) {
+    public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> getUsersBenefits(@PathVariable Long userId, Authentication auth) {
         try {
             // JWT認証チェック
             if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {

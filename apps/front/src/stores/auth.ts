@@ -11,7 +11,17 @@ export interface User {
 /** ストレージキー定数 */
 const USER_KEY = 'user_info'
 
-/** 初期ユーザー情報の取得 */
+/**
+ * セキュリティ注意事項:
+ * - アクセストークンは XSS によるトークン窃取を防ぐため、localStorage/sessionStorage には保存しない。
+ *   Pinia の state（JS メモリ）のみで管理する。
+ * - ページリフレッシュ時はトークンが消えるため、再ログインまたはリフレッシュトークンが必要。
+ * - ユーザー情報（username・id）は認証に関わらない表示用データのため sessionStorage に保存する。
+ *   remember=true の場合のみ localStorage に保存する。
+ * - 根本的な XSS 対策として、厳格な CSP・入力サニタイズ・依存ライブラリ監査を必ず行うこと。
+ */
+
+/** 初期ユーザー情報の取得（表示用のみ。認証判定には token を使う） */
 const loadInitialUser = (): User | null => {
   try {
     const userInfo = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
@@ -23,51 +33,90 @@ const loadInitialUser = (): User | null => {
 
 /**
  * 認証状態を管理するPiniaストア
- * JWTトークンは HttpOnly Cookie に格納されるため、このストアでは管理しない。
+ *
+ * ## トークン管理方針
+ * - アクセストークン: JS メモリのみ（XSS 耐性のため storage に保存しない）
+ * - ユーザー情報: sessionStorage（remember=true 時は localStorage）
+ * - ページリフレッシュ後: トークンは消えるため未認証状態になる
+ *   → リフレッシュトークン実装後は自動復元される予定
  */
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    /** ユーザー情報 */
-    user: loadInitialUser()
+    /** ユーザー情報（表示用） */
+    user: loadInitialUser(),
+    /**
+     * JWTアクセストークン（メモリのみ・storage非保存）
+     * ページリフレッシュで消えることを許容する設計。
+     */
+    token: null as string | null
   }),
   getters: {
-    /** ログイン状態（ユーザー情報の有無で判定） */
-    isLoggedIn: (state): boolean => !!state.user,
+    /** ログイン状態（メモリ上のトークン存在で判定） */
+    isLoggedIn: (state): boolean => !!state.token,
     /** ユーザー情報取得 */
-    getUser: (state): User | null => state.user
+    getUser: (state): User | null => state.user,
+    /** トークン取得 */
+    getToken: (state): string | null => state.token
   },
   actions: {
     /**
      * ログイン処理
-     * @param user ユーザー情報
-     * @param remember ログイン状態を維持するか
+     * @param user ユーザー情報（表示用）
+     * @param token JWTアクセストークン（メモリのみに保持）
+     * @param remember ユーザー情報をlocalStorageに保持するか（トークンは対象外）
      */
-    login(user: User, remember: boolean = false): void {
+    login(user: User, token: string, remember: boolean = false): void {
+      this.token = token
       this.user = user
       localStorage.removeItem(USER_KEY)
       sessionStorage.removeItem(USER_KEY)
       const storage = remember ? localStorage : sessionStorage
       storage.setItem(USER_KEY, JSON.stringify(user))
-      if (user.username) {
-        sessionStorage.setItem('username', user.username)
+    },
+    /**
+     * ページリフレッシュ時のセッション復元
+     * <p>
+     * HttpOnly Cookie のリフレッシュトークンで新しいアクセストークンを取得する。
+     * App.vue の onMounted で呼び出すこと。
+     * </p>
+     * @returns セッション復元に成功した場合はtrue
+     */
+    async restoreSession(): Promise<boolean> {
+      try {
+        const response = await apiClient.post<{ data: { token: string } }>('/auth/refresh')
+        const newToken = response.data?.data?.token
+        if (!newToken) return false
+
+        this.token = newToken
+        // ユーザー情報は storage から復元（表示用のみ）
+        const stored = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
+        if (stored) {
+          this.user = JSON.parse(stored) as User
+        }
+        return true
+      } catch {
+        // リフレッシュトークン無効・期限切れ → 未ログイン状態に戻す
+        this.token = null
+        this.user = null
+        localStorage.removeItem(USER_KEY)
+        sessionStorage.removeItem(USER_KEY)
+        return false
       }
     },
     /**
      * ログアウト処理
-     * ローカルのユーザー情報をクリアし、サーバー側の HttpOnly Cookie を削除する。
+     * DBのリフレッシュトークンを失効させ、メモリ上のトークンとユーザー情報をクリアする。
      */
     async logout(): Promise<void> {
+      this.token = null
       this.user = null
       localStorage.removeItem(USER_KEY)
       sessionStorage.removeItem(USER_KEY)
-      sessionStorage.removeItem('username')
       try {
+        // サーバー側でリフレッシュトークンを失効させ Cookie をクリア
         await apiClient.post('/auth/logout')
-        // CSRFトークンキャッシュもクリア（api.tsの private メソッドのため、新しいリクエストで自動取得される）
-        console.log('Logged out successfully, CSRF token will be refreshed on next request')
       } catch (error) {
         console.warn('Logout API call failed:', error)
-        // Cookie のクリアに失敗しても JWT 期限切れにより自動無効化される
       }
     }
   }

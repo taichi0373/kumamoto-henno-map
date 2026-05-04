@@ -50,7 +50,7 @@ benefit_map/
 ├── apps/back/    # Spring Boot 3 + Java 21 バックエンド
 ├── config/database/  # DDL/DML SQLファイル
 ├── config/otp/       # OpenTripPlanner設定・GTFSデータ
-└── docs/             # HonKit設計書 (01_overview〜04_interfaces)
+└── docs/             # Docsify設計書 (01_overview〜04_interfaces)
 ```
 
 ### フロントエンド (`apps/front/src/`)

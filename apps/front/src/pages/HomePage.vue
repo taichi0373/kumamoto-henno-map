@@ -130,7 +130,7 @@ const mapSelectedLocation = ref<MarkerDto | null>(null)
 const currentUserLocation = ref<{ lat: number; lon: number } | null>(null)
 
 /** マップ */
-const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
+const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLines, setActiveRoute } = useMap()
 
 // クロスヘア表示フラグ
 const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
@@ -155,7 +155,7 @@ onMounted(() => {
     fetchUserBenefits()
   }
   // マップの初期化
-  const map = initializeMap('map')
+  initializeMap('map')
 })
 
 /** マップ中心座標を取得 */

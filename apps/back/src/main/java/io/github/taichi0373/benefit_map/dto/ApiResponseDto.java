@@ -5,6 +5,7 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 /**
@@ -17,6 +18,7 @@ import lombok.Getter;
  *
  * @param <T> レスポンスデータの型
  */
+@Schema(description = "共通APIレスポンス形式")
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponseDto<T> implements Serializable {
@@ -25,12 +27,15 @@ public class ApiResponseDto<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 処理成否 */
+    @Schema(description = "処理成否。成功時: true、エラー時: false", example = "true")
     private final boolean success;
 
     /** レスポンスデータ（成功時のみ） */
+    @Schema(description = "レスポンスデータ（成功時のみ。null の場合は省略）")
     private final T data;
 
     /** エラーメッセージ（失敗時のみ） */
+    @Schema(description = "エラーメッセージ（失敗時のみ。成功時は省略）", example = "ユーザー名またはパスワードが正しくありません")
     private final String message;
 
     private ApiResponseDto(boolean success, T data, String message) {

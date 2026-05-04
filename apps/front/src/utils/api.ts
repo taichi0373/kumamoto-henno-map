@@ -8,23 +8,39 @@ const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/benefit-map/api';
  */
 type UnauthorizedHandler = () => void
 
-/** 401ハンドラー（App.vue のセットアップ時に登録される） */
+/** 401ハンドラー（main.ts で登録される） */
 let unauthorizedHandler: UnauthorizedHandler | null = null
-
-/** CSRF トークンキャッシュ */
-let csrfToken: string | null = null
 
 /**
  * 401 Unauthorized 発生時のコールバックを登録する
  * <p>
  * api.ts とストアの循環依存を避けるため、ストアへの直接依存を持たず
  * コールバック注入でハンドリングを委譲する。
- * App.vue の setup() トップレベルで呼び出すこと。
+ * main.tsで呼び出すこと。
  * </p>
  * @param handler ログアウト処理とリダイレクトを行うコールバック
  */
 export function setUnauthorizedHandler(handler: UnauthorizedHandler): void {
   unauthorizedHandler = handler
+}
+
+/**
+ * JWTトークン取得関数の型
+ */
+type TokenProvider = () => string | null
+
+/** トークンプロバイダー（auth store への循環依存を避けるため注入方式） */
+let tokenProvider: TokenProvider | null = null
+
+/**
+ * JWTトークンプロバイダーを登録する
+ * <p>
+ * main.tsで呼び出すこと。
+ * </p>
+ * @param provider トークンを返す関数
+ */
+export function setTokenProvider(provider: TokenProvider): void {
+  tokenProvider = provider
 }
 
 /**
@@ -71,7 +87,11 @@ class RestApiClient {
     this.axiosInstance = axios.create({
       baseURL,
       timeout: 10000,
-      withCredentials: true,
+      // withCredentials は設定しない（同一オリジン前提のため不要）。
+      // 開発環境は vue.config.js の devServer.proxy で同一オリジンを実現。
+      // 本番環境は Nginx リバースプロキシで同一オリジンを実現すること。
+      // ※ SameSite=Lax の Cookie はクロスオリジン XHR では送信されないため、
+      //   VUE_APP_API_BASE_URL に絶対 URL を設定して proxy をバイパスすることは禁止。
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -83,63 +103,25 @@ class RestApiClient {
   }
 
   /**
-   * CSRF トークンを取得してキャッシュする
-   * @returns CSRF トークン
-   */
-  private async fetchCsrfToken(): Promise<string> {
-    if (csrfToken) {
-      return csrfToken
-    }
-    try {
-      const response = await this.axiosInstance.get('/auth/csrf')
-      const token = response.data.data
-      if (!token || typeof token !== 'string') {
-        throw new Error('Invalid CSRF token received from server')
-      }
-      csrfToken = token
-      return csrfToken
-    } catch (error) {
-      console.error('Failed to fetch CSRF token:', error)
-      throw error
-    }
-  }
-
-  /**
-   * CSRF トークンキャッシュをクリア
-   */
-  private clearCsrfToken(): void {
-    csrfToken = null
-  }
-
-  /**
    * リクエスト・レスポンスインターセプターの設定
    */
   private setupInterceptors(): void {
-    // リクエストインターセプター（CSRFトークン追加 & ロギング）
+    // リクエストインターセプター（Bearerトークン追加 & ロギング）
     this.axiosInstance.interceptors.request.use(
-      async (config: InternalAxiosRequestConfig) => {
-        // 状態変更系リクエストにCSRFトークンを追加
-        if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
-          // 認証不要エンドポイントは除外（SecurityConfig の ignoringRequestMatchers と一致）
-          const skipCsrfPaths = ['/auth/', '/users/signup']
-          const needsCsrf = !skipCsrfPaths.some(path => config.url?.includes(path))
-          
-          if (needsCsrf) {
-            try {
-              const token = await this.fetchCsrfToken()
-              config.headers['X-XSRF-TOKEN'] = token
-            } catch (error) {
-              console.error('Failed to add CSRF token:', error)
-              // CSRF トークン取得失敗時はリクエストを続行（サーバーエラーで判断）
-            }
-          }
+      (config: InternalAxiosRequestConfig) => {
+        // Authorization: Bearer ヘッダーを追加
+        const token = tokenProvider ? tokenProvider() : null
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`
         }
-        
+
         console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))
         return config
       },
       (error) => {
-        console.error('API Request Error:', error)
+        // error オブジェクトを丸ごと出力すると config.headers の Authorization トークンが漏えいするため、
+        // URL・メッセージのみ抽出して出力する
+        console.error('API Request Error:', error?.config?.method?.toUpperCase(), error?.config?.url, error?.message)
         return Promise.reject(error)
       }
     )
@@ -152,34 +134,20 @@ class RestApiClient {
       },
       (error) => {
         console.error('API Response Error:', error.response?.status, error.config?.url, error.message)
-        
-        if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login') && !error.config?.url?.includes('/auth/logout')) {
+
+        // /auth/login・/auth/logout・/auth/refresh は401を自前でハンドリングするため除外
+        const isAuthEndpoint = ['/auth/login', '/auth/logout', '/auth/refresh'].some(
+          path => error.config?.url?.includes(path)
+        )
+        if (error.response?.status === 401 && !isAuthEndpoint) {
           console.warn('Unauthorized access, redirecting to login...')
-          this.clearCsrfToken() // 認証エラー時はCSRFトークンもクリア
           if (unauthorizedHandler) {
             unauthorizedHandler()
           } else {
-            // ハンドラー未登録時のフォールバック
             window.location.href = '/login'
           }
         }
-        
-        // CSRF トークンエラー時はキャッシュクリア
-        // バックエンドが CSRF 専用メッセージを返した場合（primary）、
-        // またはCSRF保護対象の状態変更系リクエストが403を受けた場合（safety net）にクリアする
-        if (error.response?.status === 403) {
-          const isCsrfMessage = error.response?.data?.message?.includes('CSRF')
-          const isStateMutating = ['post', 'put', 'patch', 'delete'].includes(
-            error.config?.method?.toLowerCase() || ''
-          )
-          const skipCsrfPaths = ['/auth/', '/users/signup']
-          const isCsrfRequired = !skipCsrfPaths.some(path => error.config?.url?.includes(path))
 
-          if (isCsrfMessage || (isStateMutating && isCsrfRequired)) {
-            console.warn('CSRF token error or state-mutating 403, clearing token cache')
-            this.clearCsrfToken()
-          }
-        }
         return Promise.reject(error)
       }
     )
@@ -230,7 +198,7 @@ class RestApiClient {
   /**
    * RESTful リソース操作のヘルパーメソッド
    */
-  
+
   /**
    * リソースの一覧取得
    */

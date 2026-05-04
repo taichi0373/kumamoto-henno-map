@@ -14,9 +14,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.InvalidCsrfTokenException;
-import org.springframework.security.web.csrf.MissingCsrfTokenException;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,8 +27,8 @@ import jakarta.servlet.http.HttpServletResponse;
  * Spring Security 設定クラス
  * <p>
  * JWT認証を使用したステートレスセキュリティ設定を行う。
- * フォームログイン・HTTP Basicは無効化し、
- * CSRF 保護は CookieCsrfTokenRepository で有効化する。
+ * フォームログイン・HTTP Basic・CSRFは無効化し、
+ * Authorization: Bearer ヘッダーによるJWT認証を使用する。
  * 認証エラー時は {@link ApiResponseDto} 形式のJSONを返す。
  * </p>
  */
@@ -75,11 +72,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // CSRF保護を有効化（HttpOnly Cookie認証のため必須）
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/auth/**", "/users/signup")
-            )
+            // CSRF無効化（STATELESSなBearer Token認証では不要）
+            .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
@@ -87,8 +81,10 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(authz -> authz
+                // /auth/** は全て permitAll（login・refresh・logout・パスワードリセット）
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/users/signup").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/users/**").authenticated()
                 .requestMatchers("/benefit/users/**").authenticated()
                 .anyRequest().permitAll()
@@ -96,14 +92,8 @@ public class SecurityConfig {
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((request, response, authException) ->
                     writeJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "認証が必要です"))
-                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                    if (accessDeniedException instanceof InvalidCsrfTokenException
-                            || accessDeniedException instanceof MissingCsrfTokenException) {
-                        writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "CSRFトークンが無効です");
-                    } else {
-                        writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "アクセス権限がありません");
-                    }
-                })
+                .accessDeniedHandler((request, response, accessDeniedException) ->
+                    writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "アクセス権限がありません"))
             )
             .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
