@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import apiClient from '@/utils/api'
+import type { AxiosError } from 'axios'
 
 /** ユーザー情報の型定義 */
 export interface User {
@@ -10,6 +11,16 @@ export interface User {
 
 /** ストレージキー定数 */
 const USER_KEY = 'user_info'
+
+/**
+ * AxiosErrorの型ガード
+ */
+function isAxiosError(error: unknown): error is AxiosError {
+  return error !== null && 
+         typeof error === 'object' && 
+         'isAxiosError' in error && 
+         (error as AxiosError).isAxiosError === true
+}
 
 /**
  * セキュリティ注意事項:
@@ -83,19 +94,46 @@ export const useAuthStore = defineStore('auth', {
      */
     async restoreSession(): Promise<boolean> {
       try {
-        const response = await apiClient.post<{ data: { token: string } }>('/auth/refresh')
+        const response = await apiClient.post<{ data: { token: string, user?: User } }>('/auth/refresh')
         const newToken = response.data?.data?.token
         if (!newToken) return false
 
         this.token = newToken
-        // ユーザー情報は storage から復元（表示用のみ）
-        const stored = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
-        if (stored) {
-          this.user = JSON.parse(stored) as User
+        
+        // ユーザー情報の復元: APIレスポンス > ストレージ の優先順位
+        const responseUser = response.data?.data?.user
+        if (responseUser) {
+          this.user = responseUser
+          // APIから取得したユーザー情報をストレージにも保存（remember状態は維持）
+          const hasRememberStorage = localStorage.getItem(USER_KEY)
+          const storage = hasRememberStorage ? localStorage : sessionStorage
+          storage.setItem(USER_KEY, JSON.stringify(responseUser))
+        } else {
+          // APIにユーザー情報が含まれない場合、ストレージから復元（局所的にtry-catch）
+          const stored = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY)
+          if (stored) {
+            try {
+              this.user = JSON.parse(stored) as User
+            } catch (parseError) {
+              console.warn('Failed to parse stored user info, continuing without user data:', parseError)
+              this.user = null
+              // 破損したストレージをクリア
+              localStorage.removeItem(USER_KEY)
+              sessionStorage.removeItem(USER_KEY)
+            }
+          } else {
+            this.user = null
+          }
         }
         return true
-      } catch {
-        // リフレッシュトークン無効・期限切れ → 未ログイン状態に戻す
+      } catch (error: unknown) {
+        const axiosError = error as AxiosError<{ message: string }>
+        // 401はリフレッシュトークンが無い/無効な正常系 → 静かに未ログイン扱い
+        if (axiosError?.response?.status === 401) {
+          return false
+        }
+        
+        // その他のエラー（ネットワークエラー等）は状態をクリアして静かに処理
         this.token = null
         this.user = null
         localStorage.removeItem(USER_KEY)
