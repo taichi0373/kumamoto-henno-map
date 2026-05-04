@@ -17,25 +17,25 @@
           <div class="form-col">
             <AppLabel :id="'username'" :required="true">ユーザー名</AppLabel>
             <AppTextField :input-id="'username'" :type="'text'" v-model="usersModel.username"
-              placeholder="ユーザー名を入力してください" :required="true" :error="usernameErrorDto" />
+              placeholder="" :required="true" :error="usernameErrorDto" />
           </div>
 
           <div class="form-col">
             <AppLabel :id="'password'" :required="true">パスワード</AppLabel>
-            <AppPassword :input-id="'password'" v-model="usersModel.password" placeholder="パスワードを入力してください"
+            <AppPassword :input-id="'password'" v-model="usersModel.password" placeholder=""
               :error="passwordErrorDto" />
           </div>
 
           <div class="form-col">
             <AppLabel :id="'confirmPassword'" :required="true">パスワード確認</AppLabel>
             <AppPassword :input-id="'confirmPassword'" v-model="usersModel.confirmPassword"
-              placeholder="パスワードを再入力してください" :error="confirmPasswordErrorDto" />
+              placeholder="" :error="confirmPasswordErrorDto" />
           </div>
 
           <div class="form-col">
             <AppLabel :id="'email'" :required="true">メールアドレス</AppLabel>
             <AppTextField :input-id="'email'" :type="'text'" v-model="usersModel.email"
-              placeholder="メールアドレスを入力してください" :required="true" :error="emailErrorDto" />
+              placeholder="" :required="true" :error="emailErrorDto" />
           </div>
 
           <div class="form-col">

@@ -15,12 +15,12 @@
           <div class="form-col">
             <AppLabel :required="true">ユーザー名</AppLabel>
             <AppTextField :input-id="'username'" type="text" v-model="usersModel.username"
-              placeholder="ユーザー名を入力してください" :required="true" :error="usernameErrorDto" />
+              placeholder="" :required="true" :error="usernameErrorDto" />
           </div>
           <div class="form-col">
             <AppLabel :id="'email'" :required="true">メールアドレス</AppLabel>
             <AppTextField :input-id="'email'" type="text" v-model="usersModel.email"
-              placeholder="メールアドレスを入力してください" :required="true" :error="emailErrorDto" />
+              placeholder="" :required="true" :error="emailErrorDto" />
           </div>
         </div>
         <div class="form-row-2">

@@ -9,7 +9,7 @@
 --   からは自動実行されない（サブディレクトリのため）。
 --
 -- 【実行方法（手動）】
---   psql -h localhost -U user -d benefit_map -f config/database/dev/setup_dev.sql
+--   psql -h localhost -U user -d kumamoto_henno_map -f config/database/dev/setup_dev.sql
 -- ============================================================
 
 -- 開発用管理者ユーザー（admin / admin）

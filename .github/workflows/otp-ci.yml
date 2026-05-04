@@ -7,6 +7,7 @@ on:
       - 'docker-compose.yml'
       - 'config/otp/**'
   pull_request:
+    branches: ["develop"]
     paths:
       - 'docker-compose.yml'
       - 'config/otp/**'
