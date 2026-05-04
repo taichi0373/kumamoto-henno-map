@@ -16,7 +16,7 @@ module.exports = defineConfig({
       // HttpOnly Cookie（SameSite=Lax）が正常に送受信される。
       // ※ このプロキシを経由せず直接 localhost:8081 を叩くと Cookie が送信されず
       //   リフレッシュトークンが機能しないため、VUE_APP_API_BASE_URL に絶対 URL を設定しないこと。
-      '/benefit-map/api': {
+      '/kumamoto-henno-map/api': {
         target: 'http://localhost:8081',
         changeOrigin: true,
         secure: false

@@ -79,7 +79,7 @@
 本アプリは機能ベースのディレクトリ構成を採用し、関心の分離とスケーラビリティを実現しています。
 
 ```
-benefit_map/
+kumamoto_henno_map/
 ├── apps/
 │   ├── front/
 │   │   ├── .storybook/
@@ -251,7 +251,7 @@ public void processData(String data) { ... }
 
 ### パッケージ構造
 
-- パッケージ名: `io.github.taichi0373.benefit_map`
+- パッケージ名: `io.github.taichi0373.kumamoto_henno_map`
 - レイヤー別の配置:
   - `controller`: REST APIエンドポイント
   - `service`: ビジネスロジック
