@@ -22,11 +22,8 @@
 | `FRONTEND_BASE_URL` | パスワードリセットメールに使用するフロントURL | `https://www.kumamoto-henno-map.com` | ✅ |
 | `FORWARD_HEADERS_STRATEGY` | リバースプロキシのヘッダー処理 | `FRAMEWORK` | ✅ |
 | `OTP_API_URL` | OpenTripPlanner APIのURL | `https://otp.kumamoto-henno-map.com/otp/routers/default/plan` | ✅ |
-| `MAIL_HOST` | SMTPサーバーホスト | `sandbox.smtp.mailtrap.io` | ✅ |
-| `MAIL_PORT` | SMTPポート | `587` | ✅ |
-| `MAIL_USERNAME` | SMTPユーザー名 | Mailtrapのユーザー名 | ✅ |
-| `MAIL_PASSWORD` | SMTPパスワード | Mailtrapのパスワード | ✅ |
-| `MAIL_FROM` | 送信元メールアドレス | `noreply@kumamoto-henno-map.com` | （未設定時は `MAIL_USERNAME` を使用） |
+| `SENDGRID_API_KEY` | SendGrid APIキー（`SG.`から始まる文字列） | SendGridダッシュボードで発行 | ✅ |
+| `MAIL_FROM` | 送信元メールアドレス（SendGridで認証済みのアドレス） | `noreply@kumamoto-henno-map.com` | ✅ |
 
 ---
 
@@ -45,3 +42,25 @@ jdbc:postgresql://dpg-xxxxxxxxx-a/kumamoto_henno_map?sslmode=require
 ```
 
 ※ `postgresql://user:password@host/db` の形式から、`jdbc:postgresql://host/db?sslmode=require` に変換（ユーザー名・パスワードは別変数で指定）。
+
+### SMTP から SendGrid HTTP API への移行手順
+
+v1.0.1 以降、メール送信を SMTP（`spring-boot-starter-mail`）から SendGrid HTTP API に変更しました。既存環境をデプロイする際は以下の手順で環境変数を更新してください。
+
+**追加する変数:**
+
+| 変数名 | 値 |
+|--------|-----|
+| `SENDGRID_API_KEY` | SendGrid ダッシュボード → Settings → API Keys で発行（Mail Send 権限） |
+| `MAIL_FROM` | SendGrid で認証済みの送信元アドレス（例: `noreply@kumamoto-henno-map.com`） |
+
+**削除してよい変数（SMTP設定）:**
+
+| 変数名 |
+|--------|
+| `MAIL_HOST` |
+| `MAIL_PORT` |
+| `MAIL_USERNAME` |
+| `MAIL_PASSWORD` |
+
+> **SendGrid 送信者認証**: `MAIL_FROM` に設定するアドレスは SendGrid の Sender Authentication（Single Sender または Domain Authentication）で事前に認証が必要です。未認証のアドレスを設定するとメール送信が失敗します。
