@@ -64,7 +64,8 @@ const onClick = () => {
     font-size: base.$fontsize-button;
   }
   &:hover,
-  &:active {
+  &:active,
+  &:disabled {
     background-color: base.$base-300;
     color: base.$base-700;
     border: 1px solid;
@@ -74,7 +75,8 @@ const onClick = () => {
     background-color: base.$base-700;
     color: base.$base-100;
     &:hover,
-    &:active {
+    &:active,
+    &:disabled {
       background-color: base.$base-600;
       color: base.$base-100;
     }

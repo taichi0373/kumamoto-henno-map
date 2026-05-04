@@ -161,7 +161,7 @@ public class AuthController {
     public ResponseEntity<ApiResponseDto<RefreshResponseDto>> refresh(
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-        String plainToken = extractRefreshTokenFromCookie(httpRequest);
+        String plainToken = getRefreshTokenFromCookie(httpRequest);
         if (plainToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ApiResponseDto.error("リフレッシュトークンがありません"));
@@ -175,13 +175,18 @@ public class AuthController {
                     .body(ApiResponseDto.error("リフレッシュトークンが無効または期限切れです。再ログインしてください。"));
         }
 
-        // 新しいアクセストークンを生成
-        String newAccessToken = authService.generateAccessToken(result.userId());
+        // 新しいアクセストークンとユーザー情報を生成
+        AuthService.AccessTokenResult tokenResult = authService.generateAccessTokenWithUser(result.userId());
+        RefreshResponseDto.UserInfo userInfo = new RefreshResponseDto.UserInfo(
+                String.valueOf(tokenResult.user().getUserId()),
+                tokenResult.user().getUsername(),
+                "1".equals(tokenResult.user().getIsAdmin())
+        );
 
         // ローテーションされた新リフレッシュトークンをCookieにセット
         setRefreshTokenCookie(httpResponse, result.newPlainToken());
 
-        return ResponseEntity.ok(ApiResponseDto.success(new RefreshResponseDto(newAccessToken)));
+        return ResponseEntity.ok(ApiResponseDto.success(new RefreshResponseDto(tokenResult.token(), userInfo)));
     }
 
     /**
@@ -199,7 +204,7 @@ public class AuthController {
     @ApiResponse(responseCode = "204", description = "ログアウト成功")
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        String plainToken = extractRefreshTokenFromCookie(httpRequest);
+        String plainToken = getRefreshTokenFromCookie(httpRequest);
         if (plainToken != null) {
             try {
                 refreshTokenService.revoke(plainToken);
@@ -215,10 +220,21 @@ public class AuthController {
      * パスワードリセットメール送信
      */
     @Operation(summary = "パスワードリセットメール送信", description = "メールアドレスにパスワードリセット用URLを送信する。認証不要。")
-    @ApiResponse(responseCode = "200", description = "処理完了（メールアドレスの存在有無に関わらず同一レスポンス）")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "処理完了（メールアドレスの存在有無に関わらず同一レスポンス）"),
+            @ApiResponse(responseCode = "429", description = "リセット要求回数超過（15分後に解除）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
     @PostMapping("/password-reset/request")
     public ResponseEntity<ApiResponseDto<Void>> requestPasswordReset(
-            @RequestBody PasswordResetRequestDto request) {
+            @RequestBody PasswordResetRequestDto request,
+            HttpServletRequest httpRequest) {
+        String clientIp = RequestUtils.getClientIp(httpRequest);
+        if (loginAttemptService.isPasswordResetRequestBlocked(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponseDto.error("リセット要求回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
+        }
+        loginAttemptService.recordPasswordResetRequestAttempt(clientIp);
         if (!ValidateUtils.isEmail(request.getEmail())) {
             return ResponseEntity.ok(ApiResponseDto.success(null));
         }
@@ -263,7 +279,8 @@ public class AuthController {
             if (!ValidateUtils.isValidPassword(request.getNewPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponseDto.error(
-                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "文字以上で入力してください"));
+                                "パスワードは" + ValidateUtils.PASSWORD_MIN_LENGTH + "～"
+                                        + ValidateUtils.PASSWORD_MAX_LENGTH + "文字で入力してください"));
             }
             if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -321,11 +338,11 @@ public class AuthController {
     }
 
     /**
-     * リクエストのCookieからリフレッシュトークンを抽出する
+     * リクエストのCookieからリフレッシュトークン文字列を抽出する
      * @param request HTTPリクエスト
      * @return 平文リフレッシュトークン、Cookieが存在しない場合はnull
      */
-    private String extractRefreshTokenFromCookie(HttpServletRequest request) {
+    private String getRefreshTokenFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return null;
         return Arrays.stream(cookies)

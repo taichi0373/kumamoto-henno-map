@@ -7,20 +7,11 @@ export interface User {
   username?: string
   email?: string
   id?: string
+  isAdmin?: boolean
 }
 
 /** ストレージキー定数 */
 const USER_KEY = 'user_info'
-
-/**
- * AxiosErrorの型ガード
- */
-function isAxiosError(error: unknown): error is AxiosError {
-  return error !== null && 
-         typeof error === 'object' && 
-         'isAxiosError' in error && 
-         (error as AxiosError).isAxiosError === true
-}
 
 /**
  * セキュリティ注意事項:
@@ -67,7 +58,9 @@ export const useAuthStore = defineStore('auth', {
     /** ユーザー情報取得 */
     getUser: (state): User | null => state.user,
     /** トークン取得 */
-    getToken: (state): string | null => state.token
+    getToken: (state): string | null => state.token,
+    /** 管理者判定（ログインレスポンスのisAdminフラグで判断） */
+    isAdmin: (state): boolean => state.user?.isAdmin ?? false
   },
   actions: {
     /**

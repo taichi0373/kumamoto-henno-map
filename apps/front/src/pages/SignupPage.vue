@@ -4,6 +4,15 @@
     <div class="whole">
       <AppCard title="新規登録" :inputStyle="{ width: '100%', maxWidth: '600px' }">
 
+        <div class="form-col">
+          <AppMessageBar
+            v-if="barErrMode != ''"
+            :mode="barErrMode"
+            :message="barErrMsg"
+            style="width: 100%;"
+          ></AppMessageBar>
+        </div>
+
         <div class="form-row-2">
           <div class="form-col">
             <AppLabel :id="'username'" :required="true">ユーザー名</AppLabel>
@@ -63,8 +72,6 @@
 
       </AppCard>
     </div>
-    <!-- トーストメッセージ -->
-    <AppToastMessage />
   </div>
 </template>
 
@@ -75,7 +82,7 @@ import { useRouter } from 'vue-router'
 import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
-import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
+import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import AppCalendar from '@/components/atoms/AppCalendar.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppCard from '@/components/atoms/AppCard.vue'
@@ -83,7 +90,6 @@ import AppLink from '@/components/atoms/AppLink.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppPassword from '@/components/atoms/AppPassword.vue'
 import apiClient from '@/utils/api'
-import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
@@ -117,6 +123,10 @@ const addressOptions = ref([]) as Ref<SelectDto[]>
 /** ローディング */
 const isLoading = ref(false)
 
+/** エラーバー */
+const barErrMode = ref('') as Ref<string>
+const barErrMsg = ref('') as Ref<string>
+
 /** 運転免許の所持状況のプルダウン */
 const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.UNLICENSED]: '所持していない',
@@ -149,10 +159,12 @@ const getMunicipalities = async () => {
         text: dto.municipalityKana
       }))
     } else {
-      ToastMessageUtils.error(API_RESPONSE_MESSAGE.DATA_NOT_FOUND)
+      barErrMode.value = 'error'
+      barErrMsg.value = API_RESPONSE_MESSAGE.DATA_NOT_FOUND
     }
-  } catch (error) {
-    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+  } catch {
+    barErrMode.value = 'error'
+    barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR
   }
 }
 
@@ -169,6 +181,9 @@ const getLicenseStatusOptions = () => {
  * 新規登録処理
   */
 const onClick = async () => {
+  // エラーバーをリセット
+  barErrMode.value = ''
+  barErrMsg.value = ''
   // エラーチェック
   const hasError = checkError()
   // エラーがない場合はAPIを呼び出す
@@ -192,10 +207,13 @@ const onClick = async () => {
         isLoading.value = false
         router.push('/login')
       } else {
-        ToastMessageUtils.error(API_RESPONSE_MESSAGE.CREATE_FAILED)
+        barErrMode.value = 'error'
+        barErrMsg.value = API_RESPONSE_MESSAGE.CREATE_FAILED
       }
-    } catch {
-      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: { message?: string } } }
+      barErrMode.value = 'error'
+      barErrMsg.value = axiosError?.response?.data?.message ?? API_RESPONSE_MESSAGE.API_ERROR
     } finally {
       isLoading.value = false
     }
@@ -231,12 +249,42 @@ function checkError(): boolean {
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "ユーザ名")
     );
     hasError = true
+  } else if ((usersModel.value.username ?? '').length < ValidateUtils.USERNAME_MIN_LENGTH) {
+    // ユーザ名が最小文字数未満の場合はエラー
+    usernameErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "ユーザ名", String(ValidateUtils.USERNAME_MIN_LENGTH))
+    );
+    hasError = true
+  } else if ((usersModel.value.username ?? '').length > ValidateUtils.USERNAME_MAX_LENGTH) {
+    // ユーザ名が最大文字数超過の場合はエラー
+    usernameErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_003, "ユーザ名", String(ValidateUtils.USERNAME_MAX_LENGTH))
+    );
+    hasError = true
+  } else if (!ValidateUtils.isUsername(usersModel.value.username ?? '')) {
+    // ユーザ名に使用できない文字が含まれている場合はエラー
+    usernameErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_004, "ユーザ名")
+    );
+    hasError = true
   }
 
   // パスワードが未入力の場合はエラー
   if (ValidateUtils.isNullOrEmpty(usersModel.value.password)) {
     passwordErrorDto.value.push(
       MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "パスワード")
+    );
+    hasError = true
+  } else if ((usersModel.value.password ?? '').length < ValidateUtils.PASSWORD_MIN_LENGTH) {
+    // パスワードが最小文字数未満の場合はエラー
+    passwordErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_002, "パスワード", String(ValidateUtils.PASSWORD_MIN_LENGTH))
+    );
+    hasError = true
+  } else if ((usersModel.value.password ?? '').length > ValidateUtils.PASSWORD_MAX_LENGTH) {
+    // パスワードが最大文字数超過の場合はエラー
+    passwordErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_003, "パスワード", String(ValidateUtils.PASSWORD_MAX_LENGTH))
     );
     hasError = true
   }

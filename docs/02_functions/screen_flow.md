@@ -10,11 +10,17 @@ graph TD
 
     Home --> Login[S011: ログイン画面]
     Login --> Signup[S012: 会員登録画面]
+    Login --> ForgotPw[S015: パスワードリセット要求画面]
     Login --> Home
     Signup --> Login
+    ForgotPw --> ResetPw[S016: パスワードリセット画面]
+    ResetPw --> Login
 
     Home --> Profile[S013: プロフィール画面]
+    Profile --> ChangePw[S014: パスワード変更画面]
+    ChangePw --> Profile
     Home --> SupportInfo[S021: サポート情報画面]
+
     classDef startStyle fill:#e1f5fe,stroke:#01579b,stroke-width:2px
     classDef mainStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef authStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
@@ -23,8 +29,8 @@ graph TD
 
     class Start startStyle
     class Home mainStyle
-    class Login,Signup authStyle
-    class Profile userStyle
+    class Login,Signup,ForgotPw,ResetPw authStyle
+    class Profile,ChangePw userStyle
     class SupportInfo supportStyle
 ```
 
@@ -69,6 +75,34 @@ graph TD
     class Profile userStyle
 ```
 
+### 3. パスワード変更フロー（ログイン済みユーザー）
+
+```mermaid
+graph TD
+    Profile[S013: プロフィール画面] -- パスワード変更リンク --> ChangePw[S014: パスワード変更画面]
+    ChangePw -- 変更成功 --> Profile
+    ChangePw -- キャンセル --> Profile
+
+    classDef userStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    class Profile,ChangePw userStyle
+```
+
+### 4. パスワードリセットフロー（未ログインユーザー）
+
+```mermaid
+graph TD
+    Login[S011: ログイン画面] -- パスワードを忘れた場合 --> ForgotPw[S015: パスワードリセット要求画面]
+    ForgotPw -- メール送信 --> MailSent[メール受信確認]
+    MailSent -- URLクリック --> ResetPw[S016: パスワードリセット画面]
+    ResetPw -- リセット成功 --> Login
+    ForgotPw -- ログインに戻る --> Login
+
+    classDef authStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef externalStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    class Login,ForgotPw,ResetPw authStyle
+    class MailSent externalStyle
+```
+
 ## 画面遷移の詳細仕様
 
 ### 遷移方法の種類
@@ -82,11 +116,14 @@ graph TD
 
 ### 認証が必要な画面
 
-**認証必要画面**:
+**認証必要画面**（未ログイン時は `/login?redirect=...` にリダイレクト）:
 - S013: プロフィール画面
+- S014: パスワード変更画面
 
 **パブリック画面**:
 - S001: ホーム画面（ゲスト利用可能）
 - S011: ログイン画面
 - S012: 会員登録画面
+- S015: パスワードリセット要求画面
+- S016: パスワードリセット画面
 - S021: サポート情報画面

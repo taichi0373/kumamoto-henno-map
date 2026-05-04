@@ -1,18 +1,11 @@
 <template>
   <div class="license-container">
     <div class="license-content">
-      <p class="source-info">
-        出典：
-        <AppLink @click="openUrl('https://www.pref.kumamoto.jp/soshiki/54/51729.html?type=top')">
-          「運転免許証自主返納者への特典」のご紹介
-        </AppLink>
-      </p>
-
       <!-- 出典・ライセンス情報のボタン -->
       <div class="license-button-section">
         <AppButton
           type="button"
-          label="ライセンス情報"
+          label="出典・ライセンス情報"
           :primary="false"
           size="small"
           icon="pi pi-info-circle"
@@ -24,7 +17,7 @@
     <!-- ダイアログ -->
     <AppDialog
       v-model="showLicensePopup"
-      header="ライセンス情報"
+      header="出典・ライセンス情報"
       :dialog-style="{ width: '600px' }"
     >
       <div class="modal-content">
@@ -45,12 +38,24 @@
 
         <div class="license-section">
           <h4 class="section-title">
+            <i class="pi pi-book" />自主返納特典の出典
+          </h4>
+          <p class="section-description">
+            出典：
+            <AppLink @click="openUrl('https://www.pref.kumamoto.jp/soshiki/54/51729.html?type=top')">
+              「運転免許証自主返納者への特典」のご紹介
+            </AppLink>
+          </p>
+        </div>
+
+        <div class="license-section">
+          <h4 class="section-title">
             <i class="pi pi-cog" />オープンソースソフトウェア
           </h4>
           <ul class="license-list">
             <li class="license-item">
               <AppLink @click="openUrl('https://www.opentripplanner.org')">
-                OpenTripPlanner
+                OpenTripPlanner 2.5.0
               </AppLink>
               <div class="license-details">
                 ライセンス：
@@ -143,10 +148,8 @@ const openUrl = (url: string) => {
 
 .license-container {
   background: base.$base-100;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: base.$margin-200 - 1;
-  border: 1px solid base.$base-400;
+  padding: 8px;
+  border-top: 1px solid base.$base-400;
 }
 
 .license-content {
@@ -155,26 +158,9 @@ const openUrl = (url: string) => {
   gap: base.$margin-100;
 }
 
-.source-info {
-  font-size: base.$fontsize-medium;
-  color: base.$text-primary;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: base.$margin-100;
-  flex-wrap: wrap;
-}
-
-.attribution-text {
-  font-size: base.$fontsize-small;
-  color: base.$text-primary;
-}
-
 .license-button-section {
   display: flex;
   justify-content: center;
-  padding-top: base.$margin-100;
-  border-top: 1px solid base.$base-400;
 }
 
 .modal-content {

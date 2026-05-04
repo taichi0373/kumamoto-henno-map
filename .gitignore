@@ -1,6 +1,8 @@
 ### claude ###
+.claude
 .claude/settings.json
 .claude/settings.local.json
+.mcp.json
 
 ### OS ###
 .DS_Store
@@ -40,6 +42,7 @@ nbdist/
 .env
 .env.local
 .env.*.local
+.env.test
 
 ### node_modules ###
 node_modules/
