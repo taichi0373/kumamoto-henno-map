@@ -69,6 +69,7 @@
 </template>
 
 <script setup lang="ts">
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
