@@ -2,17 +2,17 @@
 
 システムが提供する REST API の仕様です。
 
-- ベース URL: `http://localhost:8081/benefit-map/api`
+- ベース URL: `http://localhost:8081/kumamoto-henno-map/api`
 - すべてのリクエストは `application/json`。ボディを持つレスポンスは `application/json`（204 No Content 等はボディなし）
 - 認証が必要なエンドポイントは `Authorization: Bearer <token>` ヘッダーを付与する
 - 通常の認証付き API は `Authorization` ヘッダーで Bearer Token を送信するため、Cookie 自動送信を前提とした CSRF の主対象ではない
 
 > **OpenAPI 仕様書（ReDoc）** は GitHub Pages で公開されています。
-> → [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
-> → [openapi.yaml（ソース）](https://taichi0373.github.io/benefit-map/openapi/openapi.yaml)
+> → [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/kumamoto-henno-map/openapi/)
+> → [openapi.yaml（ソース）](https://taichi0373.github.io/kumamoto-henno-map/openapi/openapi.yaml)
 
 > **サービスクラス仕様書（Javadoc）** はコントローラーメソッドの引数・例外・内部処理の詳細を参照する場合に使用してください。
-> → [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
+> → [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/kumamoto-henno-map/javadoc/)
 
 ---
 

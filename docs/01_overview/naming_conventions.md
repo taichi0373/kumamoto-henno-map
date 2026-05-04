@@ -7,7 +7,7 @@
 | Javaクラス・インターフェース | PascalCase | `BenefitService`, `BenefitDao` |
 | Javaメソッド・変数 | camelCase | `benefitId`, `findByMunicipalityCd` |
 | Java定数 | UPPER_SNAKE_CASE | `DEFAULT_CATEGORY_CD` |
-| Javaパッケージ | 小文字・ドット区切り | `io.github.taichi0373.benefit_map.controller` |
+| Javaパッケージ | 小文字・ドット区切り | `io.github.taichi0373.kumamoto_henno_map.controller` |
 | Vueコンポーネント・ファイル | `App` プレフィックス + PascalCase | `AppButton.vue`, `AppSearchBenefit.vue` |
 | ページコンポーネント | PascalCase + `Page` サフィックス | `HomePage.vue`, `LoginPage.vue` |
 | TS変数・関数 | camelCase | `benefitList`, `searchBenefits` |

@@ -171,7 +171,7 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_DB: benefit_map
+          POSTGRES_DB: kumamoto_henno_map
           POSTGRES_USER: user
           POSTGRES_PASSWORD: pass
         ports:
@@ -201,7 +201,7 @@ jobs:
 
       # DDL・DML を実行してテーブル・ビュー・初期データを作成
       - name: Initialize database
-        run: PGPASSWORD=pass psql -h localhost -U user -d benefit_map -f config/database/setup.sql
+        run: PGPASSWORD=pass psql -h localhost -U user -d kumamoto_henno_map -f config/database/setup.sql
 
       # Spring Boot を起動して /v3/api-docs.yaml を生成
       - name: Generate OpenAPI YAML
@@ -210,7 +210,7 @@ jobs:
         env:
           DB_HOST: localhost
           DB_PORT: 5432
-          DB_NAME: benefit_map
+          DB_NAME: kumamoto_henno_map
           DB_USERNAME: user
           DB_PASSWORD: pass
 

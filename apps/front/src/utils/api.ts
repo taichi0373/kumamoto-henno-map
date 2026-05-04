@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
 // Vue CLI用の環境変数
-const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/benefit-map/api';
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/kumamoto-henno-map/api';
 
 /**
  * 401 Unauthorized 発生時に呼び出されるコールバックの型

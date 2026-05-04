@@ -17,9 +17,9 @@
 * [ER図](03_database/er_diagram.md)
 
 **4. UIコンポーネント**
-* [コンポーネント仕様書](https://taichi0373.github.io/benefit-map/storybook/)
+* [コンポーネント仕様書](https://taichi0373.github.io/kumamoto-henno-map/storybook/)
 
 **5. API仕様**
 * [API仕様書](04_interfaces/api_spec.md)
-* [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/benefit-map/openapi/)
-* [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/benefit-map/javadoc/)
+* [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/kumamoto-henno-map/openapi/)
+* [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/kumamoto-henno-map/javadoc/)
