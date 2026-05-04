@@ -2,7 +2,8 @@
 
 システムが提供する REST API の仕様です。
 
-- ベース URL: `http://localhost:8081/kumamoto-henno-map/api`
+- ベース URL（開発）: `http://localhost:8081/kumamoto-henno-map/api`
+- ベース URL（本番）: `https://www.kumamoto-henno-map.com/kumamoto-henno-map/api`
 - すべてのリクエストは `application/json`。ボディを持つレスポンスは `application/json`（204 No Content 等はボディなし）
 - 認証が必要なエンドポイントは `Authorization: Bearer <token>` ヘッダーを付与する
 - 通常の認証付き API は `Authorization` ヘッダーで Bearer Token を送信するため、Cookie 自動送信を前提とした CSRF の主対象ではない

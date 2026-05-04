@@ -53,7 +53,7 @@ docker compose down -v
 接続情報は `docker-compose.yml` の `POSTGRES_USER` / `POSTGRES_PASSWORD` を参照してください。
 
 ```bash
-docker compose exec db psql -U user -d benefit_map
+docker compose exec db psql -U user -d kumamoto_henno_map
 ```
 
 | psql コマンド | 説明 |
@@ -67,27 +67,6 @@ docker compose exec db psql -U user -d benefit_map
 |------|-----|
 | ホスト名/アドレス | db |
 | ポート番号 | 5432 |
-| 管理用データベース | benefit_map |
+| 管理用データベース | kumamoto_henno_map |
 | ユーザー名 / パスワード | `docker-compose.yml` の `POSTGRES_USER` / `POSTGRES_PASSWORD` を参照 |
 
-## テスト用DB（benefit_map_test）
-
-`docker compose up -d` の初回起動時に `config/database/setup-test.sh` が自動実行され、`benefit_map_test` が作成されます。
-
-スキーマ変更時はボリュームごと削除して再起動してください。
-
-```bash
-docker compose down -v && docker compose up -d
-```
-
-### E2Eテスト実行前の設定
-
-`apps/front/.env.test` を作成して以下を設定してください（`DB_NAME` は `_test` で終わることが必須）。
-
-```
-DB_HOST=<WSL IPアドレス>
-DB_PORT=5432
-DB_NAME=benefit_map_test
-DB_USERNAME=<DB_USERNAME>
-DB_PASSWORD=<DB_PASSWORD>
-```

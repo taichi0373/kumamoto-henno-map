@@ -88,7 +88,7 @@ graph TB
 
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
-| PostgreSQL | 15.x | リレーショナルDB |
+| PostgreSQL | 18.x | リレーショナルDB |
 
 ## 外部サービス
 
@@ -105,3 +105,31 @@ graph TB
 | GitHub Actions | - | CI/CD |
 | Docsify | 4.13.1 | ドキュメントホスティング（ビルド不要） |
 | GitHub Pages | - | ドキュメントホスティング |
+
+## ホスティング・本番環境
+
+| サービス | 用途 | URL |
+|----------|------|-----|
+| Vercel | フロントエンドホスティング | `https://www.kumamoto-henno-map.com` |
+| Render | バックエンド（Spring Boot）ホスティング | `https://api.kumamoto-henno-map.com` |
+| Render PostgreSQL | 本番データベース | Render内部接続（Internal Database URL） |
+| Hetzner VPS | OpenTripPlannerサーバー（Nginx + SSL） | `https://otp.kumamoto-henno-map.com` |
+| Cloudflare | ドメイン管理・DNS | `kumamoto-henno-map.com` |
+
+### ドメイン構成
+
+| サブドメイン | CNAME/A先 | 用途 |
+|-------------|----------|------|
+| `@` / `www` | Vercel | フロントエンド |
+| `api` | Render（CNAME） | バックエンドAPI |
+| `otp` | Hetzner VPS（Aレコード） | 経路探索エンジン |
+
+### Vercel リライト設定
+
+フロントエンドと同一オリジンからAPIを呼び出すため、Vercelのリライト機能でAPIプロキシを構成しています。
+
+```
+/kumamoto-henno-map/api/** → https://api.kumamoto-henno-map.com/kumamoto-henno-map/api/**
+```
+
+これにより Cookie（`SameSite=Lax`）が正常に送信され、クロスオリジン問題を回避しています。
