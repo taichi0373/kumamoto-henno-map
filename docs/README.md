@@ -21,9 +21,9 @@
 - [コンポーネント仕様書](https://taichi0373.github.io/kumamoto-henno-map/storybook/)
 
 ### 5. API仕様
-* [API仕様書](04_interfaces/api_spec.md)
-* [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/kumamoto-henno-map/openapi/)
-* [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/kumamoto-henno-map/javadoc/)
+- [API仕様書](04_interfaces/api_spec.md)
+- [OpenAPI 仕様書（ReDoc）](https://taichi0373.github.io/kumamoto-henno-map/openapi/)
+- [サービスクラス仕様書（Javadoc）](https://taichi0373.github.io/kumamoto-henno-map/javadoc/)
 
 ## 技術スタック
 
