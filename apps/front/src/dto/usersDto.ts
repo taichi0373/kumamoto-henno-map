@@ -13,7 +13,7 @@ interface UsersInterface {
     /** パスワード確認 */
     confirmPassword: string | null;
     /** 生年月日 */
-    birthDate: Date | null;
+    birthDate: string | Date | null;
     /** 居住地域 */
     address: string | null;
     /** 運転免許の所持状況 */
@@ -35,7 +35,7 @@ class UsersDto {
     /** パスワード確認 */
     confirmPassword: string | null;
     /** 生年月日 */
-    birthDate: Date | null;
+    birthDate: string | Date | null;
     /** 居住地域 */
     address: string | null;
     /** 運転免許の所持状況 */

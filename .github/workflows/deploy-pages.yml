@@ -1,0 +1,226 @@
+name: Deploy to GitHub Pages
+
+# ワークフロー共有設定
+on:
+  workflow_call:
+    inputs:
+      timeout-minutes:
+        description: 'タイムアウト（分）'
+        type: number
+        default: 15
+
+      frontend-dir:
+        description: 'フロントエンドディレクトリ'
+        type: string
+        default: 'apps/front'
+
+      document-dir:
+        description: 'ドキュメントディレクトリ'
+        type: string
+        default: 'docs'
+
+      npm-install-command:
+        description: 'npm installコマンド'
+        type: string
+        default: 'npm ci'
+
+      node-version:
+        description: 'nodeバージョン'
+        type: string
+        default: '22'
+
+      backend-dir:
+        description: 'バックエンドディレクトリ'
+        type: string
+        default: 'apps/back'
+
+      java-version:
+        description: 'Javaバージョン'
+        type: string
+        default: '21'
+
+      distribution:
+        description: 'Java distribution'
+        type: string
+        default: 'temurin'
+
+      build-storybook:
+        description: 'Storybookビルド実行フラグ'
+        type: boolean
+        default: true
+
+      build-javadoc:
+        description: 'Javadocビルド実行フラグ'
+        type: boolean
+        default: true
+
+      is-deploy:
+        description: 'デプロイ実行フラグ'
+        type: boolean
+        default: false
+
+env:
+  TZ: Asia/Tokyo
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# jobs: 動作内容
+jobs:
+  # HonKit ドキュメントのビルド処理
+  build-docs:
+    name: Build HonKit Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.document-dir }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.document-dir }}/package-lock.json
+
+      - name: Install dependencies
+        run: ${{ inputs.npm-install-command }}
+
+      # HonKit ビルド
+      - name: Build HonKit
+        run: npx honkit build . ./_book
+
+      # HTML整形
+      - name: Format HTML
+        run: npm run format || echo "skip format"
+
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-docs
+          path: ${{ inputs.document-dir }}/_book
+
+  # Storybook のビルド処理
+  # is-deploy: true の場合は常にビルド（デプロイ時に /storybook が欠落するのを防ぐ）
+  build-storybook:
+    name: Build Storybook
+    if: ${{ inputs.build-storybook || inputs.is-deploy }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.frontend-dir }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.frontend-dir }}/package-lock.json
+
+      - name: Install dependencies
+        run: ${{ inputs.npm-install-command }}
+
+      # Storybook ビルド
+      - name: Build Storybook
+        run: npm run build-storybook
+
+      - name: Upload Storybook artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-storybook
+          path: ${{ inputs.frontend-dir }}/storybook-static
+
+  # Javadoc のビルド処理
+  # is-deploy: true の場合は常にビルド（デプロイ時に /javadoc が欠落するのを防ぐ）
+  build-javadoc:
+    name: Build Javadoc
+    if: ${{ inputs.build-javadoc || inputs.is-deploy }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.distribution }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradle Wrapper executable
+        working-directory: ${{ inputs.backend-dir }}
+        run: chmod +x ./gradlew
+
+      - name: Build Javadoc
+        working-directory: ${{ inputs.backend-dir }}
+        run: ./gradlew javadoc
+
+      - name: Upload Javadoc artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pages-javadoc
+          path: ${{ inputs.backend-dir }}/build/docs/javadoc
+
+  # ドキュメントとStorybookとJavadocを結合してデプロイ
+  deploy:
+    name: Combine and Deploy to GitHub Pages
+    needs: [build-docs, build-storybook, build-javadoc]
+    runs-on: ubuntu-latest
+    if: >-
+      inputs.is-deploy &&
+      (needs.build-storybook.result == 'success' || needs.build-storybook.result == 'skipped') &&
+      (needs.build-javadoc.result == 'success' || needs.build-javadoc.result == 'skipped')
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      # ドキュメントをルートに配置
+      - name: Download docs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-docs
+          path: ./site
+
+      # Storybook を /storybook/ サブディレクトリに配置
+      - name: Download Storybook artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-storybook
+          path: ./site/storybook
+
+      # Javadoc を /javadoc/ サブディレクトリに配置
+      - name: Download Javadoc artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-javadoc
+          path: ./site/javadoc
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

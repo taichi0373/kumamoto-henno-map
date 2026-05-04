@@ -1,7 +1,8 @@
 <template>
   <div class="page">
+    <AppBlockUI :blocked="isLoading" />
     <div class="whole">
-      <AppCard title="ログイン" :inputStyle="{ width: '100%', maxWidth: '600px' }">
+      <AppCard title="ログイン" :inputStyle="{ width: '100%', maxWidth: '600px', padding: '16px' }">
 
         <div class="form-col">
           <AppMessageBar
@@ -44,6 +45,7 @@ import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import type { AxiosError } from 'axios'
+import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
@@ -53,8 +55,8 @@ import AppPassword from '@/components/atoms/AppPassword.vue'
 import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import { UsersDto } from '@/dto/usersDto'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
-import { AuthUtils } from '@/utils/auth'
-import { MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
+import { useAuthStore } from '@/stores/auth'
+import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
 import { ValidateUtils } from '@/utils/validateUtils'
 import { MessageUtils } from '@/utils/messageUtils'
 import apiClient from '@/utils/api'
@@ -63,6 +65,7 @@ import { responseStatusConstant } from '@/utils/responseStatusConstant'
 /** ルーター */
 const router = useRouter()
 const route = useRoute()
+const auth = useAuthStore()
 
 /** ユーザー情報 */
 const usersModel = ref<UsersDto>(new UsersDto())
@@ -75,9 +78,12 @@ const passwordErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const barErrMode = ref('') as Ref<string>
 const barErrMsg = ref('') as Ref<string>
 
+/** ローディング */
+const isLoading = ref(false)
+
 // 既にログイン済みの場合はホームにリダイレクト
 onMounted(() => {
-  if (AuthUtils.isLoggedIn()) {
+  if (auth.isLoggedIn) {
     router.push('/')
   }
 })
@@ -95,27 +101,31 @@ const onClick = async () => {
   if (hasError) return
 
   // APIリクエスト
+  isLoading.value = true
   try {
-    const response = await apiClient.post('/users/login', {
+    const response = await apiClient.post('/auth/login', {
       username: usersModel.value.username,
       password: usersModel.value.password
     })
 
     if (response.status === responseStatusConstant.OK) {
       const userData = (response.data as { data: { username: string; userId: number } }).data
-      AuthUtils.login({ username: userData.username, id: String(userData.userId) })
+      auth.login({ username: userData.username, id: String(userData.userId) })
       const redirect = route.query.redirect as string | undefined
       router.push(redirect || '/')
     }
   } catch (error: unknown) {
     const axiosError = error as AxiosError<{ message: string }>
     if (axiosError.response?.status === responseStatusConstant.UNAUTHORIZED) {
-      barErrMode.value = 'error'
-      barErrMsg.value = 'ユーザー名またはパスワードが正しくありません'
+      const error = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_009, "ユーザ名またはパスワード")
+      barErrMode.value = error.type === 1 ? 'error' : 'warning'
+      barErrMsg.value = error.message
     } else {
       barErrMode.value = 'error'
-      barErrMsg.value = 'ログイン中にエラーが発生しました'
+      barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR
     }
+  } finally {
+    isLoading.value = false
   }
 }
 

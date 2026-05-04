@@ -11,12 +11,18 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 import io.github.taichi0373.benefit_map.repository.entity.FareDiscountEntity;
 import io.github.taichi0373.benefit_map.repository.entity.FareDiscountEntity_;
 
+/**
+ * 運賃割引DAOインターフェース
+ * <p>
+ * 公共交通事業者ごとの運賃割引情報の登録・更新・削除・検索操作を提供する。
+ * </p>
+ */
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")
 public interface FareDiscountDao {
 
-    /** 
+    /**
      * 主キー検索
      */
     default FareDiscountEntity selectById(String benefit_id, String agency_id) {
@@ -28,18 +34,6 @@ public interface FareDiscountDao {
                       .where(c -> c.eq(e.agencyId, agency_id))
                       .fetchOne();
     }
-
-    // /**
-    //  * 特典IDで検索
-    //  */
-    // @Select
-    // List<FareDiscountEntity> selectByBenefitId(String benefitId);
-
-    // /**
-    //  * 事業者IDで検索
-    //  */
-    // @Select
-    // List<FareDiscountEntity> selectByAgencyId(String agencyId);
 
     /**
      * 登録

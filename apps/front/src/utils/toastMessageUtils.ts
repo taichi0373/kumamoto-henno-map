@@ -59,4 +59,4 @@ class ToastMessageUtils {
     }
 }
 
-export default ToastMessageUtils;
+export { ToastMessageUtils };

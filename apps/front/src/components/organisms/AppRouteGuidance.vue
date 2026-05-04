@@ -1,7 +1,6 @@
 <template>
   <div class="p-2">
     <form @submit.prevent="handleSearchRoute(searchRoute)">
-
       <div class="form-row-1">
         <div class="form-col">
           <AppLabel :required="true">交通手段</AppLabel>
@@ -12,8 +11,8 @@
           <AppLabel :required="true">出発地</AppLabel>
           <div class="search-input-container">
             <AppInputGroupWithButton v-model="searchRoute.startLocation" :input-id="'start-location'" :type="'text'"
-              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'" :error="startLocationErrorDto"
-              @input="onInput('start')" @focus="onFocus('start')"
+              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :error="startLocationErrorDto" @input="onInput('start')" @focus="onFocus('start')"
               @button-click="emit('select-on-map', 'start')" />
             <!-- 検索候補 -->
             <AppSuggestionList :modelValue="startSuggestions" @select="selectStartLocation" />
@@ -24,8 +23,8 @@
           <AppLabel :id="'end-location'" :required="true">目的地</AppLabel>
           <div class="search-input-container">
             <AppInputGroupWithButton v-model="searchRoute.endLocation" :input-id="'end-location'" :type="'text'"
-              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'" :error="endLocationErrorDto"
-              @input="onInput('end')" @focus="onFocus('end')"
+              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :error="endLocationErrorDto" @input="onInput('end')" @focus="onFocus('end')"
               @button-click="emit('select-on-map', 'end')" />
             <!-- 検索候補 -->
             <AppSuggestionList :modelValue="endSuggestions" @select="selectEndLocation" />
@@ -33,18 +32,18 @@
         </div>
       </div>
 
-      <div class="expand-trigger mt-4" @click="toggleConditions">
+      <div class="expand-trigger" @click="toggleConditions">
         {{ showConditions ? '条件を閉じる' : '条件指定' }}
         <span :class="showConditions ? 'icon-expand-trigger rotated' : 'icon-expand-trigger'">
           {{ showConditions ? '▲' : '▼' }}
         </span>
       </div>
       <div v-if="showConditions">
-        <div class="form-row-1 mt-2">
+        <div class="form-col">
           <AppLabel>出発/到着</AppLabel>
           <AppSelect v-model="searchRoute.departureArrival" :options="departureArrivalOptions" :show-clear="false" />
         </div>
-        <div class="form-row-2">
+        <div class="form-row-2 mt-4">
           <div class="form-col">
             <AppLabel>日付</AppLabel>
             <AppCalendar id="date" type="date" v-model="searchRoute.date" :placeholder="''" />
@@ -57,42 +56,37 @@
       </div>
 
       <div class="form-btn">
-        <AppButton type="button" :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
-        <AppButton type="submit" :label="'経路を検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
+        <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
+        <AppButton type="submit" :label="'経路を検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading"/>
       </div>
     </form>
   </div>
 
-  <!-- 経路探索結果 -->
-  <div v-if="routes.length > 0" class="p-2">
-    <template v-for="(route, index) in routes" :key="index" >
-      <div :class="['route-card', { 'route-card--active': props.activeRouteIndex === index }]" @click="emit('select-route', index)">
-        <AppCard class="mb-3">
-          <!-- <template #title>{{ route.routeName }}</template> -->
-          <p>
-            <span class="route-number" :style="{ backgroundColor: props.activeRouteIndex === index ? ROUTE_ACTIVE_COLORS[index] : '#757575' }">{{ index + 1 }}</span>
-            {{ formatJapaneseTime(route.startTime) }}～{{ formatJapaneseTime(route.endTime) }} ({{ route.duration }}分)
-          </p>
-          <p>
-            {{ route.totalFare }}円<span v-if="route.totalDiscountFare"> → {{ route.totalDiscountFare }}円</span> / 乗り換え：{{ route.transfers }}回
-          </p>
-        </AppCard>
-      </div>
-    </template>
+  <!-- ローディング -->
+  <div v-if="isLoading" class="loading-icon">
+    <AppProgressSpinner/>
   </div>
+  <!-- 経路探索結果 -->
+  <AppRouteResultList v-if="!isLoading" :routes="routes" :active-route-index="props.activeRouteIndex"
+    @select-route="emit('select-route', $event)" />
+  <AppAlert v-if="hasSearched && !isLoading && routes.length === 0" :variant="'error'" :message="'経路が見つかりませんでした'"
+    class="mt-2" />
+
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import type { Ref } from 'vue'
+import AppAlert from '../atoms/AppAlert.vue'
 import AppLabel from '../atoms/AppLabel.vue'
 import AppSelect from '../atoms/AppSelect.vue'
 import AppButton from '../atoms/AppButton.vue'
-import AppCard from '../atoms/AppCard.vue'
 import AppInputGroupWithButton from '../molecules/AppInputGroupWithButton.vue'
+import AppRouteResultList from './AppRouteResultList.vue'
 import AppSuggestionList from '../atoms/AppSuggestionList.vue'
 import AppCalendar from '../atoms/AppCalendar.vue'
 import AppTimePicker from '../atoms/AppTimePicker.vue'
+import AppProgressSpinner from '../atoms/AppProgressSpinner.vue'
 import { codeConstant } from '@/utils/codeConstant'
 import { RouteRequestDto } from '@/dto/routeRequestDto'
 import { SelectDto } from '@/dto/selectDto'
@@ -103,7 +97,6 @@ import { ValidateUtils } from '@/utils/validateUtils'
 import { MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
 import { InputFormErrorDto } from "@/dto/InputFormErrorDto";
 import { MessageUtils } from '@/utils/messageUtils'
-import { ROUTE_ACTIVE_COLORS } from '@/utils/useMap'
 
 const props = withDefaults(defineProps<{
   /** 出発地候補リスト */
@@ -140,6 +133,10 @@ const emit = defineEmits<{
   (e: 'fetch-suggestions', marker: MarkerDto): void;
   /** 候補リストのクリア */
   (e: 'clear-suggestions'): void;
+  /** 経路探索結果のクリア */
+  (e: 'clear-routes'): void;
+  /** 現在地の取得 */
+  (e: 'fetch-current-location', type: string): void;
   /** 経路カード選択 */
   (e: 'select-route', index: number): void;
 }>();
@@ -153,6 +150,9 @@ const searchRoute = ref<RouteRequestDto>(new RouteRequestDto())
 
 /** 条件表示フラグ */
 const showConditions = ref(false)
+
+/** 検索実行済みフラグ */
+const hasSearched = ref(false)
 
 /** 交通手段のプルダウン */
 const transportOptions = ref([]) as Ref<SelectDto[]>
@@ -244,7 +244,10 @@ const getDepartureArrivalOptions = () => {
 
 // 条件クリア
 const clearConditions = () => {
+  clearError()
   searchRoute.value = new RouteRequestDto()
+  hasSearched.value = false
+  emit('clear-routes')
 }
 
 // 条件の表示/非表示切り替え
@@ -286,6 +289,12 @@ const onFocus = (type: string) => {
 
 // 出発地が選択されたときの処理
 const selectStartLocation = (item: SuggestionDto) => {
+  // 現在地が選択された場合は位置情報取得
+  if (item.id === -1) {
+    emit('clear-suggestions')
+    emit('fetch-current-location', codeConstant.SEARCH_TYPE.START)
+    return
+  }
   if (item.lat == null || item.lon == null) return
   searchRoute.value.startLocation = item.name;
   searchRoute.value.startLat = item.lat;
@@ -305,6 +314,12 @@ const selectStartLocation = (item: SuggestionDto) => {
 
 // 目的地が選択されたときの処理
 const selectEndLocation = (item: SuggestionDto) => {
+  // 現在地が選択された場合は位置情報取得
+  if (item.id === -1) {
+    emit('clear-suggestions')
+    emit('fetch-current-location', codeConstant.SEARCH_TYPE.END)
+    return
+  }
   if (item.lat == null || item.lon == null) return
   searchRoute.value.endLocation = item.name;
   searchRoute.value.endLat = item.lat;
@@ -330,19 +345,12 @@ const handleOutsideClick = (event: MouseEvent) => {
   }
 }
 
-
-/** "HH:mm" 形式を "HH時mm分" 形式に変換 */
-const formatJapaneseTime = (time: string | null): string => {
-  if (!time) return ''
-  const [hour, minute] = time.split(':')
-  return `${hour}時${minute}分`
-}
-
 // 経路検索
 const handleSearchRoute = (route: RouteRequestDto) => {
   // エラーチェック
   const hasError = checkError()
   if (!hasError) {
+    hasSearched.value = true
     emit('search-route', route)
   }
 }
@@ -389,29 +397,21 @@ function checkError(): boolean {
 <style scoped lang="scss">
 @use "@/assets/scss/base";
 
-.route-card {
+// 条件指定 / 閉じる
+.expand-trigger {
+  color: base.$text-primary;
   cursor: pointer;
-  border-radius: 8px;
-
-  &--active {
-    outline: 2px solid #1A74FD;
-    border-radius: 8px;
-  }
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 12px;
+  margin: 12px 0px;
 }
 
-.route-number {
-  display: inline-flex;
-  align-items: center;
+// ローディング
+.loading-icon {
+  display: flex;
   justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background-color: var(--primary-color, #3b82f6);
-  color: #fff;
-  font-size: 12px;
-  font-weight: bold;
-  margin-right: 6px;
-  vertical-align: middle;
-  flex-shrink: 0;
+  margin: 24px 0;
 }
+
 </style>

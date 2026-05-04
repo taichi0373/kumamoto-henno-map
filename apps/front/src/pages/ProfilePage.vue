@@ -1,9 +1,8 @@
 <template>
   <div class="page">
-
+    <AppBlockUI :blocked="isLoading" />
     <div class="whole">
       <AppCard title="プロフィール編集" :inputStyle="{ width: '100%', maxWidth: '600px' }">
-        <form @submit.prevent="handleUpdateProfile">
           <div class="form-row-2">
             <div class="form-col">
               <AppLabel :required="true">ユーザー名</AppLabel>
@@ -21,7 +20,7 @@
             <div class="form-col">
               <AppLabel :required="true">居住地域</AppLabel>
               <AppSelect :input-id="'address'" v-model="usersModel.address" placeholder="選択してください"
-                :options="addressOptions" :required="true" :error="addressErrorDto" />
+                :options="addressOptions" :filter="true" :required="true" :error="addressErrorDto" />
             </div>
             <div class="form-col">
               <AppLabel :required="true">運転免許の所持状況</AppLabel>
@@ -30,11 +29,13 @@
             </div>
           </div>
           <div class="form-btn">
-            <AppButton type="submit" :label="'更新'" />
+            <AppButton :primary="false" label="クリア" @click="clearForm" />
+            <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
           </div>
-        </form>
 
       </AppCard>
+      <!-- トーストメッセージ -->
+      <AppToastMessage />
     </div>
   </div>
 </template>
@@ -44,21 +45,30 @@ import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import apiClient from '@/utils/api'
+import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppCard from '@/components/atoms/AppCard.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppCalendar from '@/components/atoms/AppCalendar.vue'
+import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { UsersDto } from '@/dto/usersDto'
 import { SelectDto } from '@/dto/selectDto'
 import { MunicipalityDto } from '@/dto/municipalityDto'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
+import { useAuthStore } from '@/stores/auth'
+import { ValidateUtils } from '@/utils/validateUtils'
+import { ToastMessageUtils } from '@/utils/toastMessageUtils'
+import { TypeConvertUtils } from '@/utils/typeConvertUtils'
+import { MessageUtils } from '@/utils/messageUtils'
+import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
 
 /** ルーター */
 const router = useRouter()
+const auth = useAuthStore()
 
 /** ユーザー情報 */
 const usersModel = ref<UsersDto>(new UsersDto())
@@ -68,6 +78,9 @@ const usernameErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const birthDateErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const addressErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 const licenseStatusErrorDto = ref([]) as Ref<InputFormErrorDto[]>
+
+/** ローディング */
+const isLoading = ref(false)
 
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
@@ -87,11 +100,11 @@ const licenseOptions = ref([]) as Ref<SelectDto[]>
  * 初期表示
  */
 onMounted(async () => {
-  // ユーザーデータの取得
-  await loadProfile()
+  // ユーザー情報の取得
+  await getUsersInfo()
   // 自治体データの取得
   await getMunicipalities()
-  // 運転免許の所持状況データの取得
+  // 運転免許の所持状況プルダウン取得
   getLicenseStatusOptions()
 })
 
@@ -106,9 +119,11 @@ const getMunicipalities = async () => {
         label: dto.municipalityName,
         text: dto.municipalityKana
       }))
+    } else {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.DATA_NOT_FOUND)
     }
   } catch (error) {
-    console.error('自治体データの取得に失敗しました:', error)
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
   }
 }
 
@@ -122,18 +137,123 @@ const getLicenseStatusOptions = () => {
 }
 
 /**
- * プロフィール情報のロード
+ * ユーザー情報の取得
  */
-const loadProfile = async () => {
-  console.log("プロフィール情報のロード")
+const getUsersInfo = async () => {
+  const userId = auth.user?.id
+  if (ValidateUtils.isNullOrEmpty(userId)) {
+    return
+  }
+  try {
+    const response = await apiClient.get(`/users/${userId}`)
+    if (response.status === responseStatusConstant.OK && response.data) {
+      usersModel.value = (response.data as unknown as { data: UsersDto }).data
+    } else {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.DATA_NOT_FOUND)
+    }
+  } catch (error) {
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+  }
 }
 
 /**
- * プロフィール更新処理
+ * ユーザー情報の更新
  */
-const handleUpdateProfile = async () => {
+const updateUsersInfo = async () => {
+  // エラーチェック
+  const hasError = checkError()
+  // エラーがない場合はAPIを呼び出す
+  if (!hasError) {
+    const userId = auth.user?.id
+    if (ValidateUtils.isNullOrEmpty(userId)) {
+      return
+    }
+    const requestData = {
+      userId: usersModel.value.userId,
+      username: usersModel.value.username,
+      birthDate: TypeConvertUtils.toStringFromDate(usersModel.value.birthDate),
+      address: usersModel.value.address,
+      licenseStatus: usersModel.value.licenseStatus
+    }
+    isLoading.value = true
+    try {
+      const response = await apiClient.put(`/users`, requestData)
+      if (response.status === responseStatusConstant.OK) {
+        ToastMessageUtils.success(API_RESPONSE_MESSAGE.UPDATE_SUCCESS)
+        // ユーザー情報の再取得
+        await getUsersInfo()
+      } else {
+        ToastMessageUtils.error(API_RESPONSE_MESSAGE.UPDATE_FAILED)
+      }
+    } catch (error) {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    } finally {
+      isLoading.value = false
+    }
+  }
 }
 
+/**
+ * フォームのクリア
+ */
+const clearForm = () => {
+  clearError()
+  usersModel.value.username = ''
+  usersModel.value.birthDate = null
+  usersModel.value.address = ''
+  usersModel.value.licenseStatus = ''
+}
+
+/**
+ * エラークリア
+  */
+const clearError = () => {
+  usernameErrorDto.value.splice(0)
+  birthDateErrorDto.value.splice(0)
+  addressErrorDto.value.splice(0)
+  licenseStatusErrorDto.value.splice(0)
+}
+
+/**
+ * エラーチェック
+ * @returns {boolean} エラーがある場合はtrue
+  */
+function checkError(): boolean {
+  // エラー初期化
+  clearError()
+  let hasError = false
+
+  // ユーザ名が未入力の場合はエラー
+  if (ValidateUtils.isNullOrEmpty(usersModel.value.username)) {
+    usernameErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "ユーザ名")
+    );
+    hasError = true
+  }
+  // 生年月日が未入力の場合はエラー
+  if (ValidateUtils.isNullOrEmpty(usersModel.value.birthDate)) {
+    birthDateErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "生年月日")
+    );
+    hasError = true
+  }
+  // 居住地域が未入力の場合はエラー
+  if (ValidateUtils.isNullOrEmpty(usersModel.value.address)) {
+    addressErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "居住地域")
+    );
+    hasError = true
+  }
+  // 運転免許の所持状況が未入力の場合はエラー
+  if (ValidateUtils.isNullOrEmpty(usersModel.value.licenseStatus)) {
+    licenseStatusErrorDto.value.push(
+      MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "運転免許の所持状況")
+    );
+    hasError = true
+  }
+
+  return hasError
+}
 
 </script>
 

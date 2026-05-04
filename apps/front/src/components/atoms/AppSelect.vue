@@ -154,13 +154,13 @@ const computedFilterFields = computed<string[] | undefined>(() => {
   width: 100%;
 }
 
-.p-select {
+.p-field :deep(.p-select) {
   width: 100%;
   height: base.$input-height;
 }
 
-.p-field :deep(.p-placeholder) {
-  color: base.$placeholder-color;
+.p-field :deep(.p-select:not(:disabled).p-focus) {
+  border-color: base.$base-500;
 }
 
 .p-field :deep(.p-select.error) {

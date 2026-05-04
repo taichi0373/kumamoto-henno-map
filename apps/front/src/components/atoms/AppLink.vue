@@ -41,11 +41,11 @@ const onClick = (e: Event) => {
 .p-button-link {
   text-align: left;
   padding: 2px;
-  color: base.$base-700;
+  color: base.$text-primary;
   text-decoration: underline;
   align-items: baseline;
   &:hover {
-    color: base.$base-500 !important;
+    color: base.$text-secondary !important;
   }
 }
 </style>

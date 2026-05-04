@@ -28,7 +28,7 @@ declare module '@/utils/auth' {
     username: string
     [key: string]: unknown
   }
-  
+
   export const AuthUtils: {
     login(user: User | null, token: string): void
     isLoggedIn(): boolean
@@ -45,7 +45,7 @@ declare module './utils/auth' {
     username: string
     [key: string]: unknown
   }
-  
+
   export const AuthUtils: {
     login(user: User | null, token: string): void
     isLoggedIn(): boolean

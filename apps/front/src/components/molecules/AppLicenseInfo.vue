@@ -7,21 +7,12 @@
           「運転免許証自主返納者への特典」のご紹介
         </AppLink>
       </p>
-      <div class="yahoo-attribution">
-        <!-- Begin Yahoo! JAPAN Web Services Attribution Snippet -->
-        <span class="attribution-text">
-          <AppLink @click="openUrl('https://developer.yahoo.co.jp/sitemap/')">
-            Webサービス by Yahoo! JAPAN
-          </AppLink>
-        </span>
-        <!-- End Yahoo! JAPAN Web Services Attribution Snippet -->
-      </div>
 
       <!-- 出典・ライセンス情報のボタン -->
       <div class="license-button-section">
         <AppButton
           type="button"
-          label="その他ライセンス情報"
+          label="ライセンス情報"
           :primary="false"
           size="small"
           icon="pi pi-info-circle"
@@ -33,7 +24,7 @@
     <!-- ダイアログ -->
     <AppDialog
       v-model="showLicensePopup"
-      header="その他ライセンス情報"
+      header="ライセンス情報"
       :dialog-style="{ width: '600px' }"
     >
       <div class="modal-content">
@@ -42,7 +33,20 @@
         </p>
 
         <div class="license-section">
-          <h4 class="section-title">オープンソースソフトウェア</h4>
+          <h4 class="section-title">
+            <i class="pi pi-map-marker" />位置情報の取得について
+          </h4>
+          <p class="section-description">
+            本アプリは、経路探索および現在地表示の目的のみで、お使いのデバイスの位置情報を取得します。
+            取得した位置情報はルート計算にのみ使用し、サーバーへの保存や第三者への提供は行いません。
+            位置情報の取得はブラウザの許可設定からいつでも無効にできます。
+          </p>
+        </div>
+
+        <div class="license-section">
+          <h4 class="section-title">
+            <i class="pi pi-cog" />オープンソースソフトウェア
+          </h4>
           <ul class="license-list">
             <li class="license-item">
               <AppLink @click="openUrl('https://www.opentripplanner.org')">
@@ -63,7 +67,9 @@
         </div>
 
         <div class="license-section">
-          <h4 class="section-title">オープンデータ</h4>
+          <h4 class="section-title">
+            <i class="pi pi-database" />オープンデータ
+          </h4>
           <p class="section-description">本システムは、以下のオープンデータを使用しています。</p>
 
           <ol class="data-list">
@@ -136,80 +142,96 @@ const openUrl = (url: string) => {
 @use "@/assets/scss/base";
 
 .license-container {
-  background: white;
+  background: base.$base-100;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 15px;
-  margin: 0px;
-  border: 1px solid #e2e8f0;
-  animation: fadeIn 0.3s ease-out;
+  padding: base.$margin-200 - 1;
+  border: 1px solid base.$base-400;
 }
 
 .license-content {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: base.$margin-100;
 }
 
 .source-info {
-  font-size: 14px;
-  color: #4a5568;
+  font-size: base.$fontsize-medium;
+  color: base.$text-primary;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: base.$margin-100;
   flex-wrap: wrap;
 }
 
 .attribution-text {
-  font-size: 12px;
-  color: #4a5568;
+  font-size: base.$fontsize-small;
+  color: base.$text-primary;
 }
 
 .license-button-section {
   display: flex;
   justify-content: center;
-  padding-top: 10px;
-  border-top: 1px solid #e2e8f0;
+  padding-top: base.$margin-100;
+  border-top: 1px solid base.$base-400;
 }
 
 .modal-content {
   max-height: 70vh;
   overflow-y: auto;
-  padding-right: 8px;
+  padding-right: base.$margin-100;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: base.$base-300;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: base.$base-400;
+    border-radius: 3px;
+
+    &:hover {
+      background: base.$base-500;
+    }
+  }
 }
 
 .intro-text {
-  color: #4a5568;
-  margin-bottom: 20px;
+  color: base.$text-primary;
+  margin-bottom: base.$margin-200;
   line-height: 1.6;
 }
 
 .license-section {
-  margin-bottom: 25px;
+  margin-bottom: base.$margin-300;
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: base.$fontsize-large;
   font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 12px;
+  color: base.$text-primary;
+  margin-bottom: base.$margin-100 + 4;
   padding-bottom: 6px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 2px solid base.$base-400;
   display: flex;
   align-items: center;
   gap: 6px;
 
-  &::before {
-    content: "📋";
-    font-size: 14px;
+  .pi {
+    font-size: base.$fontsize-medium;
+    color: base.$text-primary;
   }
 }
 
 .section-description {
-  color: #4a5568;
-  margin-bottom: 15px;
-  font-size: 14px;
+  color: base.$text-primary;
+  margin-bottom: base.$margin-200 - 1;
+  font-size: base.$fontsize-medium;
   line-height: 1.5;
 }
 
@@ -220,28 +242,20 @@ const openUrl = (url: string) => {
   margin: 0;
 }
 
-.data-list {
-  counter-reset: data-counter;
-}
-
 .license-item,
 .data-item {
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  margin-bottom: base.$margin-200;
+  padding: base.$margin-200 - 1;
+  background: base.$base-200;
+  border: 1px solid base.$base-400;
   border-radius: 8px;
-  border-left: 4px solid #4299e1;
-}
-
-.data-item {
-  counter-increment: data-counter;
+  border-left: 4px solid base.$chose-100;
 }
 
 .license-details {
-  margin: 8px 0;
-  font-size: 13px;
-  color: #4a5568;
+  margin: base.$margin-100 0;
+  font-size: base.$fontsize-medium;
+  color: base.$text-primary;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -249,47 +263,15 @@ const openUrl = (url: string) => {
 }
 
 .sub-list {
-  margin: 10px 0;
-  padding-left: 20px;
+  margin: base.$margin-100 0;
+  padding-left: base.$margin-200;
   list-style-type: disc;
 
   li {
-    color: #718096;
-    font-size: 12px;
+    color: base.$text-primary;
+    font-size: base.$fontsize-medium;
     margin-bottom: 4px;
     line-height: 1.4;
   }
 }
-
-.research-note {
-  margin-top: 10px;
-  padding: 10px;
-  background: #fff5f5;
-  border: 1px solid #fed7d7;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #c53030;
-  line-height: 1.5;
-}
-
-.modal-content {
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 3px;
-
-    &:hover {
-      background: #a0aec0;
-    }
-  }
-}
-
 </style>

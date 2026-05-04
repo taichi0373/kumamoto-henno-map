@@ -15,6 +15,12 @@ import org.seasar.doma.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 特典適用条件エンティティ
+ * <p>
+ * 特典の適用条件（年齢・免許状況・自治体コード）を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "benefit_eligibility")
 @Getter

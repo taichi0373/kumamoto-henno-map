@@ -1,7 +1,31 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
-// Vue CLI用の環境変数（VUE_APP_プレフィックスが必要）
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8081/benefit-map/api';
+// Vue CLI用の環境変数
+const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/benefit-map/api';
+
+/**
+ * 401 Unauthorized 発生時に呼び出されるコールバックの型
+ */
+type UnauthorizedHandler = () => void
+
+/** 401ハンドラー（App.vue のセットアップ時に登録される） */
+let unauthorizedHandler: UnauthorizedHandler | null = null
+
+/** CSRF トークンキャッシュ */
+let csrfToken: string | null = null
+
+/**
+ * 401 Unauthorized 発生時のコールバックを登録する
+ * <p>
+ * api.ts とストアの循環依存を避けるため、ストアへの直接依存を持たず
+ * コールバック注入でハンドリングを委譲する。
+ * App.vue の setup() トップレベルで呼び出すこと。
+ * </p>
+ * @param handler ログアウト処理とリダイレクトを行うコールバック
+ */
+export function setUnauthorizedHandler(handler: UnauthorizedHandler): void {
+  unauthorizedHandler = handler
+}
 
 /**
  * API リクエストボディの値の型
@@ -59,15 +83,56 @@ class RestApiClient {
   }
 
   /**
+   * CSRF トークンを取得してキャッシュする
+   * @returns CSRF トークン
+   */
+  private async fetchCsrfToken(): Promise<string> {
+    if (csrfToken) {
+      return csrfToken
+    }
+    try {
+      const response = await this.axiosInstance.get('/auth/csrf')
+      const token = response.data.data
+      if (!token || typeof token !== 'string') {
+        throw new Error('Invalid CSRF token received from server')
+      }
+      csrfToken = token
+      return csrfToken
+    } catch (error) {
+      console.error('Failed to fetch CSRF token:', error)
+      throw error
+    }
+  }
+
+  /**
+   * CSRF トークンキャッシュをクリア
+   */
+  private clearCsrfToken(): void {
+    csrfToken = null
+  }
+
+  /**
    * リクエスト・レスポンスインターセプターの設定
    */
   private setupInterceptors(): void {
-    // リクエストインターセプター（API Key の追加）
+    // リクエストインターセプター（CSRFトークン追加 & ロギング）
     this.axiosInstance.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        const apiKey = localStorage.getItem('api_key')
-        if (apiKey && config.headers) {
-          config.headers['X-API-Key'] = apiKey
+      async (config: InternalAxiosRequestConfig) => {
+        // 状態変更系リクエストにCSRFトークンを追加
+        if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
+          // 認証不要エンドポイントは除外（SecurityConfig の ignoringRequestMatchers と一致）
+          const skipCsrfPaths = ['/auth/', '/users/signup']
+          const needsCsrf = !skipCsrfPaths.some(path => config.url?.includes(path))
+          
+          if (needsCsrf) {
+            try {
+              const token = await this.fetchCsrfToken()
+              config.headers['X-XSRF-TOKEN'] = token
+            } catch (error) {
+              console.error('Failed to add CSRF token:', error)
+              // CSRF トークン取得失敗時はリクエストを続行（サーバーエラーで判断）
+            }
+          }
         }
         
         console.log('API Request:', config.method?.toUpperCase(), (config.baseURL || '') + (config.url || ''))
@@ -88,11 +153,32 @@ class RestApiClient {
       (error) => {
         console.error('API Response Error:', error.response?.status, error.config?.url, error.message)
         
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login') && !error.config?.url?.includes('/auth/logout')) {
           console.warn('Unauthorized access, redirecting to login...')
-          localStorage.removeItem('auth_token')
-          sessionStorage.clear()
-          window.location.href = '/login'
+          this.clearCsrfToken() // 認証エラー時はCSRFトークンもクリア
+          if (unauthorizedHandler) {
+            unauthorizedHandler()
+          } else {
+            // ハンドラー未登録時のフォールバック
+            window.location.href = '/login'
+          }
+        }
+        
+        // CSRF トークンエラー時はキャッシュクリア
+        // バックエンドが CSRF 専用メッセージを返した場合（primary）、
+        // またはCSRF保護対象の状態変更系リクエストが403を受けた場合（safety net）にクリアする
+        if (error.response?.status === 403) {
+          const isCsrfMessage = error.response?.data?.message?.includes('CSRF')
+          const isStateMutating = ['post', 'put', 'patch', 'delete'].includes(
+            error.config?.method?.toLowerCase() || ''
+          )
+          const skipCsrfPaths = ['/auth/', '/users/signup']
+          const isCsrfRequired = !skipCsrfPaths.some(path => error.config?.url?.includes(path))
+
+          if (isCsrfMessage || (isStateMutating && isCsrfRequired)) {
+            console.warn('CSRF token error or state-mutating 403, clearing token cache')
+            this.clearCsrfToken()
+          }
         }
         return Promise.reject(error)
       }

@@ -11,6 +11,12 @@ import org.seasar.doma.jdbc.criteria.Entityql;
 import io.github.taichi0373.benefit_map.repository.entity.AgencyEntity;
 import io.github.taichi0373.benefit_map.repository.entity.AgencyEntity_;
 
+/**
+ * 事業者情報DAOインターフェース
+ * <p>
+ * 公共交通事業者（GTFS agency）の登録・更新・削除・検索操作を提供する。
+ * </p>
+ */
 @Dao
 @ConfigAutowireable
 @SuppressWarnings("PMD.TooManyMethods")

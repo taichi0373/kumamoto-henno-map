@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <AppToastMessage />
+    <AppBlockUI :blocked="isLoading" />
     <div class="whole">
       <AppCard title="新規登録" :inputStyle="{ width: '100%', maxWidth: '600px' }">
 
@@ -51,6 +51,8 @@
 
       </AppCard>
     </div>
+    <!-- トーストメッセージ -->
+    <AppToastMessage />
   </div>
 </template>
 
@@ -58,6 +60,7 @@
 import { ref, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { useRouter } from 'vue-router'
+import AppBlockUI from '@/components/atoms/AppBlockUI.vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppTextField from '@/components/atoms/AppTextField.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
@@ -68,7 +71,7 @@ import AppLink from '@/components/atoms/AppLink.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
 import AppPassword from '@/components/atoms/AppPassword.vue'
 import apiClient from '@/utils/api'
-import ToastMessageUtils from '@/utils/toastMessageUtils'
+import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
@@ -97,6 +100,9 @@ const licenseStatusErrorDto = ref([]) as Ref<InputFormErrorDto[]>
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
 
+/** ローディング */
+const isLoading = ref(false)
+
 /** 運転免許の所持状況のプルダウン */
 const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.UNLICENSED]: '所持していない',
@@ -113,7 +119,7 @@ const licenseOptions = ref([]) as Ref<SelectDto[]>
 onMounted(() => {
   // 自治体データの取得
   getMunicipalities()
-  // 運転免許の所持状況データの取得
+  // 運転免許の所持状況プルダウン取得
   getLicenseStatusOptions()
 })
 
@@ -122,20 +128,21 @@ const getMunicipalities = async () => {
   try {
     const response = await apiClient.get('/municipality/all')
     if (response.status === responseStatusConstant.OK && response.data) {
-      console.log('自治体データの取得に成功しました:', response.data)
       const municipalities = ((response.data as unknown) as { data: MunicipalityDto[] }).data
       addressOptions.value = municipalities.map((dto) => ({
         value: dto.municipalityCd,
         label: dto.municipalityName,
         text: dto.municipalityKana
       }))
+    } else {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.DATA_NOT_FOUND)
     }
   } catch (error) {
-    console.error('自治体データの取得に失敗しました:', error)
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
   }
 }
 
-// 運転免許の所持状況データを取得
+// 運転免許の所持状況プルダウン取得
 const getLicenseStatusOptions = () => {
   licenseOptions.value = Object.entries(codeConstant.LICENSE_STATUS).map(([key, value]) => ({
     value: value.toString(),
@@ -147,7 +154,7 @@ const getLicenseStatusOptions = () => {
 /**
  * 新規登録処理
   */
-const onClick = () => {
+const onClick = async () => {
   // エラーチェック
   const hasError = checkError()
   // エラーがない場合はAPIを呼び出す
@@ -162,20 +169,22 @@ const onClick = () => {
       licenseStatus: usersModel.value.licenseStatus
     }
 
-    apiClient.post('/users/signup', requestData)
-      .then((response) => {
-        if (response.status === responseStatusConstant.CREATED) {
-          // ToastMessageUtils.success('新規登録が完了しました')
-          router.push('/login')
-        } else {
-          ToastMessageUtils.error(API_RESPONSE_MESSAGE.CREATE_FAILED)
-        }
-      })
-      .catch(() => {
-        ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
-    });
+    isLoading.value = true
+    try {
+      const response = await apiClient.post('/users/signup', requestData)
+      if (response.status === responseStatusConstant.CREATED) {
+        router.push('/login')
+      } else {
+        ToastMessageUtils.error(API_RESPONSE_MESSAGE.CREATE_FAILED)
+      }
+    } catch {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    } finally {
+      isLoading.value = false
+    }
   }
 }
+
 /**
  * エラークリア
   */

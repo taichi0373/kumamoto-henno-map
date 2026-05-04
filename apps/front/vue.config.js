@@ -12,10 +12,16 @@ module.exports = defineConfig({
     port: 3000, // ポートを3000に設定
     proxy: {
       // Spring Bootバックエンドへのプロキシ設定（ローカル開発用）
-      '/api': {
+      '/benefit-map/api': {
         target: 'http://localhost:8081',
         changeOrigin: true,
         secure: false
+      },
+      '/tile-proxy': {
+        target: 'https://tile.openstreetmap.jp',
+        changeOrigin: true,
+        pathRewrite: { '^/tile-proxy': '' },
+        secure: true
       }
     }
   },

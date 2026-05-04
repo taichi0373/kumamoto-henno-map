@@ -176,7 +176,6 @@ benefit_map/
 ## 外部サービス
 
 - **OTP (OpenTripPlanner)**: `http://localhost:8080/otp/routers/default/plan` — GTFS経路探索
-- **Yahoo Local Search API**: POI検索（APIキー設定が必要）
 - **MapLibre GL JS**: OpenStreetMapベースの地図表示
 
 ## ドキュメント

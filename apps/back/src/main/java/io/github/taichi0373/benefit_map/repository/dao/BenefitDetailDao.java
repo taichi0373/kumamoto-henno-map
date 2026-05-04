@@ -13,9 +13,6 @@ import io.github.taichi0373.benefit_map.util.ValidateUtils;
 
 /**
  * 特典詳細ビューDAO（V_BENEFIT_DETAIL）
- * <p>
- * 読み取り専用。登録・更新・削除操作は提供しない。
- * </p>
  */
 @Dao
 @ConfigAutowireable
@@ -61,20 +58,6 @@ public interface BenefitDetailDao {
     }
 
     /**
-     * 自治体コードで検索
-     * @param municipalityCd 自治体コード
-     * @return 特典詳細一覧
-     */
-    default List<BenefitDetailEntity> selectByMunicipalityCd(String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
-        BenefitDetailEntity_ e = new BenefitDetailEntity_();
-
-        return entityql.from(e)
-                .where(c -> c.eq(e.municipalityCd, municipalityCd))
-                .fetch();
-    }
-
-    /**
      * 利用資格条件で検索（年齢・運転免許所持状況・自治体コード）
      * @param age            年齢
      * @param licenseStatus  運転免許所持状況
@@ -101,8 +84,14 @@ public interface BenefitDetailDao {
                     if (!ValidateUtils.isNullOrEmpty(licenseStatus)) {
                         c.eq(e.licenseStatus, licenseStatus);
                     }
-                    if (!ValidateUtils.isNullOrEmpty(municipalityCd)) {
-                        c.eq(e.municipalityCd, municipalityCd);
+                    // 市区町村コードと都道府県コードの両方を考慮して検索
+                    if (!ValidateUtils.isNullOrEmpty(municipalityCd) && municipalityCd.length() >= 2) {
+                        c.and(() -> {
+                            // 市区町村コード
+                            c.eq(e.municipalityCd, municipalityCd);
+                            // 都道府県コード（上位2桁）
+                            c.or(() -> c.eq(e.municipalityCd, municipalityCd.substring(0, 2)));
+                        });
                     }
                 })
                 .fetch();

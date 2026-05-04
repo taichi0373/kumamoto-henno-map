@@ -1,5 +1,5 @@
 import { ref, shallowRef, type Ref } from 'vue'
-import maplibregl, { type Map, type Marker } from 'maplibre-gl'
+import maplibregl, { type Map } from 'maplibre-gl'
 import {
   createMapInstance,
   setupMapControls,
@@ -7,25 +7,19 @@ import {
   type MapConfig,
   type MapClickOptions
 } from '../utils/mapConfig'
-import { createStoreMarker, MarkerManager, type Store } from '../utils/markerConfig'
+import { MarkerManager } from '../utils/markerConfig'
 import type { RouteLeg } from '../dto/routeDto'
 
 
 export interface UseMapReturn {
   /* マップインスタンス */
   mapInstance: Ref<Map | null>
-  /* 店舗マーカーのリスト */
-  storeMarkers: Ref<Marker[]>
   /* マーカー管理クラスのインスタンス */
   markerManager: Ref<MarkerManager>
   /* アクティブな経路インデックス */
   activeRouteIndex: Ref<number>
   /* マップ初期化関数 */
   initializeMap: (containerId: string, config?: Partial<MapConfig>, clickEventOptions?: MapClickOptions | null) => Map
-  /* 店舗マーカー追加関数 */
-  addStoreMarkers: (stores: Store[]) => void
-  /* 店舗マーカー削除関数 */
-  removeStoreMarkers: () => void
   /* ルートライン追加関数 */
   addRouteLines: (routes: RouteLeg[][]) => void
   /* ルートライン削除関数 */
@@ -36,7 +30,7 @@ export interface UseMapReturn {
   cleanup: () => void
 }
 
-/** 経路番号別アクティブカラー（各経路固有色） */
+/** 経路番号別アクティブカラー */
 export const ROUTE_ACTIVE_COLORS = ['#1A74FD', '#1A74FD', '#1A74FD']
 /** 非アクティブ経路のカラー */
 const ROUTE_INACTIVE_COLOR = '#757575'
@@ -74,7 +68,6 @@ const decodePolyline = (encoded: string): [number, number][] => {
 
 export const useMap = (): UseMapReturn => {
   const mapInstance: Ref<Map | null> = ref(null)
-  const storeMarkers: Ref<Marker[]> = ref([])
   const markerManager = shallowRef(new MarkerManager())
   const activeRouteIndex: Ref<number> = ref(0)
   /** 経路インデックスとレイヤーIDのマッピング */
@@ -99,30 +92,6 @@ export const useMap = (): UseMapReturn => {
     }
 
     return map
-  }
-
-  const addStoreMarkers = (stores: Store[]): void => {
-    if (!mapInstance.value || !stores?.length) return
-
-    // 既存マーカーを削除
-    removeStoreMarkers()
-
-    stores.forEach((store, index) => {
-      const marker = createStoreMarker(store)
-      if (marker && mapInstance.value) {
-        marker.addTo(mapInstance.value)
-        storeMarkers.value.push(marker)
-        // マーカー管理クラスにも登録
-        markerManager.value.addMarker(`store-${index}`, marker, mapInstance.value)
-      }
-    })
-  }
-
-  const removeStoreMarkers = (): void => {
-    storeMarkers.value.forEach(marker => marker.remove())
-    storeMarkers.value = []
-    // マーカー管理クラスからも削除
-    markerManager.value.removeMarkersByType('store')
   }
 
   /** ルートラインを地図に追加 */
@@ -265,12 +234,9 @@ export const useMap = (): UseMapReturn => {
 
   return {
     mapInstance,
-    storeMarkers,
     markerManager,
     activeRouteIndex,
     initializeMap,
-    addStoreMarkers,
-    removeStoreMarkers,
     addRouteLines,
     removeRouteLines,
     setActiveRoute,

@@ -3,7 +3,7 @@
     <!-- サイドバー -->
     <div class="sidebar" id="sidebar" :class="{ collapsed: sidebarCollapsed }">
       <template v-if="!sidebarCollapsed">
-        <AppTabView :tabs="tabsForView" :modelValue="activeTabIndex" @update:modelValue="handleTabChange" />
+        <AppTab :tabs="tabs" :modelValue="activeTabIndex" @update:modelValue="handleTabChange" />
 
         <!-- 経路案内ページ -->
         <div class="sidebar-page" v-show="activeTab === 'route-guidance'">
@@ -18,7 +18,9 @@
             @remove-marker="removeMarker"
             @select-on-map="selectOnMap"
             @search-route="handleSearchRoute"
+            @clear-routes="handleClearRoutes"
             @fetch-suggestions="fetchSuggestions"
+            @fetch-current-location="setCurrentLocation"
             @clear-suggestions="clearSuggestions"
             @select-route="setActiveRoute"
           />
@@ -39,22 +41,18 @@
       </template>
     </div>
 
-    <!-- サイドバー開閉ボタン -->
-    <AppIconButton :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'" severity="secondary"
-      size="sidebarToggle" shape="rounded" tooltip="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
-
     <!-- トーストメッセージ -->
     <AppToastMessage />
 
     <!-- マップ -->
     <div id="map">
+      <!-- サイドバー開閉ボタン -->
+      <AppButton :label="''" :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'"
+        tooltip="サイドバーの表示切替" aria-label="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
+      <!-- マップ上のボタン -->
       <div class="map-button-container">
-        <AppButton type="button" :label="storesLoading ? '読み込み中...' : '支援協賛店'"
-          :tooltip="storesLoading ? '読み込み中...' : '支援協賛店'" :show-label="false" severity="primary"
-          :disabled="storesLoading" :loading="storesLoading" icon="pi pi-shop" class="map-button"
-          @click="toggleStoreDisplay" />
-        <AppButton type="button" label="自主返納支援制度とは" tooltip="自主返納支援制度とは" :show-label="false" severity="primary"
-          size="medium" icon="pi pi-info-circle" class="map-button" @click="router.push('/support_info')" />
+        <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" aria-label="自主返納支援制度とは"
+          @click="router.push('/support_info')" />
       </div>
       <!-- クロスヘア -->
       <div v-if="showCrossHair" class="map-select-ui">
@@ -69,20 +67,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
 import AppSearchBenefit from '@/components/organisms/AppSearchBenefit.vue'
-import AppTabView from '@/components/atoms/AppTabView.vue'
+import AppTab from '@/components/atoms/AppTab.vue'
 import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
-import AppIconButton from '@/components/atoms/AppIconButton.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
-import { AuthUtils } from '@/utils/auth'
+import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/utils/api'
-import { createRouteMarker, type Store, type RouteMarkerType } from '@/utils/markerConfig'
+import { createRouteMarker, type RouteMarkerType } from '@/utils/markerConfig'
 import { ValidateUtils } from '@/utils/validateUtils'
 import type { AxiosError } from 'axios'
 import { RouteRequestDto } from '@/dto/routeRequestDto'
@@ -90,10 +87,13 @@ import { BenefitDto } from '@/dto/benefitDto'
 import { MarkerDto } from '@/dto/markerDto'
 import { SuggestionDto } from '@/dto/suggestionDto'
 import { RouteDto } from '@/dto/routeDto'
+import { TabDto } from '@/dto/tabDto'
 import type { RouteInterface } from '@/dto/routeDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { TypeConvertUtils } from '@/utils/typeConvertUtils'
+import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
+import { API_RESPONSE_MESSAGE, GEOLOCATION_MESSAGE } from '@/utils/messageConstant'
 
 /** ルーター */
 const router = useRouter()
@@ -105,28 +105,15 @@ const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org'
 const sidebarCollapsed = ref(false)
 /** アクティブタブ */
 const activeTab = ref('route-guidance')
-/** 店舗のマーカー表示フラグ */
-const storeMarkersVisible = ref(false)
-/** ログイン状態 */
-const isLoggedIn = ref(false)
+const auth = useAuthStore()
+/** ログイン状態（Piniaストアから導出） */
+const isLoggedIn = computed(() => auth.isLoggedIn)
 
 /** ユーザー特典データ */
 const usersBenefits = ref<BenefitDto[]>([])
 
-// タブ
-const tabs = ref([
-  { id: 'route-guidance', label: 'ルート案内' },
-  { id: 'users-benefit', label: '利用できる特典' },
-  { id: 'search-benefit', label: '特典を探す' },
-])
-
-const supportStores = ref<Store[]>([])
-const storesLoading = ref(false)
-
 // マップ選択モードのタイプ（'start' or 'end'）
 const mapSelectMode = ref<string | null>(null)
-
-// --- 経路案内関連ステート ---
 
 /** 出発地の候補リスト */
 const startSuggestions = ref<SuggestionDto[]>([])
@@ -139,32 +126,36 @@ const routeSearchLoading = ref(false)
 /** マップ上から選択された地点 */
 const mapSelectedLocation = ref<MarkerDto | null>(null)
 
+/** 現在地キャッシュ（初回取得後に保持） */
+const currentUserLocation = ref<{ lat: number; lon: number } | null>(null)
+
 /** マップ */
-const { mapInstance, markerManager, activeRouteIndex, initializeMap, addStoreMarkers, removeStoreMarkers, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
+const { mapInstance, markerManager, activeRouteIndex, initializeMap, addRouteLines, removeRouteLines, setActiveRoute, cleanup } = useMap()
 
 // クロスヘア表示フラグ
 const showCrossHair = computed(() => !ValidateUtils.isNullOrEmpty(mapSelectMode.value))
 
-/** AppTabView用のタブ配列 */
-const tabsForView = computed(() =>
-  tabs.value.map(tab => ({ label: tab.label }))
-)
 
-/** アクティブタブのインデックス */
+/** タブ */
+const tabs = ref<TabDto[]>([
+  { id: 'route-guidance', label: 'ルート案内' },
+  { id: 'users-benefit', label: '利用できる特典' },
+  { id: 'search-benefit', label: '特典を探す' },
+])
+
+/** タブのインデックス */
 const activeTabIndex = computed(() =>
   tabs.value.findIndex(tab => tab.id === activeTab.value)
 )
 
-
 // 初期表示
 onMounted(() => {
-  // ログイン状態の確認
-  checkLoginStatus()
+  // ログイン済みの場合はユーザー特典を取得
+  if (auth.isLoggedIn) {
+    fetchUserBenefits()
+  }
   // マップの初期化
   const map = initializeMap('map')
-  if (map) {
-    map.on('load', () => console.log('Map loaded successfully'))
-  }
 })
 
 /** マップ中心座標を取得 */
@@ -276,69 +267,60 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
       // 経路探索結果（サイドバー表示用）
       routeResults.value = routes
-      console.log(routeResults.value);
-      // 全経路を色分けして地図に描画
+      // 全経路を色分けして地図に描画（空配列の場合は既存ラインをクリア）
       const routeLegs = routes.map(r => r.legs ?? [])
-      if (routeLegs.length > 0) {
-        addRouteLines(routeLegs)
-      }
+      addRouteLines(routeLegs)
     } else {
-      console.error('Route search failed:', response.statusText)
-      alert('経路検索に失敗しました')
+      addRouteLines([])
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
     }
   } catch (error) {
-    console.error('Route search error:', error)
-    alert('経路検索に失敗しました')
+    addRouteLines([])
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
   } finally {
     routeSearchLoading.value = false
   }
 }
 
+/** 経路探索結果のクリア */
+const handleClearRoutes = () => {
+  routeResults.value = []
+  addRouteLines([])
+}
+
 /** ユーザー特典データを取得 */
 const fetchUserBenefits = async () => {
-  const userId = AuthUtils.getUser()?.id;
+  const userId = auth.user?.id;
   // ログイン状態でない、またはユーザーIDが取得できない場合は処理しない
   if (!isLoggedIn.value || ValidateUtils.isNullOrEmpty(userId)) {
     return
   }
 
   try {
-    const response = await apiClient.get(`benefit/users`)
+    const response = await apiClient.get(`/benefit/users/${userId}`)
     if ((response.data as { success: boolean }).success) {
       usersBenefits.value = ((response.data as unknown) as { data: BenefitDto[] }).data || []
     } else {
-      console.warn('特典データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.BENEFIT_NOT_FOUND)
       usersBenefits.value = []
     }
   } catch (error: unknown) {
-    console.error('特典データの取得中にエラーが発生しました:', error)
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
     if ((error as AxiosError).response?.status === 401) {
-      AuthUtils.logout()
-      isLoggedIn.value = false
+      await auth.logout()
       usersBenefits.value = []
     }
   }
 }
 
-/** 支援協賛店データを取得 */
-const fetchSupportStores = async () => {
-  storesLoading.value = true
-  try {
-    const response = await apiClient.get('/support-stores')
-    if ((response.data as { success: boolean }).success) {
-      supportStores.value = ((response.data as unknown) as { data: Store[] }).data || []
-    } else {
-      console.warn('協賛店データの取得に失敗しました:', ((response.data as unknown) as { message: string }).message)
-      supportStores.value = []
-    }
-  } catch (error) {
-    console.error('協賛店データの取得中にエラーが発生しました:', error)
-    supportStores.value = []
-  } finally {
-    storesLoading.value = false
+/** ログイン状態の変化を監視してユーザー特典を更新 */
+watch(() => auth.isLoggedIn, (newVal) => {
+  if (newVal) {
+    fetchUserBenefits()
+  } else {
+    usersBenefits.value = []
   }
-}
-
+})
 
 /** サイドバーの表示/非表示切替 */
 const toggleSidebar = () => {
@@ -353,34 +335,11 @@ const setActiveTab = (tab: string) => {
   }
 }
 
-/** AppTabViewからのタブ変更ハンドラ */
+/** AppTabからのタブ変更ハンドラ */
 const handleTabChange = (index: number) => {
   const tab = tabs.value[index]
   if (tab) {
     setActiveTab(tab.id)
-  }
-}
-
-/** 店舗マーカーの表示/非表示切替 */
-const toggleStoreDisplay = async () => {
-  try {
-    storeMarkersVisible.value = !storeMarkersVisible.value
-    if (storeMarkersVisible.value) {
-      if (supportStores.value.length === 0) {
-        await fetchSupportStores()
-      }
-      if (supportStores.value.length > 0) {
-        addStoreMarkers(supportStores.value)
-      } else {
-        console.warn('No store data available for markers')
-      }
-    } else {
-      removeStoreMarkers()
-    }
-  } catch (error) {
-    console.error('店舗マーカーの表示切替でエラーが発生しました:', error)
-    storeMarkersVisible.value = false
-    removeStoreMarkers()
   }
 }
 
@@ -429,7 +388,65 @@ const selectOnMap = (type: string) => {
 
 /** 候補リストの取得（ジオコーディング） */
 const fetchSuggestions = (marker: MarkerDto) => {
+  // 入力が空の場合は位置情報を取得せず「現在地」候補のみ表示
+  if (ValidateUtils.isNullOrEmpty(marker.name)) {
+    const suggestion = new SuggestionDto({
+      id: -1,
+      name: '現在地',
+      address: null,
+      lat: null,
+      lon: null,
+    })
+    if (marker.type === codeConstant.SEARCH_TYPE.START) {
+      startSuggestions.value = [suggestion]
+    } else {
+      endSuggestions.value = [suggestion]
+    }
+    return
+  }
   geocoding(new MarkerDto({ name: marker.name, type: marker.type, lat: null, lon: null, address: null }))
+}
+
+/** 現在地を取得してマーカーを設置 */
+const setCurrentLocation = (type: string) => {
+  const applyLocation = (lat: number, lon: number) => {
+    mapSelectedLocation.value = new MarkerDto({
+      type,
+      name: '現在地',
+      address: null,
+      lat,
+      lon,
+    })
+  }
+  if (currentUserLocation.value) {
+    applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
+    return
+  }
+  if (!navigator.geolocation) {
+    clearSuggestions()
+    ToastMessageUtils.error(GEOLOCATION_MESSAGE.NOT_SUPPORTED);
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      currentUserLocation.value = {
+        lat: position.coords.latitude,
+        lon: position.coords.longitude,
+      }
+      applyLocation(currentUserLocation.value.lat, currentUserLocation.value.lon)
+    },
+    (error) => {
+      clearSuggestions()
+      if (error.code === error.PERMISSION_DENIED) {
+        ToastMessageUtils.error(GEOLOCATION_MESSAGE.PERMISSION_DENIED);
+      } else if (error.code === error.TIMEOUT) {
+        ToastMessageUtils.error(GEOLOCATION_MESSAGE.TIMEOUT);
+      } else {
+        ToastMessageUtils.error(GEOLOCATION_MESSAGE.UNKNOWN_ERROR);
+      }
+    },
+    { timeout: 10000 }
+  )
 }
 
 /** 候補リストのクリア */
@@ -438,17 +455,6 @@ const clearSuggestions = () => {
   endSuggestions.value = []
 }
 
-/** ログイン状態の確認・更新 */
-const checkLoginStatus = () => {
-  const newLoginStatus = AuthUtils.isLoggedIn()
-  if (isLoggedIn.value === newLoginStatus) return
-  isLoggedIn.value = newLoginStatus
-  if (isLoggedIn.value) {
-    fetchUserBenefits()
-  } else {
-    usersBenefits.value = []
-  }
-}
 
 </script>
 
@@ -482,6 +488,15 @@ main {
   &.collapsed {
     width: 0;
   }
+}
+
+/* サイドバー開閉ボタン */
+.sidebar-toggle-btn {
+  position: absolute;
+  top: 40%;
+  width: 30px;
+  height: 46px;
+  z-index: 2;
 }
 
 /* サイドバー内ページ */

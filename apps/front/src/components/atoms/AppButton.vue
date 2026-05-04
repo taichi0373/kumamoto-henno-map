@@ -70,17 +70,12 @@ const onClick = () => {
     border: 1px solid;
     border-color: base.$base-400;
   }
-  &:focus {
-    outline: 0 none;
-    outline-offset: 0;
-    box-shadow: 0 0 0 0.2rem base.$forcus-color;
-  }
   &.p-app-button-primary {
     background-color: base.$base-700;
     color: base.$base-100;
     &:hover,
     &:active {
-      background-color: base.$base-400;
+      background-color: base.$base-600;
       color: base.$base-100;
     }
   }

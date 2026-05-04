@@ -25,9 +25,10 @@ import DatePicker from 'primevue/datepicker';
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto';
 import AppFormError from '@/components/atoms/AppFormError.vue';
 import { usePrimeVue } from 'primevue';
+import { TypeConvertUtils } from '@/utils/typeConvertUtils';
 
 const props = withDefaults(defineProps<{
-  modelValue?: Date | null;
+  modelValue?: string | Date | null;
   placeholder?: string;
   dateFormat?: string;
   error?: InputFormErrorDto | InputFormErrorDto[];
@@ -59,8 +60,8 @@ const emit = defineEmits<{
 }>();
 
 const computedModel = computed({
-  get: () => props.modelValue,
-  set: (value) => {
+  get: () => TypeConvertUtils.toDateFromString(props.modelValue),
+  set: (value: Date | null) => {
     if (value !== props.modelValue) {
       emit('update:modelValue', value);
     }
@@ -154,13 +155,13 @@ const computedTabindex = computed(() => {
   width: 100%;
 }
 
-.p-datepicker {
+.p-field :deep(.p-datepicker) {
   width: 100%;
   height: base.$input-height;
 }
 
-.p-datepicker :deep(.p-inputtext::placeholder) {
-  color: base.$placeholder-color;
+.p-field :deep(.p-inputtext:enabled:focus) {
+    border-color: base.$base-500;
 }
 
 .p-field :deep(.p-datepicker.error) {

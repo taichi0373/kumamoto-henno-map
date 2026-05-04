@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import Toast from 'primevue/toast';
-import ToastMessageUtils from '@/utils/toastMessageUtils';
+import { ToastMessageUtils } from '@/utils/toastMessageUtils';
 import { useToast } from 'primevue/usetoast';
 
 onMounted(() => {

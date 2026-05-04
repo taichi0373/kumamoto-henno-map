@@ -22,14 +22,9 @@ $success-200: #e5f1d6;
 $chose-100: #0aa4e9;
 $chose-200: #eaf6f9;
 
-$theme-100: #a20061;
-$theme-200: #2d55d7;
-$theme-300: #77b820;
-$theme-400: #e45e32;
-$theme-500: #5914a7;
-$theme-600: #2785af;
-$theme-700: #06b281;
-$theme-800: #9f790c;
+$text-primary: #374151;
+$text-secondary: #6b7280;
+$text-disabled: #9ca3af;
 
 $margin-100: 8px;
 $margin-200: 16px;
@@ -39,6 +34,10 @@ $margin-400: 32px;
 $fontsize-small: 10px;
 $fontsize-medium: 14px;
 $fontsize-large: 18px;
+
+$title-font-size-small: 14px;
+$title-font-size-medium: 18px;
+$title-font-size-large: 24px;
 
 /* ボタンのフォントサイズ */
 $fontsize-button: 12px;
@@ -53,6 +52,6 @@ $placeholder-color: $base-500;
 $input-height: 36px;
 
 /* ヘッダーの高さ */
-$header-height: 76px;
+$header-height: 60px;
 $header-background-color: #212529;
-$header-border-color: #212529;
+$header-border-color: #394047;

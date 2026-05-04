@@ -8,6 +8,12 @@ import org.springframework.stereotype.Service;
 import io.github.taichi0373.benefit_map.repository.dao.MunicipalityDao;
 import io.github.taichi0373.benefit_map.repository.entity.MunicipalityEntity;
 
+/**
+ * 市区町村サービス
+ * <p>
+ * 市区町村情報の取得に関するビジネスロジックを提供する。
+ * </p>
+ */
 @Service
 public class MunicipalityService {
 

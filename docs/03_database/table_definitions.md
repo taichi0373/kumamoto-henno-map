@@ -155,7 +155,7 @@
 | BENEFIT_ID | VARCHAR(20) | ✓ | ✓ | ✓ | 特典ID |
 | AGENCY_ID | VARCHAR(20) | ✓ | ✓ | ✓ | 事業者ID |
 | DISCOUNT_TYPE | VARCHAR(1) | | | | 割引種別 |
-| DISCOUNT_VALUE | NUMERIC(10, 2) | | | | 割引値 |
+| DISCOUNT_VALUE | INTEGER | | | | 割引値 |
 | SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
 | SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
 

@@ -12,6 +12,12 @@ import org.seasar.doma.Table;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * 市区町村エンティティ
+ * <p>
+ * 市区町村の情報を保持するDomaエンティティ。
+ * </p>
+ */
 @Entity(metamodel = @Metamodel)
 @Table(name = "municipality")
 @Getter
@@ -34,6 +40,10 @@ public class MunicipalityEntity implements Serializable {
     /** 自治体名称かな */
     @Column(name = "municipality_kana")
     private String municipalityKana;
+
+    /** 自治体区分 */
+    @Column(name = "municipality_type")
+    private String municipalityType;
 
     /** システム共通フィールド */
     private SystemField systemField;

@@ -19,7 +19,7 @@ class ValidateUtils {
   /**
    * オブジェクトが null / undefined または空（空文字・空配列・空オブジェクト・無効日付）かどうか
    */
-  public static isNullOrEmpty(obj: unknown): boolean {
+  public static isNullOrEmpty(obj: unknown): obj is null | undefined {
     // null または undefined の場合は true
     if (obj === null || obj === undefined) return true
     // 文字列の場合、空文字の場合は true

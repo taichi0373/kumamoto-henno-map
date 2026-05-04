@@ -1,6 +1,6 @@
 import PButton from 'primevue/button';
 import AppToastMessage from './AppToastMessage.vue';
-import ToastMessageUtils from '@/utils/toastMessageUtils';
+import { ToastMessageUtils } from '@/utils/toastMessageUtils';
 
 export default {
   title: 'Design System/Atoms/AppToastMessage',
@@ -19,16 +19,16 @@ export const Default = {
     },
     methods: {
       showSuccess() {
-        ToastMessageUtils.success('保存処理が正常に完了しました。');
+        ToastMessageUtils.success('保存しました');
       },
       showNotice() {
-        ToastMessageUtils.notice('新しいお知らせがあります。');
+        ToastMessageUtils.notice('通知があります');
       },
       showWarning() {
-        ToastMessageUtils.warning('入力内容を確認してください。');
+        ToastMessageUtils.warning('未来日が入力されています。よろしいですか？');
       },
       showError() {
-        ToastMessageUtils.error('エラーが発生しました。もう一度お試しください。');
+        ToastMessageUtils.error('日付が入力されていません');
       },
       clearAll() {
         ToastMessageUtils.remove();

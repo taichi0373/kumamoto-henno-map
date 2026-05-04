@@ -15,7 +15,7 @@ export default {
     },
     modelValue: {
       control: 'text',
-      description: '入力値 (YYYY/MM/DD形式)',
+      description: '入力値 (string | Date | null)',
     },
     placeholder: {
       control: 'text',
@@ -93,6 +93,13 @@ WithValue.args = {
   ...Default.args,
   inputId: 'value-calendar',
   modelValue: new Date(2026, 1, 14),
+};
+
+export const WithStringValue = Template.bind({});
+WithStringValue.args = {
+  ...Default.args,
+  inputId: 'string-value-calendar',
+  modelValue: '2026-02-14',
 };
 
 export const Disabled = Template.bind({});

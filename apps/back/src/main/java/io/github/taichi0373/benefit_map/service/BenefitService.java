@@ -13,6 +13,12 @@ import io.github.taichi0373.benefit_map.repository.dao.UsersDao;
 import io.github.taichi0373.benefit_map.repository.entity.BenefitDetailEntity;
 import io.github.taichi0373.benefit_map.repository.entity.UsersEntity;
 
+/**
+ * 特典サービス
+ * <p>
+ * 特典の検索・ユーザー向け特典絞り込みなどのビジネスロジックを提供する。
+ * </p>
+ */
 @Service
 public class BenefitService {
 

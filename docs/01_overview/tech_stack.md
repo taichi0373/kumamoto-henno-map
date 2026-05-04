@@ -16,7 +16,7 @@ graph TB
     subgraph "Backend Layer"
         E[Spring Boot 3]
         F[Doma 2]
-        G[API Key Authentication]
+        G[JWT認証 HttpOnly Cookie]
     end
     
     subgraph "Database Layer"
@@ -222,9 +222,10 @@ graph TB
 - 標準化された仕様
 
 **実装**:
-- Spring Security + JWT
-- アクセストークン + リフレッシュトークン
-- ロールベース認可
+- Spring Security + JWT (jjwt 0.12.6)
+- アクセストークン方式（有効期限: 1時間）
+- HttpOnly Cookie による安全なトークン管理
+- CSRF トークン（CookieCsrfTokenRepository）による二重防御
 
 ### ビルドツール
 
@@ -371,8 +372,8 @@ graph TB
 
 ### セキュリティ
 
-- **認証**: JWT + リフレッシュトークン
-- **認可**: ロールベースアクセス制御
+- **認証**: JWT (HttpOnly Cookie) + CSRF トークン
+- **認可**: エンドポイント単位のアクセス制御（ユーザー自身のリソースのみ許可）
 - **通信**: HTTPS強制
 - **入力検証**: Bean Validation + カスタムバリデータ
 

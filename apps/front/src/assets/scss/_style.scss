@@ -20,14 +20,9 @@
     --success-200: #{variable.$success-200};
     --chose-100: #{variable.$chose-100};
     --chose-200: #{variable.$chose-200};
-    --theme-100: #{variable.$theme-100};
-    --theme-200: #{variable.$theme-200};
-    --theme-300: #{variable.$theme-300};
-    --theme-400: #{variable.$theme-400};
-    --theme-500: #{variable.$theme-500};
-    --theme-600: #{variable.$theme-600};
-    --theme-700: #{variable.$theme-700};
-    --theme-800: #{variable.$theme-800};
+    --text-primary: #{variable.$text-primary};
+    --text-secondary: #{variable.$text-secondary};
+    --text-disabled: #{variable.$text-disabled};
 }
 
 html {

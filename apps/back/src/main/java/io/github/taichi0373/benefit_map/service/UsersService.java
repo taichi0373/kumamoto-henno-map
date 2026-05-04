@@ -31,30 +31,6 @@ public class UsersService {
     private BCryptPasswordEncoder passwordEncoder;
     
     /**
-     * ログイン
-     * @param username ユーザー名
-     * @param password パスワード
-     * @return ログイン成功時はユーザー情報DTO（機微情報を含まない）、ログイン失敗時はnull
-     */
-    public UserResponseDto loginUser(String username, String password) {
-        try {
-            UsersEntity user = usersDao.selectByUsername(username);
-            if (ValidateUtils.isNullOrEmpty(user)) {
-                return null;
-            }
-            // パスワードの照合
-            if (passwordEncoder.matches(password, user.getPasswordHash())) {
-                return toUserResponseDto(user);
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    
-    /**
      * 新規登録
      * @param users ユーザ情報
      * @return 登録されたユーザー情報DTO（機微情報を含まない）
@@ -127,7 +103,7 @@ public class UsersService {
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setBirthDate(user.getBirthDate());
-        dto.setMunicipalityCd(user.getMunicipalityCd());
+        dto.setAddress(user.getMunicipalityCd());
         dto.setLicenseStatus(user.getLicenseStatus());
         dto.setLicenseSurrenderedAt(user.getLicenseSurrenderedAt());
         return dto;

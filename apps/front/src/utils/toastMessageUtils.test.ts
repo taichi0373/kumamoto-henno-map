@@ -1,4 +1,4 @@
-import ToastMessageUtils from './toastMessageUtils';
+import { ToastMessageUtils } from './toastMessageUtils';
 
 /**
  * ToastMessageUtilsのテストクラス
