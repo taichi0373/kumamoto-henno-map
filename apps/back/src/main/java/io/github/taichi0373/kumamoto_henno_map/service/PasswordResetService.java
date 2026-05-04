@@ -1,5 +1,6 @@
 package io.github.taichi0373.kumamoto_henno_map.service;
 
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -9,9 +10,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import com.sendgrid.Method;
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.SendGrid;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
+import com.sendgrid.helpers.mail.objects.MailSettings;
+import com.sendgrid.helpers.mail.objects.Setting;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,9 +61,13 @@ public class PasswordResetService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    /** メール送信クライアント */
-    @Autowired
-    private JavaMailSender mailSender;
+    /** SendGrid APIキー */
+    @Value("${sendgrid.api-key}")
+    private String sendgridApiKey;
+
+    /** SendGrid sandboxモード（trueの場合メールは送信されない） */
+    @Value("${sendgrid.sandbox:false}")
+    private boolean sandboxMode;
 
     /** フロントエンドのベースURL */
     @Value("${app.password-reset.base-url:http://localhost:3000}")
@@ -99,21 +112,42 @@ public class PasswordResetService {
         tokenEntity.setSystemField(new SystemField(now, now));
         passwordResetTokensDao.insert(tokenEntity);
 
-        // パスワードリセットメールを送信
+        // パスワードリセットメールを送信（SendGrid HTTP API）
         String resetUrl = frontendBaseUrl + "/reset-password?token=" + token;
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(mailFrom);
-        message.setTo(email);
-        message.setSubject("【自主返納特典マップ】パスワードリセットのご案内");
-        message.setText(
-            "パスワードリセットのリクエストを受け付けました。\n\n"
+        String body = "パスワードリセットのリクエストを受け付けました。\n\n"
             + "以下のURLからパスワードをリセットしてください。\n"
             + "このURLの有効期限は30分です。\n\n"
             + resetUrl + "\n\n"
             + "このメールに心当たりがない場合は、本メールを破棄してください。\n"
-            + "なお、このメールアドレスへの返信はできません。"
+            + "なお、このメールアドレスへの返信はできません。";
+
+        Mail mail = new Mail(
+            new Email(mailFrom),
+            "【自主返納特典マップ】パスワードリセットのご案内",
+            new Email(email),
+            new Content("text/plain", body)
         );
-        mailSender.send(message);
+
+        if (sandboxMode) {
+            MailSettings mailSettings = new MailSettings();
+            Setting sandbox = new Setting();
+            sandbox.setEnable(true);
+            mailSettings.setSandboxMode(sandbox);
+            mail.setMailSettings(mailSettings);
+        }
+
+        try {
+            Request sgRequest = new Request();
+            sgRequest.setMethod(Method.POST);
+            sgRequest.setEndpoint("mail/send");
+            sgRequest.setBody(mail.build());
+            Response sgResponse = new SendGrid(sendgridApiKey).api(sgRequest);
+            if (sgResponse.getStatusCode() >= 400) {
+                throw new RuntimeException("SendGridメール送信エラー: HTTP " + sgResponse.getStatusCode());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("SendGridメール送信中にIOエラーが発生しました", e);
+        }
     }
 
     /**
