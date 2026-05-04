@@ -143,7 +143,10 @@ public class PasswordResetService {
             sgRequest.setBody(mail.build());
             Response sgResponse = new SendGrid(sendgridApiKey).api(sgRequest);
             if (sgResponse.getStatusCode() >= 400) {
-                throw new RuntimeException("SendGridメール送信エラー: HTTP " + sgResponse.getStatusCode());
+                throw new RuntimeException(
+                    "SendGridメール送信エラー: HTTP " + sgResponse.getStatusCode()
+                    + " body=" + sgResponse.getBody()
+                );
             }
         } catch (IOException e) {
             throw new RuntimeException("SendGridメール送信中にIOエラーが発生しました", e);
