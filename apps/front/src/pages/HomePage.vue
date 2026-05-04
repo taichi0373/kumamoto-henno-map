@@ -2,7 +2,7 @@
   <div class="page">
     <!-- サイドバー -->
     <div class="sidebar" id="sidebar" :class="{ collapsed: sidebarCollapsed }">
-      <template v-if="!sidebarCollapsed">
+      <div v-show="!sidebarCollapsed" class="sidebar-content">
         <AppTab :tabs="tabs" :modelValue="activeTabIndex" @update:modelValue="handleTabChange" />
 
         <!-- 経路案内ページ -->
@@ -38,7 +38,7 @@
 
         <!-- ライセンス情報 -->
         <AppLicenseInfo />
-      </template>
+      </div>
     </div>
 
     <!-- トーストメッセージ -->
@@ -505,6 +505,14 @@ $sidebar-width: clamp(280px, 34vw, 380px);
   .sidebar {
     width: min(86vw, 340px);
   }
+}
+
+/* サイドバーコンテンツラッパー */
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* サイドバー内ページ */
