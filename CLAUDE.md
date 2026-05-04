@@ -51,7 +51,7 @@ docker compose up -d   # 全サービス起動（DB, pgAdmin, OTP含む）
 ### 全体構成
 
 ```
-benefit_map/
+kumamoto_henno_map/
 ├── apps/front/   # Vue 3 + TypeScript フロントエンド
 ├── apps/back/    # Spring Boot 3 + Java 21 バックエンド
 ├── config/database/  # DDL/DML SQLファイル
@@ -76,7 +76,7 @@ benefit_map/
 
 **認証** (`stores/auth.ts`): Pinia store + JWT Bearer Token。アクセストークンはメモリ（Pinia state）のみ保持（XSS耐性）。リフレッシュトークンは HttpOnly Cookie で管理。`restoreSession()` は `App.vue` の `onMounted` ではなく、`main.ts` で `app.mount()` 前に `await authStore.restoreSession()` を実行し、ルートガード判定前にセッション復元を完了させる。
 
-### バックエンド (`apps/back/src/main/java/io/github/taichi0373/benefit_map/`)
+### バックエンド (`apps/back/src/main/java/io/github/taichi0373/kumamoto_henno_map/`)
 
 **レイヤー構造:**
 - `controller/` — REST APIエンドポイント
