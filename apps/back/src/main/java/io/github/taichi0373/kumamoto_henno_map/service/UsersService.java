@@ -210,9 +210,11 @@ public class UsersService {
      * <p>
      * 指定されたユーザーIDのユーザー情報を更新する。
      * ユーザーが存在しない場合はnullを返す。
+     * DB アクセスエラー等の予期しない例外は RuntimeException としてスローする（呼び出し元で 500 として処理する）。
      * </p>
      * @param users 更新するユーザー情報DTO
-     * @return 更新件数（ユーザーが存在しない場合はnull、エラー時もnull）
+     * @return 更新件数（ユーザーが存在しない場合はnull）
+     * @throws RuntimeException DB アクセスエラー等の内部エラー
      */
     public Integer updateUsersInfo(UsersDto users) {
         try {
@@ -242,7 +244,7 @@ public class UsersService {
         } catch (Exception e) {
             Long userId = users != null ? users.getUserId() : null;
             logger.error("ユーザー情報更新中に予期しないエラーが発生しました userId={}", userId, e);
-            return null;
+            throw new RuntimeException("ユーザー情報の更新に失敗しました", e);
         }
 
     }
