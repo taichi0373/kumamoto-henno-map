@@ -1,0 +1,70 @@
+name: Release
+
+# main への push のうち、コミットメッセージが "Release vX.Y.Z" の形式のときのみ実行
+on:
+  push:
+    branches:
+      - main
+
+env:
+  TZ: Asia/Tokyo
+
+jobs:
+  # タグ作成 と GitHub Release 作成
+  release:
+    name: Tag & Release
+    if: startsWith(github.event.head_commit.message, 'Release v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # コミットメッセージ "Release v1.1.0" から "v1.1.0" を抽出
+      - name: バージョン番号を抽出
+        id: version
+        run: |
+          VERSION=$(echo "${{ github.event.head_commit.message }}" | grep -oP 'v\d+\.\d+\.\d+')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # タグを作成してプッシュ
+      - name: タグを作成
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
+
+      # GitHub Release を作成（PR タイトルから変更履歴を自動生成）
+      - name: GitHub Release を作成
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+
+  # develop に main を同期（squash merge による diverge を解消）
+  sync-develop:
+    name: Sync develop with main
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: develop に main をマージ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout develop
+          git merge main
+          git push origin develop
