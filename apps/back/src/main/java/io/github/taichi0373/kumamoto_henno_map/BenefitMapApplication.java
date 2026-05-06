@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * 熊本県自主返納特典マップアプリケーション
+ * くまもと自主返納特典マップアプリケーション
  * <p>
  * Spring Boot アプリケーションのエントリーポイント。
  * </p>

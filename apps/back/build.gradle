@@ -32,7 +32,7 @@ dependencies {
     implementation 'org.seasar.doma.boot:doma-spring-boot-starter:2.1.0'
     annotationProcessor 'org.seasar.doma:doma-processor:2.60.0'
 
-    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'com.sendgrid:sendgrid-java:4.10.2'
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
@@ -63,9 +63,9 @@ javadoc {
     options.charSet = 'UTF-8'
     options.addBooleanOption('Xdoclint:none', true)
     options.addBooleanOption('quiet', true)
-    options.windowTitle = '熊本県自主返納特典マップ APIリファレンス'
-    options.docTitle    = '<h1>熊本県自主返納特典マップ APIリファレンス</h1>'
-    options.header      = '<strong>熊本県自主返納特典マップ</strong>'
+    options.windowTitle = 'くまもと自主返納特典マップ APIリファレンス'
+    options.docTitle    = '<h1>くまもと自主返納特典マップ APIリファレンス</h1>'
+    options.header      = '<strong>くまもと自主返納特典マップ</strong>'
     options.bottom      = 'Copyright &copy; 2026 kumamoto-henno-map contributors'
     // カスタムスタイルシートを追加
     doFirst {
