@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: read
 
     steps:
       - name: Checkout
@@ -85,13 +86,59 @@ jobs:
             git push origin "$VERSION"
           fi
 
-      # GitHub Release を作成（PR タイトルから変更履歴を自動生成）
+      # 前回タグ以降に develop にマージされた PR を収集してリリースノートを生成
+      - name: リリースノートを生成
+        id: notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # 前回のタグを取得（現在のタグを除く直近のタグ）
+          PREV_TAG=$(git tag --sort=-version:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | grep -v "^${VERSION}$" \
+            | head -n 1)
+
+          # 前回タグのマージ日時を基準に develop へのマージ済み PR を取得
+          if [ -n "$PREV_TAG" ]; then
+            SINCE=$(git log -1 --format="%Y-%m-%d" "$PREV_TAG")
+            PRS=$(gh pr list \
+              --repo "${{ github.repository }}" \
+              --base develop \
+              --state merged \
+              --search "merged:>${SINCE}" \
+              --limit 100 \
+              --json number,title \
+              --jq '[.[] | "- " + .title + " (#" + (.number | tostring) + ")"] | reverse | .[]')
+          else
+            PRS=$(gh pr list \
+              --repo "${{ github.repository }}" \
+              --base develop \
+              --state merged \
+              --limit 100 \
+              --json number,title \
+              --jq '[.[] | "- " + .title + " (#" + (.number | tostring) + ")"] | reverse | .[]')
+          fi
+
+          {
+            echo "body<<NOTES_EOF"
+            echo "## What's Changed"
+            if [ -n "$PRS" ]; then
+              echo "$PRS"
+            else
+              echo "- No changes"
+            fi
+            echo "NOTES_EOF"
+          } >> $GITHUB_OUTPUT
+
+      # GitHub Release を作成
       - name: GitHub Release を作成
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
-          generate_release_notes: true
+          body: ${{ steps.notes.outputs.body }}
 
   # develop に main を同期（squash merge による diverge を解消）
   sync-develop:
