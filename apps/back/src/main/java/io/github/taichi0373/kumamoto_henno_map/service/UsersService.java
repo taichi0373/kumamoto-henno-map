@@ -240,7 +240,8 @@ public class UsersService {
             
             return result;
         } catch (Exception e) {
-            logger.error("ユーザー情報更新中に予期しないエラーが発生しました userId={}", users.getUserId(), e);
+            Long userId = users != null ? users.getUserId() : null;
+            logger.error("ユーザー情報更新中に予期しないエラーが発生しました userId={}", userId, e);
             return null;
         }
 
