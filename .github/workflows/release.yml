@@ -92,11 +92,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      # GITHUB_TOKEN による push は GitHub の仕様上 push-review.yml 等の他ワークフローを起動しない。
+      # sync コミットはリリース済みコードの戻しのみのため CI 再実行は不要であり、意図した動作。
       - name: develop に main をマージ
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin develop
+          git fetch origin
           git checkout -b develop origin/develop
           git merge --no-edit --no-ff main
           git push origin develop
