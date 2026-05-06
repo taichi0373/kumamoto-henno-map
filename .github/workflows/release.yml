@@ -1,0 +1,119 @@
+name: Release
+
+# main への push で毎回起動し、job の if: でコミットメッセージを判定して実行/スキップを決定する
+# workflow_dispatch でも手動実行可能（テスト・緊急リリース用）
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'リリースバージョン（例: v1.1.0）'
+        required: true
+
+env:
+  TZ: Asia/Tokyo
+
+# 同一ワークフローの並行実行を防止（再実行・連続pushによるタグ競合・develop競合を抑止）
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # タグ作成 と GitHub Release 作成
+  release:
+    name: Tag & Release
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Release v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # バージョン番号を取得（手動実行時は inputs.version、push 時はコミットメッセージから抽出）
+      - name: バージョン番号を抽出
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+            # 入力値のフォーマットを検証
+            if ! echo "$VERSION" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "バージョン番号の形式が不正です（例: v1.1.0）: $VERSION"
+              exit 1
+            fi
+          else
+            # コミットメッセージの先頭行から厳密に抽出（複数マッチは異常として失敗）
+            FIRST_LINE=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
+            MATCH_COUNT=$(echo "$FIRST_LINE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | wc -l)
+            if [ "$MATCH_COUNT" -gt 1 ]; then
+              echo "バージョン番号が複数マッチしました（$MATCH_COUNT 件）: $FIRST_LINE"
+              exit 1
+            fi
+            VERSION=$(echo "$FIRST_LINE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
+            if [ -z "$VERSION" ]; then
+              echo "バージョン番号を抽出できませんでした: $FIRST_LINE"
+              exit 1
+            fi
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # タグを作成してプッシュ（既存タグはコミット一致を確認してからスキップ）
+      - name: タグを作成
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          VERSION="${{ steps.version.outputs.version }}"
+          EXISTING_TAG_SHA=$(git ls-remote --tags origin "refs/tags/$VERSION" | awk '{print $1}')
+          if [ -n "$EXISTING_TAG_SHA" ]; then
+            HEAD_SHA=$(git rev-parse HEAD)
+            # 軽量タグは SHA 直接比較、注釈付きタグは ^{} で実コミットを取得して比較
+            DEREF_SHA=$(git ls-remote --tags origin "refs/tags/$VERSION^{}" | awk '{print $1}')
+            TAG_COMMIT_SHA="${DEREF_SHA:-$EXISTING_TAG_SHA}"
+            if [ "$TAG_COMMIT_SHA" = "$HEAD_SHA" ]; then
+              echo "タグ $VERSION は既に存在し、現在の HEAD ($HEAD_SHA) を指しているためスキップします"
+            else
+              echo "タグ $VERSION は既に存在しますが、異なるコミット ($TAG_COMMIT_SHA) を指しています（HEAD: $HEAD_SHA）"
+              exit 1
+            fi
+          else
+            git tag "$VERSION"
+            git push origin "$VERSION"
+          fi
+
+      # GitHub Release を作成（PR タイトルから変更履歴を自動生成）
+      - name: GitHub Release を作成
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+
+  # develop に main を同期（squash merge による diverge を解消）
+  sync-develop:
+    name: Sync develop with main
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # GITHUB_TOKEN による push は GitHub の仕様上 push-review.yml 等の他ワークフローを起動しない。
+      # sync コミットはリリース済みコードの戻しのみのため CI 再実行は不要であり、意図した動作。
+      - name: develop に main をマージ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin
+          git checkout -b develop origin/develop
+          git merge --no-edit --no-ff main
+          git push origin develop
