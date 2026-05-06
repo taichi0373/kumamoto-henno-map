@@ -2,8 +2,6 @@ package io.github.taichi0373.kumamoto_henno_map.service;
 
 import java.time.LocalDateTime;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,9 +25,6 @@ import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
  */
 @Service
 public class UsersService {
-
-    /** ロガー */
-    private static final Logger logger = LoggerFactory.getLogger(UsersService.class);
 
     /**
      * ユーザー情報DAO
@@ -79,11 +74,10 @@ public class UsersService {
             }
             throw new DuplicateUserException("このユーザー名は既に使用されています", e);
         } catch (Exception e) {
-            logger.error("ユーザー登録中に予期しないエラーが発生しました", e);
             return null;
         }
     }
-
+    
     /**
      * ユーザー情報の取得
      * @param userId ユーザーID
@@ -210,11 +204,9 @@ public class UsersService {
      * <p>
      * 指定されたユーザーIDのユーザー情報を更新する。
      * ユーザーが存在しない場合はnullを返す。
-     * DB アクセスエラー等の予期しない例外は RuntimeException としてスローする（呼び出し元で 500 として処理する）。
      * </p>
      * @param users 更新するユーザー情報DTO
-     * @return 更新件数（ユーザーが存在しない場合はnull）
-     * @throws RuntimeException DB アクセスエラー等の内部エラー
+     * @return 更新件数（ユーザーが存在しない場合はnull、エラー時もnull）
      */
     public Integer updateUsersInfo(UsersDto users) {
         try {
@@ -242,9 +234,7 @@ public class UsersService {
             
             return result;
         } catch (Exception e) {
-            Long userId = users != null ? users.getUserId() : null;
-            logger.error("ユーザー情報更新中に予期しないエラーが発生しました userId={}", userId, e);
-            throw new RuntimeException("ユーザー情報の更新に失敗しました", e);
+            return null;
         }
 
     }
