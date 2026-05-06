@@ -1,10 +1,16 @@
 name: Release
 
 # main への push で毎回起動し、job の if: でコミットメッセージを判定して実行/スキップを決定する
+# workflow_dispatch でも手動実行可能（テスト・緊急リリース用）
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'リリースバージョン（例: v1.1.0）'
+        required: true
 
 env:
   TZ: Asia/Tokyo
@@ -18,7 +24,7 @@ jobs:
   # タグ作成 と GitHub Release 作成
   release:
     name: Tag & Release
-    if: startsWith(github.event.head_commit.message, 'Release v')
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Release v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -29,21 +35,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      # コミットメッセージの先頭行から "Release v1.1.0" → "v1.1.0" を厳密に抽出（1件のみ）
+      # バージョン番号を取得（手動実行時は inputs.version、push 時はコミットメッセージから抽出）
       - name: バージョン番号を抽出
         id: version
         run: |
-          FIRST_LINE=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
-          VERSION=$(echo "$FIRST_LINE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -n 1)
-          if [ -z "$VERSION" ]; then
-            echo "バージョン番号を抽出できませんでした: $FIRST_LINE"
-            exit 1
-          fi
-          # 想定外の形式（複数マッチ等）を検知するため先頭行全体を検証
-          MATCH_COUNT=$(echo "$FIRST_LINE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | wc -l)
-          if [ "$MATCH_COUNT" -gt 1 ]; then
-            echo "バージョン番号が複数マッチしました（$MATCH_COUNT 件）: $FIRST_LINE"
-            exit 1
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+            # 入力値のフォーマットを検証
+            if ! echo "$VERSION" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "バージョン番号の形式が不正です（例: v1.1.0）: $VERSION"
+              exit 1
+            fi
+          else
+            # コミットメッセージの先頭行から厳密に抽出（複数マッチは異常として失敗）
+            FIRST_LINE=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
+            MATCH_COUNT=$(echo "$FIRST_LINE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | wc -l)
+            if [ "$MATCH_COUNT" -gt 1 ]; then
+              echo "バージョン番号が複数マッチしました（$MATCH_COUNT 件）: $FIRST_LINE"
+              exit 1
+            fi
+            VERSION=$(echo "$FIRST_LINE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
+            if [ -z "$VERSION" ]; then
+              echo "バージョン番号を抽出できませんでした: $FIRST_LINE"
+              exit 1
+            fi
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
