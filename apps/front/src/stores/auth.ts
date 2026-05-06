@@ -81,7 +81,7 @@ export const useAuthStore = defineStore('auth', {
      * ページリフレッシュ時のセッション復元
      * <p>
      * HttpOnly Cookie のリフレッシュトークンで新しいアクセストークンを取得する。
-     * App.vue の onMounted で呼び出すこと。
+     * main.ts の app.mount() 前に呼び出すこと（ルートガード判定前にセッション復元を完了させるため）。
      * </p>
      * @returns セッション復元に成功した場合はtrue
      */
