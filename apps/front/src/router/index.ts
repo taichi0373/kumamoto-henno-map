@@ -48,7 +48,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
-    meta: { requiresAdmin: true },
+    meta: { requiresAdmin: true, requiresAuth: true },
     children: [
       {
         path: 'benefits',
@@ -102,12 +102,19 @@ const router = createRouter({
 // ルートガード
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore()
+  const requiresAuth = to.matched.some(record => record.meta?.requiresAuth)
   const requiresAdmin = to.matched.some(record => record.meta?.requiresAdmin)
+
+  // 認証チェックを先に行う（requiresAdmin も認証が前提のため両方を対象にする）
+  if ((requiresAuth || requiresAdmin) && !auth.isLoggedIn) {
+    next({ path: '/login', query: { redirect: to.fullPath } })
+    return
+  }
+
+  // 管理者チェック
   const adminRedirect = checkAdminRouteAccess(requiresAdmin, auth.isAdmin)
   if (adminRedirect) {
     next({ path: adminRedirect })
-  } else if (to.matched.some(record => record.meta?.requiresAuth) && !auth.isLoggedIn) {
-    next({ path: '/login', query: { redirect: to.fullPath } })
   } else {
     next()
   }
