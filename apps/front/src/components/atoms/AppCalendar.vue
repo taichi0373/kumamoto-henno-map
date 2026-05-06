@@ -43,7 +43,7 @@ const props = withDefaults(defineProps<{
   tabindex?: number;
 }>(), {
   modelValue: null,
-  placeholder: "日付を選択してください",
+  placeholder: "",
   format: "yy/mm/dd",
   error: () => [],
   showError: true,
