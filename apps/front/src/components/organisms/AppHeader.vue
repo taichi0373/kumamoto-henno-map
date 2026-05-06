@@ -4,7 +4,7 @@
       <!-- タイトル -->
       <template #start>
         <router-link to="/" class="brand-link">
-          熊本県自主返納特典マップ
+          くまもと自主返納特典マップ
         </router-link>
       </template>
 

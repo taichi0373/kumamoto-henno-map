@@ -33,7 +33,7 @@ public class OpenApiConfig {
                                 .bearerFormat("JWT")
                                 .description("JWT認証トークン。POST /auth/login で取得し、Authorization: Bearer <token> ヘッダーに設定する。")))
                 .info(new Info()
-                        .title("熊本県自主返納特典マップ API")
+                        .title("くまもと自主返納特典マップ API")
                         .version("1.0.0")
                         .description("""
                                 熊本県の運転免許自主返納者向け特典情報を提供する RESTful API。
