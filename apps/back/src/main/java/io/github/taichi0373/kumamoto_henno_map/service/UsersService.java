@@ -2,6 +2,8 @@ package io.github.taichi0373.kumamoto_henno_map.service;
 
 import java.time.LocalDateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,6 +27,9 @@ import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
  */
 @Service
 public class UsersService {
+
+    /** ロガー */
+    private static final Logger logger = LoggerFactory.getLogger(UsersService.class);
 
     /**
      * ユーザー情報DAO
@@ -74,10 +79,11 @@ public class UsersService {
             }
             throw new DuplicateUserException("このユーザー名は既に使用されています", e);
         } catch (Exception e) {
+            logger.error("ユーザー登録中に予期しないエラーが発生しました", e);
             return null;
         }
     }
-    
+
     /**
      * ユーザー情報の取得
      * @param userId ユーザーID
@@ -234,6 +240,7 @@ public class UsersService {
             
             return result;
         } catch (Exception e) {
+            logger.error("ユーザー情報更新中に予期しないエラーが発生しました userId={}", users.getUserId(), e);
             return null;
         }
 
