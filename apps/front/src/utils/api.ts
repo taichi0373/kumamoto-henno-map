@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 
-// Vue CLI用の環境変数
-const API_BASE_URL = process.env.VUE_APP_API_BASE_URL || '/kumamoto-henno-map/api';
+/** APIベースURL（VITE_API_BASE_URL 未設定時は同一オリジン前提のパスを使用） */
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/kumamoto-henno-map/api';
 
 /**
  * 401 Unauthorized 発生時に呼び出されるコールバックの型
@@ -117,7 +117,7 @@ class RestApiClient {
         return config
       },
       (error) => {
-        if (process.env.NODE_ENV !== 'production') {
+        if (import.meta.env.DEV) {
           const method = error?.config?.method?.toUpperCase() || 'UNKNOWN'
           const url = `${error?.config?.baseURL || ''}${error?.config?.url || ''}`
           const message = error instanceof Error ? error.message : 'Unknown request interceptor error'
