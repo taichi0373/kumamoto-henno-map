@@ -102,12 +102,13 @@ jobs:
 
           # 前回タグのマージ日時を基準に develop へのマージ済み PR を取得
           if [ -n "$PREV_TAG" ]; then
-            SINCE=$(git log -1 --format="%Y-%m-%d" "$PREV_TAG")
+            # ISO 8601形式（タイムゾーン付き）で取得し、当日マージのPRも含める
+            SINCE=$(git log -1 --format="%aI" "$PREV_TAG")
             PRS=$(gh pr list \
               --repo "${{ github.repository }}" \
               --base develop \
               --state merged \
-              --search "merged:>${SINCE}" \
+              --search "merged:>=${SINCE}" \
               --limit 100 \
               --json number,title \
               --jq '[.[] | "- " + .title + " (#" + (.number | tostring) + ")"] | reverse | .[]')
