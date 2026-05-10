@@ -19,7 +19,7 @@
     "axios": "^1.13.4",
     "core-js": "^3.49.0",
     "maplibre-gl": "^5.24.0",
-    "pinia": "^2.2.0",
+    "pinia": "^3.0.4",
     "primeflex": "^3.3.1",
     "primeicons": "^7.0.0",
     "primevue": "^4.2.5",
