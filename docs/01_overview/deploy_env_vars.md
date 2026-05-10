@@ -14,9 +14,12 @@
 
 | 変数名 | 説明 | 設定例 | 必須 |
 |--------|------|--------|------|
-| `SPRING_DATASOURCE_URL` | PostgreSQL JDBC URL（SSL込み・DB_*変数より優先） | `jdbc:postgresql://<Internal Hostname>/<DB名>?sslmode=require` | ✅ |
-| `DB_USERNAME` | DBユーザー名 | RenderのDB Username | ✅ |
-| `DB_PASSWORD` | DBパスワード | RenderのDB Password | ✅ |
+| `DB_HOST` | NeonのDBホスト名 | `ep-xxx.ap-southeast-1.aws.neon.tech` | ✅ |
+| `DB_PORT` | DBポート番号 | `5432` | ✅ |
+| `DB_NAME` | DB名 | `neondb` | ✅ |
+| `DB_USERNAME` | DBユーザー名 | `neondb_owner` | ✅ |
+| `DB_PASSWORD` | DBパスワード | Neonダッシュボードのパスワード | ✅ |
+| `DB_SSL_PARAMS` | SSL接続パラメータ | `?sslmode=require` | ✅ |
 | `JWT_SECRET` | JWTシークレットキー（32文字以上推奨） | ランダム文字列 | ✅ |
 | `CORS_ALLOWED_ORIGINS` | 許可するオリジン（カンマ区切り） | `https://www.kumamoto-henno-map.com` | ✅ |
 | `FRONTEND_BASE_URL` | パスワードリセットメールに使用するフロントURL | `https://www.kumamoto-henno-map.com` | ✅ |
@@ -27,21 +30,24 @@
 
 ---
 
-> **注意**: `SPRING_DATASOURCE_URL` に Render PostgreSQL の **Internal Database URL** を使用してください（`postgresql://` → `jdbc:postgresql://` に変換し、`?sslmode=require` を付加）。`DB_HOST` / `DB_PORT` / `DB_NAME` は `SPRING_DATASOURCE_URL` を設定している場合は不要です。Internal接続はRender内部ネットワーク経由で高速・無料で、SSL必須です。
+> **注意**: DBはNeon（サーバーレスPostgreSQL）を使用しています。NeonはSSL接続が必須のため `DB_SSL_PARAMS=?sslmode=require` を必ず設定してください。接続情報はNeonダッシュボード → **Connection Details** → **Connection string** から確認できます。
 
-### SPRING_DATASOURCE_URL の組み立て方
+### Neon接続情報の確認方法
 
-Render の PostgreSQL ダッシュボード → **Connect** タブ → **Internal Database URL** を確認し、以下のように変換する:
+Neonダッシュボード → **Connection Details** に表示される接続文字列から各変数を取り出す:
 
 ```
-# Render が表示する Internal Database URL（例）
-postgresql://kumamoto_henno_map_user:PASSWORD@dpg-xxxxxxxxx-a/kumamoto_henno_map
+# Neonが表示する接続文字列（例）
+postgresql://neondb_owner:PASSWORD@ep-xxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 
-# 環境変数に設定する JDBC URL
-jdbc:postgresql://dpg-xxxxxxxxx-a/kumamoto_henno_map?sslmode=require
+# 各環境変数への対応
+DB_HOST     = ep-xxx.ap-southeast-1.aws.neon.tech
+DB_PORT     = 5432
+DB_NAME     = neondb
+DB_USERNAME = neondb_owner
+DB_PASSWORD = PASSWORD
+DB_SSL_PARAMS = ?sslmode=require
 ```
-
-※ `postgresql://user:password@host/db` の形式から、`jdbc:postgresql://host/db?sslmode=require` に変換（ユーザー名・パスワードは別変数で指定）。
 
 ### SMTP から SendGrid HTTP API への移行手順
 

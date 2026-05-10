@@ -88,7 +88,7 @@ graph TB
 
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
-| PostgreSQL | 18.x | リレーショナルDB |
+| PostgreSQL | 17.x（Neon） | リレーショナルDB |
 
 ## 外部サービス
 
@@ -112,7 +112,7 @@ graph TB
 |----------|------|-----|
 | Vercel | フロントエンドホスティング | `https://www.kumamoto-henno-map.com` |
 | Render | バックエンド（Spring Boot）ホスティング | `https://api.kumamoto-henno-map.com` |
-| Render PostgreSQL | 本番データベース | Render内部接続（Internal Database URL） |
+| Neon | 本番データベース（PostgreSQL 17） | 外部接続（SSL必須） |
 | Hetzner VPS | OpenTripPlannerサーバー（Nginx + SSL） | `https://otp.kumamoto-henno-map.com` |
 | Cloudflare | ドメイン管理・DNS | `kumamoto-henno-map.com` |
 
