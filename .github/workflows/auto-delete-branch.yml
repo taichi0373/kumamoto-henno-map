@@ -1,0 +1,36 @@
+name: マージ後ブランチ自動削除
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-branch:
+    # スカッシュマージされた場合のみ実行（通常マージ・リベースマージも含めるなら条件を削除）
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: ブランチ削除（develop→main は除外）
+        # base=main かつ head=develop の場合はスキップ
+        if: |
+          !(github.event.pull_request.base.ref == 'main' &&
+            github.event.pull_request.head.ref == 'develop')
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const headRef = context.payload.pull_request.head.ref;
+            try {
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `heads/${headRef}`,
+              });
+              console.log(`ブランチを削除しました: ${headRef}`);
+            } catch (e) {
+              if (e.status === 422) {
+                console.log(`ブランチは既に削除済みです: ${headRef}`);
+              } else {
+                throw e;
+              }
+            }

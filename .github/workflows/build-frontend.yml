@@ -50,13 +50,13 @@ jobs:
 
       # リポジトリ取得
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # Node.js セットアップ
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ inputs.node-version }}
           cache: npm
@@ -71,7 +71,7 @@ jobs:
       #   run: npm run typedoc
 
       # - name: Upload TSDoc
-      #   uses: actions/upload-artifact@v4
+      #   uses: actions/upload-artifact@v7
       #   with:
       #     name: frontend-tsdoc
       #     path: ${{ env.FRONTEND_DIR }}/docs
@@ -81,7 +81,7 @@ jobs:
         run: npm run build-storybook
 
       - name: Upload Storybook
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-storybook
           path: ${{ env.FRONTEND_DIR }}/storybook-static

@@ -31,7 +31,7 @@ export interface MapClickOptions {
 
 /** タイルスタイルURL（開発時はdevServerプロキシ経由、本番は直接参照） */
 const TILE_STYLE_URL =
-  process.env.NODE_ENV === 'production'
+  import.meta.env.PROD
     ? 'https://tile.openstreetmap.jp/styles/osm-bright-ja/style.json'
     : '/tile-proxy/styles/osm-bright-ja/style.json'
 
