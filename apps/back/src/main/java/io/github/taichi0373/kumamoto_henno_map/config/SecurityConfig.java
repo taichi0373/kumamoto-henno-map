@@ -49,8 +49,7 @@ public class SecurityConfig {
     private CorsConfigurationSource corsConfigurationSource;
 
     /** JSONシリアライザー */
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * JWT認証フィルターBean
