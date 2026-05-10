@@ -54,6 +54,9 @@
     "ts-loader": "^9.5.7",
     "typescript": "^5.9.3"
   },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "4.60.3"
+  },
   "eslintConfig": {
     "root": true,
     "env": {
