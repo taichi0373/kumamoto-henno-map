@@ -1,29 +1,12 @@
-import path from 'path';
+import type { StorybookConfig } from '@storybook/vue3-vite';
 
-export default {
+const config: StorybookConfig = {
   stories: ["../src/**/*.stories.@(js|jsx|ts|tsx|mdx)"],
-  addons: [
-    "@storybook/addon-webpack5-compiler-babel",
-    "@storybook/addon-essentials"
-  ],
+  addons: [],
   framework: {
-    name: "@storybook/vue3-webpack5",
+    name: "@storybook/vue3-vite",
     options: {},
   },
-  typescript: {
-    check: false,
-  },
-  webpackFinal: async (config: any) => {
-    // CSS/SCSS support
-    config.module.rules.push({
-      test: /\.scss$/,
-      use: ['style-loader', 'css-loader', 'sass-loader'],
-      include: path.resolve(__dirname, '../'),
-    });
-
-    // Alias for @ imports
-    config.resolve.alias['@'] = path.resolve(__dirname, '../src');
-    
-    return config;
-  }
 };
+
+export default config;
