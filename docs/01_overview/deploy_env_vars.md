@@ -4,11 +4,11 @@
 
 | 変数名 | 説明 | 設定値 |
 |--------|------|--------|
-| `VUE_APP_API_BASE_URL` | バックエンドAPIのベースURL | **設定不要** |
+| `VITE_API_BASE_URL` | バックエンドAPIのベースURL | **設定不要** |
 
 ---
 
-> **注意**: 本番環境では `VUE_APP_API_BASE_URL` を Vercel に設定しないでください。未設定時はデフォルト値 `/kumamoto-henno-map/api`（相対パス）が使用され、Vercel のリライト設定によりバックエンドへプロキシされます。絶対URLを設定するとリライトを経由せず直接クロスオリジン通信となり、Cookie（`SameSite=Lax`）が送信されず認証が正常に機能しません。
+> **注意**: 本番環境では `VITE_API_BASE_URL` を Vercel に設定しないでください。未設定時はデフォルト値 `/kumamoto-henno-map/api`（相対パス）が使用され、Vercel のリライト設定によりバックエンドへプロキシされます。絶対URLを設定するとリライトを経由せず直接クロスオリジン通信となり、Cookie（`SameSite=Lax`）が送信されず認証が正常に機能しません。
 
 ## バックエンド（Render）
 
