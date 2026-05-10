@@ -88,21 +88,21 @@ jobs:
       # 2. フロントエンド差分チェック
       - name: Frontend diff
         id: frontend
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@v47
         with:
           files: ${{ env.FRONTEND_DIR }}/**
 
       # 3. コンポーネント差分チェック
       - name: Component diff
         id: component
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@v47
         with:
           files: ${{ env.COMPONENT_DIR }}/**
 
       # 4. バックエンド差分チェック
       - name: Backend diff
         id: backend
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@v47
         with:
           files: ${{ env.BACKEND_DIR }}/**
 
@@ -117,6 +117,6 @@ jobs:
       # 6. ドキュメント差分チェック
       - name: Document diff
         id: document
-        uses: tj-actions/changed-files@v45
+        uses: tj-actions/changed-files@v47
         with:
           files: ${{ env.DOCUMENT_DIR }}/**
