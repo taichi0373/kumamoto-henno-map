@@ -69,7 +69,7 @@ jobs:
       # 全履歴取得（差分検知必須）
       # PRイベント: PRのhead SHA / pushイベント: プッシュされたSHAを使用
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
