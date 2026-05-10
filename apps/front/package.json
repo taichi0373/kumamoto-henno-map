@@ -30,10 +30,9 @@
     "@babel/core": "^7.29.0",
     "@babel/eslint-parser": "^7.25.0",
     "@playwright/test": "^1.59.1",
-    "@storybook/addon-essentials": "^8.6.14",
-    "@storybook/addon-webpack5-compiler-babel": "^3.0.6",
     "@storybook/vue3": "^10.3.6",
-    "@storybook/vue3-webpack5": "^8.6.14",
+    "@storybook/vue3-vite": "^10.3.6",
+    "vue-eslint-parser": "^10.3.0",
     "@types/jest": "^30.0.0",
     "@types/pg": "^8.20.0",
     "@typescript-eslint/eslint-plugin": "^8.59.2",
@@ -49,7 +48,8 @@
     "pg": "^8.20.0",
     "sass": "^1.89.2",
     "sass-loader": "^16.0.5",
-    "storybook": "^8.6.14",
+    "storybook": "^10.3.6",
+    "vite": "^6.0.0",
     "ts-jest": "^29.4.9",
     "ts-loader": "^9.5.7",
     "typescript": "^5.9.3"
@@ -58,10 +58,12 @@
     "root": true,
     "env": {
       "node": true,
+      "browser": true,
+      "es6": true,
       "jest": true
     },
     "extends": [
-      "plugin:vue/vue3-essential",
+      "plugin:vue/essential",
       "eslint:recommended"
     ],
     "parserOptions": {
@@ -71,6 +73,12 @@
     },
     "plugins": [
       "@typescript-eslint"
+    ],
+    "overrides": [
+      {
+        "files": ["*.ts"],
+        "parser": "@typescript-eslint/parser"
+      }
     ],
     "rules": {
       "vue/multi-word-component-names": "off",
