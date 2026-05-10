@@ -1,0 +1,34 @@
+version: 2
+updates:
+  # フロントエンド（npm）
+  - package-ecosystem: "npm"
+    directory: "/apps/front"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+    labels:
+      - "dependencies"
+      - "frontend"
+    open-pull-requests-limit: 10
+
+  # バックエンド（Gradle）
+  - package-ecosystem: "gradle"
+    directory: "/apps/back"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+    labels:
+      - "dependencies"
+      - "backend"
+    open-pull-requests-limit: 10
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+    labels:
+      - "dependencies"
+      - "ci"
+    open-pull-requests-limit: 10
