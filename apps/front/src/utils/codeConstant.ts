@@ -12,11 +12,11 @@ const codeConstant = {
 
     // 交通手段（経路検索用）
     TRANSPORTATION: {
-        TRANSIT: 'TRANSIT, WALK', // 公共交通機関
-        RAIL: 'RAIL, TRAM, WALK', // 電車
-        BUS: 'BUS, WALK',         // バス
-        BICYCLE: 'BICYCLE',       // 自転車
-        WALK: 'WALK',             // 徒歩
+        TRANSIT: 'TRANSIT,WALK', // 公共交通機関
+        RAIL: 'RAIL,TRAM,WALK',  // 電車
+        BUS: 'BUS,WALK',         // バス
+        BICYCLE: 'BICYCLE',      // 自転車
+        WALK: 'WALK',            // 徒歩
     } as Record<string, string>,
 
     // 交通手段アイコン

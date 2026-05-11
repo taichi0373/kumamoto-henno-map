@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
+import java.util.Map;
 
 import io.github.taichi0373.kumamoto_henno_map.dto.ApiResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.RouteRequestDto;
@@ -52,14 +53,14 @@ public class RouteController {
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/search")
-    public ResponseEntity<ApiResponseDto<JsonNode>> searchRoutes(@RequestBody RouteRequestDto request, Authentication auth) {
+    public ResponseEntity<ApiResponseDto<List<Map<String, Object>>>> searchRoutes(@RequestBody RouteRequestDto request, Authentication auth) {
         try {
             // JWT認証済みの場合はユーザーIDを取得（未ログインは null）
             Long userId = (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof CustomUserDetails)
                     ? ((CustomUserDetails) auth.getPrincipal()).getUserId()
                     : null;
 
-            JsonNode result = routeService.searchRoutes(request, userId);
+            List<Map<String, Object>> result = routeService.searchRoutes(request, userId);
             return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (IOException | ParseException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
