@@ -6,6 +6,8 @@ on:
 
 jobs:
   delete-branch:
+    permissions:
+      contents: write
     # スカッシュマージされた場合のみ実行（通常マージ・リベースマージも含めるなら条件を削除）
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
