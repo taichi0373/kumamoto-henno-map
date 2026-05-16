@@ -326,7 +326,14 @@ public class RouteService {
         legData.put("communityBusId", "");
         legData.put("agencyUrl", leg.has("agencyUrl") ? leg.get("agencyUrl").asText() : "");
         legData.put("routeId", leg.has("routeId") ? leg.get("routeId").asText() : "");
-        legData.put("legGeometry", leg.has("legGeometry") ? leg.get("legGeometry") : null);
+        JsonNode geomNode = leg.get("legGeometry");
+        if (!ValidateUtils.isNullOrEmpty(geomNode)) {
+            Map<String, Object> legGeometry = new HashMap<>();
+            legGeometry.put("points", geomNode.has("points") ? geomNode.get("points").asText() : null);
+            legData.put("legGeometry", legGeometry);
+        } else {
+            legData.put("legGeometry", null);
+        }
         legData.put("transitLeg", leg.has("transitLeg") ? leg.get("transitLeg").asBoolean() : false);
         legData.put("isRealtime", leg.has("realTime") && leg.get("realTime").asBoolean(false));
         legData.put("arrivalDelay", leg.hasNonNull("arrivalDelay") ? leg.get("arrivalDelay").asInt() : null);
