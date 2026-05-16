@@ -178,21 +178,24 @@ export const useMap = (): UseMapReturn => {
     // レイヤー初期化
     removeRouteLines(layerId)
 
+    // ソース登録
+    map.addSource(layerId, {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {}, // ルートの属性を必要に応じて追加（路線名、交通手段種別など）
+        geometry: {
+          type: 'LineString',
+          coordinates: coordinates
+        }
+      }
+    })
+
     // レイヤー追加
     map.addLayer({
       id: layerId,
       type: 'line',
-      source: {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: null, // ルートの属性を必要に応じて追加（路線名、交通手段種別など）
-          geometry: {
-            type: 'LineString',
-            coordinates: coordinates
-          }
-        }
-      },
+      source: layerId,
       layout: {
         'line-join': 'round',
         'line-cap': 'round'
@@ -201,7 +204,7 @@ export const useMap = (): UseMapReturn => {
         'line-color': color,
         'line-width': 5
       }
-    });
+    })
     return layerId
   }
 

@@ -6,6 +6,8 @@
 - [アプリケーション概要](01_overview/overview.md)
 - [技術スタック](01_overview/tech_stack.md)
 - [命名規則](01_overview/naming_conventions.md)
+- [デプロイ環境変数一覧](01_overview/deploy_env_vars.md)
+- [リリースワークフロー](01_overview/release_workflow.md)
 
 ### 2. 機能・画面仕様
 - [機能一覧](02_functions/feature_list.md)
@@ -27,7 +29,7 @@
 
 ## 技術スタック
 
-**フロントエンド**: Vue 3 + TypeScript + Vue CLI
+**フロントエンド**: Vue 3 + TypeScript + Vite
 
 **バックエンド**: Java 21 + Spring Boot + Doma 2
 
@@ -41,7 +43,7 @@
 
 ```
 kumamoto-henno-map/
-├── apps/front/         # フロントエンド（Vue 3 + TypeScript + Vue CLI）
+├── apps/front/         # フロントエンド（Vue 3 + TypeScript + Vite）
 ├── apps/back/          # バックエンド（Java 21 + Spring Boot + Doma 2）
 ├── config/database/    # データベース設定
 ├── config/otp/         # 経路探索設定

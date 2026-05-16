@@ -8,7 +8,7 @@ import org.seasar.doma.Insert;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.CommunityBusEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.CommunityBusEntity_;
@@ -32,10 +32,10 @@ public interface CommunityBusDao {
      * @return コミュニティバスエンティティ、存在しない場合はnull
      */
     default CommunityBusEntity selectById(String routeId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         CommunityBusEntity_ e = new CommunityBusEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.routeId, routeId))
                       .fetchOne();
     }
@@ -72,10 +72,10 @@ public interface CommunityBusDao {
      */
     default List<CommunityBusEntity> selectForAdmin(int offset, int limit, String routeName,
             String routeId, String communityBusId, String keyword, String sort, String order) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         CommunityBusEntity_ e = new CommunityBusEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
@@ -117,10 +117,10 @@ public interface CommunityBusDao {
      * @return 件数
      */
     default long countForAdmin(String routeName, String routeId, String communityBusId, String keyword) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         CommunityBusEntity_ e = new CommunityBusEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
@@ -149,10 +149,10 @@ public interface CommunityBusDao {
      * @return コミュニティバスエンティティリスト
      */
     default List<CommunityBusEntity> selectByCommunityBusId(String communityBusId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         CommunityBusEntity_ e = new CommunityBusEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.communityBusId, communityBusId))
                 .fetch();
     }

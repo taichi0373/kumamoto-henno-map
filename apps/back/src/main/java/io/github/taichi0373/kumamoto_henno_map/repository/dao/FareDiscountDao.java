@@ -8,7 +8,7 @@ import org.seasar.doma.Insert;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.FareDiscountEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.FareDiscountEntity_;
@@ -29,10 +29,10 @@ public interface FareDiscountDao {
      * 主キー検索
      */
     default FareDiscountEntity selectById(String benefit_id, String agency_id) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.benefitId, benefit_id))
                       .where(c -> c.eq(e.agencyId, agency_id))
                       .fetchOne();
@@ -53,10 +53,10 @@ public interface FareDiscountDao {
      */
     default List<FareDiscountEntity> selectForAdmin(int offset, int limit, String benefitId,
             String agencyId, String discountType, String discountValue, String keyword, String sort, String order) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
@@ -110,10 +110,10 @@ public interface FareDiscountDao {
      * @return 件数
      */
     default long countForAdmin(String benefitId, String agencyId, String discountType, String discountValue, String keyword) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
@@ -149,10 +149,10 @@ public interface FareDiscountDao {
      * @return 運賃割引エンティティリスト
      */
     default List<FareDiscountEntity> selectByBenefitId(String benefitId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.benefitId, benefitId))
                 .fetch();
     }
@@ -164,10 +164,10 @@ public interface FareDiscountDao {
      * @return 運賃割引エンティティリスト
      */
     default List<FareDiscountEntity> selectByAgencyId(String agencyId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         FareDiscountEntity_ e = new FareDiscountEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.agencyId, agencyId))
                 .fetch();
     }

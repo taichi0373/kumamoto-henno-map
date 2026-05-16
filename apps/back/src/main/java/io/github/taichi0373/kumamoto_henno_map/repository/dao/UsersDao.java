@@ -9,7 +9,7 @@ import org.seasar.doma.Insert;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity_;
@@ -32,10 +32,10 @@ public interface UsersDao {
      * @return ユーザーエンティティ、存在しない場合はnull
      */
     default UsersEntity selectById(Long userId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.userId, userId))
                       .fetchOne();
     }
@@ -47,10 +47,10 @@ public interface UsersDao {
      * @return ユーザーエンティティ、存在しない場合はnull
      */
     default UsersEntity selectByUsername(String username) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
         
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.username, username))
                       .fetchOne();
     }
@@ -61,10 +61,10 @@ public interface UsersDao {
      * @return 該当ユーザーエンティティ、存在しない場合はnull
      */
     default UsersEntity selectByEmail(String email) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.email, email))
                       .fetchOne();
     }
@@ -85,10 +85,10 @@ public interface UsersDao {
      * @return 自分以外に同一ユーザー名を持つユーザーが存在する場合はtrue
      */
     default boolean existsByUsernameExcluding(String username, Long excludeUserId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> {
                           c.eq(e.username, username);
                           c.ne(e.userId, excludeUserId);
@@ -103,10 +103,10 @@ public interface UsersDao {
      * @return 自分以外に同一メールアドレスを持つユーザーが存在する場合はtrue
      */
     default boolean existsByEmailExcluding(String email, Long excludeUserId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> {
                           c.eq(e.email, email);
                           c.ne(e.userId, excludeUserId);
@@ -133,10 +133,10 @@ public interface UsersDao {
     default List<UsersEntity> selectForAdmin(int offset, int limit, String username, String email,
             String userId, String birthDate, String municipalityCd, String licenseStatus,
             String keyword, String sort, String order) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (keyword != null && !keyword.isBlank()) {
                         c.and(() -> {
@@ -205,10 +205,10 @@ public interface UsersDao {
     default long countForAdmin(String username, String email,
             String userId, String birthDate, String municipalityCd, String licenseStatus,
             String keyword) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (keyword != null && !keyword.isBlank()) {
                         c.and(() -> {
@@ -255,10 +255,10 @@ public interface UsersDao {
      * @return 該当ユーザーリスト（空の場合は依存なし）
      */
     default List<UsersEntity> selectByMunicipalityCd(String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         UsersEntity_ e = new UsersEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.municipalityCd, municipalityCd))
                 .fetch();
     }

@@ -39,7 +39,7 @@ graph LR
         OTP[OpenTripPlanner]
         OSM[OpenStreetMap]
         GTFS[GTFS Data Feed]
-        MAIL[Mailtrap SMTP]
+        MAIL[SendGrid HTTP API]
     end
 
     FE -->|Authorization: Bearer Token| AUTH
@@ -47,7 +47,7 @@ graph LR
     AUTH --> API
     API -->|SQL| DB
     API -->|REST API| OTP
-    API -->|SMTP| MAIL
+    API -->|HTTP API| MAIL
     OTP -->|Map Data| OSM
     OTP -->|Route Data| GTFS
 
@@ -157,7 +157,8 @@ sequenceDiagram
   "data": {
     "token": "eyJhbGciOiJIUzI1NiJ9...",
     "userId": 1,
-    "username": "taro"
+    "username": "taro",
+    "isAdmin": false
   }
 }
 ```
@@ -190,7 +191,12 @@ sequenceDiagram
 {
   "success": true,
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiJ9..."
+    "token": "eyJhbGciOiJIUzI1NiJ9...",
+    "userInfo": {
+      "userId": 1,
+      "username": "taro",
+      "isAdmin": false
+    }
   }
 }
 ```
@@ -703,8 +709,8 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
     "content": [...],
     "totalElements": 100,
     "totalPages": 5,
-    "currentPage": 0,
-    "pageSize": 20
+    "page": 0,
+    "size": 20
   }
 }
 ```
@@ -715,9 +721,9 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 {
   "success": true,
   "data": {
-    "successCount": 10,
-    "updateCount": 2,
-    "failureCount": 1,
+    "createdCount": 10,
+    "updatedCount": 2,
+    "failedCount": 1,
     "errors": ["行3: benefitIdが重複しています"]
   }
 }

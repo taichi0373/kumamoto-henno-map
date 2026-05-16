@@ -5,7 +5,7 @@ import java.util.List;
 import org.seasar.doma.Dao;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 import org.seasar.doma.jdbc.criteria.option.LikeOption;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitDetailEntity;
@@ -24,10 +24,10 @@ public interface BenefitDetailDao {
      * @return 特典詳細一覧
      */
     default List<BenefitDetailEntity> selectAll() {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(e).fetch();
+        return queryDsl.from(e).fetch();
     }
 
     /**
@@ -36,10 +36,10 @@ public interface BenefitDetailDao {
      * @return 特典詳細一覧
      */
     default List<BenefitDetailEntity> selectByBenefitId(String benefitId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.benefitId, benefitId))
                 .fetch();
     }
@@ -50,10 +50,10 @@ public interface BenefitDetailDao {
      * @return 特典詳細一覧
      */
     default List<BenefitDetailEntity> selectByCategoryCd(String categoryCd) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.categoryCd, categoryCd))
                 .fetch();
     }
@@ -70,10 +70,10 @@ public interface BenefitDetailDao {
     default List<BenefitDetailEntity> selectEligible(
             Integer age, String licenseStatus, String municipalityCd,
             String keyword, String categoryCd) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(age)) {
                         c.and(() -> {

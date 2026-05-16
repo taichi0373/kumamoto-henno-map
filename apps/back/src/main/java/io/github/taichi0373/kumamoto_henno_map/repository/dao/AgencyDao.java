@@ -8,7 +8,7 @@ import org.seasar.doma.Insert;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.AgencyEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.AgencyEntity_;
@@ -32,10 +32,10 @@ public interface AgencyDao {
      * @return 事業者エンティティ、存在しない場合はnull
      */
     default AgencyEntity selectById(String agencyId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.agencyId, agencyId))
                       .fetchOne();
     }
@@ -46,10 +46,10 @@ public interface AgencyDao {
      * @return 事業者エンティティリスト
      */
     default List<AgencyEntity> selectAll() {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .orderBy(c -> c.asc(e.agencyId))
                 .fetch();
     }
@@ -71,10 +71,10 @@ public interface AgencyDao {
     default List<AgencyEntity> selectForAdmin(int offset, int limit, String agencyName,
             String agencyId, String agencyKana, String phoneNumber, String operatorId,
             String keyword, String sort, String order) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
@@ -129,10 +129,10 @@ public interface AgencyDao {
      */
     default long countForAdmin(String agencyName,
             String agencyId, String agencyKana, String phoneNumber, String operatorId, String keyword) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         AgencyEntity_ e = new AgencyEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {

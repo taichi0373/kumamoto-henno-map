@@ -82,7 +82,7 @@ public class RouteService {
      * @param request 経路探索リクエスト
      * @param userId  セッションから取得したユーザーID
      */
-    public JsonNode searchRoutes(RouteRequestDto request, Long userId) throws IOException, ParseException {
+    public List<Map<String, Object>> searchRoutes(RouteRequestDto request, Long userId) throws IOException, ParseException {
         String otpUrl = buildOtpUrl(request);
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
@@ -160,11 +160,11 @@ public class RouteService {
      * @param discountMap ユーザーの割引情報マップ {事業者ID, 割引情報}
      * @return 処理済み経路情報
      */
-    private JsonNode processOtpResponse(JsonNode otpResponse, Map<String, FareDiscountEligibilityEntity> discountMap) {
+    private List<Map<String, Object>> processOtpResponse(JsonNode otpResponse, Map<String, FareDiscountEligibilityEntity> discountMap) {
         try {
             JsonNode planNode = otpResponse.get("plan");
             if (ValidateUtils.isNullOrEmpty(planNode) || !planNode.has("itineraries")) {
-                return objectMapper.createArrayNode();
+                return new ArrayList<>();
             }
 
             JsonNode itineraries = planNode.get("itineraries");
@@ -186,7 +186,7 @@ public class RouteService {
                 processedItineraries.add(processedItinerary);
             }
 
-            return objectMapper.valueToTree(processedItineraries);
+            return processedItineraries;
         } catch (Exception e) {
             throw new RuntimeException("経路データの処理に失敗しました", e);
         }
@@ -326,7 +326,14 @@ public class RouteService {
         legData.put("communityBusId", "");
         legData.put("agencyUrl", leg.has("agencyUrl") ? leg.get("agencyUrl").asText() : "");
         legData.put("routeId", leg.has("routeId") ? leg.get("routeId").asText() : "");
-        legData.put("legGeometry", leg.has("legGeometry") ? leg.get("legGeometry") : null);
+        JsonNode geomNode = leg.get("legGeometry");
+        if (!ValidateUtils.isNullOrEmpty(geomNode)) {
+            Map<String, Object> legGeometry = new HashMap<>();
+            legGeometry.put("points", geomNode.has("points") ? geomNode.get("points").asText() : null);
+            legData.put("legGeometry", legGeometry);
+        } else {
+            legData.put("legGeometry", null);
+        }
         legData.put("transitLeg", leg.has("transitLeg") ? leg.get("transitLeg").asBoolean() : false);
         legData.put("isRealtime", leg.has("realTime") && leg.get("realTime").asBoolean(false));
         legData.put("arrivalDelay", leg.hasNonNull("arrivalDelay") ? leg.get("arrivalDelay").asInt() : null);
