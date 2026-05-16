@@ -105,15 +105,3 @@ docker compose exec db psql -U user -d kumamoto_henno_map
 | ユーザー名 | user |
 | パスワード | pass |
 
-ログイン: `admin@example.com` / `admin`
-
-## ドキュメント
-
-詳細設計書は `docs/` ディレクトリ（Docsify）を参照してください。
-
-| ディレクトリ | 内容 |
-|-------------|------|
-| `docs/01_overview/` | 概要・技術スタック・命名規則 |
-| `docs/02_functions/` | 機能一覧・画面一覧・画面遷移図 |
-| `docs/03_database/` | テーブル一覧・テーブル定義・ER図 |
-| `docs/04_interfaces/` | 外部インターフェース仕様 |
