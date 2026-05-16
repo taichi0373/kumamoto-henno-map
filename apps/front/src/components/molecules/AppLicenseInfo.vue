@@ -18,7 +18,7 @@
     <AppDialog
       v-model="showLicensePopup"
       header="出典・ライセンス情報"
-      :dialog-style="{ width: '600px' }"
+      :dialog-style="{ width: 'min(600px, 90vw)' }"
     >
       <div class="modal-content">
         <p class="intro-text">
@@ -89,10 +89,10 @@
                 </AppLink>
               </div>
               <ul class="sub-list">
-                <li>産交バス：https://www.kyusanko.co.jp/sankobus</li>
-                <li>熊本電鉄バス：https://www.kumamotodentetsu.co.jp/bus</li>
-                <li>熊本バス：https://www.kuma-bus.co.jp</li>
-                <li>熊本都市バス：https://www.kumamoto-toshibus.co.jp</li>
+                <li><AppLink @click="openUrl('https://www.kyusanko.co.jp/sankobus')">産交バス</AppLink></li>
+                <li><AppLink @click="openUrl('https://www.kumamotodentetsu.co.jp/bus')">熊本電鉄バス</AppLink></li>
+                <li><AppLink @click="openUrl('https://www.kuma-bus.co.jp')">熊本バス</AppLink></li>
+                <li><AppLink @click="openUrl('https://www.kumamoto-toshibus.co.jp')">熊本都市バス</AppLink></li>
               </ul>
             </li>
 
@@ -107,7 +107,7 @@
                 </AppLink>
               </div>
               <ul class="sub-list">
-                <li>熊本市交通局：http://www.kotsu-kumamoto.jp</li>
+                <li><AppLink @click="openUrl('http://www.kotsu-kumamoto.jp')">熊本市交通局</AppLink></li>
               </ul>
               <div class="license-details">
                 ライセンス：
@@ -116,7 +116,7 @@
                 </AppLink>
               </div>
               <ul class="sub-list">
-                <li>熊本電鉄：https://www.kumamotodentetsu.co.jp</li>
+                <li><AppLink @click="openUrl('https://www.kumamotodentetsu.co.jp')">熊本電鉄</AppLink></li>
               </ul>
             </li>
 
@@ -167,6 +167,10 @@ const openUrl = (url: string) => {
   max-height: 70vh;
   overflow-y: auto;
   padding-right: base.$margin-100;
+
+  @media (max-width: 768px) {
+    max-height: 60vh;
+  }
 
   &::-webkit-scrollbar {
     width: 6px;
