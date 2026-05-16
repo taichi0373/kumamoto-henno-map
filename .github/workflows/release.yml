@@ -77,6 +77,9 @@ jobs:
             TAG_COMMIT_SHA="${DEREF_SHA:-$EXISTING_TAG_SHA}"
             if [ "$TAG_COMMIT_SHA" = "$HEAD_SHA" ]; then
               echo "タグ $VERSION は既に存在し、現在の HEAD ($HEAD_SHA) を指しているためスキップします"
+            elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              # 手動実行時は既存タグのリリースノート再生成を許可するためスキップ
+              echo "タグ $VERSION は既に存在します（コミット: $TAG_COMMIT_SHA）。リリースノートの再生成のためスキップします"
             else
               echo "タグ $VERSION は既に存在しますが、異なるコミット ($TAG_COMMIT_SHA) を指しています（HEAD: $HEAD_SHA）"
               exit 1
