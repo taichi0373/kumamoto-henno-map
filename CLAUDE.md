@@ -129,7 +129,9 @@ kumamoto_henno_map/
 - Entity は `Serializable` 実装 + `serialVersionUID = 1L`
 
 **Git 要点:**
+- 必ず、docs/01_overview/naming_conventions.md の命名規則に沿って、`develop`からブランチ作成し、コミット、プッシュを行う
 - コミットメッセージは日本語で簡潔に
+例）fix: ○○不具合の修正
 
 ## 外部サービス
 
