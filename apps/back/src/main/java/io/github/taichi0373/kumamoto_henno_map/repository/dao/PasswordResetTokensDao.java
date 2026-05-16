@@ -6,8 +6,7 @@ import org.seasar.doma.Dao;
 import org.seasar.doma.Insert;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
-import org.seasar.doma.jdbc.criteria.NativeSql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.PasswordResetTokensEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.PasswordResetTokensEntity_;
@@ -29,10 +28,10 @@ public interface PasswordResetTokensDao {
      * @return 該当トークンエンティティ、存在しない場合はnull
      */
     default PasswordResetTokensEntity selectByToken(String tokenHash) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         PasswordResetTokensEntity_ e = new PasswordResetTokensEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.token, tokenHash))
                       .fetchOne();
     }
@@ -49,7 +48,7 @@ public interface PasswordResetTokensDao {
      * @return 更新件数（1 = 成功、0 = 使用済みまたは期限切れ）
      */
     default int markAsUsedIfValid(String tokenHash, LocalDateTime now) {
-        NativeSql nativeSql = new NativeSql(Config.get(this));
+        QueryDsl nativeSql = new QueryDsl(Config.get(this));
         PasswordResetTokensEntity_ e = new PasswordResetTokensEntity_();
         return nativeSql.update(e)
                 .set(c -> {
@@ -76,7 +75,7 @@ public interface PasswordResetTokensDao {
      * @return 削除件数の合計
      */
     default int deleteExpiredOrUsed(LocalDateTime now) {
-        NativeSql nativeSql = new NativeSql(Config.get(this));
+        QueryDsl nativeSql = new QueryDsl(Config.get(this));
         PasswordResetTokensEntity_ e = new PasswordResetTokensEntity_();
         int count = nativeSql.delete(e)
                 .where(c -> c.le(e.expiresAt, now))

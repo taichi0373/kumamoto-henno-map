@@ -8,7 +8,7 @@ import org.seasar.doma.Insert;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.MunicipalityEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.MunicipalityEntity_;
@@ -33,10 +33,10 @@ public interface MunicipalityDao {
      * @return 市区町村エンティティ、存在しない場合はnull
      */
     default MunicipalityEntity selectById(String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.municipalityCd, municipalityCd))
                       .fetchOne();
     }
@@ -45,10 +45,10 @@ public interface MunicipalityDao {
      * 市町村の自治体CDを全件取得
      */
     default List<MunicipalityEntity> selectAllOrderByCd() {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.municipalityType, CodeConstants.MunicipalityType.CITY))
                       .orderBy(c -> c.asc(e.municipalityCd))
                       .fetch();
@@ -71,10 +71,10 @@ public interface MunicipalityDao {
     default List<MunicipalityEntity> selectForAdmin(int offset, int limit, String municipalityName,
             String municipalityCd, String municipalityKana, String municipalityType,
             String keyword, String sort, String order) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
@@ -124,10 +124,10 @@ public interface MunicipalityDao {
     default long countForAdmin(String municipalityName,
             String municipalityCd, String municipalityKana, String municipalityType,
             String keyword) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         MunicipalityEntity_ e = new MunicipalityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {

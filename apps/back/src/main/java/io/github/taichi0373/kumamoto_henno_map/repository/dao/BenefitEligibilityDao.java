@@ -8,7 +8,7 @@ import org.seasar.doma.Insert;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitEligibilityEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitEligibilityEntity_;
@@ -31,10 +31,10 @@ public interface BenefitEligibilityDao {
      * @return 特典適用条件エンティティリスト
      */
     default List<BenefitEligibilityEntity> selectByBenefitId(String benefitId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.benefitId, benefitId))
                 .fetch();
     }
@@ -46,10 +46,10 @@ public interface BenefitEligibilityDao {
      * @return 特典適用条件エンティティ
      */
     default BenefitEligibilityEntity selectById(Long id) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.id, id))
                 .fetchOne();
     }
@@ -72,10 +72,10 @@ public interface BenefitEligibilityDao {
     default List<BenefitEligibilityEntity> selectForAdmin(int offset, int limit, String benefitId,
             String id, String licenseStatus, String minAge, String maxAge, String municipalityCd,
             String keyword, String sort, String order) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (keyword != null && !keyword.isBlank()) {
                         c.and(() -> {
@@ -145,10 +145,10 @@ public interface BenefitEligibilityDao {
      */
     default long countForAdmin(String benefitId, String id, String licenseStatus,
             String minAge, String maxAge, String municipalityCd, String keyword) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEligibilityEntity_ e = new BenefitEligibilityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (keyword != null && !keyword.isBlank()) {
                         c.and(() -> {

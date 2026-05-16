@@ -6,7 +6,7 @@ import org.seasar.doma.Insert;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import java.util.List;
 
@@ -30,10 +30,10 @@ public interface BenefitCategoryDao {
      * @return 有効カテゴリ一覧
      */
     default List<BenefitCategoryEntity> selectAllOrdered() {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.isActive, "1"))
                 .orderBy(c -> c.asc(e.displayOrder))
                 .fetch();
@@ -46,10 +46,10 @@ public interface BenefitCategoryDao {
      * @return 特典カテゴリエンティティ、存在しない場合はnull
      */
     default BenefitCategoryEntity selectById(String categoryCd) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.categoryCd, categoryCd))
                       .fetchOne();
     }
@@ -80,10 +80,10 @@ public interface BenefitCategoryDao {
      */
     default List<BenefitCategoryEntity> selectForAdmin(int offset, int limit, String categoryName,
             String categoryCd, String displayOrder, String keyword, String sort, String order) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
@@ -128,10 +128,10 @@ public interface BenefitCategoryDao {
      * @return 件数
      */
     default long countForAdmin(String categoryName, String categoryCd, String displayOrder, String keyword) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitCategoryEntity_ e = new BenefitCategoryEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
