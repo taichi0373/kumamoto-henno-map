@@ -38,6 +38,28 @@ npm install
 npm run serve
 ```
 
+## 開発コマンド
+
+### フロントエンド (`apps/front/`)
+
+```bash
+npm run serve          # 開発サーバー起動 (http://localhost:3000)
+npm run build          # プロダクションビルド
+npm run lint           # ESLint実行
+npm run test           # ユニットテスト実行
+npm run test:e2e       # E2Eテスト実行
+npm run storybook      # Storybook起動 (http://localhost:6006)
+npm run build-storybook # Storybookビルド
+```
+
+### バックエンド (`apps/back/`)
+
+```bash
+./gradlew bootRun      # Spring Boot起動 (http://localhost:8081)
+./gradlew build        # ビルド・テスト
+./gradlew test         # テストのみ実行
+```
+
 ## Docker 操作
 
 ```bash
@@ -49,8 +71,6 @@ docker compose down -v
 ```
 
 ## DB 操作
-
-接続情報は `docker-compose.yml` の `POSTGRES_USER` / `POSTGRES_PASSWORD` を参照してください。
 
 ```bash
 docker compose exec db psql -U user -d kumamoto_henno_map
@@ -68,5 +88,7 @@ docker compose exec db psql -U user -d kumamoto_henno_map
 | ホスト名/アドレス | db |
 | ポート番号 | 5432 |
 | 管理用データベース | kumamoto_henno_map |
-| ユーザー名 / パスワード | `docker-compose.yml` の `POSTGRES_USER` / `POSTGRES_PASSWORD` を参照 |
+| ユーザー名 | user |
+| パスワード | pass |
 
+ログイン: `admin@example.com` / `admin`
