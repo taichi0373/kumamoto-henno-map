@@ -48,47 +48,111 @@
       :message="'条件に一致する特典がありません'" />
 
     <div v-if="!isLoading">
-      <template v-for="benefit in benefitResults" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`">
-        <AppCard class="mb-3" :hoverable="true">
-          <template #title>{{ benefit.benefitName }}</template>
-          <!-- 特典内容： -->
-          <p>特典内容：{{ benefit.benefitDetail }}</p>
-          <!-- 条件 -->
-          <ul style="list-style: none; padding-left: 0;">
-            <!-- 対象年齢 -->
-            <li v-if="benefit.minAge != null || benefit.maxAge != null">
-              <i class="pi pi-user"></i>
-              対象年齢：{{ formatAgeRange(benefit.minAge, benefit.maxAge) }}
-            </li>
-            <!-- 自治体名 -->
-            <li v-if="benefit.municipalityName">
-              <i class="pi pi-map-marker"></i>
-              対象地域：{{ benefit.municipalityName }}
-            </li>
-            <!-- 運転免許の所持状況 -->
-            <li v-if="benefit.licenseStatus">
-              <i class="pi pi-id-card"></i>
-              運転免許の所持状況：{{ getLicenseStatusName(benefit.licenseStatus) }}
-            </li>
-            <!-- 電話番号 -->
-            <li v-if="benefit.phoneNumber">
-              <i class="pi pi-phone"></i>
-              電話番号：{{ benefit.phoneNumber }}
-            </li>
-            <!-- 備考 -->
-            <li v-if="benefit.eligibilityNote">
-              <small>※{{ benefit.eligibilityNote }}</small>
-            </li>
-          </ul>
-          <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
-        </AppCard>
+      <!-- カテゴリ未指定: アコーディオン表示 -->
+      <template v-if="!searchBenefit.categoryCd">
+        <div
+          v-for="group in groupedBenefitResults"
+          :key="group.categoryCd"
+          class="category-accordion mb-3"
+        >
+          <!-- カテゴリヘッダー -->
+          <button
+            type="button"
+            class="category-accordion__header"
+            @click="toggleCategory(group.categoryCd)"
+          >
+            <span class="category-accordion__title">
+              {{ group.categoryName }} <span class="category-accordion__count">{{ group.benefits.length }}件</span>
+            </span>
+            <i :class="openCategories.has(group.categoryCd) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+          </button>
+          <!-- 特典リスト -->
+          <Transition name="accordion">
+            <div v-show="openCategories.has(group.categoryCd)" class="category-accordion__body">
+              <template v-for="benefit in group.benefits" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`">
+                <AppCard class="mb-3" :hoverable="true">
+                  <template #title>{{ benefit.benefitName }}</template>
+                  <!-- 特典内容： -->
+                  <p>特典内容：{{ benefit.benefitDetail }}</p>
+                  <!-- 条件 -->
+                  <ul style="list-style: none; padding-left: 0;">
+                    <!-- 対象年齢 -->
+                    <li v-if="benefit.minAge != null || benefit.maxAge != null">
+                      <i class="pi pi-user"></i>
+                      対象年齢：{{ formatAgeRange(benefit.minAge, benefit.maxAge) }}
+                    </li>
+                    <!-- 自治体名 -->
+                    <li v-if="benefit.municipalityName">
+                      <i class="pi pi-map-marker"></i>
+                      対象地域：{{ benefit.municipalityName }}
+                    </li>
+                    <!-- 運転免許の所持状況 -->
+                    <li v-if="benefit.licenseStatus">
+                      <i class="pi pi-id-card"></i>
+                      運転免許の所持状況：{{ getLicenseStatusName(benefit.licenseStatus) }}
+                    </li>
+                    <!-- 電話番号 -->
+                    <li v-if="benefit.phoneNumber">
+                      <i class="pi pi-phone"></i>
+                      電話番号：{{ benefit.phoneNumber }}
+                    </li>
+                    <!-- 備考 -->
+                    <li v-if="benefit.eligibilityNote">
+                      <small>※{{ benefit.eligibilityNote }}</small>
+                    </li>
+                  </ul>
+                  <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+                </AppCard>
+              </template>
+            </div>
+          </Transition>
+        </div>
+      </template>
+
+      <!-- カテゴリ指定済み: フラット表示 -->
+      <template v-else>
+        <template v-for="benefit in benefitResults" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`">
+          <AppCard class="mb-3" :hoverable="true">
+            <template #title>{{ benefit.benefitName }}</template>
+            <!-- 特典内容： -->
+            <p>特典内容：{{ benefit.benefitDetail }}</p>
+            <!-- 条件 -->
+            <ul style="list-style: none; padding-left: 0;">
+              <!-- 対象年齢 -->
+              <li v-if="benefit.minAge != null || benefit.maxAge != null">
+                <i class="pi pi-user"></i>
+                対象年齢：{{ formatAgeRange(benefit.minAge, benefit.maxAge) }}
+              </li>
+              <!-- 自治体名 -->
+              <li v-if="benefit.municipalityName">
+                <i class="pi pi-map-marker"></i>
+                対象地域：{{ benefit.municipalityName }}
+              </li>
+              <!-- 運転免許の所持状況 -->
+              <li v-if="benefit.licenseStatus">
+                <i class="pi pi-id-card"></i>
+                運転免許の所持状況：{{ getLicenseStatusName(benefit.licenseStatus) }}
+              </li>
+              <!-- 電話番号 -->
+              <li v-if="benefit.phoneNumber">
+                <i class="pi pi-phone"></i>
+                電話番号：{{ benefit.phoneNumber }}
+              </li>
+              <!-- 備考 -->
+              <li v-if="benefit.eligibilityNote">
+                <small>※{{ benefit.eligibilityNote }}</small>
+              </li>
+            </ul>
+            <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+          </AppCard>
+        </template>
       </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import AppLabel from '@/components/atoms/AppLabel.vue'
 import AppSelect from '@/components/atoms/AppSelect.vue'
@@ -124,6 +188,9 @@ const searchBenefit = ref<SearchBenefitDto>(new SearchBenefitDto())
 /** 検索結果 */
 const benefitResults = ref([]) as Ref<BenefitDetailDto[]>
 
+/** 展開中カテゴリコードのセット */
+const openCategories = ref(new Set<string>())
+
 /** 居住地域プルダウン */
 const addressOptions = ref([]) as Ref<SelectDto[]>
 
@@ -140,6 +207,26 @@ const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.OTHER]: 'その他',
 }
 const licenseOptions = ref([]) as Ref<SelectDto[]>
+
+/** カテゴリ別にグループ化した検索結果（displayOrder 昇順） */
+const groupedBenefitResults = computed(() => {
+  const groups = new Map<string, {
+    categoryCd: string; categoryName: string; displayOrder: number; benefits: BenefitDetailDto[]
+  }>()
+  for (const benefit of benefitResults.value) {
+    const cd = benefit.categoryCd ?? 'OTHER'
+    if (!groups.has(cd)) {
+      groups.set(cd, {
+        categoryCd: cd,
+        categoryName: benefit.categoryName ?? 'その他',
+        displayOrder: benefit.displayOrder ?? 9999,
+        benefits: []
+      })
+    }
+    groups.get(cd)!.benefits.push(benefit)
+  }
+  return Array.from(groups.values()).sort((a, b) => a.displayOrder - b.displayOrder)
+})
 
 // カテゴリデータを取得
 const getCategories = async () => {
@@ -215,6 +302,8 @@ const searchBenefits = async (conditions: SearchBenefitDto) => {
     hasSearched.value = false
   } finally {
     isLoading.value = false
+    /** 検索完了後: 全カテゴリ展開 */
+    openCategories.value = new Set(groupedBenefitResults.value.map(g => g.categoryCd))
   }
 }
 
@@ -223,23 +312,35 @@ const clearConditions = () => {
   searchBenefit.value = new SearchBenefitDto()
   benefitResults.value = []
   hasSearched.value = false
+  openCategories.value = new Set()
 }
 
- /** 対象年齢の表示用文言を組み立て */
- const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string => {
-   const hasMin = minAge != null
-   const hasMax = maxAge != null
-   if (hasMin && hasMax) {
-     return `${minAge}歳以上～${maxAge}歳以下`
-   }
-   if (hasMin) {
-     return `${minAge}歳以上`
-   }
-   if (hasMax) {
-     return `${maxAge}歳以下`
-   }
-   return ''
- }
+/** 対象年齢の表示用文言を組み立て */
+const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string => {
+  const hasMin = minAge != null
+  const hasMax = maxAge != null
+  if (hasMin && hasMax) {
+    return `${minAge}歳以上～${maxAge}歳以下`
+  }
+  if (hasMin) {
+    return `${minAge}歳以上`
+  }
+  if (hasMax) {
+    return `${maxAge}歳以下`
+  }
+  return ''
+}
+
+/** アコーディオンの開閉を切り替える */
+const toggleCategory = (cd: string) => {
+  if (openCategories.value.has(cd)) {
+    openCategories.value.delete(cd)
+  } else {
+    openCategories.value.add(cd)
+  }
+  /** Set の変更を Vue に検知させるため再代入 */
+  openCategories.value = new Set(openCategories.value)
+}
 
 // 初期表示
 onMounted(() => {
@@ -263,4 +364,53 @@ onMounted(() => {
   margin: 24px 0;
 }
 
+.category-accordion {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #f5f5f5;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: bold;
+
+    &:hover {
+      background-color: #e8e8e8;
+    }
+  }
+
+  &__title {
+    color: base.$text-primary;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__count {
+    font-weight: normal;
+    color: base.$text-secondary;
+  }
+
+  &__body {
+    padding: 8px;
+  }
+}
+
+.accordion-enter-active,
+.accordion-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+  opacity: 0;
+}
 </style>

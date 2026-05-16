@@ -5,6 +5,10 @@ import router from './router'
 import { setTokenProvider, setUnauthorizedHandler } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
 
+// maplibre-gl Worker
+import { setWorkerUrl } from 'maplibre-gl'
+import maplibreglWorkerUrl from 'maplibre-gl/dist/maplibre-gl-csp-worker?url'
+
 // PrimeVue Import
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
@@ -34,6 +38,9 @@ setUnauthorizedHandler(() => {
     router.push('/login')
   })
 })
+
+// maplibre-gl の WebWorker URL を明示的に指定
+setWorkerUrl(maplibreglWorkerUrl)
 
 const MyPreset = definePreset(Aura, {
   semantic: {
