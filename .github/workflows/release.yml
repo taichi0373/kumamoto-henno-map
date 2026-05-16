@@ -1,7 +1,7 @@
 name: Release
 
 # main への push で毎回起動し、job の if: でコミットメッセージを判定して実行/スキップを決定する
-# workflow_dispatch でも手動実行可能（テスト・緊急リリース用）
+# workflow_dispatch でも手動実行可能
 on:
   push:
     branches:
@@ -15,7 +15,7 @@ on:
 env:
   TZ: Asia/Tokyo
 
-# 同一ワークフローの並行実行を防止（再実行・連続pushによるタグ競合・develop競合を抑止）
+# 同一ワークフローの並行実行を防止
 concurrency:
   group: release
   cancel-in-progress: false
@@ -36,7 +36,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      # バージョン番号を取得（手動実行時は inputs.version、push 時はコミットメッセージから抽出）
+      # バージョン番号を取得
       - name: バージョン番号を抽出
         id: version
         run: |
@@ -63,7 +63,7 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # タグを作成してプッシュ（既存タグはコミット一致を確認してからスキップ）
+      # タグを作成してプッシュ
       - name: タグを作成
         run: |
           git config user.name "github-actions[bot]"
@@ -89,7 +89,7 @@ jobs:
             git push origin "$VERSION"
           fi
 
-      # 前回タグ以降に develop にマージされた PR を収集してリリースノートを生成
+      # 前回タグ以降に develop にマージされた PR からリリースノートを生成
       - name: リリースノートを生成
         id: notes
         env:
@@ -144,7 +144,7 @@ jobs:
           name: Release ${{ steps.version.outputs.version }}
           body: ${{ steps.notes.outputs.body }}
 
-  # develop を削除して main から再作成（squash merge による diverge を根本解消）
+  # develop を削除して main から再作成
   sync-develop:
     name: Recreate develop from main
     needs: release
@@ -158,8 +158,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # GITHUB_TOKEN による push は GitHub の仕様上 push-review.yml 等の他ワークフローを起動しない。
-      # develop 再作成はリリース済みコードと完全同期するための操作であり、CI 再実行は不要。
       - name: develop を削除して main から再作成
         run: |
           git config user.name "github-actions[bot]"
