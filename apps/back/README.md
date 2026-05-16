@@ -6,10 +6,10 @@ Java 21 + Spring Boot 3 + Doma 2 による REST API サーバーです。
 
 ```bash
 # コンパイル
-./gradlew compileJava
+./gradlew clean compileJava
 
 # ビルド（テスト含む）
-./gradlew build
+./gradlew clean build
 
 # 開発サーバー起動（http://localhost:8081）
 ./gradlew bootRun

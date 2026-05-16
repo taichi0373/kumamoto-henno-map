@@ -13,6 +13,16 @@
 | OTP | http://localhost:8080 |
 | Storybook | http://localhost:6006 |
 
+## 技術スタック
+
+| レイヤー | 技術 |
+|---------|------|
+| フロントエンド | Vue 3 + TypeScript + Vite + Pinia + MapLibre GL JS |
+| バックエンド | Java 21 + Spring Boot 4 + Doma 2 + JWT認証 |
+| データベース | PostgreSQL 18 |
+| 経路探索 | OpenTripPlanner 2.5.0（GTFS） |
+| インフラ | Docker / Docker Compose |
+
 ## 環境構築
 
 ### 1. Docker 起動
@@ -47,7 +57,9 @@ npm run serve          # 開発サーバー起動 (http://localhost:3000)
 npm run build          # プロダクションビルド
 npm run lint           # ESLint実行
 npm run test           # ユニットテスト実行
+npm run test:watch     # ユニットテスト（ウォッチモード）
 npm run test:e2e       # E2Eテスト実行
+npm run test:e2e:ui    # E2EテストUI起動
 npm run storybook      # Storybook起動 (http://localhost:6006)
 npm run build-storybook # Storybookビルド
 ```
@@ -56,9 +68,11 @@ npm run build-storybook # Storybookビルド
 
 ```bash
 ./gradlew bootRun      # Spring Boot起動 (http://localhost:8081)
-./gradlew build        # ビルド・テスト
+./gradlew clean build  # ビルド・テスト
 ./gradlew test         # テストのみ実行
 ```
+
+詳細は [`apps/back/README.md`](apps/back/README.md) を参照してください。
 
 ## Docker 操作
 
@@ -92,3 +106,14 @@ docker compose exec db psql -U user -d kumamoto_henno_map
 | パスワード | pass |
 
 ログイン: `admin@example.com` / `admin`
+
+## ドキュメント
+
+詳細設計書は `docs/` ディレクトリ（Docsify）を参照してください。
+
+| ディレクトリ | 内容 |
+|-------------|------|
+| `docs/01_overview/` | 概要・技術スタック・命名規則 |
+| `docs/02_functions/` | 機能一覧・画面一覧・画面遷移図 |
+| `docs/03_database/` | テーブル一覧・テーブル定義・ER図 |
+| `docs/04_interfaces/` | 外部インターフェース仕様 |
