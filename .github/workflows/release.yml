@@ -144,9 +144,9 @@ jobs:
           name: Release ${{ steps.version.outputs.version }}
           body: ${{ steps.notes.outputs.body }}
 
-  # develop に main を同期（squash merge による diverge を解消）
+  # develop を削除して main から再作成（squash merge による diverge を根本解消）
   sync-develop:
-    name: Sync develop with main
+    name: Recreate develop from main
     needs: release
     runs-on: ubuntu-latest
     permissions:
@@ -159,12 +159,12 @@ jobs:
           fetch-depth: 0
 
       # GITHUB_TOKEN による push は GitHub の仕様上 push-review.yml 等の他ワークフローを起動しない。
-      # sync コミットはリリース済みコードの戻しのみのため CI 再実行は不要であり、意図した動作。
-      - name: develop に main をマージ
+      # develop 再作成はリリース済みコードと完全同期するための操作であり、CI 再実行は不要。
+      - name: develop を削除して main から再作成
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin
-          git checkout -b develop origin/develop
-          git merge --no-edit --no-ff main
+          git push origin --delete develop
+          git checkout -b develop origin/main
           git push origin develop
