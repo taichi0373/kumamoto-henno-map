@@ -1,23 +1,25 @@
 <template>
   <div class="page">
     <div class="container">
-      <div class="page-header">
-        <h1 class="page-title">自主返納支援制度とは</h1>
-      </div>
-      
+      <AppTitle size="large">自主返納支援制度とは</AppTitle>
+
       <div class="content-sections">
         <!-- 制度について -->
-        <div class="info-section">
-          <h2 class="section-title">運転免許証の自主返納制度について</h2>
+        <AppCard>
+          <template #title>
+            <h2 class="section-title">運転免許証の自主返納制度について</h2>
+          </template>
           <p class="section-description">
             運転免許証の自主返納制度は、加齢に伴う身体機能の変化等により、
             自動車等の運転に不安を感じる方が、運転免許証を自主的に返納できる制度です。
           </p>
-        </div>
-        
+        </AppCard>
+
         <!-- メリット -->
-        <div class="info-section">
-          <h2 class="section-title">自主返納のメリット</h2>
+        <AppCard>
+          <template #title>
+            <h2 class="section-title">自主返納のメリット</h2>
+          </template>
           <div class="merit-list">
             <div class="merit-item">
               <i class="pi pi-shield"></i>
@@ -36,91 +38,126 @@
               <span>地域社会の安全向上に貢献できます</span>
             </div>
           </div>
-        </div>
-        
+        </AppCard>
+
         <!-- 返納手続き -->
-        <div class="info-section">
-          <h2 class="section-title">返納手続きについて</h2>
-          <div class="procedure-steps">
-            <div class="step-card">
-              <div class="step-number">1</div>
-              <div class="step-content">
-                <h3 class="step-title">必要書類の準備</h3>
-                <p class="step-description">運転免許証、本人確認書類を準備してください。</p>
-              </div>
+        <AppCard>
+          <template #title>
+            <h2 class="section-title">返納手続きについて</h2>
+          </template>
+          <div class="procedure-summary">
+            <div class="summary-item">
+              <h3 class="summary-title">
+                <i class="pi pi-map-marker"></i>受付場所
+              </h3>
+              <ul class="summary-list">
+                <li>運転免許センター（月〜木・日曜日）</li>
+                <li>警察署（月〜金曜日）</li>
+                <li>氷川幹部交番（月〜金曜日）</li>
+              </ul>
+              <p class="summary-note">※ 受付時間や休業日は場所により異なります</p>
             </div>
-            
-            <div class="step-card">
-              <div class="step-number">2</div>
-              <div class="step-content">
-                <h3 class="step-title">警察署・運転免許センターへ</h3>
-                <p class="step-description">最寄りの警察署または運転免許センターで手続きを行います。</p>
-              </div>
+
+            <div class="summary-item">
+              <h3 class="summary-title">
+                <i class="pi pi-file"></i>必要書類（本人申請）
+              </h3>
+              <ul class="summary-list">
+                <li>有効な運転免許証またはマイナ免許証</li>
+              </ul>
+              <p class="summary-note">※ 代理申請の場合は委任状等が別途必要です</p>
             </div>
-            
-            <div class="step-card">
-              <div class="step-number">3</div>
-              <div class="step-content">
-                <h3 class="step-title">運転経歴証明書の交付</h3>
-                <p class="step-description">希望者には運転経歴証明書が交付されます（有料）。</p>
-              </div>
+
+            <div class="summary-item">
+              <h3 class="summary-title">
+                <i class="pi pi-id-card"></i>運転経歴証明書
+              </h3>
+              <ul class="summary-list">
+                <li>返納と同時に申請可能（手数料：1,150円）</li>
+                <li>写真1枚が必要（運転免許センター申請時は不要）</li>
+              </ul>
             </div>
           </div>
-        </div>
-        
+
+          <div class="procedure-link-wrap">
+            <AppLink to="https://www.pref.kumamoto.jp/site/police/8708.html">
+              <i class="pi pi-external-link"></i>
+              詳細は熊本県警察公式サイトをご確認ください
+            </AppLink>
+          </div>
+        </AppCard>
+
         <!-- 特典について -->
-        <div class="info-section">
-          <h2 class="section-title">特典について</h2>
+        <AppCard>
+          <template #title>
+            <h2 class="section-title">特典について</h2>
+          </template>
           <p class="section-description">
-            運転免許証を自主返納された方には、熊本県内の多くの店舗や施設で
-            様々な特典やサービスをご利用いただけます。
+            熊本県内では、運転免許証を自主返納された方を対象に、
+            公共交通機関や地域の店舗・施設、各市町村から多様な支援が提供されています。
+            詳細・申込方法は各事業者・市町村へ直接ご確認ください。
           </p>
-          
+
           <div class="benefit-categories">
-            <div class="category-card">
-              <div class="category-icon">🛒</div>
-              <h3 class="category-title">ショッピング</h3>
-              <p class="category-description">商品割引、配送サービスなど</p>
-            </div>
-            
-            <div class="category-card">
-              <div class="category-icon">🍽️</div>
-              <h3 class="category-title">飲食店</h3>
-              <p class="category-description">料金割引、ドリンクサービスなど</p>
-            </div>
-            
-            <div class="category-card">
-              <div class="category-icon">🏨</div>
-              <h3 class="category-title">宿泊・温泉</h3>
-              <p class="category-description">宿泊料金割引、入浴料割引など</p>
-            </div>
-            
-            <div class="category-card">
-              <div class="category-icon">🚌</div>
-              <h3 class="category-title">交通機関</h3>
-              <p class="category-description">運賃割引、回数券特典など</p>
-            </div>
+            <AppCard :hoverable="true">
+              <div class="category-content">
+                <div class="category-icon">🚌</div>
+                <h3 class="category-title">公共交通機関</h3>
+                <p class="category-description">路線バス・路面電車・電車・タクシーなどの運賃割引（例：返納後2年間、運賃の半額など）</p>
+              </div>
+            </AppCard>
+
+            <AppCard :hoverable="true">
+              <div class="category-content">
+                <div class="category-icon">🪙</div>
+                <h3 class="category-title">ICカード・商品券</h3>
+                <p class="category-description">市町村から交通系ICカードや商品券が支給される場合があります</p>
+              </div>
+            </AppCard>
+
+            <AppCard :hoverable="true">
+              <div class="category-content">
+                <div class="category-icon">🚲</div>
+                <h3 class="category-title">移動手段の取得支援</h3>
+                <p class="category-description">電動アシスト自転車購入費の一部助成など、車に代わる移動手段の取得を支援</p>
+              </div>
+            </AppCard>
+
+            <AppCard :hoverable="true">
+              <div class="category-content">
+                <div class="category-icon">👓</div>
+                <h3 class="category-title">眼鏡・補聴器</h3>
+                <p class="category-description">眼鏡・補聴器専門店での購入割引や無料メンテナンス</p>
+              </div>
+            </AppCard>
+
+            <AppCard :hoverable="true">
+              <div class="category-content">
+                <div class="category-icon">♨️</div>
+                <h3 class="category-title">温泉・宿泊</h3>
+                <p class="category-description">県内温泉施設の入浴料割引（例：半額）など</p>
+              </div>
+            </AppCard>
           </div>
-        </div>
-        
+
+          <AppAlert
+            message="※ 特典の内容・対象者・期間は事業者・市町村によって異なります。最新情報は各窓口でご確認ください。"
+            variant="info"
+            :closable="false"
+          />
+        </AppCard>
+
         <!-- お問い合わせ -->
-        <div class="info-section">
-          <h2 class="section-title">お問い合わせ</h2>
-          <div class="contact-card">
-            <h3 class="contact-title">熊本県警察本部 運転免許課</h3>
-            <div class="contact-details">
-              <div class="contact-item">
-                <i class="pi pi-phone"></i>
-                <span>電話：096-233-0110</span>
-              </div>
-              <div class="contact-item">
-                <i class="pi pi-clock"></i>
-                <span>受付時間：平日 8:30-17:15</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
+        <AppCard>
+          <template #title>
+            <h2 class="section-title">お問い合わせ</h2>
+          </template>
+          <AppLink to="https://www.pref.kumamoto.jp/soshiki/54/51729.html?type=top">
+            <i class="pi pi-external-link"></i>
+            熊本県公式サイト（運転免許証自主返納者への特典）
+          </AppLink>
+        </AppCard>
+
         <!-- 戻るボタン -->
         <div class="back-section">
           <AppButton
@@ -139,6 +176,10 @@
 
 <script setup lang="ts">
 import AppButton from '../components/atoms/AppButton.vue'
+import AppTitle from '../components/atoms/AppTitle.vue'
+import AppCard from '../components/atoms/AppCard.vue'
+import AppLink from '../components/atoms/AppLink.vue'
+import AppAlert from '../components/atoms/AppAlert.vue'
 </script>
 
 <style scoped lang="scss">
@@ -159,55 +200,34 @@ import AppButton from '../components/atoms/AppButton.vue'
   box-sizing: border-box;
 }
 
-.page-header {
-  text-align: center;
-  margin-bottom: 40px;
-  padding: 30px 0;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-}
-
-.page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0;
+/** AppTitle をページ中央に配置し、グラデーション下線を追加するスタイル上書き */
+.app-title {
+  justify-content: center;
+  margin: 30px 0;
+  padding-bottom: 10px;
   position: relative;
-  display: inline-block;
-}
 
-.page-title::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 2px;
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 2px;
+  }
 }
 
 .content-sections {
   display: flex;
   flex-direction: column;
   gap: 25px;
-}
 
-.info-section {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.info-section:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+  > * {
+    animation: fadeInUp 0.6s ease-out;
+  }
 }
 
 .section-title {
@@ -217,6 +237,8 @@ import AppButton from '../components/atoms/AppButton.vue'
   margin-bottom: 20px;
   border-left: 4px solid #4299e1;
   padding-left: 15px;
+  /** AppCard の .p-card-title から継承される text-align: center を上書き */
+  text-align: left;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -267,72 +289,51 @@ import AppButton from '../components/atoms/AppButton.vue'
   font-weight: 500;
 }
 
-/* 手続きステップ */
-.procedure-steps {
+/* 返納手続き概要 */
+.procedure-summary {
   display: grid;
-  gap: 20px;
-  margin-top: 25px;
+  gap: 15px;
+  margin-top: 10px;
 }
 
-.step-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 20px;
+.summary-item {
+  padding: 15px 20px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  border-radius: 8px;
 }
 
-.step-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.step-card:hover {
-  background: #edf2f7;
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-}
-
-.step-number {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 16px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.step-content {
-  flex: 1;
-}
-
-.step-title {
-  font-size: 16px;
+.summary-title {
+  font-size: 15px;
   font-weight: 600;
   color: #2d3748;
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  i {
+    color: #4299e1;
+  }
 }
 
-.step-description {
+.summary-list {
+  margin: 0 0 6px 0;
+  padding-left: 20px;
   color: #4a5568;
-  margin: 0;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.summary-note {
+  margin: 6px 0 0 0;
+  color: #718096;
+  font-size: 12px;
+}
+
+.procedure-link-wrap {
+  margin-top: 15px;
+  text-align: right;
 }
 
 /* 特典カテゴリー */
@@ -341,95 +342,33 @@ import AppButton from '../components/atoms/AppButton.vue'
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
   margin-top: 25px;
+  margin-bottom: 20px;
 }
 
-.category-card {
-  background: white;
-  padding: 25px 20px;
-  border-radius: 10px;
+.category-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
 
-.category-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
+  .category-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
 
-.category-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
+  .category-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 8px 0;
+  }
 
-.category-icon {
-  font-size: 32px;
-  margin-bottom: 12px;
-  display: block;
-}
-
-.category-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #2d3748;
-  margin: 0 0 8px 0;
-}
-
-.category-description {
-  color: #718096;
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-/* お問い合わせセクション */
-.contact-card {
-  display: flex;
-  flex-direction: column;
-  padding: 15px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-}
-.contact-card:hover {
-  background: #edf2f7;
-  transform: translateY(-2px);
-}
-.contact-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #2d3748;
-  margin: 0 0 15px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.contact-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #4a5568;
-  font-size: 14px;
-}
-
-.contact-item i {
-  color: #4299e1;
-  width: 16px;
+  .category-description {
+    color: #718096;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
 }
 
 /* 戻るボタンセクション */
@@ -451,40 +390,14 @@ import AppButton from '../components/atoms/AppButton.vue'
   }
 }
 
-.info-section {
-  animation: fadeInUp 0.6s ease-out;
-}
-
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
   .container {
     padding: 0 15px;
   }
-  
-  .page-title {
-    font-size: 24px;
-  }
-  
-  .info-section {
-    padding: 20px;
-  }
-  
-  .step-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 15px;
-  }
-  
+
   .benefit-categories {
     grid-template-columns: 1fr;
-  }
-  
-  .contact-details {
-    text-align: center;
-  }
-  
-  .contact-item {
-    justify-content: center;
   }
 }
 
@@ -492,20 +405,11 @@ import AppButton from '../components/atoms/AppButton.vue'
   .page {
     padding: 10px 0;
   }
-  
-  .page-header {
-    margin-bottom: 20px;
-    padding: 20px 0;
-  }
-  
+
   .content-sections {
     gap: 15px;
   }
-  
-  .info-section {
-    padding: 15px;
-  }
-  
+
   .section-title {
     font-size: 18px;
   }
