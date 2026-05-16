@@ -60,17 +60,17 @@ graph TB
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
 | Vue.js | 3.x | UIフレームワーク |
-| TypeScript | 5.x | 静的型付け |
+| TypeScript | 6.x | 静的型付け |
 | Vue Router | 4.x | SPAルーティング |
 | Pinia | 2.x | 状態管理 |
 | Axios | 1.x | HTTP通信クライアント |
 | PrimeVue | 4.x | UIコンポーネントライブラリ |
-| MapLibre GL JS | 5.6.0 | 地図表示 |
+| MapLibre GL JS | 5.x | 地図表示 |
 | ESLint + Prettier | - | コード品質管理 |
 | Jest | 30.x | ユニットテスト |
 | Playwright | 1.x | E2Eテスト |
 | Storybook | 8.6.14 | コンポーネント開発・ドキュメント |
-| Vue CLI | 5.x | ビルドツール |
+| Vite | 8.x | ビルドツール |
 | npm | - | パッケージ管理 |
 
 ## バックエンド

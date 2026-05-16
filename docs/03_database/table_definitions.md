@@ -117,6 +117,7 @@
 | MUNICIPALITY_CD | VARCHAR(6) | | | ✓ | 自治体コード |
 | LICENSE_STATUS | VARCHAR(1) | | | | 運転免許所持状況 |
 | LICENSE_SURRENDERED_AT | DATE | | | | 運転免許返納日 |
+| IS_ADMIN | CHAR(1) | ✓ | | | 管理者フラグ（1:管理者, 0:一般ユーザー） |
 | SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
 | SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
 
@@ -125,6 +126,7 @@
 - ユニーク制約: `USERS_USERNAME_UNIQUE` (USERNAME)
 - ユニーク制約: `USERS_EMAIL_UNIQUE` (EMAIL)
 - 外部キー制約: `USERS_FK` (MUNICIPALITY_CD → MUNICIPALITY.MUNICIPALITY_CD)
+- デフォルト値: IS_ADMIN = '0'
 
 **LICENSE_STATUS値**:
 - 0: 未所持
