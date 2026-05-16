@@ -1,4 +1,4 @@
-name: マージ後ブランチ自動削除
+name: Auto Delete Branch After Merge
 
 on:
   pull_request:
