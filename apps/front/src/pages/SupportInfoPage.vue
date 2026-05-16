@@ -41,30 +41,51 @@
         <!-- 返納手続き -->
         <div class="info-section">
           <h2 class="section-title">返納手続きについて</h2>
-          <div class="procedure-steps">
-            <div class="step-card">
-              <div class="step-number">1</div>
-              <div class="step-content">
-                <h3 class="step-title">必要書類の準備</h3>
-                <p class="step-description">運転免許証、本人確認書類を準備してください。</p>
-              </div>
+
+          <div class="procedure-summary">
+            <div class="summary-item">
+              <h3 class="summary-title">
+                <i class="pi pi-map-marker"></i>受付場所
+              </h3>
+              <ul class="summary-list">
+                <li>運転免許センター（月〜木・日曜日）</li>
+                <li>警察署（月〜金曜日）</li>
+                <li>氷川幹部交番（月〜金曜日）</li>
+              </ul>
+              <p class="summary-note">※ 受付時間や休業日は場所により異なります</p>
             </div>
-            
-            <div class="step-card">
-              <div class="step-number">2</div>
-              <div class="step-content">
-                <h3 class="step-title">警察署・運転免許センターへ</h3>
-                <p class="step-description">最寄りの警察署または運転免許センターで手続きを行います。</p>
-              </div>
+
+            <div class="summary-item">
+              <h3 class="summary-title">
+                <i class="pi pi-file"></i>必要書類（本人申請）
+              </h3>
+              <ul class="summary-list">
+                <li>有効な運転免許証またはマイナ免許証</li>
+              </ul>
+              <p class="summary-note">※ 代理申請の場合は委任状等が別途必要です</p>
             </div>
-            
-            <div class="step-card">
-              <div class="step-number">3</div>
-              <div class="step-content">
-                <h3 class="step-title">運転経歴証明書の交付</h3>
-                <p class="step-description">希望者には運転経歴証明書が交付されます（有料）。</p>
-              </div>
+
+            <div class="summary-item">
+              <h3 class="summary-title">
+                <i class="pi pi-id-card"></i>運転経歴証明書
+              </h3>
+              <ul class="summary-list">
+                <li>返納と同時に申請可能（手数料：1,150円）</li>
+                <li>写真1枚が必要（運転免許センター申請時は不要）</li>
+              </ul>
             </div>
+          </div>
+
+          <div class="procedure-link-wrap">
+            <a
+              href="https://www.pref.kumamoto.jp/site/police/8708.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="contact-link"
+            >
+              <i class="pi pi-external-link"></i>
+              詳細は熊本県警察公式サイトをご確認ください
+            </a>
           </div>
         </div>
         
@@ -72,50 +93,62 @@
         <div class="info-section">
           <h2 class="section-title">特典について</h2>
           <p class="section-description">
-            運転免許証を自主返納された方には、熊本県内の多くの店舗や施設で
-            様々な特典やサービスをご利用いただけます。
+            熊本県内では、運転免許証を自主返納された方を対象に、
+            公共交通機関や地域の店舗・施設、各市町村から多様な支援が提供されています。
+            詳細・申込方法は各事業者・市町村へ直接ご確認ください。
           </p>
-          
+
           <div class="benefit-categories">
             <div class="category-card">
-              <div class="category-icon">🛒</div>
-              <h3 class="category-title">ショッピング</h3>
-              <p class="category-description">商品割引、配送サービスなど</p>
-            </div>
-            
-            <div class="category-card">
-              <div class="category-icon">🍽️</div>
-              <h3 class="category-title">飲食店</h3>
-              <p class="category-description">料金割引、ドリンクサービスなど</p>
-            </div>
-            
-            <div class="category-card">
-              <div class="category-icon">🏨</div>
-              <h3 class="category-title">宿泊・温泉</h3>
-              <p class="category-description">宿泊料金割引、入浴料割引など</p>
-            </div>
-            
-            <div class="category-card">
               <div class="category-icon">🚌</div>
-              <h3 class="category-title">交通機関</h3>
-              <p class="category-description">運賃割引、回数券特典など</p>
+              <h3 class="category-title">公共交通機関</h3>
+              <p class="category-description">路線バス・路面電車・電車・タクシーなどの運賃割引（例：返納後2年間、運賃の半額など）</p>
+            </div>
+
+            <div class="category-card">
+              <div class="category-icon">🪙</div>
+              <h3 class="category-title">ICカード・商品券</h3>
+              <p class="category-description">市町村から交通系ICカードや商品券が支給される場合があります</p>
+            </div>
+
+            <div class="category-card">
+              <div class="category-icon">🚲</div>
+              <h3 class="category-title">移動手段の取得支援</h3>
+              <p class="category-description">電動アシスト自転車購入費の一部助成など、車に代わる移動手段の取得を支援</p>
+            </div>
+
+            <div class="category-card">
+              <div class="category-icon">👓</div>
+              <h3 class="category-title">眼鏡・補聴器</h3>
+              <p class="category-description">眼鏡・補聴器専門店での購入割引や無料メンテナンス</p>
+            </div>
+
+            <div class="category-card">
+              <div class="category-icon">♨️</div>
+              <h3 class="category-title">温泉・宿泊</h3>
+              <p class="category-description">県内温泉施設の入浴料割引（例：半額）など</p>
             </div>
           </div>
+
+          <p class="section-note">
+            ※ 特典の内容・対象者・期間は事業者・市町村によって異なります。最新情報は各窓口でご確認ください。
+          </p>
         </div>
         
         <!-- お問い合わせ -->
         <div class="info-section">
           <h2 class="section-title">お問い合わせ</h2>
           <div class="contact-card">
-            <h3 class="contact-title">熊本県警察本部 運転免許課</h3>
+            <h3 class="contact-title">特典制度全般について</h3>
             <div class="contact-details">
               <div class="contact-item">
-                <i class="pi pi-phone"></i>
-                <span>電話：096-233-0110</span>
-              </div>
-              <div class="contact-item">
-                <i class="pi pi-clock"></i>
-                <span>受付時間：平日 8:30-17:15</span>
+                <i class="pi pi-external-link"></i>
+                <a
+                  href="https://www.pref.kumamoto.jp/soshiki/54/51729.html?type=top"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="contact-link"
+                >熊本県公式サイト（運転免許証自主返納者への特典）</a>
               </div>
             </div>
           </div>
@@ -389,7 +422,70 @@ import AppButton from '../components/atoms/AppButton.vue'
   line-height: 1.5;
 }
 
+.section-note {
+  color: #718096;
+  font-size: 13px;
+  margin-top: 15px;
+  padding: 10px 15px;
+  background: #f8fafc;
+  border-left: 3px solid #a0aec0;
+  border-radius: 4px;
+}
+
+/* 返納手続き概要 */
+.procedure-summary {
+  display: grid;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.summary-item {
+  padding: 15px 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.summary-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  i {
+    color: #4299e1;
+  }
+}
+
+.summary-list {
+  margin: 0 0 6px 0;
+  padding-left: 20px;
+  color: #4a5568;
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.summary-note {
+  margin: 6px 0 0 0;
+  color: #718096;
+  font-size: 12px;
+}
+
+.procedure-link-wrap {
+  margin-top: 15px;
+  text-align: right;
+}
+
 /* お問い合わせセクション */
+.contact-org {
+  color: #4a5568;
+  font-size: 14px;
+  margin: 0 0 10px 0;
+}
+
 .contact-card {
   display: flex;
   flex-direction: column;
@@ -430,6 +526,16 @@ import AppButton from '../components/atoms/AppButton.vue'
 .contact-item i {
   color: #4299e1;
   width: 16px;
+}
+
+.contact-link {
+  color: #4299e1;
+  text-decoration: underline;
+  font-size: 14px;
+
+  &:hover {
+    color: #2b6cb0;
+  }
 }
 
 /* 戻るボタンセクション */
