@@ -5,7 +5,7 @@ import java.util.List;
 import org.seasar.doma.Dao;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.FareDiscountEligibilityEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.FareDiscountEligibilityEntity_;
@@ -27,10 +27,10 @@ public interface FareDiscountEligibilityDao {
      */
     default List<FareDiscountEligibilityEntity> selectEligibleForUser(
             Integer age, String licenseStatus, String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         FareDiscountEligibilityEntity_ e = new FareDiscountEligibilityEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     // 年齢が設定されている場合: min_age/max_age の範囲条件
                     // 未設定の場合: 条件なし（各カラムが null）の行のみ返す

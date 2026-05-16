@@ -6,8 +6,7 @@ import org.seasar.doma.Dao;
 import org.seasar.doma.Insert;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
-import org.seasar.doma.jdbc.criteria.NativeSql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.RefreshTokensEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.RefreshTokensEntity_;
@@ -28,9 +27,9 @@ public interface RefreshTokensDao {
      * @return 該当エンティティ、存在しない場合はnull
      */
     default RefreshTokensEntity selectByTokenHash(String tokenHash) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         RefreshTokensEntity_ e = new RefreshTokensEntity_();
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.tokenHash, tokenHash))
                 .fetchOne();
     }
@@ -51,7 +50,7 @@ public interface RefreshTokensDao {
      * @return 更新件数（1=成功、0=失効済み/期限切れ/競合負け）
      */
     default int revokeIfValidByTokenHash(String tokenHash, LocalDateTime now) {
-        NativeSql nativeSql = new NativeSql(Config.get(this));
+        QueryDsl nativeSql = new QueryDsl(Config.get(this));
         RefreshTokensEntity_ e = new RefreshTokensEntity_();
         return nativeSql.update(e)
                 .set(c -> {
@@ -75,7 +74,7 @@ public interface RefreshTokensDao {
      * @return 削除件数
      */
     default int deleteExpiredOrRevoked(LocalDateTime now) {
-        NativeSql nativeSql = new NativeSql(Config.get(this));
+        QueryDsl nativeSql = new QueryDsl(Config.get(this));
         RefreshTokensEntity_ e = new RefreshTokensEntity_();
         return nativeSql.delete(e)
                 .where(c -> c.or(() -> {

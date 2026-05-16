@@ -8,7 +8,7 @@ import org.seasar.doma.Insert;
 import org.seasar.doma.Update;
 import org.seasar.doma.boot.ConfigAutowireable;
 import org.seasar.doma.jdbc.Config;
-import org.seasar.doma.jdbc.criteria.Entityql;
+import org.seasar.doma.jdbc.criteria.QueryDsl;
 
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitEntity_;
@@ -32,10 +32,10 @@ public interface BenefitDao {
      * @return 特典エンティティ、存在しない場合はnull
      */
     default BenefitEntity selectById(String benefitId) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.benefitId, benefitId))
                       .fetchOne();
     }
@@ -51,10 +51,10 @@ public interface BenefitDao {
             return List.of();
         }
         
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
         
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.in(e.benefitId, benefitIds))
                       .fetch();
     }
@@ -66,10 +66,10 @@ public interface BenefitDao {
      * @return 特典エンティティリスト
      */
     default List<BenefitEntity> selectByCategoryCd(String categoryCd) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
         
-        return entityql.from(e)
+        return queryDsl.from(e)
                       .where(c -> c.eq(e.categoryCd, categoryCd))
                       .fetch();
     }
@@ -81,10 +81,10 @@ public interface BenefitDao {
      * @return 特典エンティティリスト
      */
     default List<BenefitEntity> selectByMunicipalityCd(String municipalityCd) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> c.eq(e.municipalityCd, municipalityCd))
                 .fetch();
     }
@@ -105,10 +105,10 @@ public interface BenefitDao {
      */
     default List<BenefitEntity> selectForAdmin(int offset, int limit, String municipalityCd, String categoryCd,
             String benefitId, String benefitName, String expDetail, String keyword, String sort, String order) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
@@ -163,10 +163,10 @@ public interface BenefitDao {
      */
     default long countForAdmin(String municipalityCd, String categoryCd,
             String benefitId, String benefitName, String expDetail, String keyword) {
-        Entityql entityql = new Entityql(Config.get(this));
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitEntity_ e = new BenefitEntity_();
 
-        return entityql.from(e)
+        return queryDsl.from(e)
                 .where(c -> {
                     if (!ValidateUtils.isNullOrEmpty(keyword)) {
                         c.and(() -> {
