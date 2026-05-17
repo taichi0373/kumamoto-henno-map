@@ -40,6 +40,7 @@ graph LR
         OSM[OpenStreetMap]
         GTFS[GTFS Data Feed]
         MAIL[SendGrid HTTP API]
+        SLACK[Slack Incoming Webhook]
     end
 
     FE -->|Authorization: Bearer Token| AUTH
@@ -48,6 +49,7 @@ graph LR
     API -->|SQL| DB
     API -->|REST API| OTP
     API -->|HTTP API| MAIL
+    API -->|HTTP POST| SLACK
     OTP -->|Map Data| OSM
     OTP -->|Route Data| GTFS
 
@@ -59,7 +61,7 @@ graph LR
     class FE frontend
     class API,AUTH backend
     class DB database
-    class OTP,OSM,GTFS,MAIL external
+    class OTP,OSM,GTFS,MAIL,SLACK external
 ```
 
 ---
@@ -666,7 +668,64 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 ---
 
-## 6. ヘルスチェック (`/health`)
+## 6. フィードバック (`/feedback`)
+
+### POST /feedback
+
+ユーザーからのご意見・ご要望を受け付け、Slack Incoming Webhook に通知する。未ログインユーザーでも送信可能。ログイン済みの場合はユーザー名をSlackメッセージに自動付与する。
+
+- **認証**: 不要（ログイン済みの場合はユーザー名がSlack通知に含まれる）
+
+**リクエスト**
+
+```json
+{
+  "category": "BUG",
+  "name": "山田太郎",
+  "email": "taro@example.com",
+  "content": "地図が表示されません"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| category | string | - | カテゴリ（`"BUG"`: バグ報告 / `"REQUEST"`: 要望 / `"OTHER"`: その他）。未指定時はその他扱い |
+| name | string | - | 送信者の名前（任意・最大100文字） |
+| email | string | - | 送信者のメールアドレス（任意・最大255文字） |
+| content | string | ○ | フィードバック内容（必須・最大2000文字） |
+
+**レスポンス 200 OK**
+
+```json
+{ "success": true, "data": null }
+```
+
+**レスポンス 400 Bad Request** — 内容（content）が未入力
+
+```json
+{ "success": false, "data": null, "message": "内容は必須です" }
+```
+
+**レスポンス 500 Internal Server Error** — サーバー内部エラー
+
+> **Slack通知フォーマット例:**
+> ```
+> *【ご意見・ご要望】*
+> カテゴリ: バグ報告
+> お名前: 山田太郎
+> メールアドレス: taro@example.com
+> 内容:
+> 地図が表示されません
+>
+> 送信日時: 2025-01-15 14:30:00
+> ユーザー情報: ログイン済み（taro）
+> ```
+>
+> `SLACK_WEBHOOK_URL` 環境変数未設定時はSlack送信をスキップしてサーバーログに出力する。
+
+---
+
+## 7. ヘルスチェック (`/health`)
 
 ### GET /health
 
@@ -678,7 +737,7 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 ---
 
-## 7. 管理API (`/admin`)
+## 8. 管理API (`/admin`)
 
 管理者アカウントによるデータ管理用APIです。
 
