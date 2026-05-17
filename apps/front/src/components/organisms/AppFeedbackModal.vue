@@ -50,7 +50,8 @@
           type="email"
           placeholder="example@mail.com"
           :maxlength="255"
-          :show-error="false"
+          :error="emailError"
+          :show-error="true"
         />
       </div>
 
@@ -98,6 +99,9 @@ import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
 import { SelectDto } from '@/dto/selectDto'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/utils/api'
+import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageConstant'
+import { ValidateUtils } from '@/utils/validateUtils'
+import { MessageUtils } from '@/utils/messageUtils'
 
 const props = defineProps<{
   /** 表示フラグ */
@@ -124,7 +128,7 @@ const categoryOptions: SelectDto[] = [
 ]
 
 /** フォームデータ */
-const form = ref(new FeedbackDto({ category: 'OTHER', name: null, email: null, content: null }))
+const form = ref(new FeedbackDto({ category: 'BUG', name: null, email: null, content: null }))
 
 /** 送信中フラグ */
 const isLoading = ref(false)
@@ -134,6 +138,9 @@ const isSubmitted = ref(false)
 
 /** 送信エラーメッセージ */
 const submitError = ref<string | null>(null)
+
+/** メールアドレスバリデーションエラー */
+const emailError = ref<InputFormErrorDto[]>([])
 
 /** 内容バリデーションエラー */
 const contentError = ref<InputFormErrorDto[]>([])
@@ -149,38 +156,54 @@ watch(
 )
 
 /**
+ * エラーをクリアする
+ */
+const clearError = (): void => {
+  emailError.value.splice(0)
+  contentError.value.splice(0)
+}
+
+/**
  * フォームをリセットする
  */
 const resetForm = (): void => {
   form.value = new FeedbackDto({
-    category: 'OTHER',
+    category: 'BUG',
     name: auth.user?.username ?? null,
     email: auth.user?.email ?? null,
     content: null,
   })
-  contentError.value = []
+  clearError()
   submitError.value = null
   isSubmitted.value = false
 }
 
 /**
- * バリデーションを実行する
- * @returns バリデーション成功の場合 true
+ * 入力チェックを実行する
+ * @returns エラーがない場合 true
  */
-const validate = (): boolean => {
-  contentError.value = []
-  if (!form.value.content || form.value.content.trim() === '') {
-    contentError.value = [new InputFormErrorDto(1, '内容は必須です')]
-    return false
+const checkError = (): boolean => {
+  clearError()
+  let hasError = false
+
+  if (!ValidateUtils.isNullOrEmpty(form.value.email) && !ValidateUtils.isEmail(form.value.email ?? '')) {
+    emailError.value.push(MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_004, 'メールアドレス'))
+    hasError = true
   }
-  return true
+
+  if (ValidateUtils.isNullOrEmpty(form.value.content)) {
+    contentError.value.push(MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, '内容'))
+    hasError = true
+  }
+
+  return !hasError
 }
 
 /**
  * フォーム送信処理
  */
 const handleSubmit = async (): Promise<void> => {
-  if (!validate()) return
+  if (!checkError()) return
 
   isLoading.value = true
   submitError.value = null
@@ -194,7 +217,7 @@ const handleSubmit = async (): Promise<void> => {
     })
     isSubmitted.value = true
   } catch {
-    submitError.value = '送信に失敗しました。しばらくしてから再度お試しください。'
+    submitError.value = API_RESPONSE_MESSAGE.API_ERROR
   } finally {
     isLoading.value = false
   }
