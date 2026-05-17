@@ -12,7 +12,7 @@ jobs:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - name: ブランチ削除（develop→main は除外）
+      - name: Delete merged branch (skip develop to main)
         # base=main かつ head=develop の場合はスキップ
         if: |
           !(github.event.pull_request.base.ref == 'main' &&
