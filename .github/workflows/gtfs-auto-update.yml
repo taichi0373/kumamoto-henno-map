@@ -127,6 +127,7 @@ jobs:
   deploy:
     name: Deploy to VPS
     needs: build
+    if: needs.build.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
