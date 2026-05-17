@@ -27,8 +27,11 @@
 | `OTP_API_URL` | OpenTripPlanner APIのURL | `https://otp.kumamoto-henno-map.com/otp/routers/default/plan` | ✅ |
 | `SENDGRID_API_KEY` | SendGrid APIキー（`SG.`から始まる文字列） | SendGridダッシュボードで発行 | ✅ |
 | `MAIL_FROM` | 送信元メールアドレス（SendGridで認証済みのアドレス） | `noreply@kumamoto-henno-map.com` | ✅ |
+| `SLACK_WEBHOOK_URL` | フィードバック通知先のSlack Incoming Webhook URL | Slackアプリ設定 → Incoming Webhooks で発行 | - |
 
 ---
+
+> **注意（SLACK_WEBHOOK_URL）**: 未設定の場合はSlack送信をスキップしてサーバーログにのみ出力します（サービス継続に影響なし）。Webhook URLはSlackアプリの管理画面 → **Incoming Webhooks** で発行してください。
 
 > **注意**: DBはNeon（サーバーレスPostgreSQL）を使用しています。NeonはSSL接続が必須のため `DB_SSL_PARAMS=?sslmode=require` を必ず設定してください。接続情報はNeonダッシュボード → **Connection Details** → **Connection string** から確認できます。
 
