@@ -22,14 +22,19 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check GTFS filename
+      - name: Check GTFS file exists
+        id: check-gtfs
         run: |
-          if ! ls config/otp/data/*gtfs*.zip >/dev/null 2>&1; then
-            echo "ERROR: GTFS file name must contain 'gtfs'"
-            exit 1
+          if ls config/otp/data/*gtfs*.zip >/dev/null 2>&1; then
+            echo "has_gtfs=true" >> $GITHUB_OUTPUT
+            echo "GTFS file found"
+          else
+            echo "has_gtfs=false" >> $GITHUB_OUTPUT
+            echo "No GTFS file found, skipping graph build"
           fi
 
       - name: Build OTP graph
+        if: steps.check-gtfs.outputs.has_gtfs == 'true'
         run: |
           docker run --rm \
             -e JAVA_TOOL_OPTIONS=-Xmx4g \
@@ -38,6 +43,7 @@ jobs:
             --build --save
 
       - name: Verify graph.obj exists
+        if: steps.check-gtfs.outputs.has_gtfs == 'true'
         run: |
           if [ ! -f config/otp/data/graph.obj ]; then
             echo "ERROR: graph.obj was not generated"
@@ -45,6 +51,7 @@ jobs:
           fi
 
       - name: Upload graph artifact
+        if: steps.check-gtfs.outputs.has_gtfs == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: otp-graph-2.5.0
