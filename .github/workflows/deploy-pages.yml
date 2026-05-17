@@ -242,6 +242,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       inputs.is-deploy &&
+      needs.build-docs.result == 'success' &&
       (needs.build-storybook.result == 'success' || needs.build-storybook.result == 'skipped') &&
       (needs.build-javadoc.result == 'success' || needs.build-javadoc.result == 'skipped') &&
       (needs.build-openapi.result == 'success' || needs.build-openapi.result == 'skipped')
