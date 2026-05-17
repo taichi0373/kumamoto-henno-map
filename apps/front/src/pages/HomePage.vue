@@ -270,9 +270,21 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
       // 経路探索結果（サイドバー表示用）
       routeResults.value = routes
-      // 全経路を色分けして地図に描画（空配列の場合は既存ラインをクリア）
+      // 全経路を色分けして地図に描画
       const routeLegs = routes.map(r => r.legs ?? [])
-      addRouteLines(routeLegs)
+      if (window.innerWidth <= 768) {
+        // 768px以下の場合、サイドバーを折りたたんだ後、地図に描画
+        sidebarCollapsed.value = true
+        const sidebar = document.getElementById('sidebar')
+        const onTransitionEnd = () => {
+          sidebar?.removeEventListener('transitionend', onTransitionEnd)
+          mapInstance.value?.resize()
+          addRouteLines(routeLegs)
+        }
+        sidebar?.addEventListener('transitionend', onTransitionEnd)
+      } else {
+        addRouteLines(routeLegs)
+      }
     } else {
       addRouteLines([])
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
