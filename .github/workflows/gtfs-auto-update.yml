@@ -38,7 +38,7 @@ jobs:
         with:
           ref: develop
 
-      - name: 有効期限チェック
+      - name: Check GTFS expiry
         id: check
         run: |
           if [ "${{ inputs.force_update }}" = "true" ]; then
@@ -67,7 +67,7 @@ jobs:
           ref: develop
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 依存ツールのインストール
+      - name: Install dependencies
         run: |
           sudo apt-get update -qq
           for cmd in curl wget zip unzip osmconvert; do
@@ -81,14 +81,14 @@ jobs:
           done
           sudo apt-get install -y python3 python3-venv python3-pip
 
-      - name: GTFSダウンロード・加工
+      - name: Download and process GTFS
         working-directory: config/otp/data
         run: |
           # CI環境ではリポジトリ内の .venv（Windows向け）を削除して再作成する
           rm -rf .venv
           bash download.sh
 
-      - name: OTPグラフビルド
+      - name: Build OTP graph
         run: |
           docker run --rm \
             -e JAVA_TOOL_OPTIONS=-Xmx4g \
@@ -96,7 +96,7 @@ jobs:
             docker.io/opentripplanner/opentripplanner:2.5.0 \
             --build --save
 
-      - name: graph.obj の存在確認
+      - name: Verify graph.obj exists
         run: |
           if [ ! -f config/otp/data/graph.obj ]; then
             echo "ERROR: graph.obj が生成されませんでした"
@@ -104,7 +104,7 @@ jobs:
           fi
           echo "graph.obj のサイズ: $(du -sh config/otp/data/graph.obj | cut -f1)"
 
-      - name: 更新済みGTFSファイルをコミット
+      - name: Commit updated GTFS files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -116,7 +116,7 @@ jobs:
             git push origin develop
           fi
 
-      - name: graph.obj をArtifactとして保存
+      - name: Upload graph artifact
         uses: actions/upload-artifact@v7
         with:
           name: otp-graph-2.5.0
@@ -127,36 +127,37 @@ jobs:
   deploy:
     name: Deploy to VPS
     needs: build
+    if: needs.build.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: graph.obj をダウンロード
+      - name: Download graph artifact
         uses: actions/download-artifact@v7
         with:
           name: otp-graph-2.5.0
           path: artifact
 
-      - name: SSH秘密鍵のセットアップ
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/hetzner_key
           chmod 600 ~/.ssh/hetzner_key
           ssh-keyscan -H "${{ secrets.HETZNER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: graph.obj をVPSへ転送
+      - name: Transfer graph.obj to VPS
         run: |
           scp -i ~/.ssh/hetzner_key \
             artifact/graph.obj \
             "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:/opt/otp/data/graph.obj"
 
-      - name: OTPコンテナを再起動
+      - name: Restart OTP container
         run: |
           ssh -i ~/.ssh/hetzner_key \
             "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" \
             "cd /opt/otp && docker compose restart otp"
 
-      - name: OTP起動確認（最大3分待機）
+      - name: Wait for OTP startup (max 3 min)
         run: |
           echo "OTPの起動を待機中..."
           for i in $(seq 1 18); do
@@ -180,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 通知内容を組み立て
+      - name: Build notification message
         id: message
         env:
           CHECK_RESULT: ${{ needs.check-expiry.result }}
@@ -213,7 +214,7 @@ jobs:
             echo "MSG_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Slack通知を送信
+      - name: Send Slack notification
         env:
           COLOR: ${{ steps.message.outputs.color }}
           TITLE: ${{ steps.message.outputs.title }}

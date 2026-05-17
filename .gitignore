@@ -40,6 +40,7 @@ dist
 
 ### otp data ###
 config/otp/data/*.zip
+!config/otp/data/*.gtfs.zip
 config/otp/data/*.pbf
 config/otp/data/*.obj
 config/otp/data/.venv
