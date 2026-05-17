@@ -36,10 +36,26 @@
           <AppSearchBenefit />
         </div>
 
-        <!-- ライセンス情報 -->
-        <AppLicenseInfo />
+        <!-- サイドバー下部ボタン -->
+        <div class="sidebar-bottom">
+          <AppButton
+            label="問い合わせ"
+            icon="pi pi-envelope"
+            @click="isFeedbackModalVisible = true"
+          />
+          <AppButton
+            label="ライセンス情報"
+            icon="pi pi-info-circle"
+            @click="isLicenseModalVisible = true"
+          />
+        </div>
       </div>
     </div>
+
+    <!-- フィードバックモーダル -->
+    <AppFeedbackModal v-model="isFeedbackModalVisible" />
+    <!-- ライセンス情報モーダル -->
+    <AppLicenseModal v-model="isLicenseModalVisible" />
 
     <!-- トーストメッセージ -->
     <AppToastMessage />
@@ -76,7 +92,8 @@ import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
 import AppSearchBenefit from '@/components/organisms/AppSearchBenefit.vue'
 import AppTab from '@/components/atoms/AppTab.vue'
-import AppLicenseInfo from '@/components/molecules/AppLicenseInfo.vue'
+import AppLicenseModal from '@/components/organisms/AppLicenseModal.vue'
+import AppFeedbackModal from '@/components/organisms/AppFeedbackModal.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
@@ -106,6 +123,10 @@ const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org'
 
 /** サイドバー表示フラグ */
 const sidebarCollapsed = ref(false)
+/** フィードバックモーダル表示フラグ */
+const isFeedbackModalVisible = ref(false)
+/** ライセンス情報モーダル表示フラグ */
+const isLicenseModalVisible = ref(false)
 /** アクティブタブ */
 const activeTab = ref('route-guidance')
 const auth = useAuthStore()
@@ -270,9 +291,21 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       const routes = ((response.data as unknown) as { data: RouteInterface[] }).data || []
       // 経路探索結果（サイドバー表示用）
       routeResults.value = routes
-      // 全経路を色分けして地図に描画（空配列の場合は既存ラインをクリア）
+      // 全経路を色分けして地図に描画
       const routeLegs = routes.map(r => r.legs ?? [])
-      addRouteLines(routeLegs)
+      if (window.innerWidth <= 768) {
+        // 768px以下の場合、サイドバーを折りたたんだ後、地図に描画
+        sidebarCollapsed.value = true
+        const sidebar = document.getElementById('sidebar')
+        const onTransitionEnd = () => {
+          sidebar?.removeEventListener('transitionend', onTransitionEnd)
+          mapInstance.value?.resize()
+          addRouteLines(routeLegs)
+        }
+        sidebar?.addEventListener('transitionend', onTransitionEnd)
+      } else {
+        addRouteLines(routeLegs)
+      }
     } else {
       addRouteLines([])
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
@@ -519,6 +552,16 @@ $sidebar-width: clamp(280px, 34vw, 380px);
 .sidebar-page {
   overflow-y: auto;
   flex: 1;
+}
+
+.sidebar-bottom {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px;
+  border-top: 1px solid base.$base-400;
+  background: base.$base-100;
 }
 
 /* マップ */

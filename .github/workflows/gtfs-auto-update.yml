@@ -1,0 +1,234 @@
+name: GTFS Auto Update
+
+on:
+  schedule:
+    # 毎日 JST 02:00（UTC 17:00）に実行
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: '強制更新（有効期限に関わらず更新する）'
+        type: boolean
+        default: false
+      threshold_days:
+        description: '有効期限チェックの閾値日数（デフォルト: 7）'
+        type: number
+        default: 7
+
+env:
+  TZ: Asia/Tokyo
+
+# 同一ワークフローの並行実行を防止
+concurrency:
+  group: gtfs-auto-update
+  cancel-in-progress: false
+
+jobs:
+  # -------- 1. 有効期限チェック --------
+  check-expiry:
+    name: Check GTFS Expiry
+    runs-on: ubuntu-latest
+    outputs:
+      need_update: ${{ steps.check.outputs.need_update }}
+      expired_files: ${{ steps.check.outputs.expired_files }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: develop
+
+      - name: 有効期限チェック
+        id: check
+        run: |
+          if [ "${{ inputs.force_update }}" = "true" ]; then
+            echo "強制更新モードが有効です"
+            echo "need_update=1" >> "$GITHUB_OUTPUT"
+            echo "expired_files=（強制更新）" >> "$GITHUB_OUTPUT"
+          else
+            # exit 1 はジョブ失敗ではなく need_update=1 の通知として扱うため || true で受ける
+            bash config/otp/check-gtfs-expiry.sh "${{ inputs.threshold_days || 7 }}" || true
+          fi
+
+  # -------- 2. GTFSダウンロード・OTPグラフビルド --------
+  build:
+    name: Download GTFS & Build OTP Graph
+    needs: check-expiry
+    if: needs.check-expiry.outputs.need_update == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: develop
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 依存ツールのインストール
+        run: |
+          sudo apt-get update -qq
+          for cmd in curl wget zip unzip osmconvert; do
+            if ! command -v "$cmd" >/dev/null 2>&1; then
+              case "$cmd" in
+                osmconvert) pkg="osmctools" ;;
+                *)           pkg="$cmd" ;;
+              esac
+              sudo apt-get install -y "$pkg"
+            fi
+          done
+          sudo apt-get install -y python3 python3-venv python3-pip
+
+      - name: GTFSダウンロード・加工
+        working-directory: config/otp/data
+        run: |
+          # CI環境ではリポジトリ内の .venv（Windows向け）を削除して再作成する
+          rm -rf .venv
+          bash download.sh
+
+      - name: OTPグラフビルド
+        run: |
+          docker run --rm \
+            -e JAVA_TOOL_OPTIONS=-Xmx4g \
+            -v "$PWD/config/otp/data":/var/opentripplanner \
+            docker.io/opentripplanner/opentripplanner:2.5.0 \
+            --build --save
+
+      - name: graph.obj の存在確認
+        run: |
+          if [ ! -f config/otp/data/graph.obj ]; then
+            echo "ERROR: graph.obj が生成されませんでした"
+            exit 1
+          fi
+          echo "graph.obj のサイズ: $(du -sh config/otp/data/graph.obj | cut -f1)"
+
+      - name: 更新済みGTFSファイルをコミット
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config/otp/data/*.gtfs.zip
+          if git diff --staged --quiet; then
+            echo "GTFSファイルに変更はありませんでした"
+          else
+            git commit -m "chore: GTFSデータ自動更新 $(date +%Y-%m-%d)"
+            git push origin develop
+          fi
+
+      - name: graph.obj をArtifactとして保存
+        uses: actions/upload-artifact@v7
+        with:
+          name: otp-graph-2.5.0
+          path: config/otp/data/graph.obj
+          retention-days: 7
+
+  # -------- 3. VPSへデプロイ --------
+  deploy:
+    name: Deploy to VPS
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: graph.obj をダウンロード
+        uses: actions/download-artifact@v7
+        with:
+          name: otp-graph-2.5.0
+          path: artifact
+
+      - name: SSH秘密鍵のセットアップ
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/hetzner_key
+          chmod 600 ~/.ssh/hetzner_key
+          ssh-keyscan -H "${{ secrets.HETZNER_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: graph.obj をVPSへ転送
+        run: |
+          scp -i ~/.ssh/hetzner_key \
+            artifact/graph.obj \
+            "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:/opt/otp/data/graph.obj"
+
+      - name: OTPコンテナを再起動
+        run: |
+          ssh -i ~/.ssh/hetzner_key \
+            "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" \
+            "cd /opt/otp && docker compose restart otp"
+
+      - name: OTP起動確認（最大3分待機）
+        run: |
+          echo "OTPの起動を待機中..."
+          for i in $(seq 1 18); do
+            if ssh -i ~/.ssh/hetzner_key \
+                "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" \
+                "curl -sf http://localhost:8080/otp/routers/default >/dev/null 2>&1"; then
+              echo "OTPが正常に起動しました（${i}回目の確認）"
+              exit 0
+            fi
+            echo "起動待機中... (${i}/18)"
+            sleep 10
+          done
+          echo "ERROR: OTPが3分以内に起動しませんでした"
+          exit 1
+
+  # -------- 4. Slack通知（常に実行） --------
+  notify:
+    name: Notify Slack
+    needs: [check-expiry, build, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 通知内容を組み立て
+        id: message
+        env:
+          CHECK_RESULT: ${{ needs.check-expiry.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+          EXPIRED_FILES: ${{ needs.check-expiry.outputs.expired_files }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          DATE="$(date '+%Y-%m-%d %H:%M JST')"
+
+          if [ "${BUILD_RESULT}" = "skipped" ]; then
+            COLOR="good"
+            TITLE="GTFS自動更新: スキップ"
+            TEXT="有効期限内のため更新をスキップしました。\n実行日時: ${DATE}"
+          elif [ "${DEPLOY_RESULT}" = "success" ]; then
+            COLOR="good"
+            TITLE="GTFS自動更新: 成功"
+            TEXT="GTFSデータの更新とOTPへのデプロイが完了しました。\n対象ファイル: ${EXPIRED_FILES}\n実行日時: ${DATE}"
+          else
+            COLOR="danger"
+            TITLE="GTFS自動更新: 失敗"
+            TEXT="処理が失敗しました。Actionsログを確認してください。\ncheck-expiry: ${CHECK_RESULT} / build: ${BUILD_RESULT} / deploy: ${DEPLOY_RESULT}\nActionsログ: ${RUN_URL}\n実行日時: ${DATE}"
+          fi
+
+          {
+            echo "color=${COLOR}"
+            echo "title=${TITLE}"
+            echo "text<<MSG_EOF"
+            printf '%b\n' "${TEXT}"
+            echo "MSG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Slack通知を送信
+        env:
+          COLOR: ${{ steps.message.outputs.color }}
+          TITLE: ${{ steps.message.outputs.title }}
+          TEXT: ${{ steps.message.outputs.text }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL が未設定のため通知をスキップします"
+            exit 0
+          fi
+          payload=$(jq -n \
+            --arg color "$COLOR" \
+            --arg title "$TITLE" \
+            --arg text "$TEXT" \
+            '{attachments: [{color: $color, title: $title, text: $text, footer: "kumamoto-henno-map GitHub Actions"}]}')
+          curl -sf -X POST "$SLACK_WEBHOOK_URL" \
+            -H 'Content-Type: application/json' \
+            -d "$payload"
