@@ -124,7 +124,7 @@ const categoryOptions: SelectDto[] = [
 ]
 
 /** フォームデータ */
-const form = ref(new FeedbackDto({ category: 'OTHER', name: null, email: null, content: null }))
+const form = ref(new FeedbackDto({ category: 'BUG', name: null, email: null, content: null }))
 
 /** 送信中フラグ */
 const isLoading = ref(false)
