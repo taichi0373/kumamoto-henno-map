@@ -1,4 +1,4 @@
-name: GTFS自動更新
+name: GTFS Auto Update
 
 on:
   schedule:
@@ -26,7 +26,7 @@ concurrency:
 jobs:
   # -------- 1. 有効期限チェック --------
   check-expiry:
-    name: GTFSファイル有効期限チェック
+    name: Check GTFS Expiry
     runs-on: ubuntu-latest
     outputs:
       need_update: ${{ steps.check.outputs.need_update }}
@@ -52,7 +52,7 @@ jobs:
 
   # -------- 2. GTFSダウンロード・OTPグラフビルド --------
   build:
-    name: GTFSダウンロード・OTPグラフビルド
+    name: Download GTFS & Build OTP Graph
     needs: check-expiry
     if: needs.check-expiry.outputs.need_update == '1'
     runs-on: ubuntu-latest
@@ -125,7 +125,7 @@ jobs:
 
   # -------- 3. VPSへデプロイ --------
   deploy:
-    name: VPSへデプロイ
+    name: Deploy to VPS
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -174,7 +174,7 @@ jobs:
 
   # -------- 4. Slack通知（常に実行） --------
   notify:
-    name: Slack通知
+    name: Notify Slack
     needs: [check-expiry, build, deploy]
     if: always()
     runs-on: ubuntu-latest
