@@ -28,6 +28,10 @@
 | `SENDGRID_API_KEY` | SendGrid APIキー（`SG.`から始まる文字列） | SendGridダッシュボードで発行 | ✅ |
 | `MAIL_FROM` | 送信元メールアドレス（SendGridで認証済みのアドレス） | `noreply@kumamoto-henno-map.com` | ✅ |
 | `SLACK_WEBHOOK_URL` | フィードバック通知先のSlack Incoming Webhook URL | Slackアプリ設定 → Incoming Webhooks で発行 | - |
+| `AWS_ACCESS_KEY_ID` | AWS アクセスキーID | IAMユーザーのアクセスキー | ✅ |
+| `AWS_SECRET_ACCESS_KEY` | AWS シークレットアクセスキー | IAMユーザーのシークレットキー | ✅ |
+| `AWS_REGION` | AWSリージョン | `us-east-1`（デフォルト） | - |
+| `AWS_LOCATION_PLACE_INDEX` | Place Index名 | `kumamoto-henno-map-index`（デフォルト） | - |
 
 ---
 

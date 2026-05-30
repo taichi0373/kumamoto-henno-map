@@ -41,6 +41,7 @@ graph LR
         GTFS[GTFS Data Feed]
         MAIL[SendGrid HTTP API]
         SLACK[Slack Incoming Webhook]
+        AWS[AWS Location Service]
     end
 
     FE -->|Authorization: Bearer Token| AUTH
@@ -50,6 +51,7 @@ graph LR
     API -->|REST API| OTP
     API -->|HTTP API| MAIL
     API -->|HTTP POST| SLACK
+    API -->|REST API| AWS
     OTP -->|Map Data| OSM
     OTP -->|Route Data| GTFS
 
@@ -61,7 +63,7 @@ graph LR
     class FE frontend
     class API,AUTH backend
     class DB database
-    class OTP,OSM,GTFS,MAIL,SLACK external
+    class OTP,OSM,GTFS,MAIL,SLACK,AWS external
 ```
 
 ---
@@ -968,6 +970,47 @@ CSVファイルで特典を一括登録・更新する。
 - **認証**: 必須
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### POST /admin/benefits/geocode
+
+AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の店舗名から住所・緯度・経度を一括取得し、BENEFITテーブルに保存する。
+
+- **認証**: 必須
+
+| クエリパラメータ | 型 | デフォルト | 説明 |
+|---|---|---|---|
+| skipExisting | boolean | true | `true`: 既に緯度・経度が保存済みの特典をスキップ |
+
+**レスポンス 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "success": 45,
+    "skipped": 12,
+    "failed": 3,
+    "errors": [
+      "BEN001234: 検索結果なし（クエリ: 熊本市 テスト店舗）"
+    ]
+  }
+}
+```
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| success | int | ジオコーディング成功件数 |
+| skipped | int | スキップ件数（既に座標保存済み） |
+| failed | int | 失敗件数 |
+| errors | string[] | エラー詳細（`特典ID: エラーメッセージ` 形式） |
+
+**レスポンス 500 Internal Server Error** — ジオコーディング処理全体の失敗
+
+```json
+{ "success": false, "data": null, "message": "ジオコーディングに失敗しました: ..." }
+```
 
 ---
 

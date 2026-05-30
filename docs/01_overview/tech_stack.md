@@ -25,6 +25,7 @@ graph TB
         I[OpenTripPlanner]
         J[OpenStreetMap]
         K[GTFS Data]
+        O[AWS Location Service]
     end
 
     subgraph "Infrastructure"
@@ -40,6 +41,7 @@ graph TB
     F --> H
     E --> H
     E --> I
+    E --> O
     I --> J
     I --> K
     C --> J
@@ -52,7 +54,7 @@ graph TB
     class A,B,C,D frontend
     class E,F,G backend
     class H database
-    class I,J,K external
+    class I,J,K,O external
 ```
 
 ## フロントエンド
@@ -96,6 +98,7 @@ graph TB
 |------|-----------|------|
 | OpenTripPlanner | 2.5.0 | GTFS経路探索 |
 | OpenStreetMap | - | 地図データ |
+| AWS Location Service | - | ジオコーディング（住所・座標取得） |
 
 ## インフラ・ツール
 
