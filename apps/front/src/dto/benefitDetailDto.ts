@@ -37,6 +37,15 @@ interface BenefitDetailInterface {
     /** 特典URL */
     benefitUrl: string | null;
 
+    /** 住所 */
+    address: string | null;
+
+    /** 緯度 */
+    latitude: number | null;
+
+    /** 経度 */
+    longitude: number | null;
+
     // -------------------------------------------------------------------------
     // カテゴリ情報
     // -------------------------------------------------------------------------
@@ -116,6 +125,15 @@ class BenefitDetailDto {
     /** 特典URL */
     benefitUrl: string | null;
 
+    /** 住所 */
+    address: string | null;
+
+    /** 緯度 */
+    latitude: number | null;
+
+    /** 経度 */
+    longitude: number | null;
+
     // -------------------------------------------------------------------------
     // カテゴリ情報
     // -------------------------------------------------------------------------
@@ -170,6 +188,9 @@ class BenefitDetailDto {
             this.expDetail = dto.expDetail;
             this.phoneNumber = dto.phoneNumber;
             this.benefitUrl = dto.benefitUrl;
+            this.address = dto.address;
+            this.latitude = dto.latitude;
+            this.longitude = dto.longitude;
             this.categoryCd = dto.categoryCd;
             this.categoryName = dto.categoryName;
             this.displayOrder = dto.displayOrder;
@@ -191,6 +212,9 @@ class BenefitDetailDto {
             this.expDetail = null;
             this.phoneNumber = null;
             this.benefitUrl = null;
+            this.address = null;
+            this.latitude = null;
+            this.longitude = null;
             this.categoryCd = null;
             this.categoryName = null;
             this.displayOrder = null;
