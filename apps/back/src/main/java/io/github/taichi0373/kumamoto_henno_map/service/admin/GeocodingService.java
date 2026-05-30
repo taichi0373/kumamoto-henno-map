@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import io.github.taichi0373.kumamoto_henno_map.dto.admin.GeocodingResultDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.dao.BenefitDao;
+import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
 import io.github.taichi0373.kumamoto_henno_map.repository.dao.MunicipalityDao;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.MunicipalityEntity;
@@ -93,7 +94,7 @@ public class GeocodingService {
 
                 try {
                     // 自治体名を取得
-                    String municipalityName = resolveMunicipalityName(benefit.getMunicipalityCd());
+                    String municipalityName = getMunicipalityName(benefit.getMunicipalityCd());
 
                     // 検索クエリを構築
                     String query = buildSearchQuery(municipalityName, benefit.getBenefitName());
@@ -162,8 +163,8 @@ public class GeocodingService {
      * @param municipalityCd 自治体コード
      * @return 自治体名（取得できない場合は空文字）
      */
-    private String resolveMunicipalityName(String municipalityCd) {
-        if (municipalityCd == null) {
+    private String getMunicipalityName(String municipalityCd) {
+        if (ValidateUtils.isNullOrEmpty(municipalityCd)) {
             return "";
         }
         MunicipalityEntity municipality = municipalityDao.selectById(municipalityCd);
@@ -178,12 +179,15 @@ public class GeocodingService {
      * @return 検索クエリ
      */
     private String buildSearchQuery(String municipalityName, String benefitName) {
-        StringBuilder sb = new StringBuilder("熊本県");
-        if (!municipalityName.isEmpty()) {
-            sb.append(" ").append(municipalityName);
+        StringBuilder sb = new StringBuilder();
+        if (!ValidateUtils.isNullOrEmpty(municipalityName)) {
+            sb.append(municipalityName);
         }
-        if (benefitName != null && !benefitName.isEmpty()) {
-            sb.append(" ").append(benefitName);
+        if (!ValidateUtils.isNullOrEmpty(benefitName)) {
+            if (sb.length() > 0) {
+                sb.append(" ");
+            }
+            sb.append(benefitName);
         }
         return sb.toString();
     }

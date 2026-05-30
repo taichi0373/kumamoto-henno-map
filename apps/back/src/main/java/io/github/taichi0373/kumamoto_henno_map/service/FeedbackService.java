@@ -68,7 +68,7 @@ public class FeedbackService {
      * @return Slackメッセージ文字列
      */
     private String buildMessage(FeedbackRequestDto request, String username) {
-        String categoryLabel = resolveCategoryLabel(request.getCategory());
+        String categoryLabel = getCategoryLabel(request.getCategory());
         String nameLabel = (request.getName() == null || request.getName().isBlank())
                 ? "未記入" : request.getName();
         String emailLabel = (request.getEmail() == null || request.getEmail().isBlank())
@@ -91,7 +91,7 @@ public class FeedbackService {
      * @param category カテゴリコード
      * @return 日本語ラベル
      */
-    private String resolveCategoryLabel(String category) {
+    private String getCategoryLabel(String category) {
         if (category == null) return "その他";
         return switch (category) {
             case "BUG" -> "バグ報告";
