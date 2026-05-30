@@ -34,6 +34,15 @@ public class CodeConstants {
     }
 
     /**
+     * カテゴリコード
+     */
+    public static class CategoryCd {
+
+        /** 店舗 */
+        public static final String SHOP = "BS001";
+    }
+
+    /**
      * ユーザー区分
      */
     public static class UserType {

@@ -8,6 +8,7 @@ import org.seasar.doma.jdbc.Config;
 import org.seasar.doma.jdbc.criteria.QueryDsl;
 import org.seasar.doma.jdbc.criteria.option.LikeOption;
 
+import io.github.taichi0373.kumamoto_henno_map.constants.CodeConstants;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitDetailEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitDetailEntity_;
 import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
@@ -55,6 +56,23 @@ public interface BenefitDetailDao {
 
         return queryDsl.from(e)
                 .where(c -> c.eq(e.categoryCd, categoryCd))
+                .fetch();
+    }
+
+    /**
+     * 座標データを持つ店舗特典のみ取得
+     * @return 座標付き店舗特典詳細一覧
+     */
+    default List<BenefitDetailEntity> selectWithCoordinates() {
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
+        BenefitDetailEntity_ e = new BenefitDetailEntity_();
+
+        return queryDsl.from(e)
+                .where(c -> {
+                    c.eq(e.categoryCd, CodeConstants.CategoryCd.SHOP);
+                    c.isNotNull(e.latitude);
+                    c.isNotNull(e.longitude);
+                })
                 .fetch();
     }
 

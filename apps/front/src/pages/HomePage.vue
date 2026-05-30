@@ -33,7 +33,11 @@
 
         <!-- 特典を探すページ -->
         <div class="sidebar-page" v-show="activeTab === 'search-benefit'">
-          <AppSearchBenefit />
+          <AppSearchBenefit
+            @update-benefit-markers="handleUpdateBenefitMarkers"
+            @clear-benefit-markers="handleClearBenefitMarkers"
+            @show-benefit-on-map="handleShowBenefitOnMap"
+          />
         </div>
 
         <!-- サイドバー下部ボタン -->
@@ -67,11 +71,14 @@
         <AppButton :label="''" :icon="sidebarCollapsed ? 'pi pi-caret-right' : 'pi pi-caret-left'"
           tooltip="サイドバーの表示切替" aria-label="サイドバーの表示切替" class="sidebar-toggle-btn" @click="toggleSidebar" />
       </div>
-      <!-- マップ上のボタン -->
-      <!-- <div class="map-button-container">
-        <AppButton :label="''" :icon="'pi pi-info-circle'" title="自主返納支援制度とは" aria-label="自主返納支援制度とは"
-          @click="router.push('/support_info')" />
-      </div> -->
+      <!-- マップ上のコントロール -->
+      <div class="map-control-container">
+        <div class="map-control-item">
+          <i class="pi pi-shop map-control-icon"></i>
+          <span class="map-control-label">店舗</span>
+          <AppToggleSwitch v-model="isBenefitMarkersVisible" @update:modelValue="toggleBenefitMarkers" />
+        </div>
+      </div>
       <!-- クロスヘア -->
       <div v-if="showCrossHair" class="map-select-ui">
         <div class="crosshair"></div>
@@ -95,15 +102,17 @@ import AppTab from '@/components/atoms/AppTab.vue'
 import AppLicenseModal from '@/components/organisms/AppLicenseModal.vue'
 import AppFeedbackModal from '@/components/organisms/AppFeedbackModal.vue'
 import AppButton from '@/components/atoms/AppButton.vue'
+import AppToggleSwitch from '@/components/atoms/AppToggleSwitch.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import { useMap } from '@/utils/useMap'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/utils/api'
-import { createRouteMarker, type RouteMarkerType } from '@/utils/markerConfig'
+import { createRouteMarker, createBenefitMarker, type RouteMarkerType } from '@/utils/markerConfig'
 import { ValidateUtils } from '@/utils/validateUtils'
 import type { AxiosError } from 'axios'
 import { RouteRequestDto } from '@/dto/routeRequestDto'
 import { BenefitDto } from '@/dto/benefitDto'
+import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 import { MarkerDto } from '@/dto/markerDto'
 import { SuggestionDto } from '@/dto/suggestionDto'
 import { RouteDto } from '@/dto/routeDto'
@@ -123,6 +132,8 @@ const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org'
 
 /** サイドバー表示フラグ */
 const sidebarCollapsed = ref(false)
+/** 特典マーカー表示フラグ */
+const isBenefitMarkersVisible = ref(false)
 /** フィードバックモーダル表示フラグ */
 const isFeedbackModalVisible = ref(false)
 /** ライセンス情報モーダル表示フラグ */
@@ -487,6 +498,68 @@ const setCurrentLocation = (type: string) => {
   )
 }
 
+/** 特典マーカーの表示/非表示切替 */
+const toggleBenefitMarkers = async (value: boolean) => {
+  if (!value) {
+    handleClearBenefitMarkers()
+    return
+  }
+  try {
+    const response = await apiClient.get('/benefit/markers')
+    if ((response.data as { success: boolean }).success) {
+      const benefits = ((response.data as unknown) as { data: BenefitDetailDto[] }).data || []
+      handleUpdateBenefitMarkers(benefits.map((b: BenefitDetailDto) => new BenefitDetailDto(b)))
+    } else {
+      isBenefitMarkersVisible.value = false
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.BENEFIT_NOT_FOUND)
+    }
+  } catch {
+    isBenefitMarkersVisible.value = false
+    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+  }
+}
+
+/** 特典マーカーの更新（検索結果を地図にマーカー表示） */
+const handleUpdateBenefitMarkers = (benefits: BenefitDetailDto[]) => {
+  if (!mapInstance.value) return
+  // 既存の特典マーカーを削除
+  markerManager.value.removeMarkersByType('benefit-')
+  // benefitIdで重複排除し、座標を持つ特典のみマーカーを追加
+  const seen = new Set<string>()
+  for (const benefit of benefits) {
+    if (benefit.latitude == null || benefit.longitude == null || benefit.benefitId == null) continue
+    if (seen.has(benefit.benefitId)) continue
+    seen.add(benefit.benefitId)
+    const marker = createBenefitMarker(
+      benefit.latitude,
+      benefit.longitude,
+      benefit.benefitName ?? '',
+      benefit.benefitDetail ?? '',
+      benefit.phoneNumber,
+      benefit.benefitUrl,
+      benefit.address
+    )
+    markerManager.value.addMarker(`benefit-${benefit.benefitId}`, marker, mapInstance.value)
+  }
+  isBenefitMarkersVisible.value = true
+}
+
+/** 特典マーカーの全削除 */
+const handleClearBenefitMarkers = () => {
+  markerManager.value.removeMarkersByType('benefit-')
+  isBenefitMarkersVisible.value = false
+}
+
+/** 特典カードクリック時に地図をパン＋ポップアップ表示 */
+const handleShowBenefitOnMap = (benefit: BenefitDetailDto) => {
+  if (!mapInstance.value || benefit.latitude == null || benefit.longitude == null) return
+  mapInstance.value.flyTo({ center: [benefit.longitude, benefit.latitude], zoom: 16 })
+  const marker = markerManager.value.getMarker(`benefit-${benefit.benefitId}`)
+  if (marker) {
+    marker.togglePopup()
+  }
+}
+
 /** 候補リストのクリア */
 const clearSuggestions = () => {
   startSuggestions.value = []
@@ -587,8 +660,8 @@ $sidebar-width: clamp(280px, 34vw, 380px);
   pointer-events: all;
 }
 
-/* マップ上ボタン群 */
-.map-button-container {
+/* マップ上コントロール */
+.map-control-container {
   position: absolute;
   top: 12px;
   right: 10px;
@@ -596,6 +669,28 @@ $sidebar-width: clamp(280px, 34vw, 380px);
   flex-direction: column;
   gap: 8px;
   z-index: 1;
+}
+
+.map-control-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  font-size: 13px;
+  color: base.$text-primary;
+}
+
+.map-control-icon {
+  font-size: 15px;
+  color: base.$text-secondary;
+}
+
+.map-control-label {
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* マップ選択UI */
