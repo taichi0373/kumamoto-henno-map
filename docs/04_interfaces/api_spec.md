@@ -552,6 +552,9 @@ sequenceDiagram
 | expDetail | 有効期限 |
 | phoneNumber | 問い合わせ電話番号 |
 | benefitUrl | 特典URL |
+| address | 住所（店舗特典のみ・ジオコーディング済みの場合） |
+| latitude | 緯度（店舗特典のみ・ジオコーディング済みの場合） |
+| longitude | 経度（店舗特典のみ・ジオコーディング済みの場合） |
 | categoryCd | カテゴリコード |
 | categoryName | カテゴリ名称 |
 | displayOrder | 表示順 |
@@ -579,6 +582,58 @@ sequenceDiagram
 
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 403 Forbidden** — 他ユーザーへのアクセス
+
+---
+
+### GET /benefit/markers
+
+座標データを持つ特典を全件取得する。マップ上の店舗マーカー表示用。
+
+- **認証**: 不要
+
+**レスポンス 200 OK**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "benefitId": "B001",
+      "municipalityCd": "43100",
+      "municipalityName": "熊本市",
+      "municipalityKana": "くまもとし",
+      "municipalityType": "3",
+      "benefitName": "○○店 割引",
+      "benefitShortName": "○○割引",
+      "benefitDetail": "商品10%割引",
+      "expDetail": "2025年3月31日まで",
+      "phoneNumber": "096-XXX-XXXX",
+      "benefitUrl": "https://example.com/benefit",
+      "address": "熊本県熊本市中央区手取本町1-1",
+      "latitude": 32.8032,
+      "longitude": 130.7079,
+      "categoryCd": "BS001",
+      "categoryName": "ショッピング",
+      "displayOrder": 1,
+      "categoryIsActive": "1",
+      "eligibilityId": 1,
+      "licenseStatus": "2",
+      "minAge": 65,
+      "maxAge": null,
+      "eligibilityMunicipalityCd": "43100",
+      "eligibilityNote": null
+    }
+  ]
+}
+```
+
+> レスポンス形式は `POST /benefit/search` と同一（`BenefitDetailEntity`）。`address`・`latitude`・`longitude` が追加されている。座標（`latitude`・`longitude`）が `null` でない特典のみ返却される。
+
+**レスポンス 500 Internal Server Error** — サーバー内部エラー
+
+```json
+{ "success": false, "data": null, "message": "マーカー用特典の取得に失敗しました" }
+```
 
 ---
 
