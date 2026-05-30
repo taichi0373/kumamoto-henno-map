@@ -19,8 +19,10 @@ import org.springframework.web.multipart.MultipartFile;
 import io.github.taichi0373.kumamoto_henno_map.dto.ApiResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.admin.AdminPagedResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.admin.CsvImportResultDto;
+import io.github.taichi0373.kumamoto_henno_map.dto.admin.GeocodingResultDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitEntity;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.AdminBenefitService;
+import io.github.taichi0373.kumamoto_henno_map.service.admin.GeocodingService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -41,6 +43,10 @@ public class AdminBenefitController {
     /** 特典管理サービス */
     @Autowired
     private AdminBenefitService adminBenefitService;
+
+    /** ジオコーディングサービス */
+    @Autowired
+    private GeocodingService geocodingService;
 
     /**
      * 特典一覧を取得する
@@ -139,6 +145,29 @@ public class AdminBenefitController {
             log.error("特典CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * 店舗特典のジオコーディングを実行する
+     * <p>
+     * CATEGORY_CDが'BS001'の特典に対してAWS Location Serviceで
+     * ジオコーディングを行い、住所・緯度・経度をDBに保存する。
+     * </p>
+     *
+     * @param skipExisting 既に座標保存済みのレコードをスキップするか（デフォルトtrue）
+     * @return ジオコーディング結果
+     */
+    @PostMapping("/geocode")
+    public ResponseEntity<ApiResponseDto<GeocodingResultDto>> geocode(
+            @RequestParam(defaultValue = "true") boolean skipExisting) {
+        try {
+            var result = geocodingService.geocode(skipExisting);
+            return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (Exception e) {
+            log.error("ジオコーディングエラー", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("ジオコーディングに失敗しました: " + e.getMessage()));
         }
     }
 

@@ -20,6 +20,7 @@
       </template>
       <template #end>
         <AppButton label="インポート" icon="pi pi-download" @click="openImportDialog" style="margin-right: 8px" />
+        <AppButton label="座標取得" icon="pi pi-map-marker" @click="isGeocodeDialogVisible = true" style="margin-right: 8px" />
         <AppButton label="エクスポート" icon="pi pi-upload" @click="exportCSV" />
       </template>
     </AppToolbar>
@@ -154,6 +155,24 @@
         <AppButton label="インポート実行" icon="pi pi-upload" :primary="true" :disabled="!importFile || isImporting" @click="importCSV" />
       </template>
     </AppDialog>
+    <!-- ジオコーディング確認ダイアログ -->
+    <AppDialog v-model="isGeocodeDialogVisible" header="座標取得（ジオコーディング）" :dialogStyle="{ width: '480px' }">
+      <div class="geocode-dialog">
+        <p class="geocode-dialog__desc">
+          店舗特典（カテゴリコードが「BS」始まり）の店舗名からAWS Location Serviceを使用して住所・緯度・経度を取得し、DBに保存します。
+        </p>
+        <div class="geocode-dialog__option">
+          <label class="geocode-dialog__checkbox-label">
+            <input type="checkbox" v-model="geocodeSkipExisting" />
+            既に座標が保存済みのレコードをスキップする
+          </label>
+        </div>
+      </div>
+      <template #footer>
+        <AppButton label="キャンセル" @click="isGeocodeDialogVisible = false" />
+        <AppButton label="座標取得実行" icon="pi pi-map-marker" :primary="true" :disabled="isGeocoding" @click="executeGeocode" />
+      </template>
+    </AppDialog>
   </div>
 </template>
 
@@ -214,6 +233,12 @@ const isImporting = ref(false)
 const importFile = ref<File | null>(null)
 /** AppFileUpload の ref */
 const fileUploadRef = ref()
+/** ジオコーディング確認ダイアログ表示 */
+const isGeocodeDialogVisible = ref(false)
+/** ジオコーディング実行中フラグ */
+const isGeocoding = ref(false)
+/** 既存座標スキップオプション */
+const geocodeSkipExisting = ref(true)
 
 /** フィルター（global: キーワード検索、各カラムフィルター） */
 const filters = ref({
@@ -445,6 +470,34 @@ const importCSV = async () => {
   }
 }
 
+/** ジオコーディング実行 */
+const executeGeocode = async () => {
+  isGeocoding.value = true
+  isGeocodeDialogVisible.value = false
+  isLoading.value = true
+  try {
+    const response = await apiClient.axios.post<{
+      data: { success: number; skipped: number; failed: number; errors: string[] }
+    }>('/admin/benefits/geocode', null, {
+      params: { skipExisting: geocodeSkipExisting.value },
+    })
+    const result = response.data?.data
+    const msg = `座標取得完了: 成功 ${result?.success ?? 0} 件、スキップ ${result?.skipped ?? 0} 件、失敗 ${result?.failed ?? 0} 件`
+    if (result?.failed === 0) {
+      ToastMessageUtils.success(msg)
+    } else {
+      ToastMessageUtils.warning(msg)
+    }
+    await fetchItems(page.value)
+  } catch (error: unknown) {
+    const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+    ToastMessageUtils.error(msg ?? 'ジオコーディングに失敗しました')
+  } finally {
+    isGeocoding.value = false
+    isLoading.value = false
+  }
+}
+
 onMounted(() => fetchItems(0))
 </script>
 
@@ -532,6 +585,34 @@ onMounted(() => fetchItems(0))
   &__upload {
     display: flex;
     align-items: center;
+  }
+}
+
+.geocode-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__desc {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--p-text-color-secondary, #6c757d);
+    line-height: 1.6;
+  }
+
+  &__option {
+    padding: 0.75rem;
+    background: var(--p-surface-50, #f9fafb);
+    border: 1px solid var(--p-surface-200, #e5e7eb);
+    border-radius: 6px;
+  }
+
+  &__checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    cursor: pointer;
   }
 }
 </style>
