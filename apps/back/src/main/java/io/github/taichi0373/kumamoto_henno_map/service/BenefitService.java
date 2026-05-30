@@ -43,6 +43,14 @@ public class BenefitService {
     private BenefitDetailDao benefitDetailDao;
 
     /**
+     * 座標データを持つ特典を全件取得（マーカー表示用）
+     * @return 座標付き特典一覧
+     */
+    public List<BenefitDetailEntity> getBenefitsWithCoordinates() {
+        return benefitDetailDao.selectWithCoordinates();
+    }
+
+    /**
      * 検索条件に一致する特典を検索
      */
     public List<BenefitDetailEntity> searchBenefits(BenefitEligibilityDto request) {

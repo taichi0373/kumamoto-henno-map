@@ -200,7 +200,6 @@ import AppAlert from '../components/atoms/AppAlert.vue'
   box-sizing: border-box;
 }
 
-/** AppTitle をページ中央に配置し、グラデーション下線を追加するスタイル上書き */
 .app-title {
   justify-content: center;
   margin: 30px 0;
@@ -235,9 +234,8 @@ import AppAlert from '../components/atoms/AppAlert.vue'
   font-weight: 600;
   color: #2d3748;
   margin-bottom: 20px;
-  border-left: 4px solid #4299e1;
+  border-left: 4px solid base.$chose-100;
   padding-left: 15px;
-  /** AppCard の .p-card-title から継承される text-align: center を上書き */
   text-align: left;
   display: flex;
   align-items: center;
@@ -279,7 +277,6 @@ import AppAlert from '../components/atoms/AppAlert.vue'
 }
 
 .merit-item i {
-  color: #4299e1;
   font-size: 18px;
   width: 20px;
 }
@@ -312,9 +309,6 @@ import AppAlert from '../components/atoms/AppAlert.vue'
   align-items: center;
   gap: 8px;
 
-  i {
-    color: #4299e1;
-  }
 }
 
 .summary-list {

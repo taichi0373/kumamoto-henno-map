@@ -15,7 +15,6 @@ import ToastService from 'primevue/toastservice'
 import Ripple from 'primevue/ripple'
 import BadgeDirective from 'primevue/badgedirective'
 import Aura from '@primevue/themes/aura'
-import { definePreset } from '@primeuix/themes';
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
 
@@ -42,23 +41,6 @@ setUnauthorizedHandler(() => {
 // maplibre-gl の WebWorker URL を明示的に指定
 setWorkerUrl(maplibreglWorkerUrl)
 
-const MyPreset = definePreset(Aura, {
-  semantic: {
-    primary: {
-      50: '{cyan.50}',
-      100: '{cyan.50}',
-      200: '{cyan.100}',
-      300: '{cyan.200}',
-      400: '{cyan.300}',
-      500: '{cyan.400}',
-      600: '{cyan.500}',
-      700: '{cyan.600}',
-      800: '{cyan.700}',
-      900: '{cyan.800}'
-    }
-  }
-})
-
   // ページ直叩き（例: /profile）時、router.beforeEach はマウント前に実行されるため
   // ここでセッションを復元してから mount する。
   // こうすることでルートガードが token の有無を正しく判定できる。
@@ -70,7 +52,7 @@ const MyPreset = definePreset(Aura, {
       ripple: true,
       // ダークモード設定
       theme: {
-        preset: MyPreset,
+        preset: Aura,
         options: {
           darkModeSelector: '.my-app-dark',
         }
