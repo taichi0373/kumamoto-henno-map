@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
 /**
  * アプリ起動時に管理者ユーザーを初期化するランナー。
  * <p>
- * 環境変数 {@code ADMIN_USERNAME} / {@code ADMIN_PASSWORD} / {@code ADMIN_EMAIL} が
+ * プロパティ {@code admin.username} / {@code admin.password} / {@code admin.email} が
  * すべて設定されており、かつ同名ユーザーが存在しない場合のみ管理者ユーザーを作成する。
  * </p>
  */
@@ -27,6 +28,18 @@ public class AdminInitializer implements CommandLineRunner {
     private final UsersDao usersDao;
     private final BCryptPasswordEncoder passwordEncoder;
 
+    /** 管理者ユーザー名 */
+    @Value("${admin.username:}")
+    private String username;
+
+    /** 管理者パスワード */
+    @Value("${admin.password:}")
+    private String password;
+
+    /** 管理者メールアドレス */
+    @Value("${admin.email:}")
+    private String email;
+
     /** コンストラクタインジェクション */
     public AdminInitializer(UsersDao usersDao, BCryptPasswordEncoder passwordEncoder) {
         this.usersDao = usersDao;
@@ -35,12 +48,8 @@ public class AdminInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String username = System.getenv("ADMIN_USERNAME");
-        String password = System.getenv("ADMIN_PASSWORD");
-        String email    = System.getenv("ADMIN_EMAIL");
-
-        if (username == null || password == null || email == null) {
-            log.info("管理者初期化スキップ: 環境変数 ADMIN_USERNAME / ADMIN_PASSWORD / ADMIN_EMAIL が未設定");
+        if (username.isEmpty() || password.isEmpty() || email.isEmpty()) {
+            log.info("管理者初期化スキップ: admin.username / admin.password / admin.email が未設定");
             return;
         }
 
