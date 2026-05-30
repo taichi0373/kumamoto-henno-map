@@ -68,6 +68,9 @@
 | EXP_DETAIL | VARCHAR(200) | | | | 有効期限 |
 | PHONE_NUMBER | VARCHAR(50) | | | | 問い合わせ電話番号 |
 | BENEFIT_URL | VARCHAR(1000) | | | | 特典URL |
+| ADDRESS | VARCHAR(200) | | | | 住所 |
+| LATITUDE | NUMERIC(10,7) | | | | 緯度 |
+| LONGITUDE | NUMERIC(10,7) | | | | 経度 |
 | SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
 | SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
 

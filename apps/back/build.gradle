@@ -33,11 +33,16 @@ dependencies {
     annotationProcessor 'org.seasar.doma:doma-processor:3.14.0'
 
     implementation 'com.sendgrid:sendgrid-java:4.10.3'
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.3.1'
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.6.1'
+    implementation 'org.apache.httpcomponents.core5:httpcore5:5.4'
+    implementation 'org.apache.httpcomponents.core5:httpcore5-h2:5.4'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
 
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.apache.commons:commons-csv:1.14.1'
+
+    implementation platform('software.amazon.awssdk:bom:2.25.69')
+    implementation 'software.amazon.awssdk:location'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

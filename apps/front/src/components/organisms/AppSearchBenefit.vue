@@ -70,7 +70,7 @@
           <Transition name="accordion">
             <div v-show="openCategories.has(group.categoryCd)" class="category-accordion__body">
               <template v-for="benefit in group.benefits" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`">
-                <AppCard class="mb-3" :hoverable="true">
+                <AppCard class="mb-3" :hoverable="true" @click="emit('show-benefit-on-map', benefit)">
                   <template #title>{{ benefit.benefitName }}</template>
                   <!-- 特典内容： -->
                   <p>特典内容：{{ benefit.benefitDetail }}</p>
@@ -112,7 +112,7 @@
       <!-- カテゴリ指定済み: フラット表示 -->
       <template v-else>
         <template v-for="benefit in benefitResults" :key="`${benefit.benefitId}_${benefit.eligibilityId ?? ''}`">
-          <AppCard class="mb-3" :hoverable="true">
+          <AppCard class="mb-3" :hoverable="true" @click="emit('show-benefit-on-map', benefit)">
             <template #title>{{ benefit.benefitName }}</template>
             <!-- 特典内容： -->
             <p>特典内容：{{ benefit.benefitDetail }}</p>
@@ -173,8 +173,10 @@ import { MunicipalityDto } from '@/dto/municipalityDto'
 import { SearchBenefitDto } from '@/dto/searchBenefitDto'
 import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'show-benefit-on-map', benefit: BenefitDetailDto): void;
+  (e: 'update-benefit-markers', benefits: BenefitDetailDto[]): void;
+  (e: 'clear-benefit-markers'): void;
 }>();
 
 /** 検索結果があるかどうか */
@@ -293,6 +295,7 @@ const searchBenefits = async (conditions: SearchBenefitDto) => {
     if (response.status === responseStatusConstant.OK) {
       const data = ((response.data as unknown) as { data: BenefitDetailDto[] }).data
       benefitResults.value = data || []
+      emit('update-benefit-markers', benefitResults.value)
     } else {
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.READ_FAILED)
       hasSearched.value = false
@@ -313,6 +316,7 @@ const clearConditions = () => {
   benefitResults.value = []
   hasSearched.value = false
   openCategories.value = new Set()
+  emit('clear-benefit-markers')
 }
 
 /** 対象年齢の表示用文言を組み立て */

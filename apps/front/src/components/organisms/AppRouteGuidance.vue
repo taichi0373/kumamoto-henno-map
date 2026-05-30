@@ -11,9 +11,10 @@
           <AppLabel :id="'start-location'" :required="true">出発地</AppLabel>
           <div class="search-input-container">
             <AppInputGroupWithButton v-model="searchRoute.startLocation" :input-id="'start-location'" :type="'text'"
-              :placeholder="'出発地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :placeholder="'出発地を入力してください'" :required="true"
+              :button-icon="startButtonIcon"
               :error="startLocationErrorDto" @input="onInput('start')" @focus="onFocus('start')"
-              @button-click="emit('select-on-map', 'start')" />
+              @button-click="onStartButtonClick" />
             <!-- 検索候補 -->
             <AppSuggestionList :modelValue="startSuggestions" @select="selectStartLocation" />
           </div>
@@ -23,9 +24,10 @@
           <AppLabel :id="'end-location'" :required="true">目的地</AppLabel>
           <div class="search-input-container">
             <AppInputGroupWithButton v-model="searchRoute.endLocation" :input-id="'end-location'" :type="'text'"
-              :placeholder="'目的地を入力してください'" :required="true" :button-icon="'pi pi-map-marker'"
+              :placeholder="'目的地を入力してください'" :required="true"
+              :button-icon="endButtonIcon"
               :error="endLocationErrorDto" @input="onInput('end')" @focus="onFocus('end')"
-              @button-click="emit('select-on-map', 'end')" />
+              @button-click="onEndButtonClick" />
             <!-- 検索候補 -->
             <AppSuggestionList :modelValue="endSuggestions" @select="selectEndLocation" />
           </div>
@@ -75,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import type { Ref } from 'vue'
 import AppAlert from '../atoms/AppAlert.vue'
 import AppLabel from '../atoms/AppLabel.vue'
@@ -335,6 +337,52 @@ const selectEndLocation = (item: SuggestionDto) => {
     lon: item.lon
   });
   emit('set-marker', marker);
+}
+
+/** 出発地ボタンアイコン（入力値があればクリア、なければ地図選択） */
+const startButtonIcon = computed(() =>
+  searchRoute.value.startLocation ? 'pi pi-times' : 'pi pi-map-marker'
+)
+
+/** 目的地ボタンアイコン（入力値があればクリア、なければ地図選択） */
+const endButtonIcon = computed(() =>
+  searchRoute.value.endLocation ? 'pi pi-times' : 'pi pi-map-marker'
+)
+
+/** 出発地ボタンクリック時の処理 */
+const onStartButtonClick = () => {
+  if (searchRoute.value.startLocation) {
+    clearStartLocation();
+  } else {
+    emit('select-on-map', codeConstant.SEARCH_TYPE.START);
+  }
+}
+
+/** 目的地ボタンクリック時の処理 */
+const onEndButtonClick = () => {
+  if (searchRoute.value.endLocation) {
+    clearEndLocation();
+  } else {
+    emit('select-on-map', codeConstant.SEARCH_TYPE.END);
+  }
+}
+
+// 出発地をクリア
+const clearStartLocation = () => {
+  searchRoute.value.startLocation = null;
+  searchRoute.value.startLat = null;
+  searchRoute.value.startLon = null;
+  emit('remove-marker', codeConstant.SEARCH_TYPE.START);
+  emit('clear-suggestions');
+}
+
+// 目的地をクリア
+const clearEndLocation = () => {
+  searchRoute.value.endLocation = null;
+  searchRoute.value.endLat = null;
+  searchRoute.value.endLon = null;
+  emit('remove-marker', codeConstant.SEARCH_TYPE.END);
+  emit('clear-suggestions');
 }
 
 // 外部クリック時、候補リストをクリア

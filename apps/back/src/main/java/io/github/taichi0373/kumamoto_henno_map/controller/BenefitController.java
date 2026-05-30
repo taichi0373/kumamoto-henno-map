@@ -46,6 +46,27 @@ public class BenefitController {
     private BenefitService benefitService;
 
     /**
+     * 座標データを持つ特典を全件取得（マーカー表示用）
+     */
+    @Operation(summary = "マーカー用特典取得", description = "座標データを持つ特典を全件取得する。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @GetMapping("/markers")
+    public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> getMarkers() {
+        try {
+            List<BenefitDetailEntity> benefits = benefitService.getBenefitsWithCoordinates();
+            return ResponseEntity.ok(ApiResponseDto.success(benefits));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("マーカー用特典の取得に失敗しました"));
+        }
+    }
+
+    /**
      * 有効なカテゴリ一覧を取得
      */
     @Operation(summary = "カテゴリ一覧取得", description = "有効な特典カテゴリ一覧を表示順で取得する。認証不要。")

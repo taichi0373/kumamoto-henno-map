@@ -41,6 +41,7 @@ graph LR
         GTFS[GTFS Data Feed]
         MAIL[SendGrid HTTP API]
         SLACK[Slack Incoming Webhook]
+        AWS[AWS Location Service]
     end
 
     FE -->|Authorization: Bearer Token| AUTH
@@ -50,6 +51,7 @@ graph LR
     API -->|REST API| OTP
     API -->|HTTP API| MAIL
     API -->|HTTP POST| SLACK
+    API -->|REST API| AWS
     OTP -->|Map Data| OSM
     OTP -->|Route Data| GTFS
 
@@ -61,7 +63,7 @@ graph LR
     class FE frontend
     class API,AUTH backend
     class DB database
-    class OTP,OSM,GTFS,MAIL,SLACK external
+    class OTP,OSM,GTFS,MAIL,SLACK,AWS external
 ```
 
 ---
@@ -550,6 +552,9 @@ sequenceDiagram
 | expDetail | 有効期限 |
 | phoneNumber | 問い合わせ電話番号 |
 | benefitUrl | 特典URL |
+| address | 住所（店舗特典のみ・ジオコーディング済みの場合） |
+| latitude | 緯度（店舗特典のみ・ジオコーディング済みの場合） |
+| longitude | 経度（店舗特典のみ・ジオコーディング済みの場合） |
 | categoryCd | カテゴリコード |
 | categoryName | カテゴリ名称 |
 | displayOrder | 表示順 |
@@ -577,6 +582,58 @@ sequenceDiagram
 
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 403 Forbidden** — 他ユーザーへのアクセス
+
+---
+
+### GET /benefit/markers
+
+座標データを持つ特典を全件取得する。マップ上の店舗マーカー表示用。
+
+- **認証**: 不要
+
+**レスポンス 200 OK**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "benefitId": "B001",
+      "municipalityCd": "43100",
+      "municipalityName": "熊本市",
+      "municipalityKana": "くまもとし",
+      "municipalityType": "3",
+      "benefitName": "○○店 割引",
+      "benefitShortName": "○○割引",
+      "benefitDetail": "商品10%割引",
+      "expDetail": "2025年3月31日まで",
+      "phoneNumber": "096-XXX-XXXX",
+      "benefitUrl": "https://example.com/benefit",
+      "address": "熊本県熊本市中央区手取本町1-1",
+      "latitude": 32.8032,
+      "longitude": 130.7079,
+      "categoryCd": "BS001",
+      "categoryName": "ショッピング",
+      "displayOrder": 1,
+      "categoryIsActive": "1",
+      "eligibilityId": 1,
+      "licenseStatus": "2",
+      "minAge": 65,
+      "maxAge": null,
+      "eligibilityMunicipalityCd": "43100",
+      "eligibilityNote": null
+    }
+  ]
+}
+```
+
+> レスポンス形式は `POST /benefit/search` と同一（`BenefitDetailEntity`）。`address`・`latitude`・`longitude` が追加されている。座標（`latitude`・`longitude`）が `null` でない特典のみ返却される。
+
+**レスポンス 500 Internal Server Error** — サーバー内部エラー
+
+```json
+{ "success": false, "data": null, "message": "マーカー用特典の取得に失敗しました" }
+```
 
 ---
 
@@ -968,6 +1025,47 @@ CSVファイルで特典を一括登録・更新する。
 - **認証**: 必須
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
+
+---
+
+### POST /admin/benefits/geocode
+
+AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の店舗名から住所・緯度・経度を一括取得し、BENEFITテーブルに保存する。
+
+- **認証**: 必須
+
+| クエリパラメータ | 型 | デフォルト | 説明 |
+|---|---|---|---|
+| skipExisting | boolean | true | `true`: 既に緯度・経度が保存済みの特典をスキップ |
+
+**レスポンス 200 OK**
+
+```json
+{
+  "success": true,
+  "data": {
+    "success": 45,
+    "skipped": 12,
+    "failed": 3,
+    "errors": [
+      "BEN001234: 検索結果なし（クエリ: 熊本市 テスト店舗）"
+    ]
+  }
+}
+```
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| success | int | ジオコーディング成功件数 |
+| skipped | int | スキップ件数（既に座標保存済み） |
+| failed | int | 失敗件数 |
+| errors | string[] | エラー詳細（`特典ID: エラーメッセージ` 形式） |
+
+**レスポンス 500 Internal Server Error** — ジオコーディング処理全体の失敗
+
+```json
+{ "success": false, "data": null, "message": "ジオコーディングに失敗しました: ..." }
+```
 
 ---
 
