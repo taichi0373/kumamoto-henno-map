@@ -2,6 +2,7 @@ package io.github.taichi0373.kumamoto_henno_map.repository.entity;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
@@ -64,6 +65,18 @@ public class BenefitEntity implements Serializable {
     /** 特典URL */
     @Column(name = "benefit_url")
     private String benefitUrl;
+
+    /** 住所 */
+    @Column(name = "address")
+    private String address;
+
+    /** 緯度 */
+    @Column(name = "latitude")
+    private BigDecimal latitude;
+
+    /** 経度 */
+    @Column(name = "longitude")
+    private BigDecimal longitude;
 
     /** システム共通フィールド */
     private SystemField systemField;

@@ -39,6 +39,12 @@ export interface BenefitAdminDto {
   phoneNumber: string | null
   /** 特典URL */
   benefitUrl: string | null
+  /** 住所 */
+  address: string | null
+  /** 緯度 */
+  latitude: number | null
+  /** 経度 */
+  longitude: number | null
   /** 作成日時 */
   sysCreatedAt: string | null
   /** 更新日時 */
