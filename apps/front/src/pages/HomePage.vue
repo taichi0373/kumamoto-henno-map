@@ -513,9 +513,13 @@ const toggleBenefitMarkers = async (value: boolean) => {
       isBenefitMarkersVisible.value = false
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.BENEFIT_NOT_FOUND)
     }
-  } catch {
+  } catch (error) {
     isBenefitMarkersVisible.value = false
-    ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    if ((error as AxiosError).response?.status === responseStatusConstant.NOT_FOUND) {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.BENEFIT_LOCATION_NOT_FOUND)
+    } else {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    }
   }
 }
 
