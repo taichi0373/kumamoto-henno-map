@@ -76,7 +76,7 @@ jobs:
 
       # ユニットテスト
       - name: Unit tests
-        run: npm test -- --ci --passWithNoTests
+        run: npm run test:ci
 
       # # TSDoc 生成
       # - name: Generate TSDoc
