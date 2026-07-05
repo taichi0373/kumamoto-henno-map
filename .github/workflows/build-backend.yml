@@ -20,7 +20,7 @@ on:
         description: 'Javaバージョン'
         type: string
         default: '21'
-  
+
 env:
   TZ: Asia/Tokyo
   BACKEND_DIR: ${{ inputs.backend-dir }}
@@ -33,6 +33,22 @@ jobs:
     timeout-minutes: ${{ inputs.timeout-minutes }}
     # Github-hosted runner を使用
     runs-on: ubuntu-latest
+
+    # テスト用PostgreSQLサービスコンテナ
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: kumamoto_henno_map_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
       GITHUB_USERNAME: ${{ github.actor }}
@@ -67,6 +83,34 @@ jobs:
       # ビルド
       - name: Compile Java
         run: ./gradlew compileJava
+
+      # テスト用DBスキーマ構築（DDL）
+      - name: Set up test database schema
+        run: |
+          export PGPASSWORD=postgres
+          for f in $(ls ../../config/database/DDL/TABLE/*.SQL | sort); do
+            echo "Running DDL: $f"
+            psql -h localhost -U postgres -d kumamoto_henno_map_test -f "$f"
+          done
+
+      # テスト用データ投入（DML）
+      - name: Load test data
+        run: |
+          export PGPASSWORD=postgres
+          for f in $(ls ../../config/database/DML/TABLE/*.SQL | sort); do
+            echo "Running DML: $f"
+            psql -h localhost -U postgres -d kumamoto_henno_map_test -f "$f"
+          done
+
+      # ユニットテスト実行
+      - name: Run tests
+        run: ./gradlew test
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: kumamoto_henno_map_test
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
 
       # Javadoc 生成
       - name: Generate Javadoc
