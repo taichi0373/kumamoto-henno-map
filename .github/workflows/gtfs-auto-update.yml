@@ -2,8 +2,8 @@ name: GTFS Auto Update
 
 on:
   schedule:
-    # 毎日 JST 02:00（UTC 17:00）に実行
-    - cron: '0 17 * * *'
+    # 毎週月曜日 JST 02:00（UTC 17:00）に実行
+    - cron: '0 17 * * 1'
   workflow_dispatch:
     inputs:
       force_update:
