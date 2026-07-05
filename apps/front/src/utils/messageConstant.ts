@@ -48,6 +48,7 @@ const API_RESPONSE_MESSAGE = {
     API_ERROR: 'APIエラーが発生しました',
     DATA_NOT_FOUND: '該当データが存在しません',
     BENEFIT_NOT_FOUND: '特典データの取得に失敗しました',
+    BENEFIT_LOCATION_NOT_FOUND: '座標情報のない店舗データが存在するため、マーカーを表示できませんでした',
     ROUTE_SEARCH_FAILED: '経路の取得に失敗しました',
     PASSWORD_CHANGE_SUCCESS: 'パスワードを変更しました',
     PASSWORD_CHANGE_FAILED: 'パスワードの変更に失敗しました',
