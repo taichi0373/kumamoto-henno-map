@@ -6,82 +6,50 @@
   "scripts": {
     "serve": "vite",
     "build": "vite build",
-    "lint": "eslint src --ext .ts,.tsx,.vue",
+    "lint": "eslint src",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:ci": "jest --ci --passWithNoTests"
   },
   "dependencies": {
     "@primevue/themes": "^4.5.4",
-    "axios": "^1.16.1",
+    "axios": "^1.17.0",
     "maplibre-gl": "^5.24.0",
     "pinia": "^3.0.4",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.5.5",
     "vue": "^3.5.35",
-    "vue-router": "^5.0.7"
+    "vue-router": "^5.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@storybook/vue3": "^10.4.1",
-    "@storybook/vue3-vite": "^10.4.1",
+    "@storybook/vue3-vite": "^10.4.2",
     "@vitejs/plugin-vue": "^6.0.7",
     "vue-eslint-parser": "^10.3.0",
     "@types/jest": "^30.0.0",
     "@types/pg": "^8.20.0",
-    "@typescript-eslint/eslint-plugin": "^8.59.4",
-    "@typescript-eslint/parser": "^8.60.0",
+    "@typescript-eslint/eslint-plugin": "^8.60.1",
+    "@typescript-eslint/parser": "^8.62.1",
     "dotenv": "^17.4.2",
-    "eslint": "^10.4.0",
+    "eslint": "^10.4.1",
     "eslint-plugin-vue": "^10.9.1",
     "jest": "^30.4.2",
     "pg": "^8.21.0",
     "sass": "^1.100.0",
     "storybook": "^10.4.1",
-    "vite": "^8.0.14",
+    "vite": "^8.0.16",
     "ts-jest": "^29.4.11",
-    "ts-loader": "^9.5.7",
+    "ts-loader": "^9.6.0",
     "typescript": "^6.0.3"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.60.3"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true,
-      "browser": true,
-      "es6": true,
-      "jest": true
-    },
-    "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended"
-    ],
-    "parserOptions": {
-      "parser": "@typescript-eslint/parser",
-      "ecmaVersion": 2020,
-      "sourceType": "module"
-    },
-    "plugins": [
-      "@typescript-eslint"
-    ],
-    "overrides": [
-      {
-        "files": ["*.ts"],
-        "parser": "@typescript-eslint/parser"
-      }
-    ],
-    "rules": {
-      "vue/multi-word-component-names": "off",
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "off"
-    }
+    "@rollup/rollup-linux-x64-gnu": "4.62.2"
   },
   "browserslist": [
     "> 1%",
