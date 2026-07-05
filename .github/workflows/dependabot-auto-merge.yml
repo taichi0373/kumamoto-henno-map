@@ -4,10 +4,12 @@ on:
   pull_request_target:
     types: [opened, synchronize, reopened]
 
-# Dependabot PRへの書き込み権限
-permissions:
-  pull-requests: write
-  contents: write
+# Dependabotが作成したPRのみに権限を付与
+permissions: {}
+
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   auto-merge:
@@ -15,6 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     # Dependabotが作成したPRのみ対象
     if: github.actor == 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+      contents: write
     steps:
       - name: Enable auto-merge
         run: gh pr merge --auto --squash "$PR_URL"

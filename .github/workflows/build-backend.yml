@@ -88,19 +88,19 @@ jobs:
       - name: Set up test database schema
         run: |
           export PGPASSWORD=postgres
-          for f in $(ls ../../config/database/DDL/TABLE/*.SQL | sort); do
+          while IFS= read -r f; do
             echo "Running DDL: $f"
             psql -h localhost -U postgres -d kumamoto_henno_map_test -f "$f"
-          done
+          done < <(find ../../config/database/DDL/TABLE -maxdepth 1 -iname "*.sql" | sort)
 
       # テスト用データ投入（DML）
       - name: Load test data
         run: |
           export PGPASSWORD=postgres
-          for f in $(ls ../../config/database/DML/TABLE/*.SQL | sort); do
+          while IFS= read -r f; do
             echo "Running DML: $f"
             psql -h localhost -U postgres -d kumamoto_henno_map_test -f "$f"
-          done
+          done < <(find ../../config/database/DML/TABLE -maxdepth 1 -iname "*.sql" | sort)
 
       # ユニットテスト実行
       - name: Run tests
