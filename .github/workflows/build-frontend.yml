@@ -52,7 +52,7 @@ jobs:
 
       # リポジトリ取得
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
