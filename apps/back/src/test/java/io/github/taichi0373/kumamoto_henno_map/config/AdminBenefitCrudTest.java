@@ -2,20 +2,32 @@ package io.github.taichi0373.kumamoto_henno_map.config;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.taichi0373.kumamoto_henno_map.controller.admin.AdminBenefitController;
 import io.github.taichi0373.kumamoto_henno_map.service.AuthService;
+import io.github.taichi0373.kumamoto_henno_map.service.admin.GeocodingService;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.AdminBenefitService;
 import io.github.taichi0373.kumamoto_henno_map.util.JwtUtil;
 
@@ -26,21 +38,47 @@ import io.github.taichi0373.kumamoto_henno_map.util.JwtUtil;
  * および依存レコードあり DELETE の 409 を検証する。
  * </p>
  */
-@WebMvcTest(AdminBenefitController.class)
-@Import(SecurityConfig.class)
+@ExtendWith(SpringExtension.class)
+@WebAppConfiguration
+@ContextConfiguration(classes = AdminBenefitCrudTest.Config.class)
+@TestPropertySource(properties = {
+    "cors.allowed-origins=http://localhost:3000",
+    "cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS",
+    "cors.allowed-headers=*",
+    "cors.allow-credentials=true"
+})
 class AdminBenefitCrudTest {
 
+    /** テスト用最小WebMVC設定 */
+    @Configuration
+    @EnableWebMvc
+    @Import({SecurityConfig.class, CorsConfig.class, AdminBenefitController.class})
+    static class Config {
+    }
+
     @Autowired
+    private WebApplicationContext context;
+
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private JwtUtil jwtUtil;
 
-    @MockBean
+    @MockitoBean
     private AuthService authService;
 
-    @MockBean
+    @MockitoBean
     private AdminBenefitService adminBenefitService;
+
+    @MockitoBean
+    private GeocodingService geocodingService;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
+    }
 
     /**
      * ROLE_ADMIN で GET /admin/benefits にアクセスすると 200 OK が返ることを確認する
@@ -48,8 +86,7 @@ class AdminBenefitCrudTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void 管理者ユーザーが特典一覧を取得すると200が返る() throws Exception {
-        mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/admin/benefits"))
+        mockMvc.perform(get("/admin/benefits"))
                 .andExpect(status().isOk());
     }
 
@@ -59,8 +96,7 @@ class AdminBenefitCrudTest {
     @Test
     @WithMockUser(roles = "USER")
     void 一般ユーザーが特典一覧にアクセスすると403が返る() throws Exception {
-        mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/admin/benefits"))
+        mockMvc.perform(get("/admin/benefits"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.success").value(false));
     }
@@ -70,8 +106,7 @@ class AdminBenefitCrudTest {
      */
     @Test
     void 未認証ユーザーが特典一覧にアクセスすると401が返る() throws Exception {
-        mockMvc.perform(
-                org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/admin/benefits"))
+        mockMvc.perform(get("/admin/benefits"))
                 .andExpect(status().isUnauthorized());
     }
 
