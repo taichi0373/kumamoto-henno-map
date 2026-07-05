@@ -6,7 +6,7 @@
   "scripts": {
     "serve": "vite",
     "build": "vite build",
-    "lint": "eslint src --ext .ts,.tsx,.vue",
+    "lint": "eslint src",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "jest",
@@ -50,41 +50,6 @@
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.62.2"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "node": true,
-      "browser": true,
-      "es6": true,
-      "jest": true
-    },
-    "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended"
-    ],
-    "parserOptions": {
-      "parser": "@typescript-eslint/parser",
-      "ecmaVersion": 2020,
-      "sourceType": "module"
-    },
-    "plugins": [
-      "@typescript-eslint"
-    ],
-    "overrides": [
-      {
-        "files": [
-          "*.ts"
-        ],
-        "parser": "@typescript-eslint/parser"
-      }
-    ],
-    "rules": {
-      "vue/multi-word-component-names": "off",
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "off"
-    }
   },
   "browserslist": [
     "> 1%",
