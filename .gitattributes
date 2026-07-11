@@ -1,0 +1,9 @@
+# デフォルト: テキストファイルはLFに正規化
+* text=auto
+
+# Windowsバッチファイルはチェックアウト時にCRLFを使用
+*.bat text eol=crlf
+
+# シェルスクリプトはLFを強制
+*.sh text eol=lf
+gradlew text eol=lf
