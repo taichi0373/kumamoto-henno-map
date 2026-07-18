@@ -9,6 +9,7 @@ updates:
     labels:
       - "dependencies"
       - "frontend"
+      - "リリースノート記載外"
     open-pull-requests-limit: 10
 
   # バックエンド（Gradle）
@@ -20,6 +21,7 @@ updates:
     labels:
       - "dependencies"
       - "backend"
+      - "リリースノート記載外"
     open-pull-requests-limit: 10
 
   # GitHub Actions
@@ -31,4 +33,5 @@ updates:
     labels:
       - "dependencies"
       - "ci"
+      - "リリースノート記載外"
     open-pull-requests-limit: 10
