@@ -8,16 +8,59 @@ on:
 
 jobs:
   label:
-    name: リリースノート対象ラベルを付与
+    name: ラベルを自動付与
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
 
     steps:
-      - name: リリースノート対象ラベルを付与
+      - name: ブランチ名でタイプ・リリースノートラベルを付与
         env:
           GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.head_ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
         run: |
-          gh pr edit ${{ github.event.pull_request.number }} \
-            --add-label "リリースノート対象" \
-            --repo "${{ github.repository }}"
+          case "$BRANCH" in
+            feature/*)
+              LABELS="機能追加,リリースノート対象"
+              ;;
+            bugfix/*|hotfix/*)
+              LABELS="バグ,リリースノート対象"
+              ;;
+            docs/*)
+              LABELS="ドキュメント,リリースノート除外"
+              ;;
+            ci/*)
+              LABELS="CI/CD,リリースノート除外"
+              ;;
+            refactor/*|test/*)
+              LABELS="リリースノート除外"
+              ;;
+            *)
+              LABELS="リリースノート対象"
+              ;;
+          esac
+          gh pr edit "$PR_NUMBER" \
+            --add-label "$LABELS" \
+            --repo "$REPO"
+
+      - name: 変更ファイルでエリアラベルを付与
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          CHANGED_FILES=$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only)
+
+          if echo "$CHANGED_FILES" | grep -q "^apps/front/"; then
+            gh pr edit "$PR_NUMBER" --add-label "フロントエンド" --repo "$REPO"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "^apps/back/"; then
+            gh pr edit "$PR_NUMBER" --add-label "バックエンド" --repo "$REPO"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "^\.github/"; then
+            gh pr edit "$PR_NUMBER" --add-label "CI/CD" --repo "$REPO"
+          fi
