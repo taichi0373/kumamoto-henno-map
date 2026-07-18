@@ -2,26 +2,38 @@
 # 実際のラベル作成・更新は gh label create / gh label edit コマンドで手動管理する
 
 labels:
-  - name: "リリースノート記載"
+  - name: "バグ"
+    color: "d73a4a"
+    description: "不具合の修正"
+
+  - name: "機能追加"
+    color: "a2eeef"
+    description: "新機能・既存機能の改善"
+
+  - name: "ドキュメント"
+    color: "0075ca"
+    description: "ドキュメントの追加・修正"
+
+  - name: "依存関係"
+    color: "0366d6"
+    description: "依存パッケージの更新"
+
+  - name: "フロントエンド"
+    color: "6a4cb2"
+    description: "フロントエンド関連"
+
+  - name: "バックエンド"
+    color: "c4bf5b"
+    description: "バックエンド関連"
+
+  - name: "CI/CD"
+    color: "b85b20"
+    description: "CI/CDパイプライン関連"
+
+  - name: "リリースノート対象"
     color: "0e8a16"
     description: "リリースノートに記載するPR"
 
-  - name: "リリースノート記載外"
+  - name: "リリースノート除外"
     color: "ededed"
     description: "リリースノートから除外するPR"
-
-  - name: "dependencies"
-    color: "0075ca"
-    description: "依存関係の更新"
-
-  - name: "frontend"
-    color: "e4e669"
-    description: "フロントエンド関連"
-
-  - name: "backend"
-    color: "d93f0b"
-    description: "バックエンド関連"
-
-  - name: "ci"
-    color: "bfd4f2"
-    description: "CI/CD関連"
