@@ -4,6 +4,9 @@
 .claude/settings.local.json
 .mcp.json
 
+### superpowers ###
+docs/superpowers/
+
 ### OS ###
 .DS_Store
 Thumbs.db
