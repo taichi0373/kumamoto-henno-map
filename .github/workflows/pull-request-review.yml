@@ -3,10 +3,6 @@ name: Check on pull request
 on:
   pull_request:
     branches: ["develop", "main"]
-    paths:
-      - 'docs/**'
-      - 'apps/front/**'
-      - 'apps/back/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
