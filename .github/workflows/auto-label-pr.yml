@@ -1,6 +1,8 @@
 name: Auto Label PR
 
 on:
+  # 注意: pull_request_target はフォークPRのコードをチェックアウトしないこと
+  # ラベル付与のみに使用し、コードの実行・actions/checkout は行わない
   pull_request_target:
     types: [opened]
 
