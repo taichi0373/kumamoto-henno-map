@@ -1,0 +1,23 @@
+name: Auto Label PR
+
+on:
+  # 注意: pull_request_target はフォークPRのコードをチェックアウトしないこと
+  # ラベル付与のみに使用し、コードの実行・actions/checkout は行わない
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  label:
+    name: リリースノート対象ラベルを付与
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: リリースノート対象ラベルを付与
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --add-label "リリースノート対象" \
+            --repo "${{ github.repository }}"
