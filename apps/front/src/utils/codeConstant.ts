@@ -60,6 +60,11 @@ const codeConstant = {
         ADMIN_PAGE_SIZE: 10,    // 管理者画面の1ページあたり表示件数
     },
 
+    // カテゴリコード
+    CATEGORY_CD: {
+        SHOP: 'BS001', // 店舗
+    },
+
 } as const;
 
 export { codeConstant };

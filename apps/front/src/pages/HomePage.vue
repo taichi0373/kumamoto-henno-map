@@ -28,7 +28,10 @@
 
         <!-- 利用できる特典ページ -->
         <div class="sidebar-page" v-show="activeTab === 'users-benefit'">
-          <AppUsersBenefit :users-benefits="usersBenefits" />
+          <AppUsersBenefit
+            :users-benefits="usersBenefits"
+            @show-benefit-on-map="handleShowBenefitOnMap"
+          />
         </div>
 
         <!-- 特典を探すページ -->
@@ -111,7 +114,6 @@ import { createRouteMarker, createBenefitMarker, type RouteMarkerType } from '@/
 import { ValidateUtils } from '@/utils/validateUtils'
 import type { AxiosError } from 'axios'
 import { RouteRequestDto } from '@/dto/routeRequestDto'
-import { BenefitDto } from '@/dto/benefitDto'
 import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 import { MarkerDto } from '@/dto/markerDto'
 import { SuggestionDto } from '@/dto/suggestionDto'
@@ -145,7 +147,7 @@ const auth = useAuthStore()
 const isLoggedIn = computed(() => auth.isLoggedIn)
 
 /** ユーザー特典データ */
-const usersBenefits = ref<BenefitDto[]>([])
+const usersBenefits = ref<BenefitDetailDto[]>([])
 
 // マップ選択モードのタイプ（'start' or 'end'）
 const mapSelectMode = ref<string | null>(null)
@@ -348,7 +350,7 @@ const fetchUserBenefits = async () => {
   try {
     const response = await apiClient.get(`/benefit/users/${userId}`)
     if ((response.data as { success: boolean }).success) {
-      usersBenefits.value = ((response.data as unknown) as { data: BenefitDto[] }).data || []
+      usersBenefits.value = ((response.data as unknown) as { data: BenefitDetailDto[] }).data || []
     } else {
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.BENEFIT_NOT_FOUND)
       usersBenefits.value = []
@@ -554,14 +556,27 @@ const handleClearBenefitMarkers = () => {
   isBenefitMarkersVisible.value = false
 }
 
-/** 特典カードクリック時に地図をパン＋ポップアップ表示 */
+/** 特典カードクリック時に地図をパン＋ポップアップ表示（マーカー未存在時は追加） */
 const handleShowBenefitOnMap = (benefit: BenefitDetailDto) => {
   if (!mapInstance.value || benefit.latitude == null || benefit.longitude == null) return
   mapInstance.value.flyTo({ center: [benefit.longitude, benefit.latitude], zoom: 16 })
-  const marker = markerManager.value.getMarker(`benefit-${benefit.benefitId}`)
-  if (marker) {
-    marker.togglePopup()
+
+  const markerId = `benefit-${benefit.benefitId}`
+  let marker = markerManager.value.getMarker(markerId)
+  if (!marker) {
+    marker = createBenefitMarker(
+      benefit.latitude,
+      benefit.longitude,
+      benefit.benefitName ?? '',
+      benefit.benefitDetail ?? '',
+      benefit.phoneNumber,
+      benefit.benefitUrl,
+      benefit.address
+    )
+    markerManager.value.addMarker(markerId, marker, mapInstance.value)
+    isBenefitMarkersVisible.value = true
   }
+  marker.togglePopup()
 }
 
 /** 候補リストのクリア */
