@@ -29,9 +29,9 @@
         <!-- 利用できる特典ページ -->
         <div class="sidebar-page" v-show="activeTab === 'users-benefit'">
           <AppUsersBenefit
-          :users-benefits="usersBenefits"
-          @show-benefit-on-map="handleShowBenefitOnMap"
-        />
+            :users-benefits="usersBenefits"
+            @show-benefit-on-map="handleShowBenefitOnMap"
+          />
         </div>
 
         <!-- 特典を探すページ -->
@@ -574,6 +574,7 @@ const handleShowBenefitOnMap = (benefit: BenefitDetailDto) => {
       benefit.address
     )
     markerManager.value.addMarker(markerId, marker, mapInstance.value)
+    isBenefitMarkersVisible.value = true
   }
   marker.togglePopup()
 }

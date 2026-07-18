@@ -26,7 +26,7 @@
               <AppCard
                 class="mb-3"
                 :hoverable="true"
-                @click="isShopBenefit(benefit) ? emit('show-benefit-on-map', benefit) : undefined"
+                @click="isShopBenefit(benefit) && emit('show-benefit-on-map', benefit)"
               >
                 <template #title>{{ benefit.benefitName }}</template>
                 <!-- 特典内容 -->
