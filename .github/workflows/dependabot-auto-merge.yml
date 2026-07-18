@@ -21,6 +21,16 @@ jobs:
       pull-requests: write
       contents: write
     steps:
+      - name: リリースノート除外ラベルを付与
+        run: |
+          gh pr edit "$PR_NUMBER" \
+            --add-label "依存関係,リリースノート除外" \
+            --repo "$REPO"
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Enable auto-merge
         run: gh pr merge --auto --squash "$PR_URL"
         env:
