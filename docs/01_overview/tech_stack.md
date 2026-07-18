@@ -12,7 +12,7 @@ graph TB
     end
 
     subgraph "Backend Layer"
-        E[Spring Boot 3]
+        E[Spring Boot 4]
         F[Doma 2]
         G[JWT認証]
     end
@@ -62,16 +62,16 @@ graph TB
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
 | Vue.js | 3.x | UIフレームワーク |
-| TypeScript | 6.x | 静的型付け |
-| Vue Router | 4.x | SPAルーティング |
-| Pinia | 2.x | 状態管理 |
+| TypeScript | 7.0.2 | 静的型付け |
+| Vue Router | 5.x | SPAルーティング |
+| Pinia | 3.x | 状態管理 |
 | Axios | 1.x | HTTP通信クライアント |
 | PrimeVue | 4.x | UIコンポーネントライブラリ |
 | MapLibre GL JS | 5.x | 地図表示 |
 | ESLint + Prettier | - | コード品質管理 |
 | Jest | 30.x | ユニットテスト |
 | Playwright | 1.x | E2Eテスト |
-| Storybook | 8.6.14 | コンポーネント開発・ドキュメント |
+| Storybook | 10.5.2 | コンポーネント開発・ドキュメント |
 | Vite | 8.x | ビルドツール |
 | npm | - | パッケージ管理 |
 
@@ -80,17 +80,17 @@ graph TB
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
 | Java | 21.0.6 (LTS) | 言語 |
-| Spring Boot | 3.3.5 | Webフレームワーク |
-| Doma 2 | 2.60.0 | O/Rマッパー |
-| jjwt | 0.12.6 | JWT認証 |
-| springdoc-openapi | 2.6.0 | OpenAPI仕様書（Swagger UI / ReDoc） |
+| Spring Boot | 4.1.0 | Webフレームワーク |
+| Doma 2 | 3.14.0 | O/Rマッパー |
+| jjwt | 0.13.0 | JWT認証 |
+| springdoc-openapi | 3.0.3 | OpenAPI仕様書（Swagger UI / ReDoc） |
 | Gradle | - | ビルドツール |
 
 ## データベース
 
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
-| PostgreSQL | 17.x（Neon） | リレーショナルDB |
+| PostgreSQL | 17.x（Supabase） | リレーショナルDB |
 
 ## 外部サービス
 
@@ -115,7 +115,7 @@ graph TB
 |----------|------|-----|
 | Vercel | フロントエンドホスティング | `https://www.kumamoto-henno-map.com` |
 | Render | バックエンド（Spring Boot）ホスティング | `https://api.kumamoto-henno-map.com` |
-| Neon | 本番データベース（PostgreSQL 17） | 外部接続（SSL必須） |
+| Supabase | 本番データベース（PostgreSQL 17） | 外部接続（SSL必須） |
 | Hetzner VPS | OpenTripPlannerサーバー（Nginx + SSL） | `https://otp.kumamoto-henno-map.com` |
 | Cloudflare | ドメイン管理・DNS | `kumamoto-henno-map.com` |
 

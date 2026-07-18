@@ -88,7 +88,7 @@ kumamoto_henno_map/
 
 **Doma 2パターン**: Entityqlとメタモデルクラスでタイプセーフクエリを記述。DAOは `@Dao` + `@ConfigAutowireable` を付与し、Entityqlを使うメソッドは `default` メソッドで実装。
 
-**認証**: Spring Security STATELESS + JWT Bearer Token（jjwt 0.12.6）。アクセストークン1時間・リフレッシュトークン30日（HttpOnly Cookie・DB管理・ローテーション）。
+**認証**: Spring Security STATELESS + JWT Bearer Token（jjwt 0.13.0）。アクセストークン1時間・リフレッシュトークン30日（HttpOnly Cookie・DB管理・ローテーション）。
 
 ### データベース
 

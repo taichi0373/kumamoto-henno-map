@@ -14,11 +14,11 @@
 
 | 変数名 | 説明 | 設定例 | 必須 |
 |--------|------|--------|------|
-| `DB_HOST` | NeonのDBホスト名 | `ep-xxx.ap-southeast-1.aws.neon.tech` | ✅ |
+| `DB_HOST` | SupabaseのDBホスト名 | `db.xxxxx.supabase.co` | ✅ |
 | `DB_PORT` | DBポート番号 | `5432` | ✅ |
-| `DB_NAME` | DB名 | `neondb` | ✅ |
-| `DB_USERNAME` | DBユーザー名 | `neondb_owner` | ✅ |
-| `DB_PASSWORD` | DBパスワード | Neonダッシュボードのパスワード | ✅ |
+| `DB_NAME` | DB名 | `postgres` | ✅ |
+| `DB_USERNAME` | DBユーザー名 | `postgres` | ✅ |
+| `DB_PASSWORD` | DBパスワード | Supabaseダッシュボードのパスワード | ✅ |
 | `DB_SSL_PARAMS` | SSL接続パラメータ | `?sslmode=require` | ✅ |
 | `JWT_SECRET` | JWTシークレットキー（32文字以上推奨） | ランダム文字列 | ✅ |
 | `CORS_ALLOWED_ORIGINS` | 許可するオリジン（カンマ区切り） | `https://www.kumamoto-henno-map.com` | ✅ |
@@ -37,21 +37,21 @@
 
 > **注意（SLACK_WEBHOOK_URL）**: 未設定の場合はSlack送信をスキップしてサーバーログにのみ出力します（サービス継続に影響なし）。Webhook URLはSlackアプリの管理画面 → **Incoming Webhooks** で発行してください。
 
-> **注意**: DBはNeon（サーバーレスPostgreSQL）を使用しています。NeonはSSL接続が必須のため `DB_SSL_PARAMS=?sslmode=require` を必ず設定してください。接続情報はNeonダッシュボード → **Connection Details** → **Connection string** から確認できます。
+> **注意**: DBはSupabase（PostgreSQL）を使用しています。SupabaseはSSL接続が必須のため `DB_SSL_PARAMS=?sslmode=require` を必ず設定してください。接続情報はSupabaseダッシュボード → **Project Settings** → **Database** → **Connection string** から確認できます。
 
-### Neon接続情報の確認方法
+### Supabase接続情報の確認方法
 
-Neonダッシュボード → **Connection Details** に表示される接続文字列から各変数を取り出す:
+Supabaseダッシュボード → **Project Settings** → **Database** に表示される接続文字列から各変数を取り出す:
 
 ```
-# Neonが表示する接続文字列（例）
-postgresql://neondb_owner:PASSWORD@ep-xxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+# Supabaseが表示する接続文字列（例）
+postgresql://postgres:PASSWORD@db.xxxxx.supabase.co:5432/postgres?sslmode=require
 
 # 各環境変数への対応
-DB_HOST     = ep-xxx.ap-southeast-1.aws.neon.tech
+DB_HOST     = db.xxxxx.supabase.co
 DB_PORT     = 5432
-DB_NAME     = neondb
-DB_USERNAME = neondb_owner
+DB_NAME     = postgres
+DB_USERNAME = postgres
 DB_PASSWORD = PASSWORD
 DB_SSL_PARAMS = ?sslmode=require
 ```
