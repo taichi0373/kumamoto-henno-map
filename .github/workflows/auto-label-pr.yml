@@ -1,0 +1,21 @@
+name: Auto Label PR
+
+on:
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  label:
+    name: リリースノート対象ラベルを付与
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: リリースノート対象ラベルを付与
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --add-label "リリースノート対象" \
+            --repo "${{ github.repository }}"
