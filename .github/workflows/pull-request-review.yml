@@ -3,10 +3,6 @@ name: Check on pull request
 on:
   pull_request:
     branches: ["develop", "main"]
-    paths:
-      - 'docs/**'
-      - 'apps/front/**'
-      - 'apps/back/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -52,3 +48,21 @@ jobs:
       contents: read
       pages: write
       id-token: write
+
+  # 全チェックの集約（常に実行・Rulesets の必須チェック用）
+  all-checks-passed:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [frontend-build, backend-build, document-build]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          results=("${{ needs.frontend-build.result }}" "${{ needs.backend-build.result }}" "${{ needs.document-build.result }}")
+          for result in "${results[@]}"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "A required job failed: $result"
+              exit 1
+            fi
+          done
+          echo "All checks passed or were skipped."

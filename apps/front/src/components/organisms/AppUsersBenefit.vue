@@ -23,7 +23,11 @@
         <Transition name="accordion">
           <div v-show="openCategories.has(group.categoryCd)" class="category-accordion__body">
             <template v-for="(benefit, index) in group.benefits" :key="benefit.benefitId ?? `benefit-${index}`">
-              <AppCard class="mb-3" :hoverable="true">
+              <AppCard
+                class="mb-3"
+                :hoverable="true"
+                @click="isShopBenefit(benefit) && emit('show-benefit-on-map', benefit)"
+              >
                 <template #title>{{ benefit.benefitName }}</template>
                 <!-- 特典内容 -->
                 <p>特典内容：{{ benefit.benefitDetail }}</p>
@@ -50,8 +54,8 @@
                     電話番号：{{ benefit.phoneNumber }}
                   </li>
                   <!-- 備考 -->
-                  <li v-if="benefit.note">
-                    <small>※{{ benefit.note }}</small>
+                  <li v-if="benefit.eligibilityNote">
+                    <small>※{{ benefit.eligibilityNote }}</small>
                   </li>
                 </ul>
                 <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
@@ -69,7 +73,7 @@ import { computed, ref, watch, onMounted } from 'vue'
 import AppCard from '@/components/atoms/AppCard.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
-import { BenefitDto } from '@/dto/benefitDto'
+import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 import { codeConstant } from '@/utils/codeConstant'
 import apiClient from '@/utils/api'
 
@@ -84,10 +88,15 @@ interface BenefitCategory {
 }
 
 const props = withDefaults(defineProps<{
-  usersBenefits?: BenefitDto[];
+  usersBenefits?: BenefitDetailDto[];
 }>(), {
   usersBenefits: () => [],
 });
+
+/** 店舗特典かつ座標ありの場合に地図連動を有効にする */
+const emit = defineEmits<{
+  (e: 'show-benefit-on-map', benefit: BenefitDetailDto): void
+}>()
 
 /** カテゴリリスト */
 const categories = ref<BenefitCategory[]>([])
@@ -102,7 +111,7 @@ const categoryMap = computed(() =>
 
 /** カテゴリ別にグループ化した特典リスト（displayOrder 昇順） */
 const groupedBenefits = computed(() => {
-  const groups = new Map<string, { categoryCd: string; categoryName: string; displayOrder: number; benefits: BenefitDto[] }>()
+  const groups = new Map<string, { categoryCd: string; categoryName: string; displayOrder: number; benefits: BenefitDetailDto[] }>()
   for (const benefit of props.usersBenefits) {
     const cd = benefit.categoryCd ?? 'OTHER'
     if (!groups.has(cd)) {
@@ -150,6 +159,12 @@ const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string 
   }
   return ''
 }
+
+/** 店舗特典かつ座標ありの場合に true を返す（地図連動クリック判定） */
+const isShopBenefit = (benefit: BenefitDetailDto): boolean =>
+  benefit.categoryCd === codeConstant.CATEGORY_CD.SHOP
+  && benefit.latitude != null
+  && benefit.longitude != null
 
 /** アコーディオンの開閉を切り替える */
 const toggleCategory = (cd: string) => {

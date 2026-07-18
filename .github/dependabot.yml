@@ -7,8 +7,9 @@ updates:
       interval: "weekly"
     target-branch: "develop"
     labels:
-      - "dependencies"
-      - "frontend"
+      - "依存関係"
+      - "フロントエンド"
+      - "リリースノート除外"
     open-pull-requests-limit: 10
 
   # バックエンド（Gradle）
@@ -18,8 +19,9 @@ updates:
       interval: "weekly"
     target-branch: "develop"
     labels:
-      - "dependencies"
-      - "backend"
+      - "依存関係"
+      - "バックエンド"
+      - "リリースノート除外"
     open-pull-requests-limit: 10
 
   # GitHub Actions
@@ -29,6 +31,7 @@ updates:
       interval: "weekly"
     target-branch: "develop"
     labels:
-      - "dependencies"
-      - "ci"
+      - "依存関係"
+      - "CI/CD"
+      - "リリースノート除外"
     open-pull-requests-limit: 10

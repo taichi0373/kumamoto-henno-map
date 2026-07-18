@@ -113,16 +113,16 @@ jobs:
               --state merged \
               --search "merged:>=${SINCE}" \
               --limit 100 \
-              --json number,title,author \
-              --jq '[.[] | select(.author.login != "dependabot[bot]") | "- " + .title + " (#" + (.number | tostring) + ")"] | reverse | .[]')
+              --json number,title,labels \
+              --jq '[.[] | select(.labels | map(.name) | index("リリースノート除外") == null) | "- " + .title + " (#" + (.number | tostring) + ")"] | reverse | .[]')
           else
             PRS=$(gh pr list \
               --repo "${{ github.repository }}" \
               --base develop \
               --state merged \
               --limit 100 \
-              --json number,title,author \
-              --jq '[.[] | select(.author.login != "dependabot[bot]") | "- " + .title + " (#" + (.number | tostring) + ")"] | reverse | .[]')
+              --json number,title,labels \
+              --jq '[.[] | select(.labels | map(.name) | index("リリースノート除外") == null) | "- " + .title + " (#" + (.number | tostring) + ")"] | reverse | .[]')
           fi
 
           {
