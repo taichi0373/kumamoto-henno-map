@@ -17,11 +17,19 @@
   margin-bottom: 8px;
 }
 
+.form-row-sidebar-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 8px;
+  margin-bottom: 8px;
+}
+
 /* フォーム列レイアウト */
 .form-col {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 /* フォームボタンレイアウト */

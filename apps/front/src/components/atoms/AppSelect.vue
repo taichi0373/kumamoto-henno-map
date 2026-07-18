@@ -159,6 +159,12 @@ const computedFilterFields = computed<string[] | undefined>(() => {
   height: base.$input-height;
 }
 
+.p-field :deep(.p-select-label) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .p-field :deep(.p-select:not(:disabled).p-focus) {
   border-color: base.$base-500;
 }
