@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-   <form class="p-2" @submit.prevent="searchBenefits(searchBenefit)">
+   <form @submit.prevent="searchBenefits(searchBenefit)">
       <div class="form-row-1">
         <div class="form-col form-col--wide">
           <AppLabel :id="'keyword'">フリーワード</AppLabel>
@@ -8,7 +8,7 @@
              :placeholder="'商品券'" />
         </div>
       </div>
-      <div class="form-row-2 mt-4">
+      <div class="form-row-sidebar-2 mt-4">
         <div class="form-col">
           <AppLabel :id="'category'">カテゴリ</AppLabel>
           <AppSelect :input-id="'category'" v-model="searchBenefit.categoryCd"
@@ -20,7 +20,7 @@
             :placeholder="''" />
         </div>
       </div>
-      <div class="form-row-2 mt-4">
+      <div class="form-row-sidebar-2 mt-4">
         <div class="form-col">
           <AppLabel :id="'license-status'">運転免許の所持状況</AppLabel>
           <AppSelect :input-id="'license-status'" v-model="searchBenefit.licenseStatus" :options="licenseOptions"
