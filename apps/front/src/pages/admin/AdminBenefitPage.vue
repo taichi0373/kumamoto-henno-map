@@ -57,11 +57,24 @@
           />
         </div>
       </template>
+      <Column field="lastConfirmedDate" header="最終確認日" sortable style="min-width: 130px">
+        <template #body="{ data }">
+          <span :class="getAdminLastConfirmedClass(data.lastConfirmedDate)">
+            {{ data.lastConfirmedDate ?? '未確認' }}
+          </span>
+        </template>
+      </Column>
       <Column field="actions" header="操作">
         <template #body="{ data }">
           <div class="action-buttons">
             <AppButton label="編集" icon="pi pi-pencil" @click="openEditDialog(data as BenefitAdminDto)" />
             <AppButton label="削除" icon="pi pi-trash" @click="openDeleteDialog(data as BenefitAdminDto)" />
+            <AppButton
+              label="確認済み"
+              severity="secondary"
+              size="small"
+              @click="confirmBenefit(data.benefitId)"
+            />
           </div>
         </template>
       </Column>
@@ -469,6 +482,29 @@ const importCSV = async () => {
   }
 }
 
+/**
+ * 特典を確認済みとしてマークする
+ */
+const confirmBenefit = async (benefitId: string) => {
+  try {
+    await apiClient.post(`/admin/benefits/${benefitId}/confirm`, {});
+    ToastMessageUtils.success('確認済みとしてマークしました');
+    await fetchItems(page.value);
+  } catch {
+    ToastMessageUtils.error('確認処理に失敗しました');
+  }
+};
+
+/**
+ * 管理画面用の最終確認日CSSクラス
+ */
+const getAdminLastConfirmedClass = (date: string | null | undefined): string => {
+  if (!date) return 'text-secondary';
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  return new Date(date) < sixMonthsAgo ? 'text-warning' : '';
+};
+
 /** ジオコーディング実行 */
 const executeGeocode = async () => {
   isGeocoding.value = true
@@ -613,5 +649,10 @@ onMounted(() => fetchItems(0))
     font-size: 0.875rem;
     cursor: pointer;
   }
+}
+
+.text-warning {
+  color: #e67e22;
+  font-weight: bold;
 }
 </style>

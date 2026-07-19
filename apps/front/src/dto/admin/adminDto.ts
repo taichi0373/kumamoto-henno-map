@@ -45,6 +45,8 @@ export interface BenefitAdminDto {
   latitude: number | null
   /** 経度 */
   longitude: number | null
+  /** 最終確認日 */
+  lastConfirmedDate: string | null
   /** 作成日時 */
   sysCreatedAt: string | null
   /** 更新日時 */
