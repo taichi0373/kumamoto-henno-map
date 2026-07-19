@@ -102,6 +102,13 @@
                     </li>
                   </ul>
                   <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+                  <!-- 情報報告ボタン -->
+                  <AppButton
+                    label="情報を報告"
+                    :primary="false"
+                    size="small"
+                    @click.stop="openReportDialog(benefit)"
+                  />
                 </AppCard>
               </template>
             </div>
@@ -144,11 +151,40 @@
               </li>
             </ul>
             <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+            <!-- 情報報告ボタン -->
+            <AppButton
+              label="情報を報告"
+              :primary="false"
+              @click.stop="openReportDialog(benefit)"
+            />
           </AppCard>
         </template>
       </template>
     </div>
   </div>
+
+  <!-- 情報報告確認ダイアログ -->
+  <AppDialog
+    v-model="isReportDialogVisible"
+    header="情報を報告"
+    :modal="true"
+  >
+    <p>「{{ reportTarget?.benefitName }}」の情報に誤りがありますか？</p>
+    <p>管理者に報告します。</p>
+    <template #footer>
+      <AppButton
+        label="キャンセル"
+        :primary="false"
+        @click="isReportDialogVisible = false"
+      />
+      <AppButton
+        label="報告する"
+        :primary="true"
+        :loading="isReporting"
+        @click="submitReport"
+      />
+    </template>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
@@ -163,6 +199,7 @@ import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
 import AppProgressSpinner from '@/components/atoms/AppProgressSpinner.vue'
+import AppDialog from '@/components/atoms/AppDialog.vue'
 import apiClient from '@/utils/api'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
@@ -209,6 +246,13 @@ const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.OTHER]: 'その他',
 }
 const licenseOptions = ref([]) as Ref<SelectDto[]>
+
+/** 報告ダイアログの表示状態 */
+const isReportDialogVisible = ref(false)
+/** 報告対象の特典 */
+const reportTarget = ref<BenefitDetailDto | null>(null)
+/** 報告送信中フラグ */
+const isReporting = ref(false)
 
 /** カテゴリ別にグループ化した検索結果（displayOrder 昇順） */
 const groupedBenefitResults = computed(() => {
@@ -344,6 +388,27 @@ const toggleCategory = (cd: string) => {
   }
   /** Set の変更を Vue に検知させるため再代入 */
   openCategories.value = new Set(openCategories.value)
+}
+
+/** 報告ダイアログを開く */
+const openReportDialog = (benefit: BenefitDetailDto) => {
+  reportTarget.value = benefit
+  isReportDialogVisible.value = true
+}
+
+/** 報告を送信する */
+const submitReport = async () => {
+  if (!reportTarget.value) return
+  isReporting.value = true
+  try {
+    await apiClient.post(`/benefit/${reportTarget.value.benefitId}/report`, {})
+    ToastMessageUtils.success('報告を送信しました。ご協力ありがとうございます')
+    isReportDialogVisible.value = false
+  } catch {
+    ToastMessageUtils.error('報告の送信に失敗しました')
+  } finally {
+    isReporting.value = false
+  }
 }
 
 // 初期表示
