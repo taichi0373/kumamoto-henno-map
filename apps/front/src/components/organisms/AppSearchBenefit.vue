@@ -33,8 +33,17 @@
       </div>
       <div class="form-row-1 mt-4">
         <div class="form-col form-col--wide">
-          <AppLabel :id="'radius'">現在地からの距離（km）</AppLabel>
-          <AppNumberField :input-id="'radius'" v-model="searchBenefit.radiusKm" :min="0" :placeholder="'例: 2'" />
+          <AppLabel :id="'radius'">
+            現在地からの距離：
+            <span class="radius-value">{{ radiusLabel }}</span>
+          </AppLabel>
+          <AppSlider
+            input-id="radius"
+            v-model="radiusKmValue"
+            :min="0"
+            :max="20"
+            :step="1"
+          />
         </div>
       </div>
       <div class="form-btn">
@@ -168,6 +177,7 @@ import AppCard from '@/components/atoms/AppCard.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
+import AppSlider from '@/components/atoms/AppSlider.vue'
 import AppProgressSpinner from '@/components/atoms/AppProgressSpinner.vue'
 import apiClient from '@/utils/api'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
@@ -235,6 +245,19 @@ const groupedBenefitResults = computed(() => {
   }
   return Array.from(groups.values()).sort((a, b) => a.displayOrder - b.displayOrder)
 })
+
+/** スライダー値（0 = 距離指定なし、1〜20 = 実際のkm） */
+const radiusKmValue = computed({
+  get: () => searchBenefit.value.radiusKm ?? 0,
+  set: (value: number) => {
+    searchBenefit.value.radiusKm = value === 0 ? undefined : value
+  },
+})
+
+/** 距離ラベル表示文言 */
+const radiusLabel = computed(() =>
+  radiusKmValue.value === 0 ? '距離指定なし' : `${radiusKmValue.value} km 以内`
+)
 
 // カテゴリデータを取得
 const getCategories = async () => {
@@ -451,5 +474,10 @@ onMounted(() => {
 .accordion-enter-from,
 .accordion-leave-to {
   opacity: 0;
+}
+
+.radius-value {
+  font-weight: normal;
+  color: base.$text-secondary;
 }
 </style>
