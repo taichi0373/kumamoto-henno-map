@@ -13,7 +13,6 @@ import maplibreglWorkerUrl from 'maplibre-gl/dist/maplibre-gl-csp-worker?url'
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
 import Ripple from 'primevue/ripple'
-import BadgeDirective from 'primevue/badgedirective'
 import Aura from '@primevue/themes/aura'
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
@@ -60,7 +59,6 @@ setWorkerUrl(maplibreglWorkerUrl)
     })
     app.use(ToastService)
     app.directive('ripple', Ripple)
-    app.directive('badge', BadgeDirective)
 
     app.mount('#app')
   })()
