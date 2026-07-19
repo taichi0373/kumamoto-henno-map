@@ -99,6 +99,11 @@ def main() -> None:
     )
     parser.add_argument('pdf_path', help='抽出するPDFファイルのパス')
     parser.add_argument(
+        '--force',
+        action='store_true',
+        help='出力ファイルが既に存在する場合でも上書きする'
+    )
+    parser.add_argument(
         '-o', '--output',
         default='output.txt',
         help='出力ファイルパス（デフォルト: output.txt）'
@@ -106,8 +111,16 @@ def main() -> None:
     args = parser.parse_args()
 
     pdf_path = Path(args.pdf_path)
-    if not pdf_path.exists():
-        print(f'エラー: ファイルが見つかりません: {args.pdf_path}', file=sys.stderr)
+    if not pdf_path.is_file():
+        print(f'エラー: 有効なPDFファイルではありません: {args.pdf_path}', file=sys.stderr)
+        sys.exit(1)
+
+    output_path_obj = Path(args.output)
+    if output_path_obj.exists() and not args.force:
+        print(
+            f'エラー: {args.output} は既に存在します。--force オプションで上書きできます。',
+            file=sys.stderr
+        )
         sys.exit(1)
 
     print(f'PDFを読み込み中: {args.pdf_path}')

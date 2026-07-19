@@ -64,3 +64,27 @@ def test_空ページを無視する():
     result = remove_noise(pages)
     assert '特典A' in result
     assert '特典B' in result
+
+
+def test_extract_text_from_pdf_がページテキストのリストを返す():
+    """extract_text_from_pdfがページごとのテキストリストを返すこと"""
+    from unittest.mock import patch, MagicMock
+    from extract_pdf import extract_text_from_pdf
+
+    mock_page1 = MagicMock()
+    mock_page1.extract_text.return_value = 'ページ1のテキスト'
+    mock_page2 = MagicMock()
+    mock_page2.extract_text.return_value = 'ページ2のテキスト'
+    mock_page3 = MagicMock()
+    mock_page3.extract_text.return_value = None  # 空ページ
+
+    mock_pdf = MagicMock()
+    mock_pdf.__enter__ = MagicMock(return_value=mock_pdf)
+    mock_pdf.__exit__ = MagicMock(return_value=False)
+    mock_pdf.pages = [mock_page1, mock_page2, mock_page3]
+
+    with patch('extract_pdf.pdfplumber.open', return_value=mock_pdf):
+        result = extract_text_from_pdf('dummy.pdf')
+
+    assert result == ['ページ1のテキスト', 'ページ2のテキスト', '']
+    assert len(result) == 3
