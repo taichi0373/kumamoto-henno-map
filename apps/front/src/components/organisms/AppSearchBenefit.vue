@@ -34,12 +34,10 @@
       <div class="form-btn">
         <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
         <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
-      </div>
-      <!-- 現在地周辺フィルターボタン -->
-      <div class="form-btn mt-2">
+        <!-- 現在地周辺フィルターボタン -->
         <AppButton
           label="現在地周辺"
-          severity="secondary"
+          :primary="false"
           icon="pi pi-map-marker"
           @click="filterByCurrentLocation"
         />
