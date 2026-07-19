@@ -21,6 +21,12 @@ jobs:
       pull-requests: write
       contents: write
     steps:
+      - name: Dependabotメタデータを取得
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: リリースノート除外ラベルを付与
         run: |
           gh pr edit "$PR_NUMBER" \
@@ -31,8 +37,24 @@ jobs:
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Enable auto-merge
+      # patch / minor のみ auto-merge（major は破壊的変更の可能性があるため人間がレビュー）
+      - name: Enable auto-merge（patch / minor のみ）
+        if: >
+          steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.metadata.outputs.update-type == 'version-update:semver-minor'
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # major バージョンアップはレビュー待ちラベルを付与してスキップ
+      - name: major バージョンアップにレビュー要求ラベルを付与
+        if: steps.metadata.outputs.update-type == 'version-update:semver-major'
+        run: |
+          gh pr edit "$PR_NUMBER" \
+            --add-label "要レビュー" \
+            --repo "$REPO"
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

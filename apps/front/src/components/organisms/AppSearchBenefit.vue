@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-   <form @submit.prevent="searchBenefits(searchBenefit)">
+   <form @submit.prevent="searchBenefits()">
       <div class="form-row-1">
         <div class="form-col form-col--wide">
           <AppLabel :id="'keyword'">フリーワード</AppLabel>
@@ -29,6 +29,21 @@
         <div class="form-col">
           <AppLabel :id="'age'">年齢</AppLabel>
           <AppNumberField :input-id="'age'" v-model="searchBenefit.age" :max="999" :placeholder="''" />
+        </div>
+      </div>
+      <div class="form-row-1 mt-4">
+        <div class="form-col form-col--wide">
+          <AppLabel :id="'radius'">
+            現在地からの距離：
+            <span class="radius-value">{{ radiusLabel }}</span>
+          </AppLabel>
+          <AppSlider
+            input-id="radius"
+            v-model="radiusKmValue"
+            :min="0"
+            :max="10"
+            :step="1"
+          />
         </div>
       </div>
       <div class="form-btn">
@@ -102,6 +117,19 @@
                     </li>
                   </ul>
                   <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+                  <!-- 最終確認日 -->
+                  <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+                    最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+                  </div>
+                  <!-- 情報報告ボタン -->
+                  <div class="report-btn">
+                    <AppButton
+                      label="情報を報告"
+                      :primary="false"
+                      size="small"
+                      @click.stop="openReportDialog(benefit)"
+                    />
+                  </div>
                 </AppCard>
               </template>
             </div>
@@ -144,11 +172,47 @@
               </li>
             </ul>
             <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+            <!-- 最終確認日 -->
+            <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+              最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+            </div>
+            <!-- 情報報告ボタン -->
+            <div class="report-btn">
+              <AppButton
+                label="情報を報告"
+                :primary="false"
+                size="small"
+                @click.stop="openReportDialog(benefit)"
+              />
+            </div>
           </AppCard>
         </template>
       </template>
     </div>
   </div>
+
+  <!-- 情報報告確認ダイアログ -->
+  <AppDialog
+    v-model="isReportDialogVisible"
+    header="情報を報告"
+    :modal="true"
+  >
+    <p>「{{ reportTarget?.benefitName }}」の情報に誤りがありますか？</p>
+    <p>管理者に報告します。</p>
+    <template #footer>
+      <AppButton
+        label="キャンセル"
+        :primary="false"
+        @click="isReportDialogVisible = false"
+      />
+      <AppButton
+        label="報告する"
+        :primary="true"
+        :loading="isReporting"
+        @click="submitReport"
+      />
+    </template>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
@@ -162,7 +226,9 @@ import AppCard from '@/components/atoms/AppCard.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
+import AppSlider from '@/components/atoms/AppSlider.vue'
 import AppProgressSpinner from '@/components/atoms/AppProgressSpinner.vue'
+import AppDialog from '@/components/atoms/AppDialog.vue'
 import apiClient from '@/utils/api'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
@@ -210,6 +276,13 @@ const licenseStatusLabels = {
 }
 const licenseOptions = ref([]) as Ref<SelectDto[]>
 
+/** 報告ダイアログの表示状態 */
+const isReportDialogVisible = ref(false)
+/** 報告対象の特典 */
+const reportTarget = ref<BenefitDetailDto | null>(null)
+/** 報告送信中フラグ */
+const isReporting = ref(false)
+
 /** カテゴリ別にグループ化した検索結果（displayOrder 昇順） */
 const groupedBenefitResults = computed(() => {
   const groups = new Map<string, {
@@ -229,6 +302,19 @@ const groupedBenefitResults = computed(() => {
   }
   return Array.from(groups.values()).sort((a, b) => a.displayOrder - b.displayOrder)
 })
+
+/** スライダー値（0 = 距離指定なし、1〜20 = 実際のkm） */
+const radiusKmValue = computed({
+  get: () => searchBenefit.value.radiusKm ?? 0,
+  set: (value: number) => {
+    searchBenefit.value.radiusKm = value === 0 ? undefined : value
+  },
+})
+
+/** 距離ラベル表示文言 */
+const radiusLabel = computed(() =>
+  radiusKmValue.value === 0 ? '距離指定なし' : `${radiusKmValue.value} km 以内`
+)
 
 // カテゴリデータを取得
 const getCategories = async () => {
@@ -279,15 +365,40 @@ const getLicenseStatusName = (code: string) => {
 }
 
 // 特典検索API呼び出し
-const searchBenefits = async (conditions: SearchBenefitDto) => {
+const searchBenefits = async () => {
+  // 距離が指定されている場合、GPS位置情報を取得してから検索
+  if (searchBenefit.value.radiusKm) {
+    if (!navigator.geolocation) {
+      ToastMessageUtils.error('このブラウザはGPS位置情報に対応していません')
+      return
+    }
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject)
+      })
+      searchBenefit.value.latitude = position.coords.latitude
+      searchBenefit.value.longitude = position.coords.longitude
+    } catch {
+      ToastMessageUtils.error('位置情報の取得に失敗しました。ブラウザの設定で位置情報の使用を許可してください')
+      return
+    }
+  } else {
+    searchBenefit.value.latitude = undefined
+    searchBenefit.value.longitude = undefined
+  }
+
   isLoading.value = true
   hasSearched.value = true
+  const conditions = searchBenefit.value
   const requestData = {
     age: conditions.age,
     licenseStatus: conditions.licenseStatus,
     municipalityCd: conditions.address,
     keyword: conditions.keyword,
     categoryCd: conditions.categoryCd,
+    latitude: conditions.latitude,
+    longitude: conditions.longitude,
+    radiusKm: conditions.radiusKm,
   }
 
   try {
@@ -313,6 +424,9 @@ const searchBenefits = async (conditions: SearchBenefitDto) => {
 // 条件クリア
 const clearConditions = () => {
   searchBenefit.value = new SearchBenefitDto()
+  searchBenefit.value.latitude = undefined
+  searchBenefit.value.longitude = undefined
+  searchBenefit.value.radiusKm = undefined
   benefitResults.value = []
   hasSearched.value = false
   openCategories.value = new Set()
@@ -335,6 +449,30 @@ const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string 
   return ''
 }
 
+/**
+ * 最終確認日のCSSクラスを返す（半年以上前: 警告色）
+ */
+const getLastConfirmedClass = (date: string | null | undefined): string => {
+  if (!date) return 'last-confirmed--unknown';
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  return new Date(date) < sixMonthsAgo
+    ? 'last-confirmed--warning'
+    : 'last-confirmed--normal';
+};
+
+/**
+ * 最終確認日を日本語形式でフォーマットする
+ */
+const formatLastConfirmedDate = (date: string | null | undefined): string => {
+  if (!date) return '未確認';
+  return new Date(date).toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 /** アコーディオンの開閉を切り替える */
 const toggleCategory = (cd: string) => {
   if (openCategories.value.has(cd)) {
@@ -344,6 +482,27 @@ const toggleCategory = (cd: string) => {
   }
   /** Set の変更を Vue に検知させるため再代入 */
   openCategories.value = new Set(openCategories.value)
+}
+
+/** 報告ダイアログを開く */
+const openReportDialog = (benefit: BenefitDetailDto) => {
+  reportTarget.value = benefit
+  isReportDialogVisible.value = true
+}
+
+/** 報告を送信する */
+const submitReport = async () => {
+  if (!reportTarget.value) return
+  isReporting.value = true
+  try {
+    await apiClient.post(`/benefit/${reportTarget.value.benefitId}/report`, {})
+    ToastMessageUtils.success('報告を送信しました。ご協力ありがとうございます')
+    isReportDialogVisible.value = false
+  } catch {
+    ToastMessageUtils.error('報告の送信に失敗しました')
+  } finally {
+    isReporting.value = false
+  }
 }
 
 // 初期表示
@@ -416,5 +575,34 @@ onMounted(() => {
 .accordion-enter-from,
 .accordion-leave-to {
   opacity: 0;
+}
+
+.radius-value {
+  font-weight: normal;
+  color: base.$text-secondary;
+}
+
+.report-btn {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.last-confirmed {
+  font-size: 0.8rem;
+  margin-top: 4px;
+
+  &--normal {
+    color: base.$text-secondary;
+  }
+
+  &--warning {
+    color: #e67e22;
+    font-weight: bold;
+  }
+
+  &--unknown {
+    color: base.$text-secondary;
+  }
 }
 </style>
