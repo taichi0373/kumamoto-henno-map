@@ -31,6 +31,21 @@
           <AppNumberField :input-id="'age'" v-model="searchBenefit.age" :max="999" :placeholder="''" />
         </div>
       </div>
+      <div class="form-row-1 mt-4">
+        <div class="form-col form-col--wide">
+          <AppLabel :id="'radius'">
+            現在地からの距離：
+            <span class="radius-value">{{ radiusLabel }}</span>
+          </AppLabel>
+          <AppSlider
+            input-id="radius"
+            v-model="radiusKmValue"
+            :min="0"
+            :max="10"
+            :step="1"
+          />
+        </div>
+      </div>
       <div class="form-btn">
         <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
         <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
@@ -215,6 +230,7 @@ import AppCard from '@/components/atoms/AppCard.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
+import AppSlider from '@/components/atoms/AppSlider.vue'
 import AppProgressSpinner from '@/components/atoms/AppProgressSpinner.vue'
 import AppDialog from '@/components/atoms/AppDialog.vue'
 import apiClient from '@/utils/api'
@@ -291,6 +307,19 @@ const groupedBenefitResults = computed(() => {
   return Array.from(groups.values()).sort((a, b) => a.displayOrder - b.displayOrder)
 })
 
+/** スライダー値（0 = 距離指定なし、1〜20 = 実際のkm） */
+const radiusKmValue = computed({
+  get: () => searchBenefit.value.radiusKm ?? 0,
+  set: (value: number) => {
+    searchBenefit.value.radiusKm = value === 0 ? undefined : value
+  },
+})
+
+/** 距離ラベル表示文言 */
+const radiusLabel = computed(() =>
+  radiusKmValue.value === 0 ? '距離指定なし' : `${radiusKmValue.value} km 以内`
+)
+
 // カテゴリデータを取得
 const getCategories = async () => {
   try {
@@ -341,6 +370,27 @@ const getLicenseStatusName = (code: string) => {
 
 // 特典検索API呼び出し
 const searchBenefits = async () => {
+  // 距離が指定されている場合、GPS位置情報を取得してから検索
+  if (searchBenefit.value.radiusKm) {
+    if (!navigator.geolocation) {
+      ToastMessageUtils.error('このブラウザはGPS位置情報に対応していません')
+      return
+    }
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject)
+      })
+      searchBenefit.value.latitude = position.coords.latitude
+      searchBenefit.value.longitude = position.coords.longitude
+    } catch {
+      ToastMessageUtils.error('位置情報の取得に失敗しました。ブラウザの設定で位置情報の使用を許可してください')
+      return
+    }
+  } else {
+    searchBenefit.value.latitude = undefined
+    searchBenefit.value.longitude = undefined
+  }
+
   isLoading.value = true
   hasSearched.value = true
   const conditions = searchBenefit.value
@@ -385,29 +435,6 @@ const clearConditions = () => {
   hasSearched.value = false
   openCategories.value = new Set()
   emit('clear-benefit-markers')
-}
-
-/**
- * 現在地を取得して周辺2km以内の特典を検索する
- */
-const filterByCurrentLocation = () => {
-  if (!navigator.geolocation) {
-    ToastMessageUtils.error('このブラウザはGPS位置情報に対応していません')
-    return
-  }
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      searchBenefit.value.latitude = position.coords.latitude
-      searchBenefit.value.longitude = position.coords.longitude
-      searchBenefit.value.radiusKm = 2.0
-      searchBenefits()
-    },
-    () => {
-      ToastMessageUtils.error(
-        '位置情報の取得に失敗しました。ブラウザの設定で位置情報の使用を許可してください'
-      )
-    }
-  )
 }
 
 /** 対象年齢の表示用文言を組み立て */
@@ -552,6 +579,11 @@ onMounted(() => {
 .accordion-enter-from,
 .accordion-leave-to {
   opacity: 0;
+}
+
+.radius-value {
+  font-weight: normal;
+  color: base.$text-secondary;
 }
 
 .last-confirmed {
