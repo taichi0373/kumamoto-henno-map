@@ -71,6 +71,7 @@
 | ADDRESS | VARCHAR(200) | | | | 住所 |
 | LATITUDE | NUMERIC(10,7) | | | | 緯度 |
 | LONGITUDE | NUMERIC(10,7) | | | | 経度 |
+| LAST_CONFIRMED_DATE | DATE | | | | 情報確認日 |
 | SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
 | SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
 

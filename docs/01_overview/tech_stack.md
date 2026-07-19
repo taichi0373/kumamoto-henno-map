@@ -66,7 +66,7 @@ graph TB
 | Vue Router | 5.x | SPAルーティング |
 | Pinia | 4.x | 状態管理 |
 | Axios | 1.x | HTTP通信クライアント |
-| PrimeVue | 5.x | UIコンポーネントライブラリ |
+| PrimeVue | 4.5.5 | UIコンポーネントライブラリ |
 | MapLibre GL JS | 5.x | 地図表示 |
 | ESLint + Prettier | - | コード品質管理 |
 | Jest | 30.x | ユニットテスト |
