@@ -390,8 +390,7 @@ const importCSV = async () => {
     ToastMessageUtils.success(`インポート完了: 登録 ${result?.inserted ?? 0} 件`)
     closeImportDialog()
     await fetchItems(page.value)
-  } catch (error: unknown) {
-    const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+  } catch {
     ToastMessageUtils.error('登録に失敗しました')
   } finally {
     isImporting.value = false

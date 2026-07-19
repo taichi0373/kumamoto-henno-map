@@ -406,8 +406,7 @@ const importCSV = async () => {
     )
     closeImportDialog()
     await fetchItems(page.value)
-  } catch (error: unknown) {
-    const msg = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+  } catch {
     ToastMessageUtils.error('登録に失敗しました')
   } finally {
     isImporting.value = false

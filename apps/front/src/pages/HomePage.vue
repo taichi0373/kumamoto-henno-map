@@ -97,7 +97,6 @@
 <script setup lang="ts">
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
 import AppSearchBenefit from '@/components/organisms/AppSearchBenefit.vue'
@@ -125,9 +124,6 @@ import { TypeConvertUtils } from '@/utils/typeConvertUtils'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
 import { API_RESPONSE_MESSAGE, GEOLOCATION_MESSAGE } from '@/utils/messageConstant'
-
-/** ルーター */
-const router = useRouter()
 
 /** nominatim api url */
 const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org'
@@ -323,7 +319,7 @@ const handleSearchRoute = async (routeRequest: RouteRequestDto) => {
       addRouteLines([])
       ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
     }
-  } catch (error) {
+  } catch {
     addRouteLines([])
     ToastMessageUtils.error(API_RESPONSE_MESSAGE.ROUTE_SEARCH_FAILED)
   } finally {
