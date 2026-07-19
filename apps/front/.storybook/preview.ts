@@ -8,7 +8,6 @@ import { createPinia } from 'pinia';
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'
 import Ripple from 'primevue/ripple'
-import BadgeDirective from 'primevue/badgedirective'
 import Aura from '@primevue/themes/aura'
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
@@ -34,7 +33,6 @@ setup((app) => {
   app.use(PrimeVue, { ripple: true, theme: { preset: Aura } })
   app.use(ToastService)
   app.directive('ripple', Ripple);
-  app.directive('badge', BadgeDirective);
 });
 
 const preview: Preview = {
