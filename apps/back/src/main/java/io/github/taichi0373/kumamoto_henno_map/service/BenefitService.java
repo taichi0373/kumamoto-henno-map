@@ -1,6 +1,7 @@
 package io.github.taichi0373.kumamoto_henno_map.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -92,6 +93,16 @@ public class BenefitService {
                     return dto;
                 })
                 .toList();
+    }
+
+    /**
+     * 特典IDで特典詳細を取得する
+     *
+     * @param benefitId 特典ID
+     * @return 特典詳細（存在しない場合は空のOptional）
+     */
+    public Optional<BenefitDetailEntity> getBenefitById(String benefitId) {
+        return benefitDetailDao.selectByBenefitId(benefitId).stream().findFirst();
     }
 
     /**

@@ -1,6 +1,7 @@
 package io.github.taichi0373.kumamoto_henno_map.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.BenefitListResponse;
 import io.github.taichi0373.kumamoto_henno_map.security.CustomUserDetails;
 import io.github.taichi0373.kumamoto_henno_map.service.BenefitService;
+import io.github.taichi0373.kumamoto_henno_map.service.FeedbackService;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitDetailEntity;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -44,6 +46,12 @@ public class BenefitController {
      */
     @Autowired
     private BenefitService benefitService;
+
+    /**
+     * フィードバックサービス
+     */
+    @Autowired
+    private FeedbackService feedbackService;
 
     /**
      * 座標データを持つ特典を全件取得（マーカー表示用）
@@ -105,6 +113,37 @@ public class BenefitController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("特典検索中にエラーが発生しました"));
+        }
+    }
+
+    /**
+     * 特典情報の誤りを報告する
+     *
+     * @param benefitId 報告対象の特典ID
+     * @return 処理結果
+     */
+    @Operation(summary = "特典情報の誤り報告", description = "特典情報の誤りを管理者にSlack通知で報告する。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "報告成功",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "特典が見つからない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @PostMapping("/{benefitId}/report")
+    public ResponseEntity<ApiResponseDto<Void>> reportBenefit(@PathVariable String benefitId) {
+        try {
+            Optional<BenefitDetailEntity> benefit = benefitService.getBenefitById(benefitId);
+            if (benefit.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponseDto.error("特典が見つかりません: " + benefitId));
+            }
+            feedbackService.sendBenefitReport(benefitId, benefit.get().getBenefitName());
+            return ResponseEntity.ok(ApiResponseDto.success(null));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(ApiResponseDto.error("報告の送信に失敗しました"));
         }
     }
 
