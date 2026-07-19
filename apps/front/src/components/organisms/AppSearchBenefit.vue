@@ -122,12 +122,14 @@
                     最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
                   </div>
                   <!-- 情報報告ボタン -->
-                  <AppButton
-                    label="情報を報告"
-                    :primary="false"
-                    size="small"
-                    @click.stop="openReportDialog(benefit)"
-                  />
+                  <div class="report-btn">
+                    <AppButton
+                      label="情報を報告"
+                      :primary="false"
+                      size="small"
+                      @click.stop="openReportDialog(benefit)"
+                    />
+                  </div>
                 </AppCard>
               </template>
             </div>
@@ -175,11 +177,14 @@
               最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
             </div>
             <!-- 情報報告ボタン -->
-            <AppButton
-              label="情報を報告"
-              :primary="false"
-              @click.stop="openReportDialog(benefit)"
-            />
+            <div class="report-btn">
+              <AppButton
+                label="情報を報告"
+                :primary="false"
+                size="small"
+                @click.stop="openReportDialog(benefit)"
+              />
+            </div>
           </AppCard>
         </template>
       </template>
@@ -575,6 +580,12 @@ onMounted(() => {
 .radius-value {
   font-weight: normal;
   color: base.$text-secondary;
+}
+
+.report-btn {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
 }
 
 .last-confirmed {

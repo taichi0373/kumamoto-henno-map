@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
-  (e: 'click'): void;
+  (e: 'click', event: MouseEvent): void;
 }>();
 
 const modelValue = computed(() => {
@@ -45,8 +45,8 @@ const classes = computed(() => ({
   "p-app-button-primary": props.primary,
 }));
 
-const onClick = () => {
-  emit('click');
+const onClick = (event: MouseEvent) => {
+  emit('click', event);
 };
 </script>
 
