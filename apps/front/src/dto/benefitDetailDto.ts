@@ -83,6 +83,9 @@ interface BenefitDetailInterface {
 
     /** 備考 */
     eligibilityNote: string | null;
+
+    /** 最終確認日 */
+    lastConfirmedDate: string | null;
 }
 
 /**
@@ -172,6 +175,9 @@ class BenefitDetailDto {
     /** 備考 */
     eligibilityNote: string | null;
 
+    /** 最終確認日 */
+    lastConfirmedDate: string | null;
+
     /**
      * コンストラクタ
      * @param dto 特典詳細情報インタフェース
@@ -201,6 +207,7 @@ class BenefitDetailDto {
             this.maxAge = dto.maxAge;
             this.eligibilityMunicipalityCd = dto.eligibilityMunicipalityCd;
             this.eligibilityNote = dto.eligibilityNote;
+            this.lastConfirmedDate = dto.lastConfirmedDate;
         } else {
             this.benefitId = null;
             this.municipalityCd = null;
@@ -225,6 +232,7 @@ class BenefitDetailDto {
             this.maxAge = null;
             this.eligibilityMunicipalityCd = null;
             this.eligibilityNote = null;
+            this.lastConfirmedDate = null;
         }
     }
 }

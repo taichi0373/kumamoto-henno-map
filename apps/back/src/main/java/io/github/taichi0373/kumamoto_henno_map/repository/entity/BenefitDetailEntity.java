@@ -3,6 +3,7 @@ package io.github.taichi0373.kumamoto_henno_map.repository.entity;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
@@ -102,6 +103,11 @@ public class BenefitDetailEntity implements Serializable {
     @Schema(description = "経度", example = "130.7079", nullable = true)
     @Column(name = "longitude")
     private BigDecimal longitude;
+
+    /** 最終確認日 */
+    @Schema(description = "最終確認日")
+    @Column(name = "last_confirmed_date")
+    private LocalDate lastConfirmedDate;
 
     // -------------------------------------------------------------------------
     // カテゴリ情報

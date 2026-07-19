@@ -102,6 +102,10 @@
                     </li>
                   </ul>
                   <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+                  <!-- 最終確認日 -->
+                  <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+                    最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+                  </div>
                 </AppCard>
               </template>
             </div>
@@ -144,6 +148,10 @@
               </li>
             </ul>
             <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+            <!-- 最終確認日 -->
+            <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+              最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+            </div>
           </AppCard>
         </template>
       </template>
@@ -335,6 +343,30 @@ const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string 
   return ''
 }
 
+/**
+ * 最終確認日のCSSクラスを返す（半年以上前: 警告色）
+ */
+const getLastConfirmedClass = (date: string | null | undefined): string => {
+  if (!date) return 'last-confirmed--unknown';
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  return new Date(date) < sixMonthsAgo
+    ? 'last-confirmed--warning'
+    : 'last-confirmed--normal';
+};
+
+/**
+ * 最終確認日を日本語形式でフォーマットする
+ */
+const formatLastConfirmedDate = (date: string | null | undefined): string => {
+  if (!date) return '未確認';
+  return new Date(date).toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 /** アコーディオンの開閉を切り替える */
 const toggleCategory = (cd: string) => {
   if (openCategories.value.has(cd)) {
@@ -416,5 +448,23 @@ onMounted(() => {
 .accordion-enter-from,
 .accordion-leave-to {
   opacity: 0;
+}
+
+.last-confirmed {
+  font-size: 0.8rem;
+  margin-top: 4px;
+
+  &--normal {
+    color: base.$text-secondary;
+  }
+
+  &--warning {
+    color: #e67e22;
+    font-weight: bold;
+  }
+
+  &--unknown {
+    color: base.$text-secondary;
+  }
 }
 </style>
