@@ -50,6 +50,15 @@
         <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
         <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
       </div>
+      <!-- 現在地周辺フィルターボタン -->
+      <div class="form-btn mt-2">
+        <AppButton
+          label="現在地周辺"
+          severity="secondary"
+          icon="pi pi-map-marker"
+          @click="filterByCurrentLocation"
+        />
+      </div>
     </form>
   </div>
 
@@ -117,6 +126,17 @@
                     </li>
                   </ul>
                   <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+                  <!-- 最終確認日 -->
+                  <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+                    最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+                  </div>
+                  <!-- 情報報告ボタン -->
+                  <AppButton
+                    label="情報を報告"
+                    :primary="false"
+                    size="small"
+                    @click.stop="openReportDialog(benefit)"
+                  />
                 </AppCard>
               </template>
             </div>
@@ -159,11 +179,44 @@
               </li>
             </ul>
             <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+            <!-- 最終確認日 -->
+            <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+              最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+            </div>
+            <!-- 情報報告ボタン -->
+            <AppButton
+              label="情報を報告"
+              :primary="false"
+              @click.stop="openReportDialog(benefit)"
+            />
           </AppCard>
         </template>
       </template>
     </div>
   </div>
+
+  <!-- 情報報告確認ダイアログ -->
+  <AppDialog
+    v-model="isReportDialogVisible"
+    header="情報を報告"
+    :modal="true"
+  >
+    <p>「{{ reportTarget?.benefitName }}」の情報に誤りがありますか？</p>
+    <p>管理者に報告します。</p>
+    <template #footer>
+      <AppButton
+        label="キャンセル"
+        :primary="false"
+        @click="isReportDialogVisible = false"
+      />
+      <AppButton
+        label="報告する"
+        :primary="true"
+        :loading="isReporting"
+        @click="submitReport"
+      />
+    </template>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
@@ -179,6 +232,7 @@ import AppLink from '@/components/atoms/AppLink.vue'
 import AppNumberField from '@/components/atoms/AppNumberField.vue'
 import AppSlider from '@/components/atoms/AppSlider.vue'
 import AppProgressSpinner from '@/components/atoms/AppProgressSpinner.vue'
+import AppDialog from '@/components/atoms/AppDialog.vue'
 import apiClient from '@/utils/api'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 import { codeConstant } from '@/utils/codeConstant'
@@ -225,6 +279,13 @@ const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.OTHER]: 'その他',
 }
 const licenseOptions = ref([]) as Ref<SelectDto[]>
+
+/** 報告ダイアログの表示状態 */
+const isReportDialogVisible = ref(false)
+/** 報告対象の特典 */
+const reportTarget = ref<BenefitDetailDto | null>(null)
+/** 報告送信中フラグ */
+const isReporting = ref(false)
 
 /** カテゴリ別にグループ化した検索結果（displayOrder 昇順） */
 const groupedBenefitResults = computed(() => {
@@ -376,7 +437,6 @@ const clearConditions = () => {
   emit('clear-benefit-markers')
 }
 
-
 /** 対象年齢の表示用文言を組み立て */
 const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string => {
   const hasMin = minAge != null
@@ -393,6 +453,30 @@ const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string 
   return ''
 }
 
+/**
+ * 最終確認日のCSSクラスを返す（半年以上前: 警告色）
+ */
+const getLastConfirmedClass = (date: string | null | undefined): string => {
+  if (!date) return 'last-confirmed--unknown';
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  return new Date(date) < sixMonthsAgo
+    ? 'last-confirmed--warning'
+    : 'last-confirmed--normal';
+};
+
+/**
+ * 最終確認日を日本語形式でフォーマットする
+ */
+const formatLastConfirmedDate = (date: string | null | undefined): string => {
+  if (!date) return '未確認';
+  return new Date(date).toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 /** アコーディオンの開閉を切り替える */
 const toggleCategory = (cd: string) => {
   if (openCategories.value.has(cd)) {
@@ -402,6 +486,27 @@ const toggleCategory = (cd: string) => {
   }
   /** Set の変更を Vue に検知させるため再代入 */
   openCategories.value = new Set(openCategories.value)
+}
+
+/** 報告ダイアログを開く */
+const openReportDialog = (benefit: BenefitDetailDto) => {
+  reportTarget.value = benefit
+  isReportDialogVisible.value = true
+}
+
+/** 報告を送信する */
+const submitReport = async () => {
+  if (!reportTarget.value) return
+  isReporting.value = true
+  try {
+    await apiClient.post(`/benefit/${reportTarget.value.benefitId}/report`, {})
+    ToastMessageUtils.success('報告を送信しました。ご協力ありがとうございます')
+    isReportDialogVisible.value = false
+  } catch {
+    ToastMessageUtils.error('報告の送信に失敗しました')
+  } finally {
+    isReporting.value = false
+  }
 }
 
 // 初期表示
@@ -479,5 +584,23 @@ onMounted(() => {
 .radius-value {
   font-weight: normal;
   color: base.$text-secondary;
+}
+
+.last-confirmed {
+  font-size: 0.8rem;
+  margin-top: 4px;
+
+  &--normal {
+    color: base.$text-secondary;
+  }
+
+  &--warning {
+    color: #e67e22;
+    font-weight: bold;
+  }
+
+  &--unknown {
+    color: base.$text-secondary;
+  }
 }
 </style>

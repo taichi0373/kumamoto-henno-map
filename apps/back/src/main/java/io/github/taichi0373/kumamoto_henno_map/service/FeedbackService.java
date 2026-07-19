@@ -23,7 +23,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.FeedbackRequestDto;
 @Service
 public class FeedbackService {
 
-    private static final Logger logger = LoggerFactory.getLogger(FeedbackService.class);
+    private static final Logger log = LoggerFactory.getLogger(FeedbackService.class);
 
     /** 送信日時フォーマット */
     private static final DateTimeFormatter DATE_FORMATTER =
@@ -31,10 +31,19 @@ public class FeedbackService {
 
     /** Slack Webhook URL */
     @Value("${slack.webhook.url:}")
-    private String slackWebhookUrl;
+    private String webhookUrl;
 
     /** HTTP クライアント（再利用） */
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    /**
+     * コンストラクタ
+     *
+     * @param restTemplate HTTPクライアント
+     */
+    public FeedbackService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     /**
      * フィードバックをSlackに送信する
@@ -45,19 +54,59 @@ public class FeedbackService {
     public void sendFeedback(FeedbackRequestDto request, String username) {
         String message = buildMessage(request, username);
 
-        if (slackWebhookUrl == null || slackWebhookUrl.isBlank()) {
-            logger.info("[Feedback] Webhook URL未設定のためログ出力のみ:\n{}", message);
+        if (webhookUrl == null || webhookUrl.isBlank()) {
+            log.info("[Feedback] Webhook URL未設定のためログ出力のみ:\n{}", message);
             return;
         }
 
         try {
             Map<String, String> payload = new HashMap<>();
             payload.put("text", message);
-            restTemplate.postForEntity(slackWebhookUrl, payload, String.class);
-            logger.info("[Feedback] Slackへの送信が完了しました");
+            restTemplate.postForEntity(webhookUrl, payload, String.class);
+            log.info("[Feedback] Slackへの送信が完了しました");
         } catch (Exception e) {
-            logger.error("[Feedback] Slack送信に失敗しました: {}", e.getMessage(), e);
+            log.error("[Feedback] Slack送信に失敗しました: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * 特典情報の報告をSlackに送信する
+     *
+     * @param benefitId  報告対象の特典ID
+     * @param benefitName 報告対象の特典名
+     */
+    public void sendBenefitReport(String benefitId, String benefitName) {
+        String message = buildBenefitReportMessage(benefitId, benefitName);
+        if (webhookUrl == null || webhookUrl.isBlank()) {
+            log.info("Slack Webhook URL未設定のため特典報告をスキップ: benefitId={}", benefitId);
+            return;
+        }
+        try {
+            Map<String, String> body = new HashMap<>();
+            body.put("text", message);
+            restTemplate.postForEntity(webhookUrl, body, String.class);
+            log.info("特典報告をSlackに送信しました: benefitId={}", benefitId);
+        } catch (Exception e) {
+            log.error("特典報告のSlack送信に失敗しました: benefitId={}", benefitId, e);
+        }
+    }
+
+    /**
+     * 特典報告用Slackメッセージを組み立てる
+     *
+     * @param benefitId   報告対象の特典ID
+     * @param benefitName 報告対象の特典名
+     * @return Slackメッセージ文字列
+     */
+    private String buildBenefitReportMessage(String benefitId, String benefitName) {
+        String name = (benefitName != null) ? benefitName : "（不明）";
+        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        return String.format("""
+                ⚠️ 特典情報の報告
+                特典名: %s
+                特典ID: %s
+                報告日時: %s
+                """, name, benefitId, now);
     }
 
     /**

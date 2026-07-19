@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -177,6 +178,23 @@ public class AdminBenefitService {
             reader.reset();
         }
         return reader;
+    }
+
+    /**
+     * 特典情報を確認済みとしてマークする（最終確認日を今日の日付で更新）
+     *
+     * @param benefitId 確認対象の特典ID
+     * @throws NoSuchElementException 特典が存在しない場合
+     */
+    public void confirmBenefit(String benefitId) {
+        BenefitEntity entity = benefitDao.selectById(benefitId);
+        if (entity == null) {
+            throw new NoSuchElementException("特典が見つかりません: " + benefitId);
+        }
+        entity.setLastConfirmedDate(LocalDate.now());
+        LocalDateTime createdAt = entity.getSystemField() != null ? entity.getSystemField().getSysCreatedAt() : null;
+        entity.setSystemField(new SystemField(createdAt, LocalDateTime.now()));
+        benefitDao.update(entity);
     }
 
     /**
