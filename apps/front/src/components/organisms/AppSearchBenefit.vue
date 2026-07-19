@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-   <form @submit.prevent="searchBenefits(searchBenefit)">
+   <form @submit.prevent="searchBenefits()">
       <div class="form-row-1">
         <div class="form-col form-col--wide">
           <AppLabel :id="'keyword'">フリーワード</AppLabel>
@@ -34,6 +34,15 @@
       <div class="form-btn">
         <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
         <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
+      </div>
+      <!-- 現在地周辺フィルターボタン -->
+      <div class="form-btn mt-2">
+        <AppButton
+          label="現在地周辺"
+          severity="secondary"
+          icon="pi pi-map-marker"
+          @click="filterByCurrentLocation"
+        />
       </div>
     </form>
   </div>
@@ -102,6 +111,10 @@
                     </li>
                   </ul>
                   <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+                  <!-- 最終確認日 -->
+                  <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+                    最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+                  </div>
                   <!-- 情報報告ボタン -->
                   <AppButton
                     label="情報を報告"
@@ -151,6 +164,10 @@
               </li>
             </ul>
             <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+            <!-- 最終確認日 -->
+            <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+              最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+            </div>
             <!-- 情報報告ボタン -->
             <AppButton
               label="情報を報告"
@@ -323,15 +340,19 @@ const getLicenseStatusName = (code: string) => {
 }
 
 // 特典検索API呼び出し
-const searchBenefits = async (conditions: SearchBenefitDto) => {
+const searchBenefits = async () => {
   isLoading.value = true
   hasSearched.value = true
+  const conditions = searchBenefit.value
   const requestData = {
     age: conditions.age,
     licenseStatus: conditions.licenseStatus,
     municipalityCd: conditions.address,
     keyword: conditions.keyword,
     categoryCd: conditions.categoryCd,
+    latitude: conditions.latitude,
+    longitude: conditions.longitude,
+    radiusKm: conditions.radiusKm,
   }
 
   try {
@@ -357,10 +378,36 @@ const searchBenefits = async (conditions: SearchBenefitDto) => {
 // 条件クリア
 const clearConditions = () => {
   searchBenefit.value = new SearchBenefitDto()
+  searchBenefit.value.latitude = undefined
+  searchBenefit.value.longitude = undefined
+  searchBenefit.value.radiusKm = undefined
   benefitResults.value = []
   hasSearched.value = false
   openCategories.value = new Set()
   emit('clear-benefit-markers')
+}
+
+/**
+ * 現在地を取得して周辺2km以内の特典を検索する
+ */
+const filterByCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    ToastMessageUtils.error('このブラウザはGPS位置情報に対応していません')
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      searchBenefit.value.latitude = position.coords.latitude
+      searchBenefit.value.longitude = position.coords.longitude
+      searchBenefit.value.radiusKm = 2.0
+      searchBenefits()
+    },
+    () => {
+      ToastMessageUtils.error(
+        '位置情報の取得に失敗しました。ブラウザの設定で位置情報の使用を許可してください'
+      )
+    }
+  )
 }
 
 /** 対象年齢の表示用文言を組み立て */
@@ -378,6 +425,30 @@ const formatAgeRange = (minAge?: number | null, maxAge?: number | null): string 
   }
   return ''
 }
+
+/**
+ * 最終確認日のCSSクラスを返す（半年以上前: 警告色）
+ */
+const getLastConfirmedClass = (date: string | null | undefined): string => {
+  if (!date) return 'last-confirmed--unknown';
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  return new Date(date) < sixMonthsAgo
+    ? 'last-confirmed--warning'
+    : 'last-confirmed--normal';
+};
+
+/**
+ * 最終確認日を日本語形式でフォーマットする
+ */
+const formatLastConfirmedDate = (date: string | null | undefined): string => {
+  if (!date) return '未確認';
+  return new Date(date).toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
 
 /** アコーディオンの開閉を切り替える */
 const toggleCategory = (cd: string) => {
@@ -481,5 +552,23 @@ onMounted(() => {
 .accordion-enter-from,
 .accordion-leave-to {
   opacity: 0;
+}
+
+.last-confirmed {
+  font-size: 0.8rem;
+  margin-top: 4px;
+
+  &--normal {
+    color: base.$text-secondary;
+  }
+
+  &--warning {
+    color: #e67e22;
+    font-weight: bold;
+  }
+
+  &--unknown {
+    color: base.$text-secondary;
+  }
 }
 </style>

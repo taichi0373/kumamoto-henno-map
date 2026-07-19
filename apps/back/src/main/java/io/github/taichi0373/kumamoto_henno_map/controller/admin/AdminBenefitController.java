@@ -172,6 +172,27 @@ public class AdminBenefitController {
     }
 
     /**
+     * 特典情報を確認済みとしてマークする
+     *
+     * @param benefitId 確認対象の特典ID
+     * @return 処理結果
+     */
+    @PostMapping("/{benefitId}/confirm")
+    public ResponseEntity<ApiResponseDto<Void>> confirmBenefit(@PathVariable String benefitId) {
+        try {
+            adminBenefitService.confirmBenefit(benefitId);
+            return ResponseEntity.ok(ApiResponseDto.success(null));
+        } catch (java.util.NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponseDto.error("特典が見つかりません: " + benefitId));
+        } catch (Exception e) {
+            log.error("特典確認処理エラー: {}", benefitId, e);
+            return ResponseEntity.internalServerError()
+                .body(ApiResponseDto.error("確認処理に失敗しました"));
+        }
+    }
+
+    /**
      * 特典を削除する
      *
      * @param benefitId 特典ID

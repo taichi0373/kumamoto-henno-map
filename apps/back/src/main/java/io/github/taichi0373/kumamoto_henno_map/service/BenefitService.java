@@ -56,13 +56,26 @@ public class BenefitService {
      */
     public List<BenefitDetailEntity> searchBenefits(BenefitEligibilityDto request) {
         // 特典適用条件に一致する特典を取得
-        return benefitDetailDao.selectEligible(
+        List<BenefitDetailEntity> results = benefitDetailDao.selectEligible(
             request.getAge(),
             request.getLicenseStatus(),
             request.getMunicipalityCd(),
             request.getKeyword(),
             request.getCategoryCd()
         );
+
+        // 現在地周辺フィルタリング
+        if (request.getLatitude() != null && request.getLongitude() != null) {
+            double radiusKm = (request.getRadiusKm() != null) ? request.getRadiusKm() : 2.0;
+            results = results.stream()
+                .filter(b -> b.getLatitude() != null && b.getLongitude() != null)
+                .filter(b -> isWithinRadius(
+                    b.getLatitude().doubleValue(), b.getLongitude().doubleValue(),
+                    request.getLatitude(), request.getLongitude(), radiusKm))
+                .collect(java.util.stream.Collectors.toList());
+        }
+
+        return results;
     }
 
     /**
@@ -90,6 +103,29 @@ public class BenefitService {
      */
     public Optional<BenefitDetailEntity> getBenefitById(String benefitId) {
         return benefitDetailDao.selectByBenefitId(benefitId).stream().findFirst();
+    }
+
+    /**
+     * 2点間の距離がradiusKm以内かどうかをHaversine公式で判定する
+     *
+     * @param lat1      地点1の緯度
+     * @param lng1      地点1の経度
+     * @param lat2      地点2の緯度
+     * @param lng2      地点2の経度
+     * @param radiusKm  判定半径（km）
+     * @return radiusKm以内であればtrue
+     */
+    private boolean isWithinRadius(double lat1, double lng1,
+                                    double lat2, double lng2,
+                                    double radiusKm) {
+        final double R = 6371.0; // 地球の半径（km）
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+            * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c <= radiusKm;
     }
 
     /**

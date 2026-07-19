@@ -54,6 +54,18 @@ public class BenefitEligibilityDto {
     @Schema(description = "カテゴリコード", example = "TR001")
     private String categoryCd;
 
+    /** 現在地緯度（現在地周辺フィルタリング用） */
+    @Schema(description = "現在地緯度", example = "32.789")
+    private Double latitude;
+
+    /** 現在地経度（現在地周辺フィルタリング用） */
+    @Schema(description = "現在地経度", example = "130.741")
+    private Double longitude;
+
+    /** 検索半径（km）。省略時は2km */
+    @Schema(description = "検索半径（km）", example = "2.0")
+    private Double radiusKm;
+
     /** システム共通フィールド */
     @Schema(hidden = true)
     private SystemField systemField;
