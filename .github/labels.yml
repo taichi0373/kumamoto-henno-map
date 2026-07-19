@@ -37,3 +37,7 @@ labels:
   - name: "リリースノート除外"
     color: "ededed"
     description: "リリースノートから除外するPR"
+
+  - name: "要レビュー"
+    color: "e4e669"
+    description: "人間によるレビューが必要なPR（major バージョンアップ等）"
