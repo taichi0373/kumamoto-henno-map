@@ -41,6 +41,11 @@ node_modules/
 ### dist ###
 dist
 
+### Python ###
+__pycache__/
+*.py[cod]
+output.txt
+
 ### otp data ###
 config/otp/data/*.zip
 !config/otp/data/*.gtfs.zip
