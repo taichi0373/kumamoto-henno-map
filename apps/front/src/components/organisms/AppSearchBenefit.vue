@@ -1,6 +1,6 @@
 <template>
   <div class="p-2">
-   <form @submit.prevent="searchBenefits(searchBenefit)">
+   <form @submit.prevent="searchBenefits()">
       <div class="form-row-1">
         <div class="form-col form-col--wide">
           <AppLabel :id="'keyword'">フリーワード</AppLabel>
@@ -34,6 +34,15 @@
       <div class="form-btn">
         <AppButton :label="'クリア'" :primary="false" :icon="'pi pi-trash'" @click="clearConditions" />
         <AppButton type="submit" :label="'検索'" :primary="true" :icon="'pi pi-search'" :disabled="isLoading" />
+      </div>
+      <!-- 現在地周辺フィルターボタン -->
+      <div class="form-btn mt-2">
+        <AppButton
+          label="現在地周辺"
+          severity="secondary"
+          icon="pi pi-map-marker"
+          @click="filterByCurrentLocation"
+        />
       </div>
     </form>
   </div>
@@ -279,15 +288,19 @@ const getLicenseStatusName = (code: string) => {
 }
 
 // 特典検索API呼び出し
-const searchBenefits = async (conditions: SearchBenefitDto) => {
+const searchBenefits = async () => {
   isLoading.value = true
   hasSearched.value = true
+  const conditions = searchBenefit.value
   const requestData = {
     age: conditions.age,
     licenseStatus: conditions.licenseStatus,
     municipalityCd: conditions.address,
     keyword: conditions.keyword,
     categoryCd: conditions.categoryCd,
+    latitude: conditions.latitude,
+    longitude: conditions.longitude,
+    radiusKm: conditions.radiusKm,
   }
 
   try {
@@ -313,10 +326,36 @@ const searchBenefits = async (conditions: SearchBenefitDto) => {
 // 条件クリア
 const clearConditions = () => {
   searchBenefit.value = new SearchBenefitDto()
+  searchBenefit.value.latitude = undefined
+  searchBenefit.value.longitude = undefined
+  searchBenefit.value.radiusKm = undefined
   benefitResults.value = []
   hasSearched.value = false
   openCategories.value = new Set()
   emit('clear-benefit-markers')
+}
+
+/**
+ * 現在地を取得して周辺2km以内の特典を検索する
+ */
+const filterByCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    ToastMessageUtils.error('このブラウザはGPS位置情報に対応していません')
+    return
+  }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      searchBenefit.value.latitude = position.coords.latitude
+      searchBenefit.value.longitude = position.coords.longitude
+      searchBenefit.value.radiusKm = 2.0
+      searchBenefits()
+    },
+    () => {
+      ToastMessageUtils.error(
+        '位置情報の取得に失敗しました。ブラウザの設定で位置情報の使用を許可してください'
+      )
+    }
+  )
 }
 
 /** 対象年齢の表示用文言を組み立て */
