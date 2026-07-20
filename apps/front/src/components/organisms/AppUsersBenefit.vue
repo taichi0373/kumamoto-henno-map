@@ -59,6 +59,19 @@
                   </li>
                 </ul>
                 <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+                <!-- 最終確認日 -->
+                <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+                  最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+                </div>
+                <!-- 情報報告ボタン -->
+                <div class="report-btn">
+                  <AppButton
+                    label="情報を報告"
+                    :primary="false"
+                    size="small"
+                    @click.stop="openReportDialog(benefit)"
+                  />
+                </div>
               </AppCard>
             </template>
           </div>
@@ -66,6 +79,29 @@
       </div>
     </div>
   </div>
+
+  <!-- 情報報告確認ダイアログ -->
+  <AppDialog
+    v-model="isReportDialogVisible"
+    header="情報を報告"
+    :modal="true"
+  >
+    <p>「{{ reportTarget?.benefitName }}」の情報に誤りがありますか？</p>
+    <p>管理者に報告します。</p>
+    <template #footer>
+      <AppButton
+        label="キャンセル"
+        :primary="false"
+        @click="isReportDialogVisible = false"
+      />
+      <AppButton
+        label="報告する"
+        :primary="true"
+        :loading="isReporting"
+        @click="submitReport"
+      />
+    </template>
+  </AppDialog>
 </template>
 
 <script setup lang="ts">
@@ -73,9 +109,12 @@ import { computed, ref, watch, onMounted } from 'vue'
 import AppCard from '@/components/atoms/AppCard.vue'
 import AppAlert from '@/components/atoms/AppAlert.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
+import AppButton from '@/components/atoms/AppButton.vue'
+import AppDialog from '@/components/atoms/AppDialog.vue'
 import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 import { codeConstant } from '@/utils/codeConstant'
 import apiClient from '@/utils/api'
+import { ToastMessageUtils } from '@/utils/toastMessageUtils'
 
 /** カテゴリ情報 */
 interface BenefitCategory {
@@ -97,6 +136,13 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   (e: 'show-benefit-on-map', benefit: BenefitDetailDto): void
 }>()
+
+/** 報告ダイアログの表示状態 */
+const isReportDialogVisible = ref(false)
+/** 報告対象の特典 */
+const reportTarget = ref<BenefitDetailDto | null>(null)
+/** 報告送信中フラグ */
+const isReporting = ref(false)
 
 /** カテゴリリスト */
 const categories = ref<BenefitCategory[]>([])
@@ -165,6 +211,51 @@ const isShopBenefit = (benefit: BenefitDetailDto): boolean =>
   benefit.categoryCd === codeConstant.CATEGORY_CD.SHOP
   && benefit.latitude != null
   && benefit.longitude != null
+
+/**
+ * 最終確認日のCSSクラスを返す（半年以上前: 警告色）
+ */
+const getLastConfirmedClass = (date: string | null | undefined): string => {
+  if (!date) return 'last-confirmed--unknown';
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  return new Date(date) < sixMonthsAgo
+    ? 'last-confirmed--warning'
+    : 'last-confirmed--normal';
+};
+
+/**
+ * 最終確認日を日本語形式でフォーマットする
+ */
+const formatLastConfirmedDate = (date: string | null | undefined): string => {
+  if (!date) return '未確認';
+  return new Date(date).toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
+/** 報告ダイアログを開く */
+const openReportDialog = (benefit: BenefitDetailDto) => {
+  reportTarget.value = benefit
+  isReportDialogVisible.value = true
+}
+
+/** 報告を送信する */
+const submitReport = async () => {
+  if (!reportTarget.value) return
+  isReporting.value = true
+  try {
+    await apiClient.post(`/benefit/${reportTarget.value.benefitId}/report`, {})
+    ToastMessageUtils.success('報告を送信しました。ご協力ありがとうございます')
+    isReportDialogVisible.value = false
+  } catch {
+    ToastMessageUtils.error('報告の送信に失敗しました')
+  } finally {
+    isReporting.value = false
+  }
+}
 
 /** アコーディオンの開閉を切り替える */
 const toggleCategory = (cd: string) => {
@@ -247,5 +338,29 @@ watch(() => props.usersBenefits, () => {
 .accordion-enter-from,
 .accordion-leave-to {
   opacity: 0;
+}
+
+.report-btn {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.last-confirmed {
+  font-size: 0.8rem;
+  margin-top: 4px;
+
+  &--normal {
+    color: base.$text-secondary;
+  }
+
+  &--warning {
+    color: #e67e22;
+    font-weight: bold;
+  }
+
+  &--unknown {
+    color: base.$text-secondary;
+  }
 }
 </style>
