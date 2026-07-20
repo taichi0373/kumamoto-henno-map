@@ -50,7 +50,7 @@ class BenefitServiceNearbyTest {
     void 現在地指定なしのとき全件返す() {
         BenefitDetailEntity b1 = createBenefitWithCoords("B001", KUMAMOTO_LAT, KUMAMOTO_LNG);
         BenefitDetailEntity b2 = createBenefitWithCoords("B002", 33.0, 131.0); // 遠い
-        when(benefitDetailDao.selectEligible(any(), any(), any(), any(), any()))
+        when(benefitDetailDao.selectEligible(any(), any(), any(), any(), any(), any(), any(), any(), any()))
             .thenReturn(List.of(b1, b2));
 
         BenefitEligibilityDto request = new BenefitEligibilityDto();
@@ -67,7 +67,7 @@ class BenefitServiceNearbyTest {
         BenefitDetailEntity nearby = createBenefitWithCoords("B001", 32.7930, 130.7416);
         // 熊本市役所から約30km
         BenefitDetailEntity far = createBenefitWithCoords("B002", 33.0, 131.0);
-        when(benefitDetailDao.selectEligible(any(), any(), any(), any(), any()))
+        when(benefitDetailDao.selectEligible(any(), any(), any(), any(), any(), any(), any(), any(), any()))
             .thenReturn(List.of(nearby, far));
 
         BenefitEligibilityDto request = new BenefitEligibilityDto();
@@ -86,7 +86,7 @@ class BenefitServiceNearbyTest {
         BenefitDetailEntity noCoords = new BenefitDetailEntity();
         noCoords.setBenefitId("B003");
         // latitude, longitude = null
-        when(benefitDetailDao.selectEligible(any(), any(), any(), any(), any()))
+        when(benefitDetailDao.selectEligible(any(), any(), any(), any(), any(), any(), any(), any(), any()))
             .thenReturn(List.of(noCoords));
 
         BenefitEligibilityDto request = new BenefitEligibilityDto();

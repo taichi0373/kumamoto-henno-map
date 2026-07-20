@@ -1,5 +1,6 @@
 package io.github.taichi0373.kumamoto_henno_map.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,23 +56,41 @@ public class BenefitService {
      * 検索条件に一致する特典を検索
      */
     public List<BenefitDetailEntity> searchBenefits(BenefitEligibilityDto request) {
-        // 特典適用条件に一致する特典を取得
+        // 現在地周辺フィルタリング時はDB側でバウンディングボックスによる事前絞り込みを行う
+        BigDecimal minLat = null, maxLat = null, minLng = null, maxLng = null;
+        double radiusKm = 2.0;
+        if (request.getLatitude() != null && request.getLongitude() != null) {
+            radiusKm = (request.getRadiusKm() != null) ? request.getRadiusKm() : 2.0;
+            double lat = request.getLatitude();
+            double lng = request.getLongitude();
+            // 緯度方向: 1度 ≈ 111km
+            double latDelta = radiusKm / 111.0;
+            // 経度方向: 1度 ≈ 111km * cos(緯度)
+            double lngDelta = radiusKm / (111.0 * Math.cos(Math.toRadians(lat)));
+            minLat = BigDecimal.valueOf(lat - latDelta);
+            maxLat = BigDecimal.valueOf(lat + latDelta);
+            minLng = BigDecimal.valueOf(lng - lngDelta);
+            maxLng = BigDecimal.valueOf(lng + lngDelta);
+        }
+
+        // 特典適用条件に一致する特典を取得（現在地指定時はバウンディングボックスでDB側絞り込み）
         List<BenefitDetailEntity> results = benefitDetailDao.selectEligible(
             request.getAge(),
             request.getLicenseStatus(),
             request.getMunicipalityCd(),
             request.getKeyword(),
-            request.getCategoryCd()
+            request.getCategoryCd(),
+            minLat, maxLat, minLng, maxLng
         );
 
-        // 現在地周辺フィルタリング
+        // 現在地周辺フィルタリング（Haversine公式で正確な距離判定）
         if (request.getLatitude() != null && request.getLongitude() != null) {
-            double radiusKm = (request.getRadiusKm() != null) ? request.getRadiusKm() : 2.0;
+            final double finalRadiusKm = radiusKm;
             results = results.stream()
                 .filter(b -> b.getLatitude() != null && b.getLongitude() != null)
                 .filter(b -> isWithinRadius(
                     b.getLatitude().doubleValue(), b.getLongitude().doubleValue(),
-                    request.getLatitude(), request.getLongitude(), radiusKm))
+                    request.getLatitude(), request.getLongitude(), finalRadiusKm))
                 .collect(java.util.stream.Collectors.toList());
         }
 

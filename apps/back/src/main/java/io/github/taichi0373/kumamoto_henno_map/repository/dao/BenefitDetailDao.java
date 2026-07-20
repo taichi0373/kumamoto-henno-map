@@ -1,5 +1,6 @@
 package io.github.taichi0373.kumamoto_henno_map.repository.dao;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.seasar.doma.Dao;
@@ -77,17 +78,27 @@ public interface BenefitDetailDao {
     }
 
     /**
-     * 利用資格条件で検索（年齢・運転免許所持状況・自治体コード・キーワード・カテゴリコード）
+     * 利用資格条件で検索（年齢・運転免許所持状況・自治体コード・キーワード・カテゴリコード・バウンディングボックス）
+     * <p>
+     * 現在地周辺フィルタリング時は minLat/maxLat/minLng/maxLng を指定することで、
+     * DB側でバウンディングボックスによる事前絞り込みを行い、転送データ量を削減する。
+     * Haversine精度フィルタリングはサービス層で別途実施する。
+     * </p>
      * @param age            年齢
      * @param licenseStatus  運転免許所持状況
      * @param municipalityCd 対象自治体コード
      * @param keyword        フリーワード（特典名・特典内容の部分一致）
      * @param categoryCd     カテゴリコード
+     * @param minLat         緯度の下限（nullの場合は絞り込まない）
+     * @param maxLat         緯度の上限（nullの場合は絞り込まない）
+     * @param minLng         経度の下限（nullの場合は絞り込まない）
+     * @param maxLng         経度の上限（nullの場合は絞り込まない）
      * @return 特典詳細一覧
      */
     default List<BenefitDetailEntity> selectEligible(
             Integer age, String licenseStatus, String municipalityCd,
-            String keyword, String categoryCd) {
+            String keyword, String categoryCd,
+            BigDecimal minLat, BigDecimal maxLat, BigDecimal minLng, BigDecimal maxLng) {
         QueryDsl queryDsl = new QueryDsl(Config.get(this));
         BenefitDetailEntity_ e = new BenefitDetailEntity_();
 
@@ -125,6 +136,15 @@ public interface BenefitDetailDao {
                     // カテゴリコードで絞り込み
                     if (!ValidateUtils.isNullOrEmpty(categoryCd)) {
                         c.eq(e.categoryCd, categoryCd);
+                    }
+                    // バウンディングボックスによる事前絞り込み（現在地周辺フィルタリング時のみ）
+                    if (minLat != null) {
+                        c.isNotNull(e.latitude);
+                        c.isNotNull(e.longitude);
+                        c.ge(e.latitude, minLat);
+                        c.le(e.latitude, maxLat);
+                        c.ge(e.longitude, minLng);
+                        c.le(e.longitude, maxLng);
                     }
                 })
                 .fetch();
