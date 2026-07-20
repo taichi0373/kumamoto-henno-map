@@ -17,7 +17,8 @@ import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
  * アプリ起動時に管理者ユーザーを初期化するランナー。
  * <p>
  * プロパティ {@code admin.username} / {@code admin.password} / {@code admin.email} が
- * すべて設定されており、かつ同名ユーザーが存在しない場合のみ管理者ユーザーを作成する。
+ * すべて設定されている場合に動作する。同名ユーザーが存在しない場合は新規作成し、
+ * 存在する場合はパスワード・メール・管理者フラグを環境変数の値で更新する。
  * </p>
  */
 @Component
@@ -53,8 +54,14 @@ public class AdminInitializer implements CommandLineRunner {
             return;
         }
 
-        if (usersDao.selectByUsername(username) != null) {
-            log.info("管理者初期化スキップ: ユーザー '{}' は既に存在します", username);
+        UsersEntity existing = usersDao.selectByUsername(username);
+        if (existing != null) {
+            existing.setPasswordHash(passwordEncoder.encode(password));
+            existing.setEmail(email);
+            existing.setIsAdmin("1");
+            existing.setSystemField(new SystemField(existing.getSystemField().getSysCreatedAt(), LocalDateTime.now()));
+            usersDao.update(existing);
+            log.info("管理者ユーザー '{}' のパスワードを更新しました", username);
             return;
         }
 
