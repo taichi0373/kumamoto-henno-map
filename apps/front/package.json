@@ -33,7 +33,7 @@
     "@storybook/vue3-vite": "^10.4.2",
     "@types/jest": "^30.0.0",
     "@types/pg": "^8.23.1",
-    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/eslint-plugin": "^8.68.0",
     "@typescript-eslint/parser": "^8.68.0",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vue/devtools-api": "^8.2.1",
