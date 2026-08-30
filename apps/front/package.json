@@ -52,7 +52,7 @@
     "vue-eslint-parser": "^10.4.1"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.62.4"
+    "@rollup/rollup-linux-x64-gnu": "4.63.0"
   },
   "browserslist": [
     "> 1%",
