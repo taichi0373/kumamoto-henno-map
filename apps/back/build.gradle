@@ -41,7 +41,7 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.apache.commons:commons-csv:1.14.1'
 
-    implementation platform('software.amazon.awssdk:bom:2.54.5')
+    implementation platform('software.amazon.awssdk:bom:2.54.11')
     implementation 'software.amazon.awssdk:location'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
