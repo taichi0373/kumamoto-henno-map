@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '4.1.0'
+    id 'org.springframework.boot' version '4.1.1'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
 }
@@ -33,15 +33,15 @@ dependencies {
     annotationProcessor 'org.seasar.doma:doma-processor:3.14.0'
 
     implementation 'com.sendgrid:sendgrid-java:4.10.3'
-    implementation 'org.apache.httpcomponents.client5:httpclient5:5.6.2'
-    implementation 'org.apache.httpcomponents.core5:httpcore5:5.4.3'
-    implementation 'org.apache.httpcomponents.core5:httpcore5-h2:5.4.3'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.6.4'
+    implementation 'org.apache.httpcomponents.core5:httpcore5:5.4.4'
+    implementation 'org.apache.httpcomponents.core5:httpcore5-h2:5.4.4'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1'
 
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.apache.commons:commons-csv:1.14.1'
 
-    implementation platform('software.amazon.awssdk:bom:2.48.3')
+    implementation platform('software.amazon.awssdk:bom:2.55.4')
     implementation 'software.amazon.awssdk:location'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

@@ -59,6 +59,7 @@ jobs:
     timeout-minutes: 90
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout repository
@@ -74,7 +75,7 @@ jobs:
             if ! command -v "$cmd" >/dev/null 2>&1; then
               case "$cmd" in
                 osmconvert) pkg="osmctools" ;;
-                *)           pkg="$cmd" ;;
+                *)          pkg="$cmd" ;;
               esac
               sudo apt-get install -y "$pkg"
             fi
@@ -104,17 +105,18 @@ jobs:
           fi
           echo "graph.obj のサイズ: $(du -sh config/otp/data/graph.obj | cut -f1)"
 
-      - name: Commit updated GTFS files
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add config/otp/data/*.gtfs.zip
-          if git diff --staged --quiet; then
-            echo "GTFSファイルに変更はありませんでした"
-          else
-            git commit -m "chore: GTFSデータ自動更新 $(date +%Y-%m-%d)"
-            git push origin develop
-          fi
+      - name: Create Pull Request for updated GTFS files
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: GTFSデータ自動更新"
+          title: "chore: GTFSデータ自動更新"
+          body: "GTFSデータの自動更新により生成された変更です。"
+          branch: "auto-update/gtfs-data"
+          base: "develop"
+          delete-branch: true
+          add-paths: |
+            config/otp/data/*.gtfs.zip
 
       - name: Upload graph artifact
         uses: actions/upload-artifact@v7
