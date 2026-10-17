@@ -68,3 +68,11 @@ jobs:
           if echo "$CHANGED_FILES" | grep -q "^\.github/"; then
             gh pr edit "$PR_NUMBER" --add-label "CI/CD" --repo "$REPO"
           fi
+
+          if echo "$CHANGED_FILES" | grep -q "^config/database/"; then
+            gh pr edit "$PR_NUMBER" --add-label "DB変更あり" --repo "$REPO"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -q "^config/otp/"; then
+            gh pr edit "$PR_NUMBER" --add-label "GTFSデータ変更あり" --repo "$REPO"
+          fi
