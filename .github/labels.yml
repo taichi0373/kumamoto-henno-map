@@ -41,3 +41,11 @@ labels:
   - name: "要レビュー"
     color: "e4e669"
     description: "人間によるレビューが必要なPR（major バージョンアップ等）"
+
+  - name: "DB変更あり"
+    color: "e8b800"
+    description: "config/database/ 配下のSQLファイルを変更するPR"
+
+  - name: "GTFSデータ変更あり"
+    color: "006b75"
+    description: "config/otp/ 配下のGTFSデータを変更するPR"
