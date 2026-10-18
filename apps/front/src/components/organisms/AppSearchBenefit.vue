@@ -53,6 +53,62 @@
     </form>
   </div>
 
+  <!-- シェアされた特典 -->
+  <div v-if="props.sharedBenefits && props.sharedBenefits.length > 0" class="p-2 shared-benefit-section">
+    <p class="shared-benefit-label"><i class="pi pi-link"></i> シェアされた特典</p>
+    <template
+      v-for="benefit in props.sharedBenefits"
+      :key="`shared_${benefit.benefitId}_${benefit.eligibilityId ?? ''}`"
+    >
+      <AppCard class="mb-3" :hoverable="true" @click="emit('show-benefit-on-map', benefit)">
+        <template #title>{{ benefit.benefitName }}</template>
+        <p>特典内容：{{ benefit.benefitDetail }}</p>
+        <ul style="list-style: none; padding-left: 0;">
+          <li v-if="benefit.minAge != null || benefit.maxAge != null">
+            <i class="pi pi-user"></i>
+            対象年齢：{{ formatAgeRange(benefit.minAge, benefit.maxAge) }}
+          </li>
+          <li v-if="benefit.municipalityName">
+            <i class="pi pi-map-marker"></i>
+            対象地域：{{ benefit.municipalityName }}
+          </li>
+          <li v-if="benefit.licenseStatus">
+            <i class="pi pi-id-card"></i>
+            運転免許の所持状況：{{ getLicenseStatusName(benefit.licenseStatus) }}
+          </li>
+          <li v-if="benefit.phoneNumber">
+            <i class="pi pi-phone"></i>
+            電話番号：{{ benefit.phoneNumber }}
+          </li>
+          <li v-if="benefit.eligibilityNote">
+            <small>※{{ benefit.eligibilityNote }}</small>
+          </li>
+        </ul>
+        <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
+        <div :class="getLastConfirmedClass(benefit.lastConfirmedDate)" class="last-confirmed">
+          最終確認日: {{ formatLastConfirmedDate(benefit.lastConfirmedDate) }}
+        </div>
+        <div class="report-btn">
+          <AppButton
+            label="情報を報告"
+            :primary="false"
+            size="small"
+            @click.stop="openReportDialog(benefit)"
+          />
+        </div>
+        <div class="copy-url-btn">
+          <AppButton
+            label="URLをコピー"
+            :primary="false"
+            icon="pi pi-link"
+            size="small"
+            @click.stop="copyBenefitUrl(benefit)"
+          />
+        </div>
+      </AppCard>
+    </template>
+  </div>
+
   <div class="p-2" v-if="hasSearched">
     <!-- ローディング -->
     <div v-if="isLoading" class="loading-icon">
@@ -259,10 +315,15 @@ import { MunicipalityDto } from '@/dto/municipalityDto'
 import { SearchBenefitDto } from '@/dto/searchBenefitDto'
 import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 
+const props = defineProps<{
+  sharedBenefits?: BenefitDetailDto[]
+}>()
+
 const emit = defineEmits<{
   (e: 'show-benefit-on-map', benefit: BenefitDetailDto): void;
   (e: 'update-benefit-markers', benefits: BenefitDetailDto[]): void;
   (e: 'clear-benefit-markers'): void;
+  (e: 'clear-shared-benefits'): void;
 }>();
 
 /** 検索結果があるかどうか */
@@ -386,6 +447,8 @@ const getLicenseStatusName = (code: string) => {
 
 // 特典検索API呼び出し
 const searchBenefits = async () => {
+  // シェアされた特典表示をクリア
+  emit('clear-shared-benefits')
   // 距離が指定されている場合、GPS位置情報を取得してから検索
   if (searchBenefit.value.radiusKm) {
     if (!navigator.geolocation) {
@@ -619,6 +682,21 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
+}
+
+.shared-benefit-section {
+  border-bottom: 1px solid base.$base-400;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.shared-benefit-label {
+  font-size: 13px;
+  color: base.$text-secondary;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .last-confirmed {

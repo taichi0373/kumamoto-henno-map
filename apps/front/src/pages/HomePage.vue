@@ -37,9 +37,11 @@
         <!-- 特典を探すページ -->
         <div class="sidebar-page" v-show="activeTab === 'search-benefit'">
           <AppSearchBenefit
+            :sharedBenefits="sharedBenefits"
             @update-benefit-markers="handleUpdateBenefitMarkers"
             @clear-benefit-markers="handleClearBenefitMarkers"
             @show-benefit-on-map="handleShowBenefitOnMap"
+            @clear-shared-benefits="sharedBenefits = []"
           />
         </div>
 
@@ -97,6 +99,7 @@
 <script setup lang="ts">
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
 import AppSearchBenefit from '@/components/organisms/AppSearchBenefit.vue'
@@ -145,6 +148,12 @@ const isLoggedIn = computed(() => auth.isLoggedIn)
 /** ユーザー特典データ */
 const usersBenefits = ref<BenefitDetailDto[]>([])
 
+/** シェアURLから読み込んだ特典リスト */
+const sharedBenefits = ref<BenefitDetailDto[]>([])
+
+/** ルート情報 */
+const route = useRoute()
+
 // マップ選択モードのタイプ（'start' or 'end'）
 const mapSelectMode = ref<string | null>(null)
 
@@ -182,13 +191,18 @@ const activeTabIndex = computed(() =>
 )
 
 // 初期表示
-onMounted(() => {
+onMounted(async () => {
   // ログイン済みの場合はユーザー特典を取得
   if (auth.isLoggedIn) {
     fetchUserBenefits()
   }
   // マップの初期化
   initializeMap('map')
+  // シェアURLのクエリパラメータを処理
+  const benefitId = route.query.benefitId
+  if (typeof benefitId === 'string' && benefitId) {
+    await fetchSharedBenefit(benefitId)
+  }
 })
 
 /** マップ中心座標を取得 */
@@ -357,6 +371,21 @@ const fetchUserBenefits = async () => {
       await auth.logout()
       usersBenefits.value = []
     }
+  }
+}
+
+/** シェアURLの benefitId から特典詳細を取得し「特典を探す」タブに切り替える */
+const fetchSharedBenefit = async (benefitId: string) => {
+  try {
+    const response = await apiClient.get(`/benefit/${encodeURIComponent(benefitId)}`)
+    if ((response.data as { success: boolean }).success) {
+      sharedBenefits.value = ((response.data as unknown) as { data: BenefitDetailDto[] }).data || []
+      setActiveTab('search-benefit')
+    } else {
+      ToastMessageUtils.error('特典が見つかりませんでした')
+    }
+  } catch {
+    ToastMessageUtils.error('特典が見つかりませんでした')
   }
 }
 
