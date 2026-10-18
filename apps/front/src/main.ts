@@ -4,6 +4,8 @@ import App from './App.vue'
 import router from './router'
 import { setTokenProvider, setUnauthorizedHandler } from '@/utils/api'
 import { useAuthStore } from '@/stores/auth'
+// vite-plugin-pwa が自動生成する Service Worker 登録モジュール
+import { registerSW } from 'virtual:pwa-register'
 
 // maplibre-gl Worker
 import { setWorkerUrl } from 'maplibre-gl'
@@ -39,6 +41,10 @@ setUnauthorizedHandler(() => {
 
 // maplibre-gl の WebWorker URL を明示的に指定
 setWorkerUrl(maplibreglWorkerUrl)
+
+// Service Worker を登録（PWA対応）
+// autoUpdate モードのため、新バージョン公開時に自動で更新される
+registerSW({ immediate: true })
 
   // ページ直叩き（例: /profile）時、router.beforeEach はマウント前に実行されるため
   // ここでセッションを復元してから mount する。

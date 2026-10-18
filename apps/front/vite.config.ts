@@ -1,12 +1,49 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'icon-192x192.png', 'icon-512x512.png'],
+      manifest: {
+        name: 'くまもと自主返納特典マップ',
+        short_name: '返納特典マップ',
+        description: '熊本県の運転免許自主返納者向け特典情報を地図上で表示・検索するアプリ',
+        theme_color: '#228b22',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        lang: 'ja',
+        icons: [
+          {
+            src: '/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+        ],
+      },
+      workbox: {
+        // アプリケーションシェル（HTML/JS/CSS）をキャッシュ
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // 地図タイルなど外部リソースはキャッシュしない
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/kumamoto-henno-map\/api/, /^\/tile-proxy/],
+      },
+    }),
+  ],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
   },
