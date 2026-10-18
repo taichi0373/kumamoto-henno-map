@@ -1,6 +1,7 @@
 package io.github.taichi0373.kumamoto_henno_map.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -43,5 +44,13 @@ public class UserResponseDto {
     /** 運転免許返納日 */
     @Schema(description = "運転免許返納日 (ISO 8601)。未返納の場合は null", example = "2024-04-01", type = "string", format = "date", nullable = true)
     private LocalDate licenseSurrenderedAt;
+
+    /** 最終ログイン日時 */
+    @Schema(description = "最終ログイン日時 (ISO 8601)。ログイン記録がない場合は null", nullable = true)
+    private LocalDateTime lastLoginAt;
+
+    /** 最終ログインIPアドレス */
+    @Schema(description = "最終ログインIPアドレス。ログイン記録がない場合は null", nullable = true)
+    private String lastLoginIp;
 
 }

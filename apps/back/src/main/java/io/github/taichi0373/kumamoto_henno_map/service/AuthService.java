@@ -7,6 +7,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+
 import io.github.taichi0373.kumamoto_henno_map.dto.LoginResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.dao.UsersDao;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
@@ -102,16 +104,23 @@ public class AuthService implements UserDetailsService {
      * ログイン処理
      * <p>
      * パスワードを検証し、成功時にJWTトークンを含むレスポンスを返す。
+     * ログイン成功時は最終ログイン日時とIPアドレスをDBに保存する。
+     * DB保存が失敗した場合は例外をそのまま伝播させ、ログイン失敗として扱う。
      * </p>
      * @param username ユーザー名
      * @param password パスワード
+     * @param clientIp クライアントIPアドレス
      * @return ログインレスポンスDTO（認証失敗時はnull）
      */
-    public LoginResponseDto login(String username, String password) {
+    public LoginResponseDto login(String username, String password, String clientIp) {
         UsersEntity user = usersDao.selectByUsername(username);
         if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             return null;
         }
+        user.setLastLoginAt(LocalDateTime.now());
+        user.setLastLoginIp(clientIp);
+        usersDao.update(user);
+
         CustomUserDetails userDetails = new CustomUserDetails(user);
         String token = jwtUtil.generateToken(userDetails);
 

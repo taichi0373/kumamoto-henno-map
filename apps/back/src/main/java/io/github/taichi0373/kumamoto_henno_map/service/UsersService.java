@@ -169,6 +169,8 @@ public class UsersService {
         dto.setAddress(user.getMunicipalityCd());
         dto.setLicenseStatus(user.getLicenseStatus());
         dto.setLicenseSurrenderedAt(user.getLicenseSurrenderedAt());
+        dto.setLastLoginAt(user.getLastLoginAt());
+        dto.setLastLoginIp(user.getLastLoginIp());
         return dto;
     }
 
