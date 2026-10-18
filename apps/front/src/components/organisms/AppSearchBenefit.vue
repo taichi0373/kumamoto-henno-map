@@ -130,6 +130,16 @@
                       @click.stop="openReportDialog(benefit)"
                     />
                   </div>
+                  <!-- URLコピーボタン -->
+                  <div class="copy-url-btn">
+                    <AppButton
+                      label="URLをコピー"
+                      :primary="false"
+                      icon="pi pi-link"
+                      size="small"
+                      @click.stop="copyBenefitUrl(benefit)"
+                    />
+                  </div>
                 </AppCard>
               </template>
             </div>
@@ -183,6 +193,16 @@
                 :primary="false"
                 size="small"
                 @click.stop="openReportDialog(benefit)"
+              />
+            </div>
+            <!-- URLコピーボタン -->
+            <div class="copy-url-btn">
+              <AppButton
+                label="URLをコピー"
+                :primary="false"
+                icon="pi pi-link"
+                size="small"
+                @click.stop="copyBenefitUrl(benefit)"
               />
             </div>
           </AppCard>
@@ -505,6 +525,18 @@ const submitReport = async () => {
   }
 }
 
+/** 特典の固定URLをクリップボードにコピーする */
+const copyBenefitUrl = async (benefit: BenefitDetailDto) => {
+  if (!benefit.benefitId) return
+  const url = `${window.location.origin}/?benefitId=${encodeURIComponent(benefit.benefitId)}`
+  try {
+    await navigator.clipboard.writeText(url)
+    ToastMessageUtils.success('URLをコピーしました')
+  } catch {
+    ToastMessageUtils.error('URLのコピーに失敗しました')
+  }
+}
+
 // 初期表示
 onMounted(() => {
   // 自治体データの取得
@@ -582,7 +614,8 @@ onMounted(() => {
   color: base.$text-secondary;
 }
 
-.report-btn {
+.report-btn,
+.copy-url-btn {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
