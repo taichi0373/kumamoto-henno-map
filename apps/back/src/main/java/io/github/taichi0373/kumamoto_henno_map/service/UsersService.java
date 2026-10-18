@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import io.github.taichi0373.kumamoto_henno_map.dto.UserResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UsersDto;
@@ -217,6 +218,7 @@ public class UsersService {
      * @throws IllegalStateException 管理者アカウントの場合
      * @throws Exception DB アクセスエラー等の内部エラー
      */
+    @Transactional
     public Boolean deleteOwnAccount(Long userId, String password) throws Exception {
         UsersEntity user = usersDao.selectById(userId);
         if (ValidateUtils.isNullOrEmpty(user)) {

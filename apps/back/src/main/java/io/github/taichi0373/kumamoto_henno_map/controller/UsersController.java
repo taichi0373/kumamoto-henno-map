@@ -221,6 +221,12 @@ public class UsersController {
                         .body(ApiResponseDto.error("認証が必要です"));
             }
 
+            // パスワードの必須チェック
+            if (ValidateUtils.isNullOrEmpty(request.getPassword())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("パスワードを入力してください"));
+            }
+
             CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal();
             Boolean result = usersService.deleteOwnAccount(principal.getUserId(), request.getPassword());
 

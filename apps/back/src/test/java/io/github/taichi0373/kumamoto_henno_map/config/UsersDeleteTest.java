@@ -93,6 +93,28 @@ class UsersDeleteTest {
         return new CustomUserDetails(entity);
     }
 
+    /** パスワードが null（省略）の場合 → 400 */
+    @Test
+    void deleteAccount_パスワードnull_400() throws Exception {
+        mockMvc.perform(delete("/users")
+                .with(user(buildUserDetails(1L, CodeConstants.UserType.GENERAL)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    /** パスワードが空文字の場合 → 400 */
+    @Test
+    void deleteAccount_パスワード空文字_400() throws Exception {
+        mockMvc.perform(delete("/users")
+                .with(user(buildUserDetails(1L, CodeConstants.UserType.GENERAL)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
     /** 正常削除: パスワード一致 → 200 */
     @Test
     void deleteAccount_正常削除_200() throws Exception {
