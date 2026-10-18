@@ -117,6 +117,36 @@ public class BenefitController {
     }
 
     /**
+     * 特典IDで特典詳細一覧を取得する（利用条件が複数ある特典に対応）
+     *
+     * @param benefitId 特典ID
+     * @return 特典詳細リスト
+     */
+    @Operation(summary = "特典詳細取得", description = "特典IDに紐づく特典詳細一覧を取得する。利用条件が複数ある場合は複数件返す。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "取得成功",
+                    content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
+            @ApiResponse(responseCode = "404", description = "特典が見つからない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @GetMapping("/{benefitId}")
+    public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> getBenefitDetail(@PathVariable String benefitId) {
+        try {
+            List<BenefitDetailEntity> benefits = benefitService.getBenefitDetailsByBenefitId(benefitId);
+            if (benefits.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.error("特典が見つかりません: " + benefitId));
+            }
+            return ResponseEntity.ok(ApiResponseDto.success(benefits));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("特典の取得に失敗しました"));
+        }
+    }
+
+    /**
      * 特典情報の誤りを報告する
      *
      * @param benefitId 報告対象の特典ID

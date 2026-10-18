@@ -125,6 +125,16 @@ public class BenefitService {
     }
 
     /**
+     * 特典IDに紐づく特典詳細一覧を取得する（利用条件が複数ある特典に対応）
+     *
+     * @param benefitId 特典ID
+     * @return 特典詳細リスト（0件の場合は空リスト）
+     */
+    public List<BenefitDetailEntity> getBenefitDetailsByBenefitId(String benefitId) {
+        return benefitDetailDao.selectByBenefitId(benefitId);
+    }
+
+    /**
      * 2点間の距離がradiusKm以内かどうかをHaversine公式で判定する
      *
      * @param lat1      地点1の緯度
