@@ -206,6 +206,33 @@ public class UsersService {
     }
 
     /**
+     * ユーザー自身のアカウント削除（退会）
+     * <p>
+     * ログイン済みユーザーがパスワードを確認したうえで自分のアカウントを物理削除する。
+     * 管理者アカウントの自己削除は禁止する。
+     * </p>
+     * @param userId 削除対象のユーザーID
+     * @param password 本人確認用パスワード（平文）
+     * @return 削除成功時はtrue、パスワード不一致の場合はfalse、ユーザーが存在しない場合はnull
+     * @throws IllegalStateException 管理者アカウントの場合
+     * @throws Exception DB アクセスエラー等の内部エラー
+     */
+    public Boolean deleteOwnAccount(Long userId, String password) throws Exception {
+        UsersEntity user = usersDao.selectById(userId);
+        if (ValidateUtils.isNullOrEmpty(user)) {
+            return null;
+        }
+        if (CodeConstants.UserType.ADMIN.equals(user.getIsAdmin())) {
+            throw new IllegalStateException("管理者アカウントは退会できません");
+        }
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            return false;
+        }
+        usersDao.delete(user);
+        return true;
+    }
+
+    /**
      * ユーザー情報の更新
      * <p>
      * 指定されたユーザーIDのユーザー情報を更新する。

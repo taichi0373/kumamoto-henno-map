@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import io.github.taichi0373.kumamoto_henno_map.util.RequestUtils;
 import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
 import io.github.taichi0373.kumamoto_henno_map.dto.ApiResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.ChangePasswordRequestDto;
+import io.github.taichi0373.kumamoto_henno_map.dto.DeleteAccountRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UserResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UsersDto;
 import io.github.taichi0373.kumamoto_henno_map.exception.DuplicateUserException;
@@ -187,6 +189,57 @@ public class UsersController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("ユーザー情報の更新に失敗しました"));
+        }
+    }
+
+    /**
+     * アカウント削除（退会）
+     * <p>
+     * ログイン済みユーザーがパスワードを確認したうえで自分のアカウントを物理削除する。
+     * 管理者アカウントの自己削除は禁止する。
+     * </p>
+     */
+    @Operation(summary = "アカウント削除（退会）", description = "JWT で認証されたユーザー自身のアカウントを物理削除する。パスワードによる本人確認が必要。")
+    @SecurityRequirement(name = "bearerAuth")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "削除成功（data: null）"),
+            @ApiResponse(responseCode = "400", description = "パスワード不一致または管理者アカウント",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "401", description = "未認証",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @DeleteMapping
+    public ResponseEntity<ApiResponseDto<Void>> deleteAccount(
+            @RequestBody DeleteAccountRequestDto request,
+            Authentication auth) {
+        try {
+            // JWT認証チェック
+            if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponseDto.error("認証が必要です"));
+            }
+
+            CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal();
+            Boolean result = usersService.deleteOwnAccount(principal.getUserId(), request.getPassword());
+
+            if (result == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponseDto.error("ユーザーが見つかりません"));
+            }
+            if (Boolean.FALSE.equals(result)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("パスワードが正しくありません"));
+            }
+
+            return ResponseEntity.ok(ApiResponseDto.success(null));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponseDto.error(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponseDto.error("アカウントの削除に失敗しました"));
         }
     }
 

@@ -149,6 +149,24 @@ export const useAuthStore = defineStore('auth', {
       } catch (error) {
         console.warn('Logout API call failed:', error)
       }
+    },
+
+    /**
+     * アカウント削除（退会）処理
+     * パスワードで本人確認を行いアカウントを物理削除する。
+     * 成功時はメモリ・ストレージをクリアし、Cookie クリアのためにログアウトAPIをfire-and-forgetで呼ぶ。
+     * @param password 本人確認用パスワード（平文）
+     * @throws {AxiosError} パスワード不一致・管理者・未認証・その他エラー時
+     */
+    async deleteAccount(password: string): Promise<void> {
+      await apiClient.delete('/users', { data: { password } })
+      this.token = null
+      this.user = null
+      localStorage.removeItem(USER_KEY)
+      sessionStorage.removeItem(USER_KEY)
+      // リフレッシュトークンはDBのカスケード削除で既に消えているが、
+      // Cookie クリアのためにログアウトAPIを呼ぶ（失敗しても無視）
+      apiClient.post('/auth/logout').catch(() => {})
     }
   }
 })
