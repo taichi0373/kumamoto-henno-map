@@ -47,6 +47,26 @@
               :error="licenseSurrenderedAtErrorDto" />
           </div>
         </div>
+        <div v-if="usersModel.lastLoginAt" class="form-row-2 security-info">
+          <div class="form-col">
+            <AppLabel>最終ログイン日時</AppLabel>
+            <AppTextField
+              :input-id="'lastLoginAt'"
+              type="text"
+              :model-value="formatDateTime(usersModel.lastLoginAt)"
+              :disabled="true"
+            />
+          </div>
+          <div class="form-col">
+            <AppLabel>最終ログインIPアドレス</AppLabel>
+            <AppTextField
+              :input-id="'lastLoginIp'"
+              type="text"
+              :model-value="usersModel.lastLoginIp ?? ''"
+              :disabled="true"
+            />
+          </div>
+        </div>
         <div class="form-btn">
           <AppButton :primary="false" label="クリア" @click="clearForm" />
           <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
@@ -93,6 +113,23 @@ import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageC
 /** ルーター */
 const router = useRouter()
 const auth = useAuthStore()
+
+/**
+ * ISO 8601 日時文字列を YYYY/MM/DD HH:mm:ss 形式に変換する
+ * @param iso ISO 8601 日時文字列
+ * @returns フォーマットされた日時文字列
+ */
+const formatDateTime = (iso: string | null | undefined): string => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const yyyy = d.getFullYear()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mi = String(d.getMinutes()).padStart(2, '0')
+  const ss = String(d.getSeconds()).padStart(2, '0')
+  return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`
+}
 
 /** ユーザー情報 */
 const usersModel = ref<UsersDto>(new UsersDto())

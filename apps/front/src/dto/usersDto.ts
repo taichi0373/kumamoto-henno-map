@@ -20,6 +20,10 @@ interface UsersInterface {
     licenseStatus: string | null;
     /** 運転免許返納日 */
     licenseSurrenderedAt: string | Date | null;
+    /** 最終ログイン日時（ISO 8601） */
+    lastLoginAt?: string | null;
+    /** 最終ログインIPアドレス */
+    lastLoginIp?: string | null;
 }
 
 /**
@@ -44,6 +48,10 @@ class UsersDto {
     licenseStatus: string | null;
     /** 運転免許返納日 */
     licenseSurrenderedAt: string | Date | null;
+    /** 最終ログイン日時（ISO 8601） */
+    lastLoginAt?: string | null;
+    /** 最終ログインIPアドレス */
+    lastLoginIp?: string | null;
     /**
      * コンストラクタ
      * @param usersInterface ユーザー情報インタフェース
