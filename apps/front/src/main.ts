@@ -44,12 +44,33 @@ setWorkerUrl(maplibreglWorkerUrl)
 
 // Service Worker を登録（PWA対応）
 // prompt モードのため、新バージョン検知時はユーザーの同意を得てから更新・再読み込みする
+// 開きっぱなしの PWA でも更新に気づけるよう、定期的に新バージョンを確認する
+const SW_UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000
+let hasPendingUpdate = false
+
+const confirmUpdate = () => {
+  if (window.confirm('新しいバージョンがあります。更新しますか？')) {
+    updateSW(true)
+  } else {
+    // 見送った場合は次回の定期確認時に再度案内する
+    hasPendingUpdate = true
+  }
+}
+
 const updateSW = registerSW({
   immediate: true,
-  onNeedRefresh() {
-    if (window.confirm('新しいバージョンがあります。更新しますか？')) {
-      updateSW(true)
-    }
+  onNeedRefresh: confirmUpdate,
+  onRegisteredSW(_swUrl, registration) {
+    if (!registration) return
+    setInterval(() => {
+      if (hasPendingUpdate) {
+        confirmUpdate()
+        return
+      }
+      if (navigator.onLine) {
+        registration.update()
+      }
+    }, SW_UPDATE_CHECK_INTERVAL_MS)
   },
 })
 

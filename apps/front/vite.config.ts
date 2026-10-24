@@ -50,15 +50,16 @@ export default defineConfig({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/kumamoto-henno-map\/api/],
         // オフライン時もアイコンを表示できるよう Font Awesome（外部CDN）をキャッシュする
+        // キャッシュを返しつつ裏で再取得し、成功（200）した応答のみ保存する
         // ※ 地図タイル・地図スタイルはキャッシュしない
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/use\.fontawesome\.com\/.*/,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'font-awesome',
-              cacheableResponse: { statuses: [0, 200] },
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [200] },
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },
         ],

@@ -120,4 +120,24 @@ router.beforeEach((to, from, next) => {
   }
 })
 
+// 新バージョン公開後、旧バージョンの画面ファイル（遅延読み込みチャンク）が取得できない場合は
+// 遷移先を再読み込みして最新版を取得する（短時間での再発時は無限リロード防止のため何もしない）
+const CHUNK_RELOAD_KEY = 'chunk-reload-at'
+const CHUNK_RELOAD_GUARD_MS = 10 * 1000
+const CHUNK_LOAD_ERROR_PATTERN =
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i
+
+router.onError((error: Error, to) => {
+  if (!CHUNK_LOAD_ERROR_PATTERN.test(error?.message ?? '')) return
+
+  try {
+    const lastReloadAt = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) ?? 0)
+    if (Date.now() - lastReloadAt < CHUNK_RELOAD_GUARD_MS) return
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()))
+  } catch {
+    // sessionStorage が使えない環境ではそのまま再読み込みする
+  }
+  window.location.assign(to.fullPath)
+})
+
 export default router
