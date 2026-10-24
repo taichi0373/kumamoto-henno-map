@@ -160,13 +160,10 @@ export const useAuthStore = defineStore('auth', {
      */
     async deleteAccount(password: string): Promise<void> {
       await apiClient.delete('/users', { data: { password } })
-      this.token = null
-      this.user = null
-      localStorage.removeItem(USER_KEY)
-      sessionStorage.removeItem(USER_KEY)
       // リフレッシュトークンはDBのカスケード削除で既に消えているが、
-      // Cookie クリアのためにログアウトAPIを呼ぶ（失敗しても無視）
-      apiClient.post('/auth/logout').catch(() => {})
+      // メモリ・ストレージ・Cookie のクリアのため logout を再利用する。
+      // logout は状態クリアを同期的に行い、API失敗も内部で握りつぶすため await しない。
+      void this.logout()
     }
   }
 })

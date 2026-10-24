@@ -76,7 +76,7 @@
         :message="withdrawErrorMsg"
         style="width: 100%; margin-bottom: 12px;"
       />
-      <AppLabel :required="true">パスワード</AppLabel>
+      <AppLabel :id="'withdraw-password'" :required="true">パスワード</AppLabel>
       <AppTextField
         input-id="withdraw-password"
         type="password"

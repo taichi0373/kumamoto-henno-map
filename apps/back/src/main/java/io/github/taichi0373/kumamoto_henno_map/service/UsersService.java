@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import io.github.taichi0373.kumamoto_henno_map.dto.UserResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UsersDto;
+import io.github.taichi0373.kumamoto_henno_map.exception.AdminAccountDeletionException;
 import io.github.taichi0373.kumamoto_henno_map.exception.DuplicateUserException;
 import io.github.taichi0373.kumamoto_henno_map.repository.dao.UsersDao;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.SystemField;
@@ -215,7 +216,7 @@ public class UsersService {
      * @param userId 削除対象のユーザーID
      * @param password 本人確認用パスワード（平文）
      * @return 削除成功時はtrue、パスワード不一致の場合はfalse、ユーザーが存在しない場合はnull
-     * @throws IllegalStateException 管理者アカウントの場合
+     * @throws AdminAccountDeletionException 管理者アカウントの場合
      * @throws Exception DB アクセスエラー等の内部エラー
      */
     @Transactional
@@ -225,12 +226,15 @@ public class UsersService {
             return null;
         }
         if (CodeConstants.UserType.ADMIN.equals(user.getIsAdmin())) {
-            throw new IllegalStateException("管理者アカウントは退会できません");
+            throw new AdminAccountDeletionException("管理者アカウントは退会できません");
         }
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             return false;
         }
-        usersDao.delete(user);
+        // 並行して削除済みの場合は削除件数0となるため、ユーザー不存在として扱う
+        if (usersDao.delete(user) == 0) {
+            return null;
+        }
         return true;
     }
 

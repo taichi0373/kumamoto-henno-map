@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import io.github.taichi0373.kumamoto_henno_map.constants.CodeConstants;
+import io.github.taichi0373.kumamoto_henno_map.exception.AdminAccountDeletionException;
 import io.github.taichi0373.kumamoto_henno_map.repository.dao.UsersDao;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
 
@@ -79,7 +80,7 @@ class UsersServiceDeleteTest {
         verify(usersDao, never()).delete(any());
     }
 
-    /** 管理者アカウントの場合、IllegalStateExceptionをスローする */
+    /** 管理者アカウントの場合、AdminAccountDeletionExceptionをスローする */
     @Test
     void deleteOwnAccount_管理者は削除不可() {
         UsersEntity entity = new UsersEntity();
@@ -90,7 +91,7 @@ class UsersServiceDeleteTest {
         when(usersDao.selectById(1L)).thenReturn(entity);
 
         assertThatThrownBy(() -> usersService.deleteOwnAccount(1L, "pass"))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AdminAccountDeletionException.class)
                 .hasMessage("管理者アカウントは退会できません");
         verify(usersDao, never()).delete(any());
     }

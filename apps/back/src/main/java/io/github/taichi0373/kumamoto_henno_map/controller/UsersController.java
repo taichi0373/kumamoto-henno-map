@@ -22,6 +22,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.ChangePasswordRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.DeleteAccountRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UserResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UsersDto;
+import io.github.taichi0373.kumamoto_henno_map.exception.AdminAccountDeletionException;
 import io.github.taichi0373.kumamoto_henno_map.exception.DuplicateUserException;
 import io.github.taichi0373.kumamoto_henno_map.security.CustomUserDetails;
 import io.github.taichi0373.kumamoto_henno_map.service.LoginAttemptService;
@@ -240,7 +241,7 @@ public class UsersController {
             }
 
             return ResponseEntity.ok(ApiResponseDto.success(null));
-        } catch (IllegalStateException e) {
+        } catch (AdminAccountDeletionException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponseDto.error(e.getMessage()));
         } catch (Exception e) {

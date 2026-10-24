@@ -28,6 +28,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import io.github.taichi0373.kumamoto_henno_map.constants.CodeConstants;
 import io.github.taichi0373.kumamoto_henno_map.controller.UsersController;
+import io.github.taichi0373.kumamoto_henno_map.exception.AdminAccountDeletionException;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
 import io.github.taichi0373.kumamoto_henno_map.security.CustomUserDetails;
 import io.github.taichi0373.kumamoto_henno_map.service.AuthService;
@@ -155,7 +156,7 @@ class UsersDeleteTest {
     @Test
     void deleteAccount_管理者_400() throws Exception {
         when(usersService.deleteOwnAccount(eq(1L), any()))
-                .thenThrow(new IllegalStateException("管理者アカウントは退会できません"));
+                .thenThrow(new AdminAccountDeletionException("管理者アカウントは退会できません"));
 
         mockMvc.perform(delete("/users")
                 .with(user(buildUserDetails(1L, CodeConstants.UserType.ADMIN)))
