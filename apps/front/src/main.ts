@@ -43,8 +43,15 @@ setUnauthorizedHandler(() => {
 setWorkerUrl(maplibreglWorkerUrl)
 
 // Service Worker を登録（PWA対応）
-// autoUpdate モードのため、新バージョン公開時に自動で更新される
-registerSW({ immediate: true })
+// prompt モードのため、新バージョン検知時はユーザーの同意を得てから更新・再読み込みする
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    if (window.confirm('新しいバージョンがあります。更新しますか？')) {
+      updateSW(true)
+    }
+  },
+})
 
   // ページ直叩き（例: /profile）時、router.beforeEach はマウント前に実行されるため
   // ここでセッションを復元してから mount する。

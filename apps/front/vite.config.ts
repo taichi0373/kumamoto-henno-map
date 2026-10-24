@@ -10,8 +10,8 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'icon-192x192.png', 'icon-512x512.png'],
+      // 入力中の内容が失われないよう、新バージョン検知時はユーザーに更新可否を確認する
+      registerType: 'prompt',
       manifest: {
         name: 'くまもと自主返納特典マップ',
         short_name: '返納特典マップ',
@@ -31,16 +31,30 @@ export default defineConfig({
             src: '/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any maskable',
           },
         ],
       },
       workbox: {
         // アプリケーションシェル（HTML/JS/CSS）をキャッシュ
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // 地図タイルなど外部リソースはキャッシュしない
+        // メインバンドルがデフォルト上限（2MiB）を超えて precache から外れないよう上限を引き上げる
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // ページ遷移時は index.html を返す（API リクエストは対象外）
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/kumamoto-henno-map\/api/, /^\/tile-proxy/],
+        navigateFallbackDenylist: [/^\/kumamoto-henno-map\/api/],
+        // オフライン時もアイコンを表示できるよう Font Awesome（外部CDN）をキャッシュする
+        // ※ 地図タイル・地図スタイルはキャッシュしない
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/use\.fontawesome\.com\/.*/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'font-awesome',
+              cacheableResponse: { statuses: [0, 200] },
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
+          },
+        ],
       },
     }),
   ],
