@@ -1,12 +1,71 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    VitePWA({
+      // 入力中の内容が失われないよう、新バージョン検知時はユーザーに更新可否を確認する
+      registerType: 'prompt',
+      manifest: {
+        name: 'くまもと自主返納特典マップ',
+        short_name: '返納特典マップ',
+        description: '熊本県の運転免許自主返納者向け特典情報を地図上で表示・検索するアプリ',
+        theme_color: '#228b22',
+        background_color: '#ffffff',
+        display: 'standalone',
+        start_url: '/',
+        lang: 'ja',
+        icons: [
+          {
+            src: '/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            // Android のアダプティブアイコン用（背景を端まで塗り、図柄は中央80%に収める）
+            src: '/icon-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ],
+      },
+      workbox: {
+        // アプリケーションシェル（HTML/JS/CSS）をキャッシュ
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // メインバンドルがデフォルト上限（2MiB）を超えて precache から外れないよう上限を引き上げる
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // ページ遷移時は index.html を返す（API リクエストは対象外）
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/kumamoto-henno-map\/api/],
+        // オフライン時もアイコンを表示できるよう Font Awesome（外部CDN）をキャッシュする
+        // キャッシュを返しつつ裏で再取得し、成功（200）した応答のみ保存する
+        // ※ 地図タイル・地図スタイルはキャッシュしない
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/use\.fontawesome\.com\/.*/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'font-awesome',
+              cacheableResponse: { statuses: [200] },
+              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+        ],
+      },
+    }),
+  ],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
   },
