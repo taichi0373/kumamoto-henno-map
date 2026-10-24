@@ -32,6 +32,13 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
           },
+          {
+            // Android のアダプティブアイコン用（背景を端まで塗り、図柄は中央80%に収める）
+            src: '/icon-maskable-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
       },
       workbox: {
