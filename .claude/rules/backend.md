@@ -1,3 +1,9 @@
+---
+paths:
+  - "apps/back/**"
+  - "config/database/**"
+---
+
 # Java / Spring Boot コーディング規約
 
 ## 基本方針
