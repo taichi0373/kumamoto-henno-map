@@ -117,6 +117,7 @@ kumamoto_henno_map/
 
 @.claude/rules/frontend.md
 @.claude/rules/backend.md
+@.claude/rules/business.md
 
 **TypeScript / Vue 要点:**
 - `<script setup>` + Composition API 必須、ファイル構成: `template → script → style`
