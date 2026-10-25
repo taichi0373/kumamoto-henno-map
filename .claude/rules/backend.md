@@ -26,6 +26,8 @@ paths:
 2. DMLファイル (`config/database/DML/TABLE/`)
 3. Entityクラス
 
+既存DB向けの変更SQL（`ALTER TABLE` 等）は `config/database/ALT/{バージョン}/DDL/ALT_{ファイル名}.SQL` に格納する（例: `config/database/ALT/1.1.8/DDL/ALT_USERS.SQL`）。
+
 ## API設計
 
 - エンドポイントは kebab-case かつ RESTful に設計する
