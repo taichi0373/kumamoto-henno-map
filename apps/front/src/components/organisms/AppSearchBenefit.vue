@@ -307,6 +307,7 @@ import AppProgressSpinner from '@/components/atoms/AppProgressSpinner.vue'
 import AppDialog from '@/components/atoms/AppDialog.vue'
 import apiClient from '@/utils/api'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
+import { BenefitShareUtils } from '@/utils/benefitShareUtils'
 import { codeConstant } from '@/utils/codeConstant'
 import { responseStatusConstant } from '@/utils/responseStatusConstant'
 import { API_RESPONSE_MESSAGE } from '@/utils/messageConstant'
@@ -589,16 +590,7 @@ const submitReport = async () => {
 }
 
 /** 特典の固定URLをクリップボードにコピーする */
-const copyBenefitUrl = async (benefit: BenefitDetailDto) => {
-  if (!benefit.benefitId) return
-  const url = `${window.location.origin}/?benefitId=${encodeURIComponent(benefit.benefitId)}`
-  try {
-    await navigator.clipboard.writeText(url)
-    ToastMessageUtils.success('URLをコピーしました')
-  } catch {
-    ToastMessageUtils.error('URLのコピーに失敗しました')
-  }
-}
+const copyBenefitUrl = BenefitShareUtils.copyBenefitUrl
 
 // 初期表示
 onMounted(() => {

@@ -125,6 +125,7 @@ import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 import { codeConstant } from '@/utils/codeConstant'
 import apiClient from '@/utils/api'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
+import { BenefitShareUtils } from '@/utils/benefitShareUtils'
 
 /** カテゴリ情報 */
 interface BenefitCategory {
@@ -268,16 +269,7 @@ const submitReport = async () => {
 }
 
 /** 特典の固定URLをクリップボードにコピーする */
-const copyBenefitUrl = async (benefit: BenefitDetailDto) => {
-  if (!benefit.benefitId) return
-  const url = `${window.location.origin}/?benefitId=${encodeURIComponent(benefit.benefitId)}`
-  try {
-    await navigator.clipboard.writeText(url)
-    ToastMessageUtils.success('URLをコピーしました')
-  } catch {
-    ToastMessageUtils.error('URLのコピーに失敗しました')
-  }
-}
+const copyBenefitUrl = BenefitShareUtils.copyBenefitUrl
 
 /** アコーディオンの開閉を切り替える */
 const toggleCategory = (cd: string) => {

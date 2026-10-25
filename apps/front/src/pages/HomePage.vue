@@ -41,7 +41,7 @@
             @update-benefit-markers="handleUpdateBenefitMarkers"
             @clear-benefit-markers="handleClearBenefitMarkers"
             @show-benefit-on-map="handleShowBenefitOnMap"
-            @clear-shared-benefits="sharedBenefits = []"
+            @clear-shared-benefits="handleClearSharedBenefits"
           />
         </div>
 
@@ -99,7 +99,7 @@
 <script setup lang="ts">
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AppRouteGuidance from '@/components/organisms/AppRouteGuidance.vue'
 import AppUsersBenefit from '@/components/organisms/AppUsersBenefit.vue'
 import AppSearchBenefit from '@/components/organisms/AppSearchBenefit.vue'
@@ -153,6 +153,7 @@ const sharedBenefits = ref<BenefitDetailDto[]>([])
 
 /** ルート情報 */
 const route = useRoute()
+const router = useRouter()
 
 // マップ選択モードのタイプ（'start' or 'end'）
 const mapSelectMode = ref<string | null>(null)
@@ -191,18 +192,19 @@ const activeTabIndex = computed(() =>
 )
 
 // 初期表示
-onMounted(async () => {
+onMounted(() => {
   // ログイン済みの場合はユーザー特典を取得
   if (auth.isLoggedIn) {
     fetchUserBenefits()
   }
   // マップの初期化
   initializeMap('map')
-  // シェアURLのクエリパラメータを処理
-  const benefitId = route.query.benefitId
-  if (typeof benefitId === 'string' && benefitId) {
-    await fetchSharedBenefit(benefitId)
-  }
+  // シェアURLのクエリパラメータを監視（同一ページ内での遷移にも対応）
+  watch(() => route.query.benefitId, (benefitId) => {
+    if (typeof benefitId === 'string' && benefitId) {
+      fetchSharedBenefit(benefitId)
+    }
+  }, { immediate: true })
 })
 
 /** マップ中心座標を取得 */
@@ -374,18 +376,38 @@ const fetchUserBenefits = async () => {
   }
 }
 
-/** シェアURLの benefitId から特典詳細を取得し「特典を探す」タブに切り替える */
+/** シェアURLの benefitId から特典詳細を取得し「特典を探す」タブに表示・地図上に表示する */
 const fetchSharedBenefit = async (benefitId: string) => {
   try {
     const response = await apiClient.get(`/benefit/${encodeURIComponent(benefitId)}`)
     if ((response.data as { success: boolean }).success) {
       sharedBenefits.value = ((response.data as unknown) as { data: BenefitDetailDto[] }).data || []
       setActiveTab('search-benefit')
+      sidebarCollapsed.value = false
+      // 座標を持つ特典があれば地図上に表示
+      const target = sharedBenefits.value.find((b) => b.latitude != null && b.longitude != null)
+      if (target) {
+        handleShowBenefitOnMap(target)
+      }
     } else {
       ToastMessageUtils.error('特典が見つかりませんでした')
     }
-  } catch {
-    ToastMessageUtils.error('特典が見つかりませんでした')
+  } catch (error: unknown) {
+    if ((error as AxiosError).response?.status === responseStatusConstant.NOT_FOUND) {
+      ToastMessageUtils.error('特典が見つかりませんでした')
+    } else {
+      ToastMessageUtils.error(API_RESPONSE_MESSAGE.API_ERROR)
+    }
+  }
+}
+
+/** シェアされた特典表示をクリアし、URLから benefitId を除去する */
+const handleClearSharedBenefits = () => {
+  sharedBenefits.value = []
+  if (route.query.benefitId) {
+    const query = { ...route.query }
+    delete query.benefitId
+    router.replace({ query })
   }
 }
 
