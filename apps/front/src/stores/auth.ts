@@ -154,7 +154,7 @@ export const useAuthStore = defineStore('auth', {
     /**
      * アカウント削除（退会）処理
      * パスワードで本人確認を行いアカウントを物理削除する。
-     * 成功時はメモリ・ストレージをクリアし、Cookie クリアのためにログアウトAPIをfire-and-forgetで呼ぶ。
+     * 成功時はメモリ・ストレージをクリアし、Cookie クリアのためにログアウトAPIを呼ぶ。
      * @param password 本人確認用パスワード（平文）
      * @throws {AxiosError} パスワード不一致・管理者・未認証・その他エラー時
      */
@@ -162,8 +162,8 @@ export const useAuthStore = defineStore('auth', {
       await apiClient.delete('/users', { data: { password } })
       // リフレッシュトークンはDBのカスケード削除で既に消えているが、
       // メモリ・ストレージ・Cookie のクリアのため logout を再利用する。
-      // logout は状態クリアを同期的に行い、API失敗も内部で握りつぶすため await しない。
-      void this.logout()
+      // 直後の画面遷移でリクエストが中断され Cookie が残らないよう、完了を待つ（API失敗は logout 内で握りつぶす）。
+      await this.logout()
     }
   }
 })

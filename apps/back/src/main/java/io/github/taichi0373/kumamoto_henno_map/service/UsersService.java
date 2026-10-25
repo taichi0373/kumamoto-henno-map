@@ -212,6 +212,7 @@ public class UsersService {
      * <p>
      * ログイン済みユーザーがパスワードを確認したうえで自分のアカウントを物理削除する。
      * 管理者アカウントの自己削除は禁止する。
+     * 本人確認前に別のエラーを返さないよう、パスワード照合を管理者判定より先に行う。
      * </p>
      * @param userId 削除対象のユーザーID
      * @param password 本人確認用パスワード（平文）
@@ -225,11 +226,11 @@ public class UsersService {
         if (ValidateUtils.isNullOrEmpty(user)) {
             return null;
         }
-        if (CodeConstants.UserType.ADMIN.equals(user.getIsAdmin())) {
-            throw new AdminAccountDeletionException("管理者アカウントは退会できません");
-        }
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             return false;
+        }
+        if (CodeConstants.UserType.ADMIN.equals(user.getIsAdmin())) {
+            throw new AdminAccountDeletionException("管理者アカウントは退会できません");
         }
         // 並行して削除済みの場合は削除件数0となるため、ユーザー不存在として扱う
         if (usersDao.delete(user) == 0) {

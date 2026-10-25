@@ -2,6 +2,8 @@ package io.github.taichi0373.kumamoto_henno_map.controller;
 
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -47,6 +49,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/users")
 public class UsersController {
+
+    /** ロガー */
+    private static final Logger logger = LoggerFactory.getLogger(UsersController.class);
 
     /**
      * ユーザ情報取得サービス
@@ -204,17 +209,22 @@ public class UsersController {
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "削除成功（data: null）"),
-            @ApiResponse(responseCode = "400", description = "パスワード不一致または管理者アカウント",
+            @ApiResponse(responseCode = "400", description = "入力値が不正（パスワード未入力）または管理者アカウント",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "401", description = "未認証",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "ユーザーが存在しない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "パスワードが正しくない",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "429", description = "パスワード照合の試行回数が上限を超えた",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @DeleteMapping
     public ResponseEntity<ApiResponseDto<Void>> deleteAccount(
-            @RequestBody DeleteAccountRequestDto request,
+            @RequestBody(required = false) DeleteAccountRequestDto request,
             Authentication auth) {
+        Long userId = null;
         try {
             // JWT認証チェック
             if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof CustomUserDetails)) {
@@ -222,29 +232,40 @@ public class UsersController {
                         .body(ApiResponseDto.error("認証が必要です"));
             }
 
-            // パスワードの必須チェック
-            if (ValidateUtils.isNullOrEmpty(request.getPassword())) {
+            // パスワードの必須チェック（ボディなし・JSONのnullも含む）
+            if (request == null || ValidateUtils.isNullOrEmpty(request.getPassword())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponseDto.error("パスワードを入力してください"));
             }
 
             CustomUserDetails principal = (CustomUserDetails) auth.getPrincipal();
-            Boolean result = usersService.deleteOwnAccount(principal.getUserId(), request.getPassword());
+            userId = principal.getUserId();
+
+            // 盗まれたトークンによるパスワード総当たり対策
+            if (loginAttemptService.isAccountDeleteBlocked(userId)) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(ApiResponseDto.error("パスワードの試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
+            }
+
+            Boolean result = usersService.deleteOwnAccount(userId, request.getPassword());
 
             if (result == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponseDto.error("ユーザーが見つかりません"));
             }
             if (Boolean.FALSE.equals(result)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                loginAttemptService.recordAccountDeleteFailure(userId);
+                return ResponseEntity.status(HttpStatus.CONFLICT)
                         .body(ApiResponseDto.error("パスワードが正しくありません"));
             }
 
+            loginAttemptService.recordAccountDeleteSuccess(userId);
             return ResponseEntity.ok(ApiResponseDto.success(null));
         } catch (AdminAccountDeletionException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponseDto.error(e.getMessage()));
         } catch (Exception e) {
+            logger.error("アカウント削除中に予期しないエラーが発生しました userId={}", userId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("アカウントの削除に失敗しました"));
         }

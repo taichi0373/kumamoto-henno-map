@@ -89,10 +89,28 @@ class UsersServiceDeleteTest {
         entity.setPasswordHash("hashedPass");
 
         when(usersDao.selectById(1L)).thenReturn(entity);
+        when(passwordEncoder.matches("pass", "hashedPass")).thenReturn(true);
 
         assertThatThrownBy(() -> usersService.deleteOwnAccount(1L, "pass"))
                 .isInstanceOf(AdminAccountDeletionException.class)
                 .hasMessage("管理者アカウントは退会できません");
+        verify(usersDao, never()).delete(any());
+    }
+
+    /** 管理者アカウントでもパスワード不一致の場合は、管理者判定より先にfalseを返す */
+    @Test
+    void deleteOwnAccount_管理者かつパスワード不一致() throws Exception {
+        UsersEntity entity = new UsersEntity();
+        entity.setUserId(1L);
+        entity.setIsAdmin(CodeConstants.UserType.ADMIN);
+        entity.setPasswordHash("hashedPass");
+
+        when(usersDao.selectById(1L)).thenReturn(entity);
+        when(passwordEncoder.matches("wrong", "hashedPass")).thenReturn(false);
+
+        Boolean result = usersService.deleteOwnAccount(1L, "wrong");
+
+        assertThat(result).isFalse();
         verify(usersDao, never()).delete(any());
     }
 }

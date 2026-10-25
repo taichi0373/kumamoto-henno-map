@@ -11,8 +11,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 /**
  * ログイン試行管理サービス
  * <p>
- * ログイン・新規登録・パスワードリセットのIPアドレスごとの試行回数を管理し、
- * 過剰なアクセスをブロックする。
+ * ログイン・新規登録・パスワードリセットのIPアドレスごとの試行回数、
+ * およびアカウント削除のユーザーIDごとの試行回数を管理し、過剰なアクセスをブロックする。
  * </p>
  * <p>
  * キャッシュには Caffeine を使用し、最大件数（{@link #MAX_TRACKED_IPS}）と
@@ -53,6 +53,12 @@ public class LoginAttemptService {
     /** パスワードリセット確認: ロックアウト時間（分） */
     private static final long PASSWORD_RESET_LOCK_MINUTES = 15;
 
+    /** アカウント削除: 最大失敗試行回数 */
+    private static final int ACCOUNT_DELETE_MAX_ATTEMPTS = 5;
+
+    /** アカウント削除: ロックアウト時間（分） */
+    private static final long ACCOUNT_DELETE_LOCK_MINUTES = 15;
+
     /** キャッシュに保持するIPアドレスの最大件数（超過時は古いエントリをLRU削除） */
     private static final long MAX_TRACKED_IPS = 10_000L;
 
@@ -80,6 +86,15 @@ public class LoginAttemptService {
     /** パスワードリセット確認試行キャッシュ（キー: IPアドレス） */
     private final Cache<String, AttemptData> passwordResetAttempts =
             buildCache(PASSWORD_RESET_LOCK_MINUTES, MAX_TRACKED_IPS);
+
+    /**
+     * アカウント削除試行キャッシュ（キー: ユーザーID）
+     * <p>
+     * 盗まれたアクセストークンによるパスワード総当たりを防ぐため、IPではなくユーザー単位で管理する。
+     * </p>
+     */
+    private final Cache<String, AttemptData> accountDeleteAttempts =
+            buildCache(ACCOUNT_DELETE_LOCK_MINUTES, MAX_TRACKED_IPS);
 
     /**
      * ログイン試行がブロックされているか確認する
@@ -167,6 +182,32 @@ public class LoginAttemptService {
      */
     public void recordPasswordResetSuccess(String ip) {
         passwordResetAttempts.invalidate(ip);
+    }
+
+    /**
+     * アカウント削除試行がブロックされているか確認する
+     * @param userId ユーザーID
+     * @return ブロック中の場合はtrue
+     */
+    public boolean isAccountDeleteBlocked(Long userId) {
+        return isBlocked(accountDeleteAttempts, String.valueOf(userId));
+    }
+
+    /**
+     * アカウント削除の失敗を記録する（パスワード不一致時）
+     * @param userId ユーザーID
+     */
+    public void recordAccountDeleteFailure(Long userId) {
+        record(accountDeleteAttempts, String.valueOf(userId),
+                ACCOUNT_DELETE_MAX_ATTEMPTS, ACCOUNT_DELETE_LOCK_MINUTES);
+    }
+
+    /**
+     * アカウント削除のパスワード照合成功時に試行カウントをリセットする
+     * @param userId ユーザーID
+     */
+    public void recordAccountDeleteSuccess(Long userId) {
+        accountDeleteAttempts.invalidate(String.valueOf(userId));
     }
 
     /**

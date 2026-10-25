@@ -2,6 +2,8 @@ package io.github.taichi0373.kumamoto_henno_map.config;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -129,18 +131,55 @@ class UsersDeleteTest {
                 .andExpect(jsonPath("$.success").value(true));
     }
 
-    /** パスワード不一致 → 400 */
+    /** ボディが JSON の null の場合 → 400 */
     @Test
-    void deleteAccount_パスワード不一致_400() throws Exception {
+    void deleteAccount_ボディnull_400() throws Exception {
+        mockMvc.perform(delete("/users")
+                .with(user(buildUserDetails(1L, CodeConstants.UserType.GENERAL)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("null"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    /** ボディなしの場合 → 400 */
+    @Test
+    void deleteAccount_ボディなし_400() throws Exception {
+        mockMvc.perform(delete("/users")
+                .with(user(buildUserDetails(1L, CodeConstants.UserType.GENERAL))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+    }
+
+    /** パスワード不一致 → 409、失敗回数を記録する */
+    @Test
+    void deleteAccount_パスワード不一致_409() throws Exception {
         when(usersService.deleteOwnAccount(eq(1L), any())).thenReturn(false);
 
         mockMvc.perform(delete("/users")
                 .with(user(buildUserDetails(1L, CodeConstants.UserType.GENERAL)))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"password\":\"wrong\"}"))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("パスワードが正しくありません"));
+
+        verify(loginAttemptService).recordAccountDeleteFailure(1L);
+    }
+
+    /** 試行回数上限超過 → 429、削除処理を呼ばない */
+    @Test
+    void deleteAccount_試行回数上限_429() throws Exception {
+        when(loginAttemptService.isAccountDeleteBlocked(1L)).thenReturn(true);
+
+        mockMvc.perform(delete("/users")
+                .with(user(buildUserDetails(1L, CodeConstants.UserType.GENERAL)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"password\":\"pass\"}"))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.success").value(false));
+
+        verify(usersService, never()).deleteOwnAccount(any(), any());
     }
 
     /** 未認証（Authorizationヘッダーなし） → 401 */

@@ -366,20 +366,24 @@ const openWithdrawDialog = (): void => {
  */
 const confirmWithdraw = async (): Promise<void> => {
   if (!withdrawPassword.value) {
-    withdrawErrorMsg.value = 'パスワードを入力してください'
+    withdrawErrorMsg.value = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "パスワード").message
     return
   }
   isWithdrawLoading.value = true
   try {
     await auth.deleteAccount(withdrawPassword.value)
-    router.push('/')
   } catch (error: unknown) {
     const msg = (error as { response?: { data?: { message?: string } } })
       ?.response?.data?.message
-    withdrawErrorMsg.value = msg ?? '退会処理に失敗しました'
+    withdrawErrorMsg.value = msg ?? API_RESPONSE_MESSAGE.WITHDRAW_FAILED
+    return
   } finally {
     isWithdrawLoading.value = false
   }
+  isWithdrawDialogVisible.value = false
+  // 遷移元のトーストは画面遷移で破棄されるため、遷移完了後に表示する
+  await router.push('/')
+  ToastMessageUtils.success(API_RESPONSE_MESSAGE.WITHDRAW_SUCCESS)
 }
 
 </script>
@@ -410,7 +414,7 @@ const confirmWithdraw = async (): Promise<void> => {
 
 .withdraw-warning {
   margin-bottom: 16px;
-  color: #666;
+  color: base.$base-600;
   font-size: 0.9rem;
 }
 </style>
