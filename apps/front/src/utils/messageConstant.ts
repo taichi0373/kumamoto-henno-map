@@ -56,6 +56,8 @@ const API_RESPONSE_MESSAGE = {
     PASSWORD_RESET_MAIL_SENT: 'パスワードリセットメールを送信しました。メールのリンクからパスワードを変更してください。',
     PASSWORD_RESET_SUCCESS: 'パスワードをリセットしました。新しいパスワードでログインしてください。',
     INVALID_OR_EXPIRED_TOKEN: 'このリンクは無効または期限切れです。再度お試しください。',
+    WITHDRAW_SUCCESS: '退会しました。ご利用ありがとうございました。',
+    WITHDRAW_FAILED: '退会処理に失敗しました',
 }
 
 const GEOLOCATION_MESSAGE = {

@@ -8,9 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import io.github.taichi0373.kumamoto_henno_map.dto.UserResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UsersDto;
+import io.github.taichi0373.kumamoto_henno_map.exception.AdminAccountDeletionException;
 import io.github.taichi0373.kumamoto_henno_map.exception.DuplicateUserException;
 import io.github.taichi0373.kumamoto_henno_map.repository.dao.UsersDao;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.SystemField;
@@ -202,6 +204,38 @@ public class UsersService {
                 : now;
         user.setSystemField(new SystemField(sysCreatedAt, now));
         usersDao.update(user);
+        return true;
+    }
+
+    /**
+     * ユーザー自身のアカウント削除（退会）
+     * <p>
+     * ログイン済みユーザーがパスワードを確認したうえで自分のアカウントを物理削除する。
+     * 管理者アカウントの自己削除は禁止する。
+     * 本人確認前に別のエラーを返さないよう、パスワード照合を管理者判定より先に行う。
+     * </p>
+     * @param userId 削除対象のユーザーID
+     * @param password 本人確認用パスワード（平文）
+     * @return 削除成功時はtrue、パスワード不一致の場合はfalse、ユーザーが存在しない場合はnull
+     * @throws AdminAccountDeletionException 管理者アカウントの場合
+     * @throws Exception DB アクセスエラー等の内部エラー
+     */
+    @Transactional
+    public Boolean deleteOwnAccount(Long userId, String password) throws Exception {
+        UsersEntity user = usersDao.selectById(userId);
+        if (ValidateUtils.isNullOrEmpty(user)) {
+            return null;
+        }
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            return false;
+        }
+        if (CodeConstants.UserType.ADMIN.equals(user.getIsAdmin())) {
+            throw new AdminAccountDeletionException("管理者アカウントは退会できません");
+        }
+        // 並行して削除済みの場合は削除件数0となるため、ユーザー不存在として扱う
+        if (usersDao.delete(user) == 0) {
+            return null;
+        }
         return true;
     }
 
