@@ -135,6 +135,8 @@ public class AuthController {
 
             return ResponseEntity.ok(ApiResponseDto.success(response));
         } catch (Exception e) {
+            // 例外を誘発する入力での試行が試行制限をすり抜けないよう、失敗として記録する
+            loginAttemptService.recordLoginFailure(clientIp);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("ログイン中にエラーが発生しました"));
         }
