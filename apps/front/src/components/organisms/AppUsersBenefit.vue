@@ -72,6 +72,16 @@
                     @click.stop="openReportDialog(benefit)"
                   />
                 </div>
+                <!-- URLコピーボタン -->
+                <div class="copy-url-btn">
+                  <AppButton
+                    label="URLをコピー"
+                    :primary="false"
+                    icon="pi pi-link"
+                    size="small"
+                    @click.stop="copyBenefitUrl(benefit)"
+                  />
+                </div>
               </AppCard>
             </template>
           </div>
@@ -115,6 +125,7 @@ import { BenefitDetailDto } from '@/dto/benefitDetailDto'
 import { codeConstant } from '@/utils/codeConstant'
 import apiClient from '@/utils/api'
 import { ToastMessageUtils } from '@/utils/toastMessageUtils'
+import { BenefitShareUtils } from '@/utils/benefitShareUtils'
 
 /** カテゴリ情報 */
 interface BenefitCategory {
@@ -257,6 +268,9 @@ const submitReport = async () => {
   }
 }
 
+/** 特典の固定URLをクリップボードにコピーする */
+const copyBenefitUrl = BenefitShareUtils.copyBenefitUrl
+
 /** アコーディオンの開閉を切り替える */
 const toggleCategory = (cd: string) => {
   if (openCategories.value.has(cd)) {
@@ -340,7 +354,8 @@ watch(() => props.usersBenefits, () => {
   opacity: 0;
 }
 
-.report-btn {
+.report-btn,
+.copy-url-btn {
   display: flex;
   justify-content: flex-end;
   margin-top: 8px;
