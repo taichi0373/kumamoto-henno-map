@@ -124,6 +124,8 @@
 | IS_ADMIN | CHAR(1) | ✓ | | | 管理者フラグ（1:管理者, 0:一般ユーザー） |
 | SYS_CREATED_AT | TIMESTAMP | | | | 作成日時 |
 | SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
+| LAST_LOGIN_AT | TIMESTAMP | | | | 最終ログイン日時 |
+| LAST_LOGIN_IP | VARCHAR(45) | | | | 最終ログインIPアドレス |
 
 **制約**:
 - 主キー制約: `USERS_PK` (USER_ID)

@@ -47,6 +47,26 @@
               :error="licenseSurrenderedAtErrorDto" />
           </div>
         </div>
+        <div v-if="usersModel.lastLoginAt" class="form-row-2 security-info">
+          <div class="form-col">
+            <AppLabel>最終ログイン日時</AppLabel>
+            <AppTextField
+              :input-id="'lastLoginAt'"
+              type="text"
+              :model-value="formatDateTime(usersModel.lastLoginAt)"
+              :disabled="true"
+            />
+          </div>
+          <div class="form-col">
+            <AppLabel>最終ログインIPアドレス</AppLabel>
+            <AppTextField
+              :input-id="'lastLoginIp'"
+              type="text"
+              :model-value="usersModel.lastLoginIp ?? ''"
+              :disabled="true"
+            />
+          </div>
+        </div>
         <div class="form-btn">
           <AppButton :primary="false" label="クリア" @click="clearForm" />
           <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
@@ -123,6 +143,19 @@ import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageC
 /** ルーター */
 const router = useRouter()
 const auth = useAuthStore()
+
+/**
+ * ISO 8601 日時文字列（タイムゾーンなし）を YYYY/MM/DD HH:mm:ss 形式に変換する
+ * サーバー時刻をそのまま表示するため、Date によるタイムゾーン変換は行わない
+ * @param iso ISO 8601 日時文字列
+ * @returns フォーマットされた日時文字列（解析できない場合は空文字）
+ */
+const formatDateTime = (iso: string | null | undefined): string => {
+  const match = iso?.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/)
+  if (!match) return ''
+  const [, yyyy, mm, dd, hh, mi, ss = '00'] = match
+  return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`
+}
 
 /** ユーザー情報 */
 const usersModel = ref<UsersDto>(new UsersDto())

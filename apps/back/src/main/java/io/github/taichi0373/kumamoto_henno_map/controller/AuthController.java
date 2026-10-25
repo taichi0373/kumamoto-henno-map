@@ -121,7 +121,7 @@ public class AuthController {
                     .body(ApiResponseDto.error("ログイン試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
         }
         try {
-            LoginResponseDto response = authService.login(request.getUsername(), request.getPassword());
+            LoginResponseDto response = authService.login(request.getUsername(), request.getPassword(), clientIp);
             if (response == null) {
                 loginAttemptService.recordLoginFailure(clientIp);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

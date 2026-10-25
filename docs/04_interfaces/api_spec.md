@@ -369,10 +369,17 @@ sequenceDiagram
     "birthDate": "2000-01-01",
     "address": "43100",
     "licenseStatus": "2",
-    "licenseSurrenderedAt": "2024-04-01"
+    "licenseSurrenderedAt": "2024-04-01",
+    "lastLoginAt": "2026-10-25T09:30:00",
+    "lastLoginIp": "192.168.1.1"
   }
 }
 ```
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| lastLoginAt | string (ISO 8601) \| null | 最終ログイン日時（サーバー時刻・タイムゾーンなし）。ログイン記録がない場合は null |
+| lastLoginIp | string \| null | 最終ログインIPアドレス。ログイン記録がない場合は null |
 
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 403 Forbidden** — 他ユーザーへのアクセス
