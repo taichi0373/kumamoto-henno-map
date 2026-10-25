@@ -1,3 +1,8 @@
+---
+paths:
+  - "apps/front/**"
+---
+
 # TypeScript / Vue コーディング規約
 
 ## 基本方針

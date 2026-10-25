@@ -1,6 +1,7 @@
 package io.github.taichi0373.kumamoto_henno_map.repository.dao;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.seasar.doma.Dao;
@@ -261,6 +262,30 @@ public interface UsersDao {
         return queryDsl.from(e)
                 .where(c -> c.eq(e.municipalityCd, municipalityCd))
                 .fetch();
+    }
+
+    /**
+     * 最終ログイン日時・IPアドレスのみ更新
+     * <p>
+     * 他カラムを上書きしないよう、対象カラムに限定して UPDATE する。
+     * </p>
+     *
+     * @param userId      ユーザーID
+     * @param lastLoginAt 最終ログイン日時
+     * @param lastLoginIp 最終ログインIPアドレス
+     * @return 更新件数
+     */
+    default int updateLastLogin(Long userId, LocalDateTime lastLoginAt, String lastLoginIp) {
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return queryDsl.update(e)
+                .set(c -> {
+                    c.value(e.lastLoginAt, lastLoginAt);
+                    c.value(e.lastLoginIp, lastLoginIp);
+                })
+                .where(c -> c.eq(e.userId, userId))
+                .execute();
     }
 
     /**

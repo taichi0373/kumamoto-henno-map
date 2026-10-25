@@ -121,7 +121,17 @@ public class BenefitService {
      * @return 特典詳細（存在しない場合は空のOptional）
      */
     public Optional<BenefitDetailEntity> getBenefitById(String benefitId) {
-        return benefitDetailDao.selectByBenefitId(benefitId).stream().findFirst();
+        return getBenefitDetailsByBenefitId(benefitId).stream().findFirst();
+    }
+
+    /**
+     * 特典IDに紐づく特典詳細一覧を取得する（利用条件が複数ある特典に対応）
+     *
+     * @param benefitId 特典ID
+     * @return 特典詳細リスト（0件の場合は空リスト）
+     */
+    public List<BenefitDetailEntity> getBenefitDetailsByBenefitId(String benefitId) {
+        return benefitDetailDao.selectByBenefitId(benefitId);
     }
 
     /**

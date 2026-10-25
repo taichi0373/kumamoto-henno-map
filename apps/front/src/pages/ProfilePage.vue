@@ -47,6 +47,26 @@
               :error="licenseSurrenderedAtErrorDto" />
           </div>
         </div>
+        <div v-if="usersModel.lastLoginAt" class="form-row-2 security-info">
+          <div class="form-col">
+            <AppLabel>最終ログイン日時</AppLabel>
+            <AppTextField
+              :input-id="'lastLoginAt'"
+              type="text"
+              :model-value="formatDateTime(usersModel.lastLoginAt)"
+              :disabled="true"
+            />
+          </div>
+          <div class="form-col">
+            <AppLabel>最終ログインIPアドレス</AppLabel>
+            <AppTextField
+              :input-id="'lastLoginIp'"
+              type="text"
+              :model-value="usersModel.lastLoginIp ?? ''"
+              :disabled="true"
+            />
+          </div>
+        </div>
         <div class="form-btn">
           <AppButton :primary="false" label="クリア" @click="clearForm" />
           <AppButton :primary="true" :label="'更新'" @click="updateUsersInfo" />
@@ -55,10 +75,39 @@
         <div class="form-link">
           <AppLink @click="router.push('/change-password')">パスワードを変更する</AppLink>
         </div>
+
+        <!-- 退会リンク（管理者には非表示） -->
+        <div v-if="!auth.isAdmin" class="form-link withdraw-link">
+          <AppLink @click="openWithdrawDialog">退会する</AppLink>
+        </div>
       </AppCard>
     </div>
     <!-- トーストメッセージ -->
     <AppToastMessage />
+
+    <!-- 退会確認ダイアログ -->
+    <AppDialog v-model="isWithdrawDialogVisible" header="退会の確認" :dialogStyle="{ width: '420px' }">
+      <p class="withdraw-warning">
+        この操作は取り消せません。退会するとアカウント情報はすべて削除されます。
+      </p>
+      <AppMessageBar
+        v-if="withdrawErrorMsg"
+        mode="error"
+        :message="withdrawErrorMsg"
+        style="width: 100%; margin-bottom: 12px;"
+      />
+      <AppLabel :id="'withdraw-password'" :required="true">パスワード</AppLabel>
+      <AppTextField
+        input-id="withdraw-password"
+        type="password"
+        v-model="withdrawPassword"
+        placeholder="現在のパスワードを入力してください"
+      />
+      <template #footer>
+        <AppButton label="キャンセル" :primary="false" @click="isWithdrawDialogVisible = false" />
+        <AppButton label="退会する" :primary="true" :loading="isWithdrawLoading" @click="confirmWithdraw" />
+      </template>
+    </AppDialog>
   </div>
 </template>
 
@@ -77,6 +126,7 @@ import AppCalendar from '@/components/atoms/AppCalendar.vue'
 import AppMessageBar from '@/components/atoms/AppMessageBar.vue'
 import AppToastMessage from '@/components/atoms/AppToastMessage.vue'
 import AppLink from '@/components/atoms/AppLink.vue'
+import AppDialog from '@/components/atoms/AppDialog.vue'
 import { InputFormErrorDto } from '@/dto/InputFormErrorDto'
 import { codeConstant } from '@/utils/codeConstant'
 import { UsersDto } from '@/dto/usersDto'
@@ -93,6 +143,19 @@ import { API_RESPONSE_MESSAGE, MESSAGE_LIST, MESSAGE_NO } from '@/utils/messageC
 /** ルーター */
 const router = useRouter()
 const auth = useAuthStore()
+
+/**
+ * ISO 8601 日時文字列（タイムゾーンなし）を YYYY/MM/DD HH:mm:ss 形式に変換する
+ * サーバー時刻をそのまま表示するため、Date によるタイムゾーン変換は行わない
+ * @param iso ISO 8601 日時文字列
+ * @returns フォーマットされた日時文字列（解析できない場合は空文字）
+ */
+const formatDateTime = (iso: string | null | undefined): string => {
+  const match = iso?.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/)
+  if (!match) return ''
+  const [, yyyy, mm, dd, hh, mi, ss = '00'] = match
+  return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`
+}
 
 /** ユーザー情報 */
 const usersModel = ref<UsersDto>(new UsersDto())
@@ -125,6 +188,15 @@ const licenseStatusLabels = {
   [codeConstant.LICENSE_STATUS.OTHER]: 'その他',
 }
 const licenseOptions = ref([]) as Ref<SelectDto[]>
+
+/** 退会確認ダイアログ表示フラグ */
+const isWithdrawDialogVisible = ref(false)
+/** 退会確認用パスワード入力値 */
+const withdrawPassword = ref('')
+/** 退会処理エラーメッセージ */
+const withdrawErrorMsg = ref('')
+/** 退会処理中フラグ */
+const isWithdrawLoading = ref(false)
 
 /**
  * 初期表示
@@ -313,6 +385,40 @@ function checkError(): boolean {
   return hasError
 }
 
+/**
+ * 退会ダイアログを開く（入力値をリセットしてから表示）
+ */
+const openWithdrawDialog = (): void => {
+  withdrawPassword.value = ''
+  withdrawErrorMsg.value = ''
+  isWithdrawDialogVisible.value = true
+}
+
+/**
+ * 退会処理を実行する
+ */
+const confirmWithdraw = async (): Promise<void> => {
+  if (!withdrawPassword.value) {
+    withdrawErrorMsg.value = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_001, "パスワード").message
+    return
+  }
+  isWithdrawLoading.value = true
+  try {
+    await auth.deleteAccount(withdrawPassword.value)
+  } catch (error: unknown) {
+    const msg = (error as { response?: { data?: { message?: string } } })
+      ?.response?.data?.message
+    withdrawErrorMsg.value = msg ?? API_RESPONSE_MESSAGE.WITHDRAW_FAILED
+    return
+  } finally {
+    isWithdrawLoading.value = false
+  }
+  isWithdrawDialogVisible.value = false
+  // 遷移元のトーストは画面遷移で破棄されるため、遷移完了後に表示する
+  await router.push('/')
+  ToastMessageUtils.success(API_RESPONSE_MESSAGE.WITHDRAW_SUCCESS)
+}
+
 </script>
 
 <style scoped lang="scss">
@@ -332,5 +438,16 @@ function checkError(): boolean {
   max-width: 600px;
   display: flex;
   justify-content: center;
+}
+
+.withdraw-link {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.withdraw-warning {
+  margin-bottom: 16px;
+  color: base.$base-600;
+  font-size: 0.9rem;
 }
 </style>

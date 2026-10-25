@@ -3,6 +3,7 @@ package io.github.taichi0373.kumamoto_henno_map.repository.entity;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.seasar.doma.Column;
 import org.seasar.doma.Entity;
@@ -70,6 +71,14 @@ public class UsersEntity implements Serializable {
     /** 管理者フラグ（1:管理者,0:一般ユーザー） */
     @Column(name = "is_admin")
     String isAdmin;
+
+    /** 最終ログイン日時 */
+    @Column(name = "last_login_at")
+    LocalDateTime lastLoginAt;
+
+    /** 最終ログインIPアドレス */
+    @Column(name = "last_login_ip")
+    String lastLoginIp;
 
     /** システム共通フィールド */
     private SystemField systemField;

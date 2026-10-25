@@ -54,6 +54,8 @@ erDiagram
         varchar   MUNICIPALITY_CD
         varchar   LICENSE_STATUS
         date      LICENSE_SURRENDERED_AT
+        timestamp LAST_LOGIN_AT
+        varchar   LAST_LOGIN_IP
     }
 
     REFRESH_TOKENS {
