@@ -30,7 +30,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 public class LoginAttemptService {
 
     /** ログイン: 最大失敗試行回数 */
-    private static final int LOGIN_MAX_ATTEMPTS = 5;
+    private static final int LOGIN_MAX_ATTEMPTS = 10;
 
     /** ログイン: ロックアウト時間（分） */
     private static final long LOGIN_LOCK_MINUTES = 15;
