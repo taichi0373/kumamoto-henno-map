@@ -14,6 +14,15 @@
 - コード変更後はテストを実行し、失敗したら修正してから次に進むこと（例: `cd apps/back && ./gradlew test` / `cd apps/front && npm run lint`）
 - 未知のコードは変更前に必ず読んで理解すること
 
+## 開発コマンド
+
+```bash
+docker compose up -d                       # DB(PostgreSQL) / pgAdmin / OTP 起動
+cd apps/back && ./gradlew bootRun          # http://localhost:8081
+cd apps/front && npm run serve             # http://localhost:3000
+cd apps/front && npm run test / test:e2e   # Jest / Playwright
+```
+
 ## アプリ概要
 
 **くまもと自主返納特典マップ** — 熊本県の運転免許自主返納者向け特典情報を地図上で表示・検索するWebアプリ。公共交通機関の割引特典（GTFS/OTP連携による経路探索）と商業施設の割引特典（マーカー表示）の2種類を提供する。
@@ -22,13 +31,15 @@
 
 ### フロントエンド (`apps/front/src/`)
 
-**ルーティング** (`router/index.ts`): Vue Router 4のHistory API。`requiresAuth: true` メタを持つルートは未ログイン時に `/login?redirect=...` にリダイレクト。
+**ルーティング** (`router/index.ts`): Vue Router 4のHistory API。`requiresAuth` / `requiresAdmin` メタを持つルートは未ログイン時に `/login?redirect=...` にリダイレクト。
 
-**APIクライアント** (`utils/api.ts`): AxiosベースのHTTPクライアント。Base URL は `VUE_APP_API_BASE_URL` を優先し、未設定時は同一オリジン前提の `'/kumamoto-henno-map/api'` を使用（開発時は proxy / 本番時はリバースプロキシ）。`Authorization: Bearer <TOKEN>` ヘッダーを付与。401レスポンス時は自動ログアウト・`/login` にリダイレクト。
+**APIクライアント** (`utils/api.ts`): AxiosベースのHTTPクライアント。Base URL は `VITE_API_BASE_URL` を優先し、未設定時は同一オリジン前提の `'/kumamoto-henno-map/api'` を使用（開発時は proxy / 本番時はリバースプロキシ）。`Authorization: Bearer <TOKEN>` ヘッダーを付与。401レスポンス時は自動ログアウト・`/login` にリダイレクト。
 
 **認証** (`stores/auth.ts`): Pinia store + JWT Bearer Token。アクセストークンはメモリ（Pinia state）のみ保持（XSS耐性）。リフレッシュトークンは HttpOnly Cookie で管理。`restoreSession()` は `App.vue` の `onMounted` ではなく、`main.ts` で `app.mount()` 前に `await authStore.restoreSession()` を実行し、ルートガード判定前にセッション復元を完了させる。
 
 ### バックエンド (`apps/back/src/main/java/io/github/taichi0373/kumamoto_henno_map/`)
+
+**データアクセス**: Doma 2（詳細は `.claude/rules/backend.md`）
 
 **認証**: Spring Security STATELESS + JWT Bearer Token（jjwt 0.13.0）。アクセストークン1時間・リフレッシュトークン30日（HttpOnly Cookie・DB管理・ローテーション）。
 
