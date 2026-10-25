@@ -9,7 +9,7 @@ import { registerSW } from 'virtual:pwa-register'
 
 // maplibre-gl Worker
 import { setWorkerUrl } from 'maplibre-gl'
-import maplibreglWorkerUrl from 'maplibre-gl/dist/maplibre-gl-csp-worker?url'
+import maplibreglWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 
 // PrimeVue Import
 import PrimeVue from 'primevue/config'

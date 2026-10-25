@@ -1,4 +1,4 @@
-import maplibregl from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
 import type { Map, NavigationControl, GeolocateControl, LngLatBoundsLike, Marker } from 'maplibre-gl'
 import type { PlaceMarkerFunction, ClearMarkerFunction, ReverseGeocodingFunction } from './markerTypes'
 

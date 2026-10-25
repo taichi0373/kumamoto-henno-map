@@ -1,5 +1,6 @@
 import { ref, shallowRef, type Ref } from 'vue'
-import maplibregl, { type Map } from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
+import type { Map } from 'maplibre-gl'
 import {
   createMapInstance,
   setupMapControls,
