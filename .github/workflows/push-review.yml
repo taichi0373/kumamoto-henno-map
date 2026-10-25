@@ -7,7 +7,9 @@ on:
       - 'docs/**'
       - 'apps/front/**'
       - 'apps/back/**'
-  
+  # 手動実行（GitHub Pages の再デプロイ用）
+  workflow_dispatch:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -41,11 +43,12 @@ jobs:
     if: needs.precheck.outputs.backend-changed == 'true'
     uses: ./.github/workflows/build-backend.yml
 
-  # ドキュメント・コンポーネント・バックエンドのいずれかに変更がある場合、ビルドして公開
+  # ドキュメント・コンポーネント・バックエンドのいずれかに変更がある場合、または手動実行時にビルドして公開
   deploy-pages:
     name: Deploy Pages
     needs: precheck
     if: >
+      github.event_name == 'workflow_dispatch' ||
       needs.precheck.outputs.document-changed == 'true' ||
       needs.precheck.outputs.component-changed == 'true' ||
       needs.precheck.outputs.backend-changed == 'true'
