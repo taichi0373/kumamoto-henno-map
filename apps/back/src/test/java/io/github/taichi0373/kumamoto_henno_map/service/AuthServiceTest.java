@@ -2,6 +2,10 @@ package io.github.taichi0373.kumamoto_henno_map.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,7 +54,7 @@ class AuthServiceTest {
     }
 
     /**
-     * ログイン成功時にlastLoginAtとlastLoginIpがエンティティに設定されてDAOのupdateが呼ばれること
+     * ログイン成功時に最終ログイン日時とIPのみを更新するDAOメソッドが呼ばれ、エンティティ全体の更新は行われないこと
      */
     @Test
     void ログイン成功時に最終ログイン日時とIPが保存される() {
@@ -67,13 +71,10 @@ class AuthServiceTest {
         // Assert
         assertThat(result).isNotNull();
 
-        ArgumentCaptor<UsersEntity> captor = ArgumentCaptor.forClass(UsersEntity.class);
-        verify(usersDao).update(captor.capture());
-        UsersEntity updated = captor.getValue();
-
-        assertThat(updated.getLastLoginIp()).isEqualTo("192.168.1.1");
-        assertThat(updated.getLastLoginAt()).isNotNull();
-        assertThat(updated.getLastLoginAt()).isAfterOrEqualTo(beforeLogin);
+        ArgumentCaptor<LocalDateTime> atCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(usersDao).updateLastLogin(eq(1L), atCaptor.capture(), eq("192.168.1.1"));
+        assertThat(atCaptor.getValue()).isAfterOrEqualTo(beforeLogin);
+        verify(usersDao, never()).update(any());
     }
 
     /**
@@ -91,16 +92,52 @@ class AuthServiceTest {
 
         // Assert
         assertThat(result).isNotNull();
-        ArgumentCaptor<UsersEntity> captor = ArgumentCaptor.forClass(UsersEntity.class);
-        verify(usersDao).update(captor.capture());
-        assertThat(captor.getValue().getLastLoginIp()).isEqualTo("::1");
+        verify(usersDao).updateLastLogin(eq(1L), any(LocalDateTime.class), eq("::1"));
     }
 
     /**
-     * ログイン失敗時（パスワード不一致）はupdateが呼ばれないこと
+     * カラム長（45文字）を超えるIPアドレスは切り詰めて保存されること
      */
     @Test
-    void ログイン失敗時はupdateが呼ばれない() {
+    void カラム長を超えるIPアドレスは切り詰めて保存される() {
+        // Arrange
+        when(usersDao.selectByUsername("testuser")).thenReturn(testUser);
+        when(passwordEncoder.matches("password", "hashed")).thenReturn(true);
+        when(jwtUtil.generateToken(any())).thenReturn("dummy-token");
+        String longIp = "fe80:0000:0000:0000:0000:0000:0000:0001%enp0s31f6";
+
+        // Act
+        authService.login("testuser", "password", longIp);
+
+        // Assert
+        verify(usersDao).updateLastLogin(eq(1L), any(LocalDateTime.class), eq(longIp.substring(0, 45)));
+    }
+
+    /**
+     * 最終ログイン情報の保存に失敗してもログインは成功すること
+     */
+    @Test
+    void 最終ログイン情報の保存失敗時もログインは成功する() {
+        // Arrange
+        when(usersDao.selectByUsername("testuser")).thenReturn(testUser);
+        when(passwordEncoder.matches("password", "hashed")).thenReturn(true);
+        when(jwtUtil.generateToken(any())).thenReturn("dummy-token");
+        when(usersDao.updateLastLogin(anyLong(), any(LocalDateTime.class), anyString()))
+                .thenThrow(new RuntimeException("DB error"));
+
+        // Act
+        var result = authService.login("testuser", "password", "192.168.1.1");
+
+        // Assert
+        assertThat(result).isNotNull();
+        assertThat(result.getToken()).isEqualTo("dummy-token");
+    }
+
+    /**
+     * ログイン失敗時（パスワード不一致）は最終ログイン情報が更新されないこと
+     */
+    @Test
+    void ログイン失敗時は最終ログイン情報が更新されない() {
         // Arrange
         when(usersDao.selectByUsername("testuser")).thenReturn(testUser);
         when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
@@ -110,6 +147,6 @@ class AuthServiceTest {
 
         // Assert
         assertThat(result).isNull();
-        verify(usersDao, org.mockito.Mockito.never()).update(any());
+        verify(usersDao, never()).updateLastLogin(any(), any(), any());
     }
 }

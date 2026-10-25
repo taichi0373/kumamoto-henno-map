@@ -1,5 +1,7 @@
 package io.github.taichi0373.kumamoto_henno_map.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,6 +26,12 @@ import io.github.taichi0373.kumamoto_henno_map.util.JwtUtil;
  */
 @Service
 public class AuthService implements UserDetailsService {
+
+    /** ロガー */
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+
+    /** 最終ログインIPアドレスの最大長（LAST_LOGIN_IP カラム長） */
+    private static final int LAST_LOGIN_IP_MAX_LENGTH = 45;
 
     /** ユーザー情報DAO */
     @Autowired
@@ -105,7 +113,7 @@ public class AuthService implements UserDetailsService {
      * <p>
      * パスワードを検証し、成功時にJWTトークンを含むレスポンスを返す。
      * ログイン成功時は最終ログイン日時とIPアドレスをDBに保存する。
-     * DB保存が失敗した場合は例外をそのまま伝播させ、ログイン失敗として扱う。
+     * 保存は付随情報のため、失敗しても警告ログのみ出力してログインは継続する。
      * </p>
      * @param username ユーザー名
      * @param password パスワード
@@ -117,9 +125,11 @@ public class AuthService implements UserDetailsService {
         if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             return null;
         }
-        user.setLastLoginAt(LocalDateTime.now());
-        user.setLastLoginIp(clientIp);
-        usersDao.update(user);
+        try {
+            usersDao.updateLastLogin(user.getUserId(), LocalDateTime.now(), truncateIp(clientIp));
+        } catch (RuntimeException e) {
+            logger.warn("最終ログイン情報の保存に失敗しました: userId={}", user.getUserId(), e);
+        }
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
         String token = jwtUtil.generateToken(userDetails);
@@ -130,5 +140,17 @@ public class AuthService implements UserDetailsService {
         response.setUsername(user.getUsername());
         response.setAdmin(CodeConstants.UserType.ADMIN.equals(user.getIsAdmin()));
         return response;
+    }
+
+    /**
+     * IPアドレスをカラム長以内に切り詰める
+     * @param clientIp クライアントIPアドレス
+     * @return 最大長以内のIPアドレス（nullの場合はnull）
+     */
+    private String truncateIp(String clientIp) {
+        if (clientIp == null || clientIp.length() <= LAST_LOGIN_IP_MAX_LENGTH) {
+            return clientIp;
+        }
+        return clientIp.substring(0, LAST_LOGIN_IP_MAX_LENGTH);
     }
 }

@@ -67,6 +67,8 @@ class UsersDto {
             this.address = usersInterface.address != null ? usersInterface.address : null;
             this.licenseStatus = usersInterface.licenseStatus != null ? usersInterface.licenseStatus : null;
             this.licenseSurrenderedAt = usersInterface.licenseSurrenderedAt != null ? usersInterface.licenseSurrenderedAt : null;
+            this.lastLoginAt = usersInterface.lastLoginAt != null ? usersInterface.lastLoginAt : null;
+            this.lastLoginIp = usersInterface.lastLoginIp != null ? usersInterface.lastLoginIp : null;
         } else {
             this.userId = null;
             this.username = null;
@@ -77,6 +79,8 @@ class UsersDto {
             this.address = null;
             this.licenseStatus = null;
             this.licenseSurrenderedAt = null;
+            this.lastLoginAt = null;
+            this.lastLoginIp = null;
         }
     }
 }

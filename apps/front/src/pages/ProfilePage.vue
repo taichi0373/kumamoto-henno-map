@@ -115,19 +115,15 @@ const router = useRouter()
 const auth = useAuthStore()
 
 /**
- * ISO 8601 日時文字列を YYYY/MM/DD HH:mm:ss 形式に変換する
+ * ISO 8601 日時文字列（タイムゾーンなし）を YYYY/MM/DD HH:mm:ss 形式に変換する
+ * サーバー時刻をそのまま表示するため、Date によるタイムゾーン変換は行わない
  * @param iso ISO 8601 日時文字列
- * @returns フォーマットされた日時文字列
+ * @returns フォーマットされた日時文字列（解析できない場合は空文字）
  */
 const formatDateTime = (iso: string | null | undefined): string => {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const yyyy = d.getFullYear()
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mi = String(d.getMinutes()).padStart(2, '0')
-  const ss = String(d.getSeconds()).padStart(2, '0')
+  const match = iso?.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/)
+  if (!match) return ''
+  const [, yyyy, mm, dd, hh, mi, ss = '00'] = match
   return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss}`
 }
 
