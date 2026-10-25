@@ -43,7 +43,8 @@ export default defineConfig({
       },
       workbox: {
         // アプリケーションシェル（HTML/JS/CSS）をキャッシュ
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // ※ maplibre-gl v6 の WebWorker は .mjs で出力されるため mjs も対象に含める
+        globPatterns: ['**/*.{js,mjs,css,html,ico,png,svg,woff2}'],
         // メインバンドルがデフォルト上限（2MiB）を超えて precache から外れないよう上限を引き上げる
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // ページ遷移時は index.html を返す（API リクエストは対象外）
