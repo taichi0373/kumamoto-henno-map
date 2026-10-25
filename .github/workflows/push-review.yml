@@ -43,15 +43,16 @@ jobs:
     if: needs.precheck.outputs.backend-changed == 'true'
     uses: ./.github/workflows/build-backend.yml
 
-  # ドキュメント・コンポーネント・バックエンドのいずれかに変更がある場合、または手動実行時にビルドして公開
+  # push時はドキュメント・コンポーネント・バックエンドのいずれかに変更がある場合、手動実行時はdevelopブランチ指定時のみビルドして公開
   deploy-pages:
     name: Deploy Pages
     needs: precheck
     if: >
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop') ||
-      needs.precheck.outputs.document-changed == 'true' ||
-      needs.precheck.outputs.component-changed == 'true' ||
-      needs.precheck.outputs.backend-changed == 'true'
+      (github.event_name == 'push' && (
+        needs.precheck.outputs.document-changed == 'true' ||
+        needs.precheck.outputs.component-changed == 'true' ||
+        needs.precheck.outputs.backend-changed == 'true'))
     uses: ./.github/workflows/deploy-pages.yml
     with:
       is-deploy: true
