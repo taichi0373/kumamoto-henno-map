@@ -88,10 +88,10 @@ class RestApiClient {
       baseURL,
       timeout: 10000,
       // withCredentials は設定しない（同一オリジン前提のため不要）。
-      // 開発環境は vue.config.js の devServer.proxy で同一オリジンを実現。
+      // 開発環境は vite.config.ts の server.proxy で同一オリジンを実現。
       // 本番環境は Nginx リバースプロキシで同一オリジンを実現すること。
       // ※ SameSite=Lax の Cookie はクロスオリジン XHR では送信されないため、
-      //   VUE_APP_API_BASE_URL に絶対 URL を設定して proxy をバイパスすることは禁止。
+      //   VITE_API_BASE_URL に絶対 URL を設定して proxy をバイパスすることは禁止。
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
