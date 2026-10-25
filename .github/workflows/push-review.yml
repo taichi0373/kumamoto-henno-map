@@ -7,7 +7,7 @@ on:
       - 'docs/**'
       - 'apps/front/**'
       - 'apps/back/**'
-  # 手動実行（GitHub Pages の再デプロイ用）
+  # 手動実行（GitHub Pages の再デプロイ用、develop ブランチ指定時のみデプロイ）
   workflow_dispatch:
 
 concurrency:
@@ -48,7 +48,7 @@ jobs:
     name: Deploy Pages
     needs: precheck
     if: >
-      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/develop') ||
       needs.precheck.outputs.document-changed == 'true' ||
       needs.precheck.outputs.component-changed == 'true' ||
       needs.precheck.outputs.backend-changed == 'true'
