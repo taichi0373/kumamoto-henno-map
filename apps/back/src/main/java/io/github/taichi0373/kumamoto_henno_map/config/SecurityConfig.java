@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.github.taichi0373.kumamoto_henno_map.dto.ApiResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.security.JwtAuthenticationFilter;
+import io.github.taichi0373.kumamoto_henno_map.security.NullByteRejectFilter;
 import io.github.taichi0373.kumamoto_henno_map.service.AuthService;
 import io.github.taichi0373.kumamoto_henno_map.util.JwtUtil;
 import jakarta.servlet.http.HttpServletResponse;
@@ -96,7 +97,8 @@ public class SecurityConfig {
                 .accessDeniedHandler((request, response, accessDeniedException) ->
                     writeJsonError(response, HttpServletResponse.SC_FORBIDDEN, "アクセス権限がありません"))
             )
-            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new NullByteRejectFilter(), JwtAuthenticationFilter.class);
 
         return http.build();
     }
