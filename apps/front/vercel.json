@@ -9,5 +9,24 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Content-Security-Policy-Report-Only",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://use.fontawesome.com; font-src 'self' https://use.fontawesome.com; img-src 'self' data: blob: https://tile.openstreetmap.jp; connect-src 'self' https://tile.openstreetmap.jp https://nominatim.openstreetmap.org https://use.fontawesome.com; worker-src 'self' blob:; frame-ancestors 'none'"
+        }
+      ]
+    }
   ]
 }
