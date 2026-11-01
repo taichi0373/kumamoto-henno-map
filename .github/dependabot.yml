@@ -11,6 +11,13 @@ updates:
       - "フロントエンド"
       - "リリースノート除外"
     open-pull-requests-limit: 10
+    ignore:
+      # v5以降はライセンスキーが必須のため、MITライセンスのv4系に固定する
+      - dependency-name: "primevue"
+        versions: [">=5.0.0"]
+      # v8以降はライセンスキーが必須のため、MITライセンスのv7系に固定する
+      - dependency-name: "primeicons"
+        versions: [">=8.0.0"]
 
   # バックエンド（Gradle）
   - package-ecosystem: "gradle"
