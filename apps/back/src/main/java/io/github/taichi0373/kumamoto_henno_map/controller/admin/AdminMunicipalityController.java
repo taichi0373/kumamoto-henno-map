@@ -82,7 +82,7 @@ public class AdminMunicipalityController {
         } catch (Exception e) {
             log.error("自治体登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("自治体の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("自治体の登録に失敗しました"));
         }
     }
 
@@ -104,7 +104,7 @@ public class AdminMunicipalityController {
         } catch (Exception e) {
             log.error("自治体更新エラー: {}", municipalityCd, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("自治体の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("自治体の更新に失敗しました"));
         }
     }
 
@@ -120,10 +120,13 @@ public class AdminMunicipalityController {
             }
             var result = adminMunicipalityService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("自治体CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -144,7 +147,7 @@ public class AdminMunicipalityController {
         } catch (Exception e) {
             log.error("自治体削除エラー: {}", municipalityCd, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("自治体の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("自治体の削除に失敗しました"));
         }
     }
 }

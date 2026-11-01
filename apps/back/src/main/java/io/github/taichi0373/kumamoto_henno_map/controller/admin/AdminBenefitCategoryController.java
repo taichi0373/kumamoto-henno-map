@@ -81,7 +81,7 @@ public class AdminBenefitCategoryController {
         } catch (Exception e) {
             log.error("特典カテゴリ登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典カテゴリの登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典カテゴリの登録に失敗しました"));
         }
     }
 
@@ -103,7 +103,7 @@ public class AdminBenefitCategoryController {
         } catch (Exception e) {
             log.error("特典カテゴリ更新エラー: {}", categoryCd, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典カテゴリの更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典カテゴリの更新に失敗しました"));
         }
     }
 
@@ -119,10 +119,13 @@ public class AdminBenefitCategoryController {
             }
             var result = adminBenefitCategoryService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("特典カテゴリCSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -143,7 +146,7 @@ public class AdminBenefitCategoryController {
         } catch (Exception e) {
             log.error("特典カテゴリ削除エラー: {}", categoryCd, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典カテゴリの削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典カテゴリの削除に失敗しました"));
         }
     }
 }

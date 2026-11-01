@@ -100,7 +100,7 @@ public class AdminAgencyController {
         } catch (Exception e) {
             log.error("事業者登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("事業者の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("事業者の登録に失敗しました"));
         }
     }
 
@@ -122,7 +122,7 @@ public class AdminAgencyController {
         } catch (Exception e) {
             log.error("事業者更新エラー: {}", agencyId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("事業者の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("事業者の更新に失敗しました"));
         }
     }
 
@@ -138,10 +138,13 @@ public class AdminAgencyController {
             }
             var result = adminAgencyService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("事業者CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -162,7 +165,7 @@ public class AdminAgencyController {
         } catch (Exception e) {
             log.error("事業者削除エラー: {}", agencyId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("事業者の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("事業者の削除に失敗しました"));
         }
     }
 }

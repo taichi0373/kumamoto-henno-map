@@ -87,7 +87,7 @@ public class AdminBenefitEligibilityController {
         } catch (Exception e) {
             log.error("特典条件登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典条件の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典条件の登録に失敗しました"));
         }
     }
 
@@ -112,7 +112,7 @@ public class AdminBenefitEligibilityController {
         } catch (Exception e) {
             log.error("特典条件更新エラー: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典条件の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典条件の更新に失敗しました"));
         }
     }
 
@@ -128,10 +128,13 @@ public class AdminBenefitEligibilityController {
             }
             var result = adminBenefitEligibilityService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("特典条件CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -149,7 +152,7 @@ public class AdminBenefitEligibilityController {
         } catch (Exception e) {
             log.error("特典条件削除エラー: {}", id, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典条件の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典条件の削除に失敗しました"));
         }
     }
 }
