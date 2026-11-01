@@ -1,8 +1,10 @@
 package io.github.taichi0373.kumamoto_henno_map.controller.admin;
 
+import org.seasar.doma.jdbc.JdbcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +21,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.admin.AdminPagedResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.admin.AdminUserResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.AdminUsersService;
+import io.github.taichi0373.kumamoto_henno_map.util.DbExceptionUtils;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -102,6 +105,8 @@ public class AdminUsersController {
         } catch (java.util.NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponseDto.error(e.getMessage()));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "ユーザーの更新に失敗しました");
         } catch (Exception e) {
             log.error("ユーザー更新エラー: {}", userId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
