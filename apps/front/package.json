@@ -18,7 +18,7 @@
   "dependencies": {
     "@primevue/themes": "^4.5.4",
     "axios": "^1.21.0",
-    "maplibre-gl": "^6.15.0",
+    "maplibre-gl": "^6.16.0",
     "pinia": "^4.1.0",
     "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
