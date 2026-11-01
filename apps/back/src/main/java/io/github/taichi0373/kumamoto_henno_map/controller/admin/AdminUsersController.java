@@ -105,7 +105,7 @@ public class AdminUsersController {
         } catch (Exception e) {
             log.error("ユーザー更新エラー: {}", userId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("ユーザーの更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("ユーザーの更新に失敗しました"));
         }
     }
 
@@ -123,7 +123,7 @@ public class AdminUsersController {
         } catch (Exception e) {
             log.error("ユーザー削除エラー: {}", userId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("ユーザーの削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("ユーザーの削除に失敗しました"));
         }
     }
 }

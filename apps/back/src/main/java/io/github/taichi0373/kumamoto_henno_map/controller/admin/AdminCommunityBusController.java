@@ -79,7 +79,7 @@ public class AdminCommunityBusController {
         } catch (Exception e) {
             log.error("コミュニティバス路線登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("コミュニティバス路線の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("コミュニティバス路線の登録に失敗しました"));
         }
     }
 
@@ -102,7 +102,7 @@ public class AdminCommunityBusController {
         } catch (Exception e) {
             log.error("コミュニティバス路線更新エラー: {}", routeId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("コミュニティバス路線の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("コミュニティバス路線の更新に失敗しました"));
         }
     }
 
@@ -118,10 +118,13 @@ public class AdminCommunityBusController {
             }
             var result = adminCommunityBusService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("コミュニティバスCSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -139,7 +142,7 @@ public class AdminCommunityBusController {
         } catch (Exception e) {
             log.error("コミュニティバス路線削除エラー: {}", routeId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("コミュニティバス路線の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("コミュニティバス路線の削除に失敗しました"));
         }
     }
 }

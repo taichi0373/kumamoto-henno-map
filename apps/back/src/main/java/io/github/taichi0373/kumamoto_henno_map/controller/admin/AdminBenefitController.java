@@ -98,7 +98,7 @@ public class AdminBenefitController {
         } catch (Exception e) {
             log.error("特典登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典の登録に失敗しました"));
         }
     }
 
@@ -122,7 +122,7 @@ public class AdminBenefitController {
         } catch (Exception e) {
             log.error("特典更新エラー: {}", benefitId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典の更新に失敗しました"));
         }
     }
 
@@ -141,10 +141,13 @@ public class AdminBenefitController {
             }
             var result = adminBenefitService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("特典CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -167,7 +170,7 @@ public class AdminBenefitController {
         } catch (Exception e) {
             log.error("ジオコーディングエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("ジオコーディングに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("ジオコーディングに失敗しました"));
         }
     }
 
@@ -212,7 +215,7 @@ public class AdminBenefitController {
         } catch (Exception e) {
             log.error("特典削除エラー: {}", benefitId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典の削除に失敗しました"));
         }
     }
 }

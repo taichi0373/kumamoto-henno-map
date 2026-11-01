@@ -81,7 +81,7 @@ public class AdminFareDiscountController {
         } catch (Exception e) {
             log.error("運賃割引登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("運賃割引の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("運賃割引の登録に失敗しました"));
         }
     }
 
@@ -105,7 +105,7 @@ public class AdminFareDiscountController {
         } catch (Exception e) {
             log.error("運賃割引更新エラー: {}/{}", benefitId, agencyId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("運賃割引の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("運賃割引の更新に失敗しました"));
         }
     }
 
@@ -121,10 +121,13 @@ public class AdminFareDiscountController {
             }
             var result = adminFareDiscountService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("運賃割引CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -144,7 +147,7 @@ public class AdminFareDiscountController {
         } catch (Exception e) {
             log.error("運賃割引削除エラー: {}/{}", benefitId, agencyId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("運賃割引の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("運賃割引の削除に失敗しました"));
         }
     }
 }

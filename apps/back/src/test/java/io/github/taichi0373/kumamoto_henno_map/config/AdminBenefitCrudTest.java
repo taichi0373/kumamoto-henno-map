@@ -1,12 +1,18 @@
 package io.github.taichi0373.kumamoto_henno_map.config;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -124,5 +132,59 @@ class AdminBenefitCrudTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.message").value("この特典に紐付く特典条件が存在するため削除できません"));
+    }
+
+    /**
+     * 特典登録でSQL文を含む例外が発生しても、レスポンスに例外の内容が含まれないことを確認する
+     */
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void 特典登録で例外が発生しても例外の内容を返さない() throws Exception {
+        when(adminBenefitService.create(any()))
+                .thenThrow(new RuntimeException("insert into benefit (benefit_id) values ('x')"));
+
+        mockMvc.perform(post("/admin/benefits")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"benefitId\":\"x\"}"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("特典の登録に失敗しました"));
+    }
+
+    /**
+     * CSVインポートの行エラーは 400 Bad Request とエラー内容が返ることを確認する
+     */
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void CSVの行エラーは400とエラー内容を返す() throws Exception {
+        when(adminBenefitService.importCsv(any()))
+                .thenThrow(new IllegalArgumentException("行 2: 特典IDが空です"));
+
+        mockMvc.perform(multipart("/admin/benefits/import").file(csvFile()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("CSVインポートに失敗しました: 行 2: 特典IDが空です"));
+    }
+
+    /**
+     * CSVインポートの想定外の例外は、例外の内容を返さないことを確認する
+     */
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void CSVインポートで想定外の例外が発生しても例外の内容を返さない() throws Exception {
+        when(adminBenefitService.importCsv(any()))
+                .thenThrow(new RuntimeException("insert into benefit (benefit_id) values ('x')"));
+
+        mockMvc.perform(multipart("/admin/benefits/import").file(csvFile()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.message").value("CSVインポートに失敗しました"));
+    }
+
+    /**
+     * テスト用のCSVファイルを生成する
+     *
+     * @return CSVファイル
+     */
+    private MockMultipartFile csvFile() {
+        return new MockMultipartFile("file", "benefit.csv", "text/csv", "benefitId\nx\n".getBytes(StandardCharsets.UTF_8));
     }
 }
