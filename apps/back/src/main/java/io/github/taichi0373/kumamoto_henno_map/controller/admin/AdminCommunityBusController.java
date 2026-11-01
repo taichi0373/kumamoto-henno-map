@@ -1,8 +1,10 @@
 package io.github.taichi0373.kumamoto_henno_map.controller.admin;
 
+import org.seasar.doma.jdbc.JdbcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +23,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.admin.AdminPagedResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.admin.CsvImportResultDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.CommunityBusEntity;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.AdminCommunityBusService;
+import io.github.taichi0373.kumamoto_henno_map.util.DbExceptionUtils;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -76,10 +79,12 @@ public class AdminCommunityBusController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponseDto.error(e.getMessage()));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "コミュニティバス路線の登録に失敗しました");
         } catch (Exception e) {
             log.error("コミュニティバス路線登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("コミュニティバス路線の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("コミュニティバス路線の登録に失敗しました"));
         }
     }
 
@@ -99,10 +104,12 @@ public class AdminCommunityBusController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponseDto.error(e.getMessage()));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "コミュニティバス路線の更新に失敗しました");
         } catch (Exception e) {
             log.error("コミュニティバス路線更新エラー: {}", routeId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("コミュニティバス路線の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("コミュニティバス路線の更新に失敗しました"));
         }
     }
 
@@ -118,10 +125,13 @@ public class AdminCommunityBusController {
             }
             var result = adminCommunityBusService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("コミュニティバスCSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -139,7 +149,7 @@ public class AdminCommunityBusController {
         } catch (Exception e) {
             log.error("コミュニティバス路線削除エラー: {}", routeId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("コミュニティバス路線の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("コミュニティバス路線の削除に失敗しました"));
         }
     }
 }

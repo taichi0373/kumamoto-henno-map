@@ -1,8 +1,10 @@
 package io.github.taichi0373.kumamoto_henno_map.controller.admin;
 
+import org.seasar.doma.jdbc.JdbcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +23,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.admin.AdminPagedResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.admin.CsvImportResultDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.MunicipalityEntity;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.AdminMunicipalityService;
+import io.github.taichi0373.kumamoto_henno_map.util.DbExceptionUtils;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -74,10 +77,12 @@ public class AdminMunicipalityController {
         try {
             var result = adminMunicipalityService.create(entity);
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDto.success(result));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "自治体の登録に失敗しました");
         } catch (Exception e) {
             log.error("自治体登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("自治体の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("自治体の登録に失敗しました"));
         }
     }
 
@@ -94,10 +99,12 @@ public class AdminMunicipalityController {
         } catch (java.util.NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponseDto.error(e.getMessage()));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "自治体の更新に失敗しました");
         } catch (Exception e) {
             log.error("自治体更新エラー: {}", municipalityCd, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("自治体の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("自治体の更新に失敗しました"));
         }
     }
 
@@ -113,10 +120,13 @@ public class AdminMunicipalityController {
             }
             var result = adminMunicipalityService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("自治体CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -137,7 +147,7 @@ public class AdminMunicipalityController {
         } catch (Exception e) {
             log.error("自治体削除エラー: {}", municipalityCd, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("自治体の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("自治体の削除に失敗しました"));
         }
     }
 }

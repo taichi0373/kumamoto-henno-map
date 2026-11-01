@@ -2,9 +2,11 @@ package io.github.taichi0373.kumamoto_henno_map.controller.admin;
 
 import java.util.List;
 
+import org.seasar.doma.jdbc.JdbcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +25,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.admin.AdminPagedResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.admin.CsvImportResultDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.AgencyEntity;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.AdminAgencyService;
+import io.github.taichi0373.kumamoto_henno_map.util.DbExceptionUtils;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -92,10 +95,12 @@ public class AdminAgencyController {
         try {
             var result = adminAgencyService.create(entity);
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDto.success(result));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "事業者の登録に失敗しました");
         } catch (Exception e) {
             log.error("事業者登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("事業者の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("事業者の登録に失敗しました"));
         }
     }
 
@@ -112,10 +117,12 @@ public class AdminAgencyController {
         } catch (java.util.NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponseDto.error(e.getMessage()));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "事業者の更新に失敗しました");
         } catch (Exception e) {
             log.error("事業者更新エラー: {}", agencyId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("事業者の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("事業者の更新に失敗しました"));
         }
     }
 
@@ -131,10 +138,13 @@ public class AdminAgencyController {
             }
             var result = adminAgencyService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("事業者CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -155,7 +165,7 @@ public class AdminAgencyController {
         } catch (Exception e) {
             log.error("事業者削除エラー: {}", agencyId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("事業者の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("事業者の削除に失敗しました"));
         }
     }
 }

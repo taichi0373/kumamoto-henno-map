@@ -17,6 +17,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.ApiResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.RouteRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.security.CustomUserDetails;
 import io.github.taichi0373.kumamoto_henno_map.service.RouteService;
+import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -49,12 +50,19 @@ public class RouteController {
     @Operation(summary = "経路探索", description = "出発地・目的地・日時を指定し OTP 経由で公共交通経路を探索する。未ログインでも利用可（ログイン時はユーザーIDがログに記録される）。")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "探索成功（OTP レスポンスをそのまま返却）"),
+            @ApiResponse(responseCode = "400", description = "入力値が不正",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "500", description = "OTP 接続エラーまたは探索失敗",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/search")
     public ResponseEntity<ApiResponseDto<List<Map<String, Object>>>> searchRoutes(@RequestBody RouteRequestDto request, Authentication auth) {
         try {
+            var validationError = ValidateUtils.validateRouteRequest(request);
+            if (validationError.isPresent()) {
+                return ResponseEntity.badRequest().body(ApiResponseDto.error(validationError.get()));
+            }
+
             // JWT認証済みの場合はユーザーIDを取得（未ログインは null）
             Long userId = (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof CustomUserDetails)
                     ? ((CustomUserDetails) auth.getPrincipal()).getUserId()

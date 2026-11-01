@@ -1,8 +1,10 @@
 package io.github.taichi0373.kumamoto_henno_map.controller.admin;
 
+import org.seasar.doma.jdbc.JdbcException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +25,7 @@ import io.github.taichi0373.kumamoto_henno_map.dto.admin.GeocodingResultDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitEntity;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.AdminBenefitService;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.GeocodingService;
+import io.github.taichi0373.kumamoto_henno_map.util.DbExceptionUtils;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -95,10 +98,12 @@ public class AdminBenefitController {
         try {
             var result = adminBenefitService.create(entity);
             return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDto.success(result));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "特典の登録に失敗しました");
         } catch (Exception e) {
             log.error("特典登録エラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典の登録に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典の登録に失敗しました"));
         }
     }
 
@@ -119,10 +124,12 @@ public class AdminBenefitController {
         } catch (java.util.NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponseDto.error(e.getMessage()));
+        } catch (JdbcException | DataAccessException e) {
+            return DbExceptionUtils.toErrorResponse(e, "特典の更新に失敗しました");
         } catch (Exception e) {
             log.error("特典更新エラー: {}", benefitId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典の更新に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典の更新に失敗しました"));
         }
     }
 
@@ -141,10 +148,13 @@ public class AdminBenefitController {
             }
             var result = adminBenefitService.importCsv(file);
             return ResponseEntity.ok(ApiResponseDto.success(result));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
         } catch (Exception e) {
             log.error("特典CSVインポートエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("CSVインポートに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("CSVインポートに失敗しました"));
         }
     }
 
@@ -167,7 +177,7 @@ public class AdminBenefitController {
         } catch (Exception e) {
             log.error("ジオコーディングエラー", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("ジオコーディングに失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("ジオコーディングに失敗しました"));
         }
     }
 
@@ -212,7 +222,7 @@ public class AdminBenefitController {
         } catch (Exception e) {
             log.error("特典削除エラー: {}", benefitId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典の削除に失敗しました: " + e.getMessage()));
+                    .body(ApiResponseDto.error("特典の削除に失敗しました"));
         }
     }
 }
