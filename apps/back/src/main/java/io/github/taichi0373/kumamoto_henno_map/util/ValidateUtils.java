@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.util.ObjectUtils;
 
+import io.github.taichi0373.kumamoto_henno_map.dto.BenefitEligibilityDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.RouteRequestDto;
 
 /**
@@ -43,6 +44,8 @@ public class ValidateUtils {
     private static final double LATITUDE_LIMIT = 90.0;
     /** 経度の絶対値の上限 */
     private static final double LONGITUDE_LIMIT = 180.0;
+    /** 検索半径の上限（km）。特典検索画面のスライダーの最大値と合わせる */
+    private static final double RADIUS_KM_LIMIT = 10.0;
 
     /** パスワード最低文字数 */
     public static final int PASSWORD_MIN_LENGTH = 8;
@@ -190,6 +193,29 @@ public class ValidateUtils {
         }
         if (isTooLong(request.getStartLocation()) || isTooLong(request.getEndLocation())) {
             return Optional.of("出発地または目的地の名称が長すぎます");
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * 特典検索リクエストの一括バリデーション
+     * <p>
+     * 未指定の項目は検証しない。範囲外の値は距離計算が無限大になり例外となるため拒否する。
+     * </p>
+     *
+     * @param request 特典検索リクエスト
+     * @return エラーメッセージ。{@link Optional#empty()} の場合は検証通過
+     */
+    public static Optional<String> validateBenefitSearchRequest(BenefitEligibilityDto request) {
+        Double latitude = request.getLatitude();
+        Double longitude = request.getLongitude();
+        if ((latitude != null && !isInRange(latitude, LATITUDE_LIMIT))
+                || (longitude != null && !isInRange(longitude, LONGITUDE_LIMIT))) {
+            return Optional.of("現在地の座標が正しくありません");
+        }
+        Double radiusKm = request.getRadiusKm();
+        if (radiusKm != null && !(radiusKm > 0 && radiusKm <= RADIUS_KM_LIMIT)) {
+            return Optional.of("検索半径が正しくありません");
         }
         return Optional.empty();
     }

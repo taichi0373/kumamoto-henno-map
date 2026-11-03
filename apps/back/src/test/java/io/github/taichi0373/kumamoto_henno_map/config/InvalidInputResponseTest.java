@@ -1,11 +1,17 @@
 package io.github.taichi0373.kumamoto_henno_map.config;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -31,10 +37,19 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
+import io.github.taichi0373.kumamoto_henno_map.constants.CodeConstants;
+import io.github.taichi0373.kumamoto_henno_map.controller.BenefitController;
 import io.github.taichi0373.kumamoto_henno_map.controller.RouteController;
+import io.github.taichi0373.kumamoto_henno_map.controller.UsersController;
 import io.github.taichi0373.kumamoto_henno_map.controller.admin.AdminBenefitController;
+import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
+import io.github.taichi0373.kumamoto_henno_map.security.CustomUserDetails;
 import io.github.taichi0373.kumamoto_henno_map.service.AuthService;
+import io.github.taichi0373.kumamoto_henno_map.service.BenefitService;
+import io.github.taichi0373.kumamoto_henno_map.service.FeedbackService;
+import io.github.taichi0373.kumamoto_henno_map.service.LoginAttemptService;
 import io.github.taichi0373.kumamoto_henno_map.service.RouteService;
+import io.github.taichi0373.kumamoto_henno_map.service.UsersService;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.AdminBenefitService;
 import io.github.taichi0373.kumamoto_henno_map.service.admin.GeocodingService;
 import io.github.taichi0373.kumamoto_henno_map.util.JwtUtil;
@@ -59,7 +74,8 @@ class InvalidInputResponseTest {
     /** テスト用最小WebMVC設定 */
     @Configuration
     @EnableWebMvc
-    @Import({SecurityConfig.class, CorsConfig.class, AdminBenefitController.class, RouteController.class})
+    @Import({SecurityConfig.class, CorsConfig.class, AdminBenefitController.class, RouteController.class,
+            BenefitController.class, UsersController.class})
     static class Config {
     }
 
@@ -84,6 +100,18 @@ class InvalidInputResponseTest {
 
     @MockitoBean
     private RouteService routeService;
+
+    @MockitoBean
+    private BenefitService benefitService;
+
+    @MockitoBean
+    private FeedbackService feedbackService;
+
+    @MockitoBean
+    private UsersService usersService;
+
+    @MockitoBean
+    private LoginAttemptService loginAttemptService;
 
     @BeforeEach
     void setUp() {
@@ -137,5 +165,74 @@ class InvalidInputResponseTest {
                 .andExpect(jsonPath("$.message").value("交通手段が正しくありません"));
 
         verifyNoInteractions(routeService);
+    }
+
+    @Test
+    void 範囲外の座標による特典検索は400を返し検索しない() throws Exception {
+        mockMvc.perform(post("/benefit/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"latitude\":1000,\"longitude\":130.74}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
+
+        verifyNoInteractions(benefitService);
+    }
+
+    @Test
+    void 特典検索の不正な文字によるDBエラーは400を返しSQL文を含まない() throws Exception {
+        when(benefitService.searchBenefits(any()))
+                .thenThrow(new DataIntegrityViolationException(SQL_TEXT, new SQLException(SQL_TEXT, "22021")));
+
+        mockMvc.perform(post("/benefit/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"keyword\":\"a\\u0000b\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(not(containsString(SQL_TEXT))));
+    }
+
+    @Test
+    void ユーザー更新の文字数超過は400を返しSQL文を含まない() throws Exception {
+        when(usersService.updateUsersInfo(any()))
+                .thenThrow(new RuntimeException("ユーザー情報の更新に失敗しました",
+                        new SQLException(SQL_TEXT, "22001")));
+
+        mockMvc.perform(put("/users")
+                        .with(user(buildUserDetails()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":1,\"username\":\"taro\",\"email\":\"taro@example.com\","
+                                + "\"birthDate\":\"2000-01-01\",\"address\":\"1234567\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(not(containsString(SQL_TEXT))));
+    }
+
+    @Test
+    void ユーザー更新のDB以外のエラーは500を返す() throws Exception {
+        when(usersService.updateUsersInfo(any())).thenThrow(new RuntimeException(SQL_TEXT));
+
+        mockMvc.perform(put("/users")
+                        .with(user(buildUserDetails()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\":1,\"username\":\"taro\",\"email\":\"taro@example.com\","
+                                + "\"birthDate\":\"2000-01-01\"}"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string(not(containsString(SQL_TEXT))));
+    }
+
+    @Test
+    void APIの応答にCORPヘッダーを付与する() throws Exception {
+        mockMvc.perform(post("/benefit/search")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(header().string("Cross-Origin-Resource-Policy", "same-origin"));
+    }
+
+    /** テスト用 CustomUserDetails を生成するヘルパー */
+    private CustomUserDetails buildUserDetails() {
+        UsersEntity entity = new UsersEntity();
+        entity.setUserId(1L);
+        entity.setIsAdmin(CodeConstants.UserType.GENERAL);
+        entity.setUsername("taro");
+        entity.setPasswordHash("hash");
+        return new CustomUserDetails(entity);
     }
 }
