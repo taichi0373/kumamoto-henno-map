@@ -1,0 +1,51 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  # 定期実行はデフォルトブランチ（main）のみが対象（毎週月曜 9:00 JST）
+  schedule:
+    - cron: '0 0 * * 1'
+
+env:
+  TZ: Asia/Tokyo
+
+# jobs: 動作内容
+jobs:
+  # CodeQL 解析処理
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    timeout-minutes: 30
+    # Github-hosted runner を使用
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, java-kotlin, javascript-typescript, python]
+
+    # steps: 動作手順
+    steps:
+
+      # リポジトリ取得
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # CodeQL 初期化（ビルド不要モードで解析）
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      # 解析・結果アップロード
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
