@@ -8,15 +8,15 @@
 | Javaメソッド・変数 | camelCase | `benefitId`, `findByMunicipalityCd` |
 | Java定数 | UPPER_SNAKE_CASE | `DEFAULT_CATEGORY_CD` |
 | Javaパッケージ | 小文字・ドット区切り | `io.github.taichi0373.kumamoto_henno_map.controller` |
-| Vueコンポーネント・ファイル | `App` プレフィックス + PascalCase | `AppButton.vue`, `AppSearchBenefit.vue` |
+| Vueコンポーネント・ファイル | `App` プレフィックス + PascalCase（管理画面専用は `Admin` プレフィックス） | `AppButton.vue`, `AppSearchBenefit.vue`, `AdminSidebar.vue` |
 | ページコンポーネント | PascalCase + `Page` サフィックス | `HomePage.vue`, `LoginPage.vue` |
 | TS変数・関数 | camelCase | `benefitList`, `searchBenefits` |
 | TS定数 | UPPER_SNAKE_CASE | `API_BASE_URL`, `MAX_SEARCH_RESULTS` |
 | TS型・インターフェース | PascalCase | `BenefitDto`, `SearchParams` |
 | Composable | `use` + PascalCase | `useMap`, `useAuth` |
 | DBテーブル・カラム | UPPER_SNAKE_CASE | `BENEFIT`, `BENEFIT_NAME` |
-| DB制約 | `テーブル名_制約種別_カラム名` | `BENEFIT_PK`, `BENEFIT_FK_MUNICIPALITY` |
-| DBインデックス | `IX_テーブル名_カラム名` | `IX_BENEFIT_MUNICIPALITY_CD` |
+| DB制約 | `テーブル名_制約種別[_対象]` | `BENEFIT_PK`, `BENEFIT_FK_MUNICIPALITY`, `USERS_EMAIL_UNIQUE` |
+| DBインデックス | `テーブル名_カラム名_IDX` | `REFRESH_TOKENS_USER_ID_IDX` |
 | APIエンドポイント | kebab-case・RESTful | `/auth/login`, `/benefit/search` |
 | APIクエリパラメータ・JSONフィールド | camelCase | `municipalityCd`, `benefitName` |
 | Gitブランチ | `種別/説明`（kebab-case） | `feature/add-benefit-search` |
@@ -51,13 +51,16 @@ public class BenefitDetailResponse {}
 src/
   components/
     atoms/      AppButton.vue, AppTextField.vue, AppSelect.vue, AppDialog.vue ...
-    molecules/  AppLicenseInfo.vue, AppInputGroupWithButton.vue
-    organisms/  AppHeader.vue, AppSearchBenefit.vue, AppRouteGuidance.vue ...
+    molecules/  AppInputGroupWithButton.vue
+    organisms/  AppHeader.vue, AppSearchBenefit.vue, AppRouteGuidance.vue, AdminSidebar.vue ...
+  layouts/      AdminLayout.vue
   pages/        HomePage.vue, LoginPage.vue, ProfilePage.vue, SignupPage.vue ...
+    admin/      AdminBenefitPage.vue, AdminUsersPage.vue ...
   dto/          benefitDto.ts, routeDto.ts, usersDto.ts ...
-  router/       index.ts
+    admin/      adminDto.ts
+  router/       index.ts, adminGuard.ts
   stores/       auth.ts
-  utils/        api.ts, validateUtils.ts, useMap.ts, messageConstant.ts ...
+  utils/        api.ts, useMap.ts, codeConstant.ts, messageConstant.ts ...
 ```
 
 > Composableは `utils/` に配置する（例: `useMap.ts`）
@@ -84,6 +87,7 @@ function validateInput() {}
 | `bugfix/` | バグ修正 |
 | `hotfix/` | 緊急修正 |
 | `docs/` | ドキュメント更新 |
+| `ci/` | CI/CD 設定変更 |
 
 ### コミット種別
 
@@ -94,3 +98,6 @@ function validateInput() {}
 | `docs` | ドキュメント |
 | `refactor` | リファクタリング |
 | `test` | テスト |
+| `ci` | CI/CD 設定 |
+| `build` | 依存関係・ビルド設定（Dependabot は `build(deps):`） |
+| `chore` | 雑務・自動更新（例: GTFS データ更新） |

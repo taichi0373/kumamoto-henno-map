@@ -4,14 +4,14 @@
 
 ```
 main     ──● Release v1.0.0 ──────────────────────── Release v1.1.0 ──
-              ↑ squash merge                               ↑ squash merge
+              ↑ merge commit                               ↑ merge commit
 develop  ──●──●──●──●──●──●──●──●──●──●──●──●──●──●──●──●──
              #1  #2  #3 ...                                #N
 ```
 
 | ブランチ | 環境 | 役割 |
 |---------|------|------|
-| `main` | 本番 | リリース済みコードのみ。`Release vX.Y.Z` の squash merge コミットとタグだけが並ぶ |
+| `main` | 本番 | リリース済みコードのみ。`Release vX.Y.Z` PR のマージコミットとタグが並ぶ |
 | `develop` | 検証 | 開発の主軸。feature/bugfix ブランチのマージ先。常に `main` より前にある |
 | `feature/*` | ローカル | 機能開発用。`develop` から切って `develop` へ PR を出す |
 | `bugfix/*` | ローカル | バグ修正用。`develop` から切って `develop` へ PR を出す |
@@ -60,43 +60,47 @@ git commit -m "○○機能の実装"
 
 GitHub 上で `develop` → `main` の PR を作成する。
 
-- タイトル例: `Release v1.1.0`
+- タイトルは必ず `Release vX.Y.Z` の形式にする（例: `Release v1.1.0`）
+- リリースの実行はこのタイトルで判定する。形式が異なるとリリースされない、または失敗する
 
-### 2. Squash and merge でマージ
+### 2. Create a merge commit でマージ
 
-PR のマージ方法は必ず **"Squash and merge"** を選択する。
+PR のマージ方法は **"Create a merge commit"** を選択する。
 
-- コミットメッセージ: `Release vX.Y.Z`
-- これにより `main` にはリリースコミット 1 件だけが追加される
+- `main` と `develop` の履歴が分岐しないようにするため、Squash and merge は使わない
 
 ### 3. GitHub Actions が自動実行（手動作業不要）
 
-`main` への push をトリガーに `.github/workflows/release.yml` が自動で以下を実行する。
+`main` 向け PR のマージをトリガーに `.github/workflows/release.yml` が自動で以下を実行する。
 
 ```
-main への push（Release vX.Y.Z）
+main 向け PR のマージ（タイトル: Release vX.Y.Z）
   │
-  ├─ [release job]
-  │    ├─ バージョン番号を抽出（"Release v1.1.0" → "v1.1.0"）
-  │    ├─ git tag vX.Y.Z を作成・プッシュ
-  │    └─ GitHub Release を作成（PR タイトルから変更履歴を自動生成）
-  │
-  └─ [sync-develop job]（release job 完了後）
-       └─ main を develop にマージしてプッシュ（diverge 解消）
+  └─ [release job]
+       ├─ バージョン番号を抽出（"Release v1.1.0" → "v1.1.0"）
+       ├─ git tag vX.Y.Z を作成・プッシュ
+       └─ GitHub Release を作成（PR タイトルから変更履歴を自動生成）
 ```
+
+- フォークからの PR ではリリースしない
+- ラベル `リリースノート除外` が付いた PR は変更履歴から除外される
+- GitHub Actions の画面から手動実行（`workflow_dispatch`）も可能。入力したバージョン（例: `v1.1.0`）でタグと Release を作成する
+
+### 4. main の変更を develop へ取り込む
+
+`main` に `develop` にないコミットがある場合（Dependabot のセキュリティ更新など）は、次のリリース PR の前に `main` → `develop` の PR を作成して取り込む。
 
 ### 手順まとめ
 
 ```
 develop ──●──●──●──●──●
-                        ↓ PR "Release v1.1.0" (Squash and merge) ← 手動
+                        ↓ PR "Release v1.1.0" (Create a merge commit) ← 手動
 main    ──────────── Release v1.1.0
                         │
                         ├─ tag v1.1.0        ← 自動（GitHub Actions）
-                        ├─ GitHub Release    ← 自動（GitHub Actions）
-                        │
-                        ↓ merge main → develop
-develop ──●──●──●──●──●──● (sync) ──次の開発へ  ← 自動（GitHub Actions）
+                        └─ GitHub Release    ← 自動（GitHub Actions）
+
+develop ──●──●──●──●──●──次の開発へ（main にだけあるコミットは PR で取り込む ← 手動）
 ```
 
 ---
@@ -118,7 +122,19 @@ GitHub Release の変更履歴は、マージされた PR のタイトルから�
 | イベント | 実行されるワークフロー |
 |---------|----------------------|
 | feature・bugfix → develop の PR | ビルド・テスト |
-| develop へのマージ後 push | ビルド・テスト + 検証環境デプロイ |
+| develop へのマージ後 push（`docs/`・`apps/front/`・`apps/back/` 配下の変更時） | ビルド・テスト + GitHub Pages デプロイ（設計書・Storybook・Javadoc・OpenAPI） |
 | develop → main の PR（リリース PR） | ビルド・テスト |
-| main へのマージ後 push（`Release v*`） | タグ作成・GitHub Release 作成・develop 同期 |
-| main へのマージ後 push（その他） | なし |
+| main 向け PR のマージ（タイトルが `Release v*`） | タグ作成・GitHub Release 作成 |
+| main 向け PR のマージ（その他） | なし |
+| release.yml の手動実行（workflow_dispatch） | 入力したバージョンでタグ作成・GitHub Release 作成 |
+
+### その他のワークフロー
+
+| ワークフロー | トリガー | 内容 |
+|------------|---------|------|
+| `codeql.yml` | main / develop への push・PR、毎週月曜 9:00 JST | CodeQL による静的解析（actions / java-kotlin / javascript-typescript / python） |
+| `gtfs-auto-update.yml` | 毎週月曜 2:00 JST、手動 | GTFS データの有効期限チェック・更新 PR 作成・OTP グラフのビルドと配備・Slack 通知 |
+| `otp-ci.yml` / `build-otp.yml` | `docker-compose.yml`・`config/otp/` 配下の変更時 | OTP の動作確認・グラフビルド |
+| `dependabot-auto-merge.yml` | Dependabot の PR 作成・更新時 | パッチ・マイナー更新は自動マージ、メジャー更新は「要レビュー」ラベルを付与 |
+| `auto-label-pr.yml` | PR 作成時 | PR へのラベル自動付与 |
+| `auto-delete-branch.yml` | PR クローズ時 | マージ済みブランチの削除 |

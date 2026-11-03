@@ -39,7 +39,7 @@ graph LR
         OTP[OpenTripPlanner]
         OSM[OpenStreetMap]
         GTFS[GTFS Data Feed]
-        MAIL[SendGrid HTTP API]
+        MAIL[Resend HTTP API]
         SLACK[Slack Incoming Webhook]
         AWS[AWS Location Service]
     end
@@ -181,6 +181,14 @@ sequenceDiagram
 { "success": false, "data": null, "message": "ログイン試行回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
 ```
 
+> ログイン失敗が10回に達すると、同一IPアドレスからのログインを15分間ロックする。
+
+**レスポンス 500 Internal Server Error**
+
+```json
+{ "success": false, "data": null, "message": "ログイン中にエラーが発生しました" }
+```
+
 ---
 
 ### POST /auth/refresh
@@ -196,8 +204,8 @@ sequenceDiagram
   "success": true,
   "data": {
     "token": "eyJhbGciOiJIUzI1NiJ9...",
-    "userInfo": {
-      "userId": 1,
+    "user": {
+      "id": "1",
       "username": "taro",
       "isAdmin": false
     }
@@ -206,8 +214,17 @@ sequenceDiagram
 ```
 
 > 新しい `refresh_token` が Set-Cookie ヘッダー（HttpOnly）で返却される。
+> `user.id` は文字列型（`POST /auth/login` の `userId` は数値型）。
 
-**レスポンス 401 Unauthorized** — Cookie なし、または無効・失効済みトークン
+**レスポンス 401 Unauthorized** — Cookie なし、または無効・失効済みトークン（無効・失効時は Cookie も削除する）
+
+```json
+{ "success": false, "data": null, "message": "リフレッシュトークンがありません" }
+```
+
+```json
+{ "success": false, "data": null, "message": "リフレッシュトークンが無効または期限切れです。再ログインしてください。" }
+```
 
 ---
 
@@ -223,7 +240,7 @@ sequenceDiagram
 
 ### POST /auth/password-reset/request
 
-パスワードリセットメールを送信する。指定メールアドレスにリセット用トークンURLを送信する。メールアドレスの存在有無に関わらず同一レスポンスを返す（列挙攻撃対策）。
+パスワードリセットメールを送信する。指定メールアドレスにリセット用トークンURLを送信する。メールアドレスの存在有無・形式の正誤・メール送信の成否に関わらず同一レスポンス（200）を返す（列挙攻撃対策）。メール送信には Resend を使用する。
 
 - **認証**: 不要
 
@@ -274,12 +291,25 @@ sequenceDiagram
 { "success": true, "data": null }
 ```
 
-**レスポンス 400 Bad Request** — 入力値不正（必須項目未入力・パスワード不一致・パスワード形式不正）
+**レスポンス 400 Bad Request** — 入力値不正、またはトークンが無効・期限切れ・使用済み
+
+| メッセージ | 原因 |
+|---|---|
+| すべての項目を入力してください | 必須項目未入力 |
+| パスワードは8～64文字で入力してください | パスワード長不正 |
+| 新しいパスワードと確認用パスワードが一致しません | 確認用パスワード不一致 |
+| このリンクは無効または期限切れです。再度お試しください。 | トークンが無効・期限切れ・使用済み |
 
 **レスポンス 429 Too Many Requests** — 試行回数超過（15分後に解除）
 
 ```json
 { "success": false, "data": null, "message": "試行回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
+```
+
+**レスポンス 500 Internal Server Error**
+
+```json
+{ "success": false, "data": null, "message": "パスワードのリセットに失敗しました" }
 ```
 
 ---
@@ -307,9 +337,9 @@ sequenceDiagram
 
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
-| username | string | ○ | ユーザー名（一意・最大30文字） |
-| password | string | ○ | パスワード（平文。サーバー側でハッシュ化） |
-| email | string | ○ | メールアドレス（一意） |
+| username | string | ○ | ユーザー名（一意・3〜30文字・半角英数字/ハイフン/アンダースコアのみ） |
+| password | string | ○ | パスワード（8〜64文字。平文。サーバー側でハッシュ化） |
+| email | string | ○ | メールアドレス（一意・形式チェックあり） |
 | birthDate | string (ISO 8601) | - | 生年月日 |
 | address | string | - | 居住自治体コード |
 | licenseStatus | string | - | 運転免許の所持状況 |
@@ -341,9 +371,31 @@ sequenceDiagram
 { "success": false, "data": null, "message": "このメールアドレスは既に使用されています" }
 ```
 
-**レスポンス 429 Too Many Requests** — 登録試行回数超過（1時間後に解除）
+**レスポンス 400 Bad Request** — バリデーションエラー
+
+| メッセージ | 原因 |
+|---|---|
+| ユーザー名を入力してください | ユーザー名未入力 |
+| ユーザー名は3文字以上で入力してください / ユーザー名は30文字以内で入力してください | ユーザー名の長さ不正 |
+| ユーザー名は半角英数字・ハイフン・アンダースコアのみ使用できます | ユーザー名の文字種不正 |
+| パスワードを入力してください | パスワード未入力 |
+| パスワードは8～64文字で入力してください | パスワード長不正 |
+| メールアドレスを入力してください | メールアドレス未入力 |
+| メールアドレスの形式が正しくありません | メールアドレス形式不正 |
+
+**レスポンス 429 Too Many Requests** — 登録試行回数超過（5回で同一IPアドレスを1時間ロック）
+
+```json
+{ "success": false, "data": null, "message": "登録試行回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
+```
+
+**レスポンス 500 Internal Server Error** — 登録失敗・サーバー内部エラー
 
 **レスポンス 503 Service Unavailable** — DB接続エラー
+
+```json
+{ "success": false, "data": null, "message": "データベース接続エラーが発生しました。しばらく時間をおいて再度お試しください。" }
+```
 
 ---
 
@@ -384,6 +436,7 @@ sequenceDiagram
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 403 Forbidden** — 他ユーザーへのアクセス
 **レスポンス 404 Not Found** — ユーザーが存在しない
+**レスポンス 500 Internal Server Error** — `ユーザー情報の取得に失敗しました`
 
 ---
 
@@ -412,7 +465,7 @@ sequenceDiagram
 { "success": true, "data": null }
 ```
 
-**レスポンス 400 Bad Request** — バリデーションエラー（ユーザー名未入力・メールアドレス形式不正・生年月日不正）
+**レスポンス 400 Bad Request** — バリデーションエラー（ユーザー名は `POST /users/signup` と同じチェック、メールアドレス未入力・形式不正、`生年月日を入力してください`、`生年月日に未来日は登録できません`）。PUT では生年月日が必須
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 403 Forbidden** — 他ユーザーへのアクセス
 **レスポンス 404 Not Found** — ユーザーが存在しない
@@ -450,7 +503,7 @@ sequenceDiagram
 { "success": true, "data": null }
 ```
 
-**レスポンス 400 Bad Request** — 入力値不正（必須項目未入力・パスワード不一致・パスワード形式不正）
+**レスポンス 400 Bad Request** — 入力値不正（`すべての項目を入力してください`、`パスワードは8～64文字で入力してください`、`新しいパスワードと確認用パスワードが一致しません`）
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 404 Not Found** — ユーザーが存在しない
 **レスポンス 409 Conflict** — 現在のパスワードが正しくない
@@ -458,6 +511,60 @@ sequenceDiagram
 ```json
 { "success": false, "data": null, "message": "現在のパスワードが正しくありません" }
 ```
+
+**レスポンス 500 Internal Server Error** — `パスワードの変更に失敗しました`
+
+---
+
+### DELETE /users
+
+ログイン中のユーザー自身のアカウントを削除する（退会）。パスワードによる本人確認が必要。管理者アカウントは退会できない。
+
+- **認証**: 必須（`Authorization: Bearer <token>`）
+
+**リクエスト**
+
+```json
+{
+  "password": "currentPass123"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|---|---|---|---|
+| password | string | ○ | 現在のパスワード（本人確認用） |
+
+**レスポンス 200 OK**
+
+```json
+{ "success": true, "data": null }
+```
+
+**レスポンス 400 Bad Request** — パスワード未入力、または管理者アカウント
+
+```json
+{ "success": false, "data": null, "message": "パスワードを入力してください" }
+```
+
+```json
+{ "success": false, "data": null, "message": "管理者アカウントは退会できません" }
+```
+
+**レスポンス 401 Unauthorized** — 未認証
+**レスポンス 404 Not Found** — ユーザーが存在しない
+**レスポンス 409 Conflict** — パスワードが正しくない
+
+```json
+{ "success": false, "data": null, "message": "パスワードが正しくありません" }
+```
+
+**レスポンス 429 Too Many Requests** — パスワード照合の失敗が5回に達した（ユーザー単位で15分間ロック）
+
+```json
+{ "success": false, "data": null, "message": "パスワードの試行回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
+```
+
+**レスポンス 500 Internal Server Error** — `アカウントの削除に失敗しました`
 
 ---
 
@@ -485,11 +592,13 @@ sequenceDiagram
 }
 ```
 
+**レスポンス 500 Internal Server Error** — `カテゴリ一覧の取得に失敗しました`
+
 ---
 
 ### POST /benefit/search
 
-検索条件（年齢・免許状態・自治体コード・キーワード等）から特典一覧を取得する。
+検索条件（年齢・免許状態・自治体コード・キーワード・現在地からの距離等）から特典一覧を取得する。
 
 - **認証**: 不要
 
@@ -501,7 +610,10 @@ sequenceDiagram
   "licenseStatus": "2",
   "municipalityCd": "43100",
   "keyword": "バス",
-  "categoryCd": "C001"
+  "categoryCd": "C001",
+  "latitude": 32.8032,
+  "longitude": 130.7079,
+  "radiusKm": 2
 }
 ```
 
@@ -510,8 +622,13 @@ sequenceDiagram
 | age | Integer | - | 年齢 |
 | licenseStatus | string | - | 運転免許の所持状況 |
 | municipalityCd | string | - | 自治体コード |
-| keyword | string | - | フリーワード検索 |
+| keyword | string | - | フリーワード検索（特典名称・特典内容の部分一致） |
 | categoryCd | string | - | カテゴリコード |
+| latitude | Double | - | 現在地の緯度（-90〜90）。`longitude` と両方指定時のみ距離で絞り込む |
+| longitude | Double | - | 現在地の経度（-180〜180） |
+| radiusKm | Double | - | 検索半径（km、0より大きく10以下）。省略時は2km |
+
+> 現在地を指定した場合、座標を持つ特典（店舗特典）のうち指定半径内のもののみ返却する。
 
 **レスポンス 200 OK**
 
@@ -524,13 +641,17 @@ sequenceDiagram
       "municipalityCd": "43100",
       "municipalityName": "熊本市",
       "municipalityKana": "くまもとし",
-      "municipalityType": "市",
+      "municipalityType": "3",
       "benefitName": "バス運賃割引",
       "benefitShortName": "バス割引",
       "benefitDetail": "バス運賃を10%割引",
       "expDetail": "2025年3月31日まで",
       "phoneNumber": "096-XXX-XXXX",
       "benefitUrl": "https://example.com/benefit",
+      "address": null,
+      "latitude": null,
+      "longitude": null,
+      "lastConfirmedDate": "2026-04-01",
       "categoryCd": "C001",
       "categoryName": "交通",
       "displayOrder": 1,
@@ -552,7 +673,7 @@ sequenceDiagram
 | municipalityCd | 自治体コード |
 | municipalityName | 自治体名称 |
 | municipalityKana | 自治体名称かな |
-| municipalityType | 自治体区分 |
+| municipalityType | 自治体区分（`1`: 都道府県, `2`: 区, `3`: 市町村） |
 | benefitName | 特典名称 |
 | benefitShortName | 特典短縮名称 |
 | benefitDetail | 特典内容 |
@@ -562,6 +683,7 @@ sequenceDiagram
 | address | 住所（店舗特典のみ・ジオコーディング済みの場合） |
 | latitude | 緯度（店舗特典のみ・ジオコーディング済みの場合） |
 | longitude | 経度（店舗特典のみ・ジオコーディング済みの場合） |
+| lastConfirmedDate | 最終確認日（管理者が情報を確認した日。未確認の場合は null） |
 | categoryCd | カテゴリコード |
 | categoryName | カテゴリ名称 |
 | displayOrder | 表示順 |
@@ -572,6 +694,10 @@ sequenceDiagram
 | maxAge | 最高年齢 |
 | eligibilityMunicipalityCd | 利用条件の対象自治体コード |
 | eligibilityNote | 備考 |
+
+**レスポンス 400 Bad Request** — `現在地の座標が正しくありません`、`検索半径が正しくありません`
+
+**レスポンス 409 / 400 / 500** — DB 例外発生時（「エラーコード一覧」参照）
 
 ---
 
@@ -589,6 +715,7 @@ sequenceDiagram
 
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 403 Forbidden** — 他ユーザーへのアクセス
+**レスポンス 500 Internal Server Error** — `ユーザー特典情報の取得に失敗しました`
 
 ---
 
@@ -644,6 +771,66 @@ sequenceDiagram
 
 ---
 
+### GET /benefit/{benefitId}
+
+特典IDに紐づく特典詳細を取得する。特典共有URL（`/?benefitId={benefitId}`）を開いた際の表示に使用する。利用条件が複数ある特典は複数件返る。
+
+- **認証**: 不要
+
+| パスパラメータ | 型 | 説明 |
+|---|---|---|
+| benefitId | String | 特典ID |
+
+**レスポンス 200 OK** — `POST /benefit/search` と同形式の特典配列
+
+**レスポンス 404 Not Found** — 該当する特典が存在しない
+
+```json
+{ "success": false, "data": null, "message": "特典が見つかりません: B001" }
+```
+
+**レスポンス 500 Internal Server Error** — `特典の取得に失敗しました`
+
+---
+
+### POST /benefit/{benefitId}/report
+
+特典情報の誤り（情報が古い等）を管理者に報告する。Slack Incoming Webhook に通知する。
+
+- **認証**: 不要
+
+| パスパラメータ | 型 | 説明 |
+|---|---|---|
+| benefitId | String | 報告対象の特典ID |
+
+リクエストボディなし。
+
+**レスポンス 200 OK**
+
+```json
+{ "success": true, "data": null }
+```
+
+**レスポンス 400 Bad Request** — 該当する特典が存在しない
+
+```json
+{ "success": false, "data": null, "message": "特典が見つかりません: B001" }
+```
+
+**レスポンス 500 Internal Server Error** — `報告の送信に失敗しました`
+
+> **Slack通知フォーマット例:**
+> ```
+> ⚠️ 特典情報の報告
+> 特典名: バス運賃割引
+> 特典ID: B001
+> 報告日時: 2025-01-15 14:30
+> ```
+>
+> `SLACK_WEBHOOK_URL` 環境変数未設定時はSlack送信をスキップしてサーバーログに出力する。
+
+---
+
 ## 4. 市区町村 (`/municipality`)
 
 ### GET /municipality/all
@@ -667,6 +854,8 @@ sequenceDiagram
   ]
 }
 ```
+
+**レスポンス 500 Internal Server Error** — `市区町村情報の取得に失敗しました`
 
 ---
 
@@ -697,38 +886,83 @@ sequenceDiagram
 
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
-| transportMode | string | ○ | OTP 交通手段指定（例: `"TRANSIT,WALK"`） |
-| startLocation | string | - | 出発地名称（表示用） |
+| transportMode | string | ○ | OTP 交通手段指定（例: `"TRANSIT,WALK"`。英大文字・アンダースコアのカンマ区切り、50文字以内） |
+| startLocation | string | - | 出発地名称（表示用・200文字以内） |
 | startLat | Double | ○ | 出発地緯度 |
 | startLon | Double | ○ | 出発地経度 |
-| endLocation | string | - | 目的地名称（表示用） |
+| endLocation | string | - | 目的地名称（表示用・200文字以内） |
 | endLat | Double | ○ | 目的地緯度 |
 | endLon | Double | ○ | 目的地経度 |
-| date | string (YYYY-MM-DD) | ○ | 出発日（または到着日） |
-| time | string (HH:mm) | ○ | 出発時刻（または到着時刻） |
+| date | string (YYYY-MM-DD) | - | 出発日（または到着日）。省略時は OTP の既定（現在日） |
+| time | string (HH:mm / HH:mm:ss) | - | 出発時刻（または到着時刻）。省略時は OTP の既定（現在時刻） |
 | arriveBy | boolean | - | `true`: 到着時刻指定、`false`: 出発時刻指定（デフォルト: `false`） |
 
 **レスポンス 200 OK**
 
-OTP から返却される経路情報をそのまま返す。`data` フィールドに OTP レスポンス（`plan.itineraries` 配列など）が格納される。
+OTP のレスポンスを整形した経路（itinerary）の配列を返す。到着時刻の早い順に最大3件。運賃割引マスタ（`FARE_DISCOUNT`）をもとに割引後運賃も算出する。
 
 ```json
 {
   "success": true,
-  "data": {
-    "plan": {
-      "itineraries": [
+  "data": [
+    {
+      "startTime": "09:02",
+      "endTime": "09:31",
+      "duration": 29,
+      "totalFare": 230,
+      "totalDiscountFare": 115,
+      "transfers": 0,
+      "legs": [
         {
-          "duration": 1800,
-          "legs": [ "..." ]
+          "mode": "BUS",
+          "startTime": "09:05",
+          "endTime": "09:25",
+          "duration": 20,
+          "from": "熊本駅前",
+          "fromLat": 32.7898,
+          "fromLon": 130.6984,
+          "to": "市役所前",
+          "toLat": 32.8031,
+          "toLon": 130.7078,
+          "fare": 230,
+          "discountFare": 115,
+          "agencyName": "熊本市交通局",
+          "agencyId": "A001",
+          "communityBusId": "",
+          "agencyUrl": "https://example.com",
+          "routeId": "R001",
+          "legGeometry": { "points": "encoded-polyline" },
+          "transitLeg": true,
+          "isRealtime": false,
+          "arrivalDelay": null,
+          "benefitUrl": "https://example.com/benefit",
+          "benefitId": "B001",
+          "freePass": ""
         }
       ]
     }
-  }
+  ]
 }
 ```
 
-**レスポンス 500 Internal Server Error** — OTP 接続エラーや経路探索失敗時
+| フィールド | 説明 |
+|---|---|
+| startTime / endTime | 出発・到着時刻（`HH:mm`） |
+| duration | 所要時間（分） |
+| totalFare | 合計運賃 |
+| totalDiscountFare | 割引後の合計運賃（割引対象区間がない場合は null） |
+| transfers | 乗り換え回数 |
+| legs | 区間ごとの情報（徒歩区間を含む） |
+| legs[].mode | 交通手段（`WALK` / `BUS` / `TRAM` / `RAIL` 等） |
+| legs[].fare / discountFare | 区間運賃・割引後運賃 |
+| legs[].legGeometry.points | 区間の経路形状（Encoded Polyline） |
+| legs[].transitLeg | 公共交通区間か |
+| legs[].isRealtime / arrivalDelay | リアルタイム情報の有無・到着遅延（秒） |
+| legs[].benefitId / benefitUrl / freePass | 区間に適用される特典の情報 |
+
+**レスポンス 400 Bad Request** — 入力値不正（`交通手段が正しくありません`、`出発地または目的地の座標が正しくありません`、`日付が正しくありません`、`時刻が正しくありません`、`出発地または目的地の名称が長すぎます`）
+
+**レスポンス 500 Internal Server Error** — OTP 接続エラーや経路探索失敗時（`経路探索中にエラーが発生しました`）
 
 ---
 
@@ -754,9 +988,11 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 | フィールド | 型 | 必須 | 説明 |
 |---|---|---|---|
 | category | string | - | カテゴリ（`"BUG"`: バグ報告 / `"REQUEST"`: 要望 / `"OTHER"`: その他）。未指定時はその他扱い |
-| name | string | - | 送信者の名前（任意・最大100文字） |
-| email | string | - | 送信者のメールアドレス（任意・最大255文字） |
-| content | string | ○ | フィードバック内容（必須・最大2000文字） |
+| name | string | - | 送信者の名前（任意） |
+| email | string | - | 送信者のメールアドレス（任意） |
+| content | string | ○ | フィードバック内容（必須） |
+
+> サーバー側では `content` の未入力チェックのみ行い、文字数の上限チェックは行わない（画面側で name 100文字・email 255文字・content 2000文字の入力上限を設定）。
 
 **レスポンス 200 OK**
 
@@ -770,7 +1006,7 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 { "success": false, "data": null, "message": "内容は必須です" }
 ```
 
-**レスポンス 500 Internal Server Error** — サーバー内部エラー
+**レスポンス 500 Internal Server Error** — `フィードバックの送信に失敗しました`（Slack 送信自体の失敗はログ出力のみで 200 を返す）
 
 > **Slack通知フォーマット例:**
 > ```
@@ -807,7 +1043,7 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 ### 認証
 
-全管理APIは `Authorization: Bearer <token>` ヘッダーが必須です（管理者アカウントのJWTトークン）。
+全管理APIは `Authorization: Bearer <token>` ヘッダーが必須で、管理者権限（`ROLE_ADMIN`）が必要です。未認証の場合は 401、管理者でないユーザーの場合は 403 を返します。
 
 ### ページングリクエスト共通パラメータ
 
@@ -829,9 +1065,8 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 {
   "success": true,
   "data": {
-    "content": [...],
-    "totalElements": 100,
-    "totalPages": 5,
+    "items": [...],
+    "total": 100,
     "page": 0,
     "size": 20
   }
@@ -844,13 +1079,25 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 {
   "success": true,
   "data": {
-    "createdCount": 10,
-    "updatedCount": 2,
-    "failedCount": 1,
+    "inserted": 10,
+    "updated": 2,
+    "failed": 1,
     "errors": ["行3: benefitIdが重複しています"]
   }
 }
 ```
+
+CSVインポートは `multipart/form-data`（`file` パラメータ）でファイルを送信する。
+
+### 共通レスポンスステータス
+
+| ステータス | 発生条件 |
+|---|---|
+| 201 Created | 新規作成（POST）成功時。ボディは作成したエンティティ |
+| 400 Bad Request | 入力値不正、DB の制約違反、CSV ファイルが空（`ファイルが空です`）・CSV 内容不正（`CSVインポートに失敗しました: ...`） |
+| 404 Not Found | 更新・削除対象が存在しない |
+| 409 Conflict | 一意制約違反（`既に登録されています`）、他テーブルから参照されているデータの削除 |
+| 500 Internal Server Error | サーバー内部エラー |
 
 ---
 
@@ -858,10 +1105,10 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 交通事業者一覧をページング取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **固有パラメータ**: `agencyId`, `agencyName`, `agencyKana`, `phoneNumber`, `operatorId`
 
-**レスポンス 200 OK** — ページングレスポンス形式（`content` に `AgencyEntity` の配列）
+**レスポンス 200 OK** — ページングレスポンス形式（`items` に `AgencyEntity` の配列）
 
 ---
 
@@ -869,7 +1116,7 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 セレクトボックス用に全事業者を一括取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -888,11 +1135,11 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 事業者を新規作成する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **リクエスト**: `AgencyEntity` 形式のJSONボディ
 
-**レスポンス 200 OK** — 作成した `AgencyEntity`
+**レスポンス 201 Created** — 作成した `AgencyEntity`
 
 ---
 
@@ -900,7 +1147,7 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 事業者情報を更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 | パスパラメータ | 型 | 説明 |
 |---|---|---|
@@ -916,7 +1163,7 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 事業者を削除する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -926,7 +1173,7 @@ OTP から返却される経路情報をそのまま返す。`data` フィール
 
 CSVファイルで事業者を一括登録・更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **リクエスト**: `multipart/form-data`（`file` パラメータ）
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
@@ -937,10 +1184,10 @@ CSVファイルで事業者を一括登録・更新する。
 
 特典カテゴリ一覧をページング取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **固有パラメータ**: `categoryCd`, `categoryName`, `displayOrder`
 
-**レスポンス 200 OK** — ページングレスポンス形式（`content` に `BenefitCategoryEntity` の配列）
+**レスポンス 200 OK** — ページングレスポンス形式（`items` に `BenefitCategoryEntity` の配列）
 
 ---
 
@@ -948,9 +1195,9 @@ CSVファイルで事業者を一括登録・更新する。
 
 特典カテゴリを新規作成する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
-**レスポンス 200 OK** — 作成した `BenefitCategoryEntity`
+**レスポンス 201 Created** — 作成した `BenefitCategoryEntity`
 
 ---
 
@@ -958,7 +1205,7 @@ CSVファイルで事業者を一括登録・更新する。
 
 特典カテゴリを更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — 更新後の `BenefitCategoryEntity`
 
@@ -968,7 +1215,7 @@ CSVファイルで事業者を一括登録・更新する。
 
 特典カテゴリを削除する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -978,7 +1225,7 @@ CSVファイルで事業者を一括登録・更新する。
 
 CSVファイルで特典カテゴリを一括登録・更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
 
@@ -988,10 +1235,10 @@ CSVファイルで特典カテゴリを一括登録・更新する。
 
 特典一覧をページング取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **固有パラメータ**: `benefitId`, `benefitName`, `municipalityCd`, `categoryCd`, `expDetail`
 
-**レスポンス 200 OK** — ページングレスポンス形式（`content` に `BenefitEntity` の配列）
+**レスポンス 200 OK** — ページングレスポンス形式（`items` に `BenefitEntity` の配列）
 
 ---
 
@@ -999,9 +1246,9 @@ CSVファイルで特典カテゴリを一括登録・更新する。
 
 特典を新規作成する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
-**レスポンス 200 OK** — 作成した `BenefitEntity`
+**レスポンス 201 Created** — 作成した `BenefitEntity`
 
 ---
 
@@ -1009,7 +1256,7 @@ CSVファイルで特典カテゴリを一括登録・更新する。
 
 特典情報を更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — 更新後の `BenefitEntity`
 
@@ -1019,7 +1266,7 @@ CSVファイルで特典カテゴリを一括登録・更新する。
 
 特典を削除する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -1029,7 +1276,7 @@ CSVファイルで特典カテゴリを一括登録・更新する。
 
 CSVファイルで特典を一括登録・更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
 
@@ -1039,7 +1286,7 @@ CSVファイルで特典を一括登録・更新する。
 
 AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の店舗名から住所・緯度・経度を一括取得し、BENEFITテーブルに保存する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 | クエリパラメータ | 型 | デフォルト | 説明 |
 |---|---|---|---|
@@ -1071,8 +1318,34 @@ AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の�
 **レスポンス 500 Internal Server Error** — ジオコーディング処理全体の失敗
 
 ```json
-{ "success": false, "data": null, "message": "ジオコーディングに失敗しました: ..." }
+{ "success": false, "data": null, "message": "ジオコーディングに失敗しました" }
 ```
+
+---
+
+### POST /admin/benefits/{benefitId}/confirm
+
+特典情報を確認済みとしてマークする。対象特典の最終確認日（`LAST_CONFIRMED_DATE`）を当日の日付に更新する。
+
+- **認証**: 必須（管理者）
+
+| パスパラメータ | 型 | 説明 |
+|---|---|---|
+| benefitId | String | 確認対象の特典ID |
+
+**レスポンス 200 OK**
+
+```json
+{ "success": true, "data": null }
+```
+
+**レスポンス 404 Not Found**
+
+```json
+{ "success": false, "data": null, "message": "特典が見つかりません: B001" }
+```
+
+**レスポンス 500 Internal Server Error** — `確認処理に失敗しました`
 
 ---
 
@@ -1080,10 +1353,10 @@ AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の�
 
 特典利用条件一覧をページング取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **固有パラメータ**: `id`, `benefitId`, `licenseStatus`, `minAge`, `maxAge`, `municipalityCd`
 
-**レスポンス 200 OK** — ページングレスポンス形式（`content` に `BenefitEligibilityEntity` の配列）
+**レスポンス 200 OK** — ページングレスポンス形式（`items` に `BenefitEligibilityEntity` の配列）
 
 ---
 
@@ -1091,9 +1364,9 @@ AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の�
 
 特典利用条件を新規作成する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
-**レスポンス 200 OK** — 作成した `BenefitEligibilityEntity`
+**レスポンス 201 Created** — 作成した `BenefitEligibilityEntity`
 
 ---
 
@@ -1101,7 +1374,7 @@ AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の�
 
 特典利用条件を更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — 更新後の `BenefitEligibilityEntity`
 
@@ -1111,7 +1384,7 @@ AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の�
 
 特典利用条件を削除する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -1121,7 +1394,7 @@ AWS Location Serviceを使用して、店舗特典（カテゴリ: BS001）の�
 
 CSVファイルで特典利用条件を一括登録・更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
 
@@ -1131,10 +1404,10 @@ CSVファイルで特典利用条件を一括登録・更新する。
 
 コミュニティバス路線一覧をページング取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **固有パラメータ**: `routeId`, `routeName`, `communityBusId`
 
-**レスポンス 200 OK** — ページングレスポンス形式（`content` に `CommunityBusEntity` の配列）
+**レスポンス 200 OK** — ページングレスポンス形式（`items` に `CommunityBusEntity` の配列）
 
 ---
 
@@ -1142,9 +1415,9 @@ CSVファイルで特典利用条件を一括登録・更新する。
 
 コミュニティバス路線を新規作成する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
-**レスポンス 200 OK** — 作成した `CommunityBusEntity`
+**レスポンス 201 Created** — 作成した `CommunityBusEntity`
 
 ---
 
@@ -1152,7 +1425,7 @@ CSVファイルで特典利用条件を一括登録・更新する。
 
 コミュニティバス路線を更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — 更新後の `CommunityBusEntity`
 
@@ -1162,7 +1435,7 @@ CSVファイルで特典利用条件を一括登録・更新する。
 
 コミュニティバス路線を削除する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -1172,7 +1445,7 @@ CSVファイルで特典利用条件を一括登録・更新する。
 
 CSVファイルでコミュニティバス路線を一括登録・更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
 
@@ -1182,10 +1455,10 @@ CSVファイルでコミュニティバス路線を一括登録・更新する�
 
 運賃割引一覧をページング取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **固有パラメータ**: `benefitId`, `agencyId`, `discountType`, `discountValue`
 
-**レスポンス 200 OK** — ページングレスポンス形式（`content` に `FareDiscountEntity` の配列）
+**レスポンス 200 OK** — ページングレスポンス形式（`items` に `FareDiscountEntity` の配列）
 
 ---
 
@@ -1193,9 +1466,9 @@ CSVファイルでコミュニティバス路線を一括登録・更新する�
 
 運賃割引を新規作成する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
-**レスポンス 200 OK** — 作成した `FareDiscountEntity`
+**レスポンス 201 Created** — 作成した `FareDiscountEntity`
 
 ---
 
@@ -1203,7 +1476,7 @@ CSVファイルでコミュニティバス路線を一括登録・更新する�
 
 運賃割引を更新する。複合主キー（`benefitId` + `agencyId`）を使用。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 | パスパラメータ | 型 | 説明 |
 |---|---|---|
@@ -1218,7 +1491,7 @@ CSVファイルでコミュニティバス路線を一括登録・更新する�
 
 運賃割引を削除する。複合主キー（`benefitId` + `agencyId`）を使用。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -1228,7 +1501,7 @@ CSVファイルでコミュニティバス路線を一括登録・更新する�
 
 CSVファイルで運賃割引を一括登録・更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
 
@@ -1238,10 +1511,10 @@ CSVファイルで運賃割引を一括登録・更新する。
 
 自治体一覧をページング取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **固有パラメータ**: `municipalityCd`, `municipalityName`, `municipalityKana`, `municipalityType`
 
-**レスポンス 200 OK** — ページングレスポンス形式（`content` に `MunicipalityEntity` の配列）
+**レスポンス 200 OK** — ページングレスポンス形式（`items` に `MunicipalityEntity` の配列）
 
 ---
 
@@ -1249,9 +1522,9 @@ CSVファイルで運賃割引を一括登録・更新する。
 
 自治体を新規作成する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
-**レスポンス 200 OK** — 作成した `MunicipalityEntity`
+**レスポンス 201 Created** — 作成した `MunicipalityEntity`
 
 ---
 
@@ -1259,7 +1532,7 @@ CSVファイルで運賃割引を一括登録・更新する。
 
 自治体情報を更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — 更新後の `MunicipalityEntity`
 
@@ -1269,7 +1542,7 @@ CSVファイルで運賃割引を一括登録・更新する。
 
 自治体を削除する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -1279,7 +1552,7 @@ CSVファイルで運賃割引を一括登録・更新する。
 
 CSVファイルで自治体を一括登録・更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK** — CSVインポートレスポンス形式
 
@@ -1289,10 +1562,10 @@ CSVファイルで自治体を一括登録・更新する。
 
 ユーザー一覧をページング取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 - **固有パラメータ**: `userId`, `username`, `email`, `birthDate`, `municipalityCd`, `licenseStatus`
 
-**レスポンス 200 OK** — ページングレスポンス形式（`content` に `AdminUserResponseDto` の配列）
+**レスポンス 200 OK** — ページングレスポンス形式（`items` に `AdminUserResponseDto` の配列）
 
 ---
 
@@ -1300,7 +1573,7 @@ CSVファイルで自治体を一括登録・更新する。
 
 特定ユーザーの詳細情報を取得する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 | パスパラメータ | 型 | 説明 |
 |---|---|---|
@@ -1316,12 +1589,17 @@ CSVファイルで自治体を一括登録・更新する。
     "username": "taro",
     "email": "taro@example.com",
     "birthDate": "2000-01-01",
-    "address": "43100",
+    "municipalityCd": "43100",
     "licenseStatus": "2",
-    "licenseSurrenderedAt": "2024-04-01"
+    "licenseSurrenderedAt": "2024-04-01",
+    "isAdmin": "0",
+    "sysCreatedAt": "2026-01-01T00:00:00",
+    "sysUpdatedAt": "2026-01-01T00:00:00"
   }
 }
 ```
+
+> `isAdmin` は文字列（`"1"`: 管理者, `"0"`: 一般ユーザー）。
 
 ---
 
@@ -1329,7 +1607,7 @@ CSVファイルで自治体を一括登録・更新する。
 
 ユーザー情報を管理者権限で更新する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **リクエスト**: `UsersEntity` 形式のJSONボディ
 
@@ -1341,7 +1619,7 @@ CSVファイルで自治体を一括登録・更新する。
 
 ユーザーアカウントを削除する。
 
-- **認証**: 必須
+- **認証**: 必須（管理者）
 
 **レスポンス 200 OK**
 
@@ -1351,11 +1629,11 @@ CSVファイルで自治体を一括登録・更新する。
 
 | HTTP ステータス | 主な原因 |
 |---|---|
-| 400 Bad Request | リクエストパラメータ不正、バリデーションエラー |
-| 401 Unauthorized | Bearer Token なし、または無効・期限切れ |
-| 403 Forbidden | 他ユーザーのリソースへのアクセス |
+| 400 Bad Request | リクエストパラメータ不正、バリデーションエラー、DB の制約違反（SQLState 22xxx / 23xxx） |
+| 401 Unauthorized | Bearer Token なし、または無効・期限切れ（`認証が必要です`） |
+| 403 Forbidden | 他ユーザーのリソースへのアクセス、管理者権限なしでの管理APIアクセス（`アクセス権限がありません`） |
 | 404 Not Found | 対象リソースが存在しない |
-| 409 Conflict | ユーザー名・メールアドレスの重複登録、現在のパスワード不一致 |
-| 429 Too Many Requests | レート制限超過（ログイン・登録・パスワードリセット） |
+| 409 Conflict | ユーザー名・メールアドレスの重複登録、パスワード不一致、DB の一意制約違反（`既に登録されています`）、参照中データの削除 |
+| 429 Too Many Requests | レート制限超過（ログイン・登録・パスワードリセット・退会） |
 | 500 Internal Server Error | サーバー内部エラー、OTP 接続失敗 |
 | 503 Service Unavailable | DB 接続エラー |

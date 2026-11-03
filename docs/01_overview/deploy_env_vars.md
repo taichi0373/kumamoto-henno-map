@@ -25,55 +25,22 @@
 | `FRONTEND_BASE_URL` | パスワードリセットメールに使用するフロントURL | `https://www.kumamoto-henno-map.com` | ✅ |
 | `FORWARD_HEADERS_STRATEGY` | リバースプロキシのヘッダー処理 | `FRAMEWORK` | ✅ |
 | `OTP_API_URL` | OpenTripPlanner APIのURL | `https://otp.kumamoto-henno-map.com/otp/routers/default/plan` | ✅ |
-| `SENDGRID_API_KEY` | SendGrid APIキー（`SG.`から始まる文字列） | SendGridダッシュボードで発行 | ✅ |
-| `MAIL_FROM` | 送信元メールアドレス（SendGridで認証済みのアドレス） | `noreply@kumamoto-henno-map.com` | ✅ |
+| `RESEND_API_KEY` | Resend APIキー（`re_`から始まる文字列） | Resendダッシュボードで発行 | ✅ |
+| `MAIL_FROM` | 送信元メールアドレス（Resendで認証済みドメインのアドレス） | `noreply@kumamoto-henno-map.com` | ✅ |
 | `SLACK_WEBHOOK_URL` | フィードバック通知先のSlack Incoming Webhook URL | Slackアプリ設定 → Incoming Webhooks で発行 | - |
 | `AWS_ACCESS_KEY_ID` | AWS アクセスキーID | IAMユーザーのアクセスキー | ✅ |
 | `AWS_SECRET_ACCESS_KEY` | AWS シークレットアクセスキー | IAMユーザーのシークレットキー | ✅ |
 | `AWS_REGION` | AWSリージョン | `us-east-1`（デフォルト） | - |
 | `AWS_LOCATION_PLACE_INDEX` | Place Index名 | `kumamoto-henno-map-index`（デフォルト） | - |
+| `ADMIN_USERNAME` | 起動時に作成・更新する管理者のユーザー名 | 任意の値 | - |
+| `ADMIN_PASSWORD` | 管理者のパスワード | 強固なパスワード | - |
+| `ADMIN_EMAIL` | 管理者のメールアドレス | `admin@kumamoto-henno-map.com` | - |
+| `PORT` | 待受ポート（Renderが自動設定） | `8081`（デフォルト） | - |
 
 ---
 
 > **注意（SLACK_WEBHOOK_URL）**: 未設定の場合はSlack送信をスキップしてサーバーログにのみ出力します（サービス継続に影響なし）。Webhook URLはSlackアプリの管理画面 → **Incoming Webhooks** で発行してください。
 
+> **注意（ADMIN_USERNAME / ADMIN_PASSWORD / ADMIN_EMAIL）**: 3つすべてが設定されている場合のみ、起動時に管理者ユーザーを作成します。同名のユーザーが既に存在する場合は、パスワード・メールアドレスを上書きし管理者フラグを付与します。いずれかが未設定の場合は管理者の初期化をスキップします。
+
 > **注意**: DBはSupabase（PostgreSQL）を使用しています。SupabaseはSSL接続が必須のため `DB_SSL_PARAMS=?sslmode=require` を必ず設定してください。接続情報はSupabaseダッシュボード → **Project Settings** → **Database** → **Connection string** から確認できます。
-
-### Supabase接続情報の確認方法
-
-Supabaseダッシュボード → **Project Settings** → **Database** に表示される接続文字列から各変数を取り出す:
-
-```
-# Supabaseが表示する接続文字列（例）
-postgresql://postgres:PASSWORD@db.xxxxx.supabase.co:5432/postgres?sslmode=require
-
-# 各環境変数への対応
-DB_HOST     = db.xxxxx.supabase.co
-DB_PORT     = 5432
-DB_NAME     = postgres
-DB_USERNAME = postgres
-DB_PASSWORD = PASSWORD
-DB_SSL_PARAMS = ?sslmode=require
-```
-
-### SMTP から SendGrid HTTP API への移行手順
-
-v1.0.1 以降、メール送信を SMTP（`spring-boot-starter-mail`）から SendGrid HTTP API に変更しました。既存環境をデプロイする際は以下の手順で環境変数を更新してください。
-
-**追加する変数:**
-
-| 変数名 | 値 |
-|--------|-----|
-| `SENDGRID_API_KEY` | SendGrid ダッシュボード → Settings → API Keys で発行（Mail Send 権限） |
-| `MAIL_FROM` | SendGrid で認証済みの送信元アドレス（例: `noreply@kumamoto-henno-map.com`） |
-
-**削除してよい変数（SMTP設定）:**
-
-| 変数名 |
-|--------|
-| `MAIL_HOST` |
-| `MAIL_PORT` |
-| `MAIL_USERNAME` |
-| `MAIL_PASSWORD` |
-
-> **SendGrid 送信者認証**: `MAIL_FROM` に設定するアドレスは SendGrid の Sender Authentication（Single Sender または Domain Authentication）で事前に認証が必要です。未認証のアドレスを設定するとメール送信が失敗します。
