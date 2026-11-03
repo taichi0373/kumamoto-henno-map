@@ -22,6 +22,8 @@ import io.github.taichi0373.kumamoto_henno_map.security.CustomUserDetails;
 import io.github.taichi0373.kumamoto_henno_map.service.BenefitService;
 import io.github.taichi0373.kumamoto_henno_map.service.FeedbackService;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.BenefitDetailEntity;
+import io.github.taichi0373.kumamoto_henno_map.util.DbExceptionUtils;
+import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -102,17 +104,23 @@ public class BenefitController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "検索成功",
                     content = @Content(schema = @Schema(implementation = BenefitListResponse.class))),
+            @ApiResponse(responseCode = "400", description = "入力値が不正",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PostMapping("/search")
     public ResponseEntity<ApiResponseDto<List<BenefitDetailEntity>>> searchBenefits(@RequestBody BenefitEligibilityDto request) {
         try {
+            var validationError = ValidateUtils.validateBenefitSearchRequest(request);
+            if (validationError.isPresent()) {
+                return ResponseEntity.badRequest().body(ApiResponseDto.error(validationError.get()));
+            }
+
             List<BenefitDetailEntity> benefits = benefitService.searchBenefits(request);
             return ResponseEntity.ok(ApiResponseDto.success(benefits));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("特典検索中にエラーが発生しました"));
+            return DbExceptionUtils.toErrorResponse(e, "特典検索中にエラーが発生しました");
         }
     }
 

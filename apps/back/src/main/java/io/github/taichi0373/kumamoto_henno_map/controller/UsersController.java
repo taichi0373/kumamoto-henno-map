@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.github.taichi0373.kumamoto_henno_map.util.DbExceptionUtils;
 import io.github.taichi0373.kumamoto_henno_map.util.RequestUtils;
 import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
 import io.github.taichi0373.kumamoto_henno_map.dto.ApiResponseDto;
@@ -193,8 +194,7 @@ public class UsersController {
 
             return ResponseEntity.ok(ApiResponseDto.success(null));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponseDto.error("ユーザー情報の更新に失敗しました"));
+            return DbExceptionUtils.toErrorResponse(e, "ユーザー情報の更新に失敗しました");
         }
     }
 
