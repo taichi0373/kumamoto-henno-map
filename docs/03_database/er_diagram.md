@@ -33,6 +33,10 @@ erDiagram
         varchar EXP_DETAIL
         varchar PHONE_NUMBER
         varchar BENEFIT_URL
+        varchar ADDRESS
+        numeric LATITUDE
+        numeric LONGITUDE
+        date    LAST_CONFIRMED_DATE
     }
 
     BENEFIT_ELIGIBILITY {
@@ -54,6 +58,7 @@ erDiagram
         varchar   MUNICIPALITY_CD
         varchar   LICENSE_STATUS
         date      LICENSE_SURRENDERED_AT
+        char      IS_ADMIN
         timestamp LAST_LOGIN_AT
         varchar   LAST_LOGIN_IP
     }
