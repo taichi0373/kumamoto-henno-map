@@ -1,9 +1,11 @@
 name: Release
 
-# main への push で毎回起動し、job の if: でコミットメッセージを判定して実行/スキップを決定する
+# main 向け PR のクローズで起動し、job の if: で PR タイトルを判定して実行/スキップを決定する
+# マージ方法（merge / squash）に関係なく判定できる
 # workflow_dispatch でも手動実行可能
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
   workflow_dispatch:
@@ -24,42 +26,47 @@ jobs:
   # タグ作成 と GitHub Release 作成
   release:
     name: Tag & Release
-    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.head_commit.message, 'Release v')
+    # フォークからの PR ではリリースしない
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.title, 'Release v'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: read
 
     steps:
+      # PR イベントの既定はテスト用マージ ref のため、main に入ったマージコミットを明示する
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
           fetch-depth: 0
 
       # バージョン番号を取得
+      # PR タイトルと入力値はシェルに直接展開せず、環境変数で受け取る（スクリプトインジェクション対策）
       - name: Extract version number
         id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ inputs.version }}"
+            VERSION="$INPUT_VERSION"
             # 入力値のフォーマットを検証
-            if ! echo "$VERSION" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            if ! printf '%s\n' "$VERSION" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
               echo "バージョン番号の形式が不正です（例: v1.1.0）: $VERSION"
               exit 1
             fi
           else
-            # コミットメッセージの先頭行から厳密に抽出（複数マッチは異常として失敗）
-            FIRST_LINE=$(echo "${{ github.event.head_commit.message }}" | head -n 1)
-            MATCH_COUNT=$(echo "$FIRST_LINE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | wc -l)
-            if [ "$MATCH_COUNT" -gt 1 ]; then
-              echo "バージョン番号が複数マッチしました（$MATCH_COUNT 件）: $FIRST_LINE"
+            # PR タイトル全体を厳密に検証してから抽出
+            if ! printf '%s\n' "$PR_TITLE" | grep -qE '^Release v[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "PR タイトルの形式が不正です（例: Release v1.1.0）: $PR_TITLE"
               exit 1
             fi
-            VERSION=$(echo "$FIRST_LINE" | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+')
-            if [ -z "$VERSION" ]; then
-              echo "バージョン番号を抽出できませんでした: $FIRST_LINE"
-              exit 1
-            fi
+            VERSION="${PR_TITLE#Release }"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
@@ -143,24 +150,3 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: Release ${{ steps.version.outputs.version }}
           body: ${{ steps.notes.outputs.body }}
-
-  # develop を削除して main から再作成
-  sync-develop:
-    name: Recreate develop from main
-    needs: release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Sync develop to main
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin
-          git push --force origin origin/main:refs/heads/develop
