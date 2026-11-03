@@ -82,6 +82,10 @@ main 向け PR のマージ（タイトル: Release vX.Y.Z）
        └─ GitHub Release を作成（PR タイトルから変更履歴を自動生成）
 ```
 
+- フォークからの PR ではリリースしない
+- ラベル `リリースノート除外` が付いた PR は変更履歴から除外される
+- GitHub Actions の画面から手動実行（`workflow_dispatch`）も可能。入力したバージョン（例: `v1.1.0`）でタグと Release を作成する
+
 ### 4. main の変更を develop へ取り込む
 
 `main` に `develop` にないコミットがある場合（Dependabot のセキュリティ更新など）は、次のリリース PR の前に `main` → `develop` の PR を作成して取り込む。
@@ -118,7 +122,19 @@ GitHub Release の変更履歴は、マージされた PR のタイトルから�
 | イベント | 実行されるワークフロー |
 |---------|----------------------|
 | feature・bugfix → develop の PR | ビルド・テスト |
-| develop へのマージ後 push | ビルド・テスト + 検証環境デプロイ |
+| develop へのマージ後 push（`docs/`・`apps/front/`・`apps/back/` 配下の変更時） | ビルド・テスト + GitHub Pages デプロイ（設計書・Storybook・Javadoc・OpenAPI） |
 | develop → main の PR（リリース PR） | ビルド・テスト |
 | main 向け PR のマージ（タイトルが `Release v*`） | タグ作成・GitHub Release 作成 |
 | main 向け PR のマージ（その他） | なし |
+| release.yml の手動実行（workflow_dispatch） | 入力したバージョンでタグ作成・GitHub Release 作成 |
+
+### その他のワークフロー
+
+| ワークフロー | トリガー | 内容 |
+|------------|---------|------|
+| `codeql.yml` | main / develop への push・PR、毎週月曜 9:00 JST | CodeQL による静的解析（actions / java-kotlin / javascript-typescript / python） |
+| `gtfs-auto-update.yml` | 毎週月曜 2:00 JST、手動 | GTFS データの有効期限チェック・更新 PR 作成・OTP グラフのビルドと配備・Slack 通知 |
+| `otp-ci.yml` / `build-otp.yml` | `docker-compose.yml`・`config/otp/` 配下の変更時 | OTP の動作確認・グラフビルド |
+| `dependabot-auto-merge.yml` | Dependabot の PR 作成・更新時 | パッチ・マイナー更新は自動マージ、メジャー更新は「要レビュー」ラベルを付与 |
+| `auto-label-pr.yml` | PR 作成時 | PR へのラベル自動付与 |
+| `auto-delete-branch.yml` | PR クローズ時 | マージ済みブランチの削除 |
