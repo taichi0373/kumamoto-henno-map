@@ -39,7 +39,7 @@ graph LR
         OTP[OpenTripPlanner]
         OSM[OpenStreetMap]
         GTFS[GTFS Data Feed]
-        MAIL[SendGrid HTTP API]
+        MAIL[Resend HTTP API]
         SLACK[Slack Incoming Webhook]
         AWS[AWS Location Service]
     end
