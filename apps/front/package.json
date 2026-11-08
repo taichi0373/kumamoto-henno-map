@@ -55,7 +55,7 @@
     "workbox-window": "^7.4.1"
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.66.0"
+    "@rollup/rollup-linux-x64-gnu": "4.67.5"
   },
   "browserslist": [
     "> 1%",
