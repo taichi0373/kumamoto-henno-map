@@ -35,7 +35,7 @@
     "@types/pg": "^8.23.1",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
     "@typescript-eslint/parser": "^8.72.1",
-    "@vitejs/plugin-vue": "^6.0.10",
+    "@vitejs/plugin-vue": "^6.0.11",
     "@vue/devtools-api": "^8.2.1",
     "dotenv": "^18.0.9",
     "eslint": "^10.14.0",
