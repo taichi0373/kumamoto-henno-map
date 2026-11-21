@@ -1,0 +1,24 @@
+# 自宅サーバー（k3s 単一ノード）向けの上書き値
+# 使い方: helm upgrade --install ... -f values-home.yaml -f values-secret.yaml
+
+ingress:
+  hosts:
+    - www.kumamoto-henno-map.com
+    - kumamoto-henno-map.com
+
+otp:
+  # サーバーのメモリに合わせて調整する（例: 8GB 機なら 3g / 4Gi）
+  heapSize: 3g
+  resources:
+    limits: { memory: 4Gi }
+
+db:
+  # 移行ステップ1: Supabase のまま動かす場合は false にして externalDb を設定する
+  enabled: true
+  backup:
+    enabled: false
+    r2:
+      endpoint: ""
+
+externalDb:
+  host: ""

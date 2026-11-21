@@ -1,0 +1,5 @@
+values-secret.yaml
+values-secret.example.yaml
+.git/
+*.swp
+*.bak

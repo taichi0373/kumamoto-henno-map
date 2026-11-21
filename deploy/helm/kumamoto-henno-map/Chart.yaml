@@ -1,0 +1,8 @@
+apiVersion: v2
+name: kumamoto-henno-map
+description: くまもと自主返納特典マップ（front / back / db / otp / cloudflared）を k3s 上にデプロイするチャート
+type: application
+# チャート自体のバージョン（テンプレートを変更したら上げる）
+version: 0.1.0
+# アプリのバージョン（イメージタグ未指定時の既定値には使わず、表示用）
+appVersion: "1.1.8"
