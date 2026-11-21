@@ -17,6 +17,10 @@ env:
   TZ: Asia/Tokyo
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/kumamoto-henno-map
 
+# GITHUB_TOKEN の既定権限を最小化する（push が必要なジョブのみ packages: write を個別付与）
+permissions:
+  contents: read
+
 # 同一ブランチの並行実行を防止
 concurrency:
   group: publish-images-${{ github.ref }}
