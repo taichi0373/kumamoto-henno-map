@@ -59,6 +59,8 @@ spec:
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef: { name: {{ $secret }}, key: db-password }
+            - name: SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE
+              value: {{ $b.dbMaxPoolSize | quote }}
             # ----- アプリ設定 -----
             - name: FORWARD_HEADERS_STRATEGY
               value: {{ $b.forwardHeadersStrategy | quote }}

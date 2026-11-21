@@ -1,11 +1,11 @@
 # =====================================================================
 # くまもと自主返納特典マップ Helm チャート 既定値
-# 環境ごとの差分は values-home.yaml、秘密情報は values-secret.yaml で上書きする
+# 環境ごとの差分は values-home.yaml 等、接続先・秘密情報は deploy/.env（deploy/scripts/deploy.sh が注入）で上書きする
 # =====================================================================
 
 global:
   # front / back / otp イメージの既定タグ（各コンポーネントの image.tag が空のとき使用）
-  # CI が付与するコミット SHA を --set global.imageTag=<sha> で必ず指定する
+  # deploy/.env の IMAGE_TAG（CI が付与するコミット SHA）を deploy.sh が注入する
   # （latest + IfNotPresent ではノードに古いイメージが残り更新が反映されないため、既定値は持たせない）
   imageTag: ""
   # GHCR のパッケージを非公開にしている場合は pull 用 Secret 名を指定する
@@ -43,6 +43,10 @@ back:
   # JVM のタイムゾーン。トークン有効期限等は LocalDateTime.now() で記録・比較するため、
   # 同じ DB を使う他の環境（Render 等）と必ず揃えること（ずれると期限判定・定期削除が誤動作する）
   timeZone: Asia/Tokyo
+  # DB コネクションプールの最大接続数（HikariCP。Spring Boot 既定は 10）
+  # Supabase の Session pooler は全クライアント合計で接続数が制限される（無料プランは 15）ため、
+  # 他の環境（Render 等）と同じ DB を共有する場合は合計が上限を超えないよう小さくする
+  dbMaxPoolSize: 10
   # 転送ヘッダー処理戦略
   # NATIVE: Tomcat の RemoteIpValve が X-Forwarded-For を右から辿り、内部プロキシ（10.x 等）を除いた
   #         最初のアドレスをクライアント IP とする。Cloudflare が左側に積まれた偽装値を残しても影響を受けない。
@@ -72,6 +76,7 @@ otp:
 # ----- PostgreSQL -----
 # enabled: true  → クラスタ内に StatefulSet で構築する
 # enabled: false → externalDb（Supabase 等）へ接続する
+# （deploy/.env の DB_ENABLED で上書き可能）
 db:
   enabled: true
   image:
@@ -81,7 +86,7 @@ db:
   name: kumamoto_henno_map
   username: app
   # 初回起動時（データディレクトリが空のとき）に config/database の DDL / DML を投入する
-  # 事前に deploy/scripts/sync-db-files.sh を実行してチャート内へ SQL をコピーしておくこと
+  # SQL は deploy.sh が実行時にチャート内（files/database）へコピーする
   # Supabase からダンプをリストアする場合は false にする
   initSchema: true
   storage:
@@ -92,6 +97,7 @@ db:
     requests: { cpu: 50m, memory: 256Mi }
     limits: { memory: 1Gi }
   # pg_dump の結果を Cloudflare R2（S3 互換）へ退避する
+  # 有効化と R2 の接続先は deploy/.env の DB_BACKUP_ENABLED / R2_* で指定する
   backup:
     enabled: false
     schedule: "0 3 * * *"
@@ -104,7 +110,7 @@ db:
       bucket: kumamoto-henno-map-backup
       prefix: postgres
 
-# db.enabled=false のときの接続先
+# db.enabled=false のときの接続先（deploy/.env の EXTERNAL_DB_* で上書きする）
 externalDb:
   host: ""
   port: 5432
@@ -124,7 +130,8 @@ cloudflared:
     requests: { cpu: 10m, memory: 32Mi }
     limits: { memory: 128Mi }
 
-# ----- 秘密情報（values-secret.yaml で設定し、Git には含めない） -----
+# ----- 秘密情報 -----
+# 値は deploy/.env に書き、deploy.sh が標準入力経由で注入する（このファイルには書かない）
 secrets:
   # 既存の Secret を使う場合はその名前を指定する（指定時はチャートで Secret を作成しない）
   # キー名は templates/secret.yaml を参照

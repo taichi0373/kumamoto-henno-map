@@ -1,5 +1,6 @@
 # 自宅サーバー（k3s 単一ノード）向けの上書き値
-# 使い方: helm upgrade --install ... -f values-home.yaml -f values-secret.yaml
+# DB の接続先・秘密情報は deploy/.env で設定する
+# 使い方: VALUES_FILE=values-home.yaml を deploy/.env に設定し、bash deploy/scripts/deploy.sh
 
 ingress:
   hosts:
@@ -11,14 +12,3 @@ otp:
   heapSize: 3g
   resources:
     limits: { memory: 4Gi }
-
-db:
-  # 移行ステップ1: Supabase のまま動かす場合は false にして externalDb を設定する
-  enabled: true
-  backup:
-    enabled: false
-    r2:
-      endpoint: ""
-
-externalDb:
-  host: ""
