@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { markEmailVerified } from './db';
 
 /**
  * UIログインヘルパー
@@ -19,6 +20,7 @@ export async function loginAsUser(page: Page, username: string, password: string
  *
  * サインアップが失敗した場合（既存ユーザーによる重複など）は
  * 直接ログインを試みるフォールバック処理を行う
+ * 確認メールのリンクはE2Eから開けないため、ログイン前にDBでメールアドレスを確認済みにする
  */
 export async function signupAndLogin(
   page: Page,
@@ -46,7 +48,7 @@ export async function signupAndLogin(
   // サインアップ成功時は /login へリダイレクトされる
   // 失敗時（既存ユーザーの重複など）は /signup に留まるため、直接ログインへフォールバック
   const redirected = await page
-    .waitForURL('**/login', { timeout: 10000 })
+    .waitForURL(/\/login/, { timeout: 10000 })
     .then(() => true)
     .catch(() => false);
 
@@ -55,6 +57,8 @@ export async function signupAndLogin(
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
   }
+
+  await markEmailVerified(username);
 
   // ログイン
   await page.locator('input#username').fill(username);

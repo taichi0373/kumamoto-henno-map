@@ -11,7 +11,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 /**
  * ログイン試行管理サービス
  * <p>
- * ログイン・新規登録・パスワードリセットのIPアドレスごとの試行回数、
+ * ログイン・新規登録・パスワードリセット・メールアドレス確認のIPアドレスごとの試行回数、
  * およびアカウント削除のユーザーIDごとの試行回数を管理し、過剰なアクセスをブロックする。
  * </p>
  * <p>
@@ -53,6 +53,18 @@ public class LoginAttemptService {
     /** パスワードリセット確認: ロックアウト時間（分） */
     private static final long PASSWORD_RESET_LOCK_MINUTES = 15;
 
+    /** 確認メール再送: IP当たりの最大試行回数 */
+    private static final int EMAIL_VERIFICATION_RESEND_MAX_ATTEMPTS = 5;
+
+    /** 確認メール再送: ロックアウト時間（分） */
+    private static final long EMAIL_VERIFICATION_RESEND_LOCK_MINUTES = 15;
+
+    /** メールアドレス確認: 最大失敗試行回数 */
+    private static final int EMAIL_VERIFICATION_MAX_ATTEMPTS = 5;
+
+    /** メールアドレス確認: ロックアウト時間（分） */
+    private static final long EMAIL_VERIFICATION_LOCK_MINUTES = 15;
+
     /** アカウント削除: 最大失敗試行回数 */
     private static final int ACCOUNT_DELETE_MAX_ATTEMPTS = 5;
 
@@ -86,6 +98,14 @@ public class LoginAttemptService {
     /** パスワードリセット確認試行キャッシュ（キー: IPアドレス） */
     private final Cache<String, AttemptData> passwordResetAttempts =
             buildCache(PASSWORD_RESET_LOCK_MINUTES, MAX_TRACKED_IPS);
+
+    /** 確認メール再送試行キャッシュ（キー: IPアドレス） */
+    private final Cache<String, AttemptData> emailVerificationResendAttempts =
+            buildCache(EMAIL_VERIFICATION_RESEND_LOCK_MINUTES, MAX_TRACKED_IPS);
+
+    /** メールアドレス確認試行キャッシュ（キー: IPアドレス） */
+    private final Cache<String, AttemptData> emailVerificationAttempts =
+            buildCache(EMAIL_VERIFICATION_LOCK_MINUTES, MAX_TRACKED_IPS);
 
     /**
      * アカウント削除試行キャッシュ（キー: ユーザーID）
@@ -182,6 +202,52 @@ public class LoginAttemptService {
      */
     public void recordPasswordResetSuccess(String ip) {
         passwordResetAttempts.invalidate(ip);
+    }
+
+    /**
+     * 確認メール再送がブロックされているか確認する
+     * @param ip クライアントIPアドレス
+     * @return ブロック中の場合はtrue
+     */
+    public boolean isEmailVerificationResendBlocked(String ip) {
+        return isBlocked(emailVerificationResendAttempts, ip);
+    }
+
+    /**
+     * 確認メール再送の試行を記録する（成否問わずカウント）
+     * @param ip クライアントIPアドレス
+     */
+    public void recordEmailVerificationResendAttempt(String ip) {
+        record(
+                emailVerificationResendAttempts,
+                ip,
+                EMAIL_VERIFICATION_RESEND_MAX_ATTEMPTS,
+                EMAIL_VERIFICATION_RESEND_LOCK_MINUTES);
+    }
+
+    /**
+     * メールアドレス確認試行がブロックされているか確認する
+     * @param ip クライアントIPアドレス
+     * @return ブロック中の場合はtrue
+     */
+    public boolean isEmailVerificationBlocked(String ip) {
+        return isBlocked(emailVerificationAttempts, ip);
+    }
+
+    /**
+     * メールアドレス確認の失敗を記録する（トークン不一致時）
+     * @param ip クライアントIPアドレス
+     */
+    public void recordEmailVerificationFailure(String ip) {
+        record(emailVerificationAttempts, ip, EMAIL_VERIFICATION_MAX_ATTEMPTS, EMAIL_VERIFICATION_LOCK_MINUTES);
+    }
+
+    /**
+     * メールアドレス確認成功時に試行カウントをリセットする
+     * @param ip クライアントIPアドレス
+     */
+    public void recordEmailVerificationSuccess(String ip) {
+        emailVerificationAttempts.invalidate(ip);
     }
 
     /**

@@ -20,6 +20,12 @@ graph TD
     Login -- 新規登録はこちら --> Signup
     Login -- パスワードを忘れた方はこちら --> ForgotPw[S015: パスワードリセット要求画面]
     Signup -- 登録完了 / ログインリンク --> Login
+    Signup -. 確認メール内URL .-> VerifyEmail[S017: メールアドレス確認画面]
+    Profile -. メールアドレス変更時<br/>確認メール内URL .-> VerifyEmail
+    VerifyEmail -- 確認完了 --> Login
+    VerifyEmail -- トークンなし / 再送する --> ResendVerify[S018: 確認メール再送画面]
+    Login -- 確認メールが届かない方はこちら --> ResendVerify
+    ResendVerify -- ログインに戻る --> Login
     ForgotPw -- ログインに戻る --> Login
     ForgotPw -. メール内URL .-> ResetPw[S016: パスワードリセット画面]
     ResetPw -- リセット成功 --> Login
@@ -40,7 +46,7 @@ graph TD
 
     class Start startStyle
     class Home mainStyle
-    class Login,Signup,ForgotPw,ResetPw authStyle
+    class Login,Signup,ForgotPw,ResetPw,VerifyEmail,ResendVerify authStyle
     class Profile,ChangePw userStyle
     class SupportInfo supportStyle
     class Admin adminStyle
@@ -96,20 +102,31 @@ graph TD
     Home -- ヘッダー: ログイン --> Login[S011: ログイン画面]
     Home -- ヘッダー: 新規登録 --> Signup[S012: 会員登録画面]
     Login -- 新規登録はこちら --> Signup
-    Signup -- 登録完了 / すでにアカウントをお持ちの方はこちら --> Login
+    Signup -- 登録完了<br/>/login?signupSuccess=1 / すでにアカウントをお持ちの方はこちら --> Login
+    Signup -- 確認メール送信 --> MailSent[メール受信確認]
+    MailSent -- URLクリック --> VerifyEmail[S017: メールアドレス確認画面]
+    VerifyEmail -- 確認ボタン押下で確認完了 --> Login
+    Login -- 未確認でログイン<br/>確認を促すメッセージ / 確認メールが届かない方はこちら --> ResendVerify[S018: 確認メール再送画面]
+    ResendVerify -- 確認メール再送 --> MailSent
     Login -- 認証成功<br/>redirect クエリの画面 または / --> HomeAuth[S001: ホーム画面 ログイン済み]
     HomeAuth -- マイページ/プロフィール --> Profile[S013: プロフィール画面]
     Profile -- 更新（画面に留まる） --> Profile
+    Profile -- メールアドレス変更時<br/>変更後アドレスへ確認メール送信 --> MailSent
     HomeAuth -- マイページ/ログアウト --> Login
 
     classDef mainStyle fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef authStyle fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef userStyle fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef externalStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
 
     class Home,HomeAuth mainStyle
-    class Login,Signup authStyle
+    class Login,Signup,VerifyEmail,ResendVerify authStyle
     class Profile userStyle
+    class MailSent externalStyle
 ```
+
+> メールアドレスの確認が完了するまでログインできない。会員登録から24時間以内に確認が完了しない場合、登録は自動削除される。
+> メールアドレス変更時は、確認が完了するまで変更前のメールアドレスのまま保持される。
 
 ### 4. パスワード変更・退会フロー（ログイン済みユーザー）
 
@@ -241,4 +258,6 @@ sequenceDiagram
 - S012: 会員登録画面
 - S015: パスワードリセット要求画面
 - S016: パスワードリセット画面
+- S017: メールアドレス確認画面
+- S018: 確認メール再送画面
 - S021: サポート情報画面

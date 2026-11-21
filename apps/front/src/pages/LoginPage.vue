@@ -39,6 +39,10 @@
           <AppLink @click="router.push('/forgot-password')">パスワードを忘れた方はこちら</AppLink>
         </div>
 
+        <div class="form-link">
+          <AppLink @click="router.push('/resend-verification')">確認メールが届かない方はこちら</AppLink>
+        </div>
+
       </AppCard>
     </div>
   </div>
@@ -86,7 +90,7 @@ const barErrMsg = ref('') as Ref<string>
 const isLoading = ref(false)
 
 // 既にログイン済みの場合はホームにリダイレクト
-// パスワードリセット完了時はクエリパラメータからメッセージを表示
+// パスワードリセット完了時・新規登録完了時はクエリパラメータからメッセージを表示
 onMounted(() => {
   if (auth.isLoggedIn) {
     router.push('/')
@@ -95,6 +99,9 @@ onMounted(() => {
   if (route.query.resetSuccess === '1') {
     barErrMode.value = 'success'
     barErrMsg.value = API_RESPONSE_MESSAGE.PASSWORD_RESET_SUCCESS
+  } else if (route.query.signupSuccess === '1') {
+    barErrMode.value = 'success'
+    barErrMsg.value = API_RESPONSE_MESSAGE.SIGNUP_VERIFICATION_MAIL_SENT
   }
 })
 
@@ -131,6 +138,10 @@ const onClick = async () => {
       const error = MessageUtils.getMessageDto(MESSAGE_LIST, MESSAGE_NO.MSG_009, "ユーザ名またはパスワード")
       barErrMode.value = error.type === 1 ? 'error' : 'warning'
       barErrMsg.value = error.message
+    } else if (axiosError.response?.status === responseStatusConstant.FORBIDDEN) {
+      // パスワードは正しいがメールアドレスが未確認
+      barErrMode.value = 'warning'
+      barErrMsg.value = API_RESPONSE_MESSAGE.EMAIL_NOT_VERIFIED
     } else {
       barErrMode.value = 'error'
       barErrMsg.value = API_RESPONSE_MESSAGE.API_ERROR

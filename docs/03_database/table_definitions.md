@@ -126,6 +126,7 @@
 | SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
 | LAST_LOGIN_AT | TIMESTAMP | | | | 最終ログイン日時 |
 | LAST_LOGIN_IP | VARCHAR(45) | | | | 最終ログインIPアドレス |
+| EMAIL_VERIFIED_AT | TIMESTAMP | | | | メールアドレス確認日時（NULL:未確認。未確認のまま作成から24時間経過したユーザーは自動削除） |
 
 **制約**:
 - 主キー制約: `USERS_PK` (USER_ID)
@@ -182,7 +183,29 @@ JWT認証用リフレッシュトークンを管理するデータテーブル�
 - 外部キー制約: `PASSWORD_RESET_TOKENS_FK` (USER_ID → USERS.USER_ID) ON DELETE CASCADE
 - デフォルト値: USED = FALSE
 
-## 9. COMMUNITY_BUS（コミュニティバス路線テーブル）
+## 9. EMAIL_VERIFICATION_TOKENS（メールアドレス確認トークンテーブル）
+
+会員登録時・メールアドレス変更時のメールアドレス確認用トークンを管理するデータテーブル。トークンはワンタイム使用で発行から24時間有効。新しいトークンの発行時、同一ユーザーの未使用トークンは使用済みにする。
+
+| カラム名 | 型 | NOT NULL | 主キー | 外部キー | 概要 |
+|----------|----|---------:|:------:|:--------:|------|
+| TOKEN_ID | BIGSERIAL | ✓ | ✓ | | トークンID（自動採番） |
+| USER_ID | BIGINT | ✓ | | ✓ | ユーザーID |
+| TOKEN | VARCHAR(64) | ✓ | | | 確認トークンのSHA-256ハッシュ値 |
+| NEW_EMAIL | VARCHAR(200) | | | | 変更後メールアドレス（NULL:会員登録時の確認） |
+| EXPIRES_AT | TIMESTAMP | ✓ | | | トークン有効期限（発行から24時間） |
+| USED | BOOLEAN | ✓ | | | 使用済みフラグ（ワンタイム使用制限） |
+| SYS_CREATED_AT | TIMESTAMP | | | | 作成日時（再送間隔の判定に使用） |
+| SYS_UPDATED_AT | TIMESTAMP | | | | 更新日時 |
+
+**制約**:
+- 主キー制約: TOKEN_ID (自動採番)
+- ユニーク制約: `EMAIL_VERIFICATION_TOKENS_TOKEN_UNIQUE` (TOKEN)
+- 外部キー制約: `EMAIL_VERIFICATION_TOKENS_FK` (USER_ID → USERS.USER_ID) ON DELETE CASCADE
+- インデックス: `EMAIL_VERIFICATION_TOKENS_USER_ID_IDX` (USER_ID)
+- デフォルト値: USED = FALSE
+
+## 10. COMMUNITY_BUS（コミュニティバス路線テーブル）
 
 コミュニティバスの路線情報を管理するデータテーブル。
 
@@ -198,7 +221,7 @@ JWT認証用リフレッシュトークンを管理するデータテーブル�
 - 主キー制約: `COMMUNITY_BUS_PK` (ROUTE_ID)
 - 外部キー制約: `COMMUNITY_BUS_FK` (COMMUNITY_BUS_ID → AGENCY.AGENCY_ID)
 
-## 10. FARE_DISCOUNT（運転免許返納特典運賃割引テーブル）
+## 11. FARE_DISCOUNT（運転免許返納特典運賃割引テーブル）
 
 運賃割引の詳細情報を管理するデータテーブル。
 

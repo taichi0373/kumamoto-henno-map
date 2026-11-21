@@ -43,11 +43,13 @@ paths:
 | `util/JwtUtil` | トークン生成・検証 |
 | `service/AuthService` | ログイン処理・アクセストークン生成 |
 | `service/RefreshTokenService` | リフレッシュトークン生成・ローテーション・失効 |
+| `service/EmailVerificationService` | メールアドレス確認メール送信・確認・未確認ユーザーの定期削除 |
+| `service/MailService` | Resend によるメール送信（パスワードリセット・メールアドレス確認で共用） |
 | `config/SecurityConfig` | STATELESS・CSRF無効・permitAll設定 |
 
 ## Security設定方針
 
-- `/auth/**` → permitAll（login・refresh・logout・パスワードリセット）
+- `/auth/**` → permitAll（login・refresh・logout・パスワードリセット・メールアドレス確認）
 - `POST /users/signup` → permitAll
 - `/users/**` → authenticated（JWT必須）
 - `/benefit/users/**` → authenticated（JWT必須）

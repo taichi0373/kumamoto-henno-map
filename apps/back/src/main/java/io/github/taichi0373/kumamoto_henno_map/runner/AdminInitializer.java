@@ -59,6 +59,10 @@ public class AdminInitializer implements CommandLineRunner {
             existing.setPasswordHash(passwordEncoder.encode(password));
             existing.setEmail(email);
             existing.setIsAdmin("1");
+            // 管理者はメールアドレス確認の対象外とし、未確認による自動削除を防ぐ
+            if (existing.getEmailVerifiedAt() == null) {
+                existing.setEmailVerifiedAt(LocalDateTime.now());
+            }
             existing.setSystemField(new SystemField(existing.getSystemField().getSysCreatedAt(), LocalDateTime.now()));
             usersDao.update(existing);
             log.info("管理者ユーザー '{}' のパスワードを更新しました", username);
@@ -71,6 +75,8 @@ public class AdminInitializer implements CommandLineRunner {
         admin.setEmail(email);
         admin.setIsAdmin("1");
         LocalDateTime now = LocalDateTime.now();
+        // 管理者はメールアドレス確認の対象外とし、作成時点で確認済みにする
+        admin.setEmailVerifiedAt(now);
         admin.setSystemField(new SystemField(now, now));
 
         usersDao.insert(admin);

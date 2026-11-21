@@ -70,11 +70,12 @@ public class AdminUsersService {
     /**
      * ユーザー情報を更新する
      * <p>
-     * PASSWORD_HASH と IS_ADMIN は更新対象外。
+     * PASSWORD_HASH・IS_ADMIN・EMAIL_VERIFIED_AT は更新対象外。
+     * メールアドレスの変更は確認メールを送信せずに即時反映する。
      * </p>
      *
      * @param userId  ユーザーID
-     * @param request 更新するユーザーエンティティ（passwordHash・isAdmin は無視される）
+     * @param request 更新するユーザーエンティティ（passwordHash・isAdmin・emailVerifiedAt は無視される）
      * @return 更新したユーザーレスポンスDTO
      * @throws NoSuchElementException ユーザーが存在しない場合
      */
@@ -83,10 +84,11 @@ public class AdminUsersService {
         if (existing == null) {
             throw new NoSuchElementException("ユーザーが見つかりません: " + userId);
         }
-        // PASSWORD_HASH と IS_ADMIN は既存の値を保持する
+        // PASSWORD_HASH・IS_ADMIN・メールアドレス確認状態は既存の値を保持する
         request.setUserId(userId);
         request.setPasswordHash(existing.getPasswordHash());
         request.setIsAdmin(existing.getIsAdmin());
+        request.setEmailVerifiedAt(existing.getEmailVerifiedAt());
         LocalDateTime createdAt = existing.getSystemField() != null ? existing.getSystemField().getSysCreatedAt() : null;
         request.setSystemField(new SystemField(createdAt, LocalDateTime.now()));
         usersDao.update(request);

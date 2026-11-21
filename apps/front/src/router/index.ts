@@ -46,6 +46,16 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/ResetPasswordPage.vue')
   },
   {
+    path: '/verify-email',
+    name: 'VerifyEmailPage',
+    component: () => import('../pages/VerifyEmailPage.vue')
+  },
+  {
+    path: '/resend-verification',
+    name: 'ResendVerificationPage',
+    component: () => import('../pages/ResendVerificationPage.vue')
+  },
+  {
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
     meta: { requiresAdmin: true, requiresAuth: true },

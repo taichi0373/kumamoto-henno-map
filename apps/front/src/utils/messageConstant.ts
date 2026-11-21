@@ -56,6 +56,11 @@ const API_RESPONSE_MESSAGE = {
     PASSWORD_RESET_MAIL_SENT: 'パスワードリセットメールを送信しました。メールのリンクからパスワードを変更してください。',
     PASSWORD_RESET_SUCCESS: 'パスワードをリセットしました。新しいパスワードでログインしてください。',
     INVALID_OR_EXPIRED_TOKEN: 'このリンクは無効または期限切れです。再度お試しください。',
+    SIGNUP_VERIFICATION_MAIL_SENT: '確認メールを送信しました。24時間以内にメールのリンクからメールアドレスの確認を完了してください。確認が完了するとログインできます。',
+    VERIFICATION_MAIL_SENT: '確認が完了していないメールアドレスの場合、確認メールを送信しました。メールのリンクから確認を完了してください。',
+    EMAIL_VERIFIED: 'メールアドレスの確認が完了しました。',
+    EMAIL_NOT_VERIFIED: 'メールアドレスの確認が完了していません。確認メールのリンクから確認を完了してください。',
+    EMAIL_CHANGE_PENDING: '新しいメールアドレスに確認メールを送信しました。確認が完了するまでは変更前のメールアドレスが使用されます。',
     WITHDRAW_SUCCESS: '退会しました。ご利用ありがとうございました。',
     WITHDRAW_FAILED: '退会処理に失敗しました',
 }

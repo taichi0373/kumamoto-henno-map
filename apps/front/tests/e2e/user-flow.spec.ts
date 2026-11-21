@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { markEmailVerified } from './helpers/db';
 
 /**
  * テスト用ユーザー情報
@@ -61,13 +62,16 @@ test('新規登録→ログイン→プロフィール更新→ログアウト�
   // 登録成功時は /login へリダイレクト
   // 失敗時（既存ユーザーの重複など）は /signup に留まるため、直接ログインへフォールバック
   const redirected = await page
-    .waitForURL('**/login', { timeout: 10000 })
+    .waitForURL(/\/login/, { timeout: 10000 })
     .then(() => true)
     .catch(() => false);
   if (!redirected) {
     await page.goto('/login');
     await page.waitForLoadState('networkidle');
   }
+
+  // 確認メールのリンクはE2Eから開けないため、DBでメールアドレスを確認済みにする
+  await markEmailVerified(USERNAME);
 
   // ---- Step 5: ログイン ----
   await page.locator('input#username').fill(USERNAME);

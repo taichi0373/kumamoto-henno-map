@@ -80,6 +80,10 @@ public class UsersEntity implements Serializable {
     @Column(name = "last_login_ip")
     String lastLoginIp;
 
+    /** メールアドレス確認日時（null:未確認） */
+    @Column(name = "email_verified_at")
+    LocalDateTime emailVerifiedAt;
+
     /** システム共通フィールド */
     private SystemField systemField;
 

@@ -91,7 +91,7 @@ graph TB
 | Doma 2 | 3.14.1 | O/Rマッパー |
 | jjwt | 0.13.0 | JWT認証 |
 | springdoc-openapi | 3.2.0 | OpenAPI仕様書（Swagger UI / ReDoc） |
-| Resend Java SDK | 4.29.0 | パスワードリセットメール送信 |
+| Resend Java SDK | 4.30.0 | パスワードリセットメール・メールアドレス確認メール送信 |
 | AWS SDK for Java v2 | 2.57.6 | AWS Location Service 連携 |
 | Caffeine | - | キャッシュ |
 | Apache Commons CSV | 1.14.1 | CSVインポート/エクスポート |
@@ -110,7 +110,7 @@ graph TB
 | OpenTripPlanner | 2.5.0 | GTFS経路探索 |
 | OpenStreetMap | - | 地図データ |
 | AWS Location Service | - | ジオコーディング（住所・座標取得） |
-| Resend | - | パスワードリセットメール送信 |
+| Resend | - | パスワードリセットメール・メールアドレス確認メール送信 |
 | Slack Incoming Webhook | - | フィードバック・特典情報報告の通知 |
 | Nominatim（OpenStreetMap） | - | 出発地・目的地の地名検索、逆ジオコーディング（フロントエンドから直接呼び出し） |
 

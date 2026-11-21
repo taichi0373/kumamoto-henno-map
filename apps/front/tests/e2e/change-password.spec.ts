@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { loginAsUser } from './helpers/auth';
+import { markEmailVerified } from './helpers/db';
 
 /** テスト用ユーザー情報 */
 const USERNAME = 'pw-change-test';
@@ -34,6 +35,7 @@ test.describe('パスワード変更画面', () => {
     if (response.status() !== 201 && response.status() !== 409) {
       throw new Error(`サインアップAPI失敗: status=${response.status()}`);
     }
+    await markEmailVerified(USERNAME);
   });
 
   /** 各テスト前にログイン後、マイページ→プロフィール→パスワードを変更するの順で遷移 */
