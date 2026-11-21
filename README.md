@@ -11,7 +11,7 @@
 | PostgreSQL | localhost:5432 |
 | pgAdmin | http://localhost:65432 |
 | OTP | http://localhost:8080 |
-| Storybook | http://localhost:6006 |
+| Storybook | http://localhost:6006（`npm run storybook` で起動） |
 
 ## 技術スタック
 
@@ -21,7 +21,7 @@
 | バックエンド | Java 21 + Spring Boot 4 + Doma 2 + JWT認証 |
 | データベース | PostgreSQL 18 |
 | 経路探索 | OpenTripPlanner 2.5.0（GTFS） |
-| インフラ | Docker / Docker Compose |
+| インフラ | Docker / Docker Compose / k3s + Helm |
 
 ## 環境構築
 
@@ -32,6 +32,8 @@ PostgreSQL・pgAdmin・OTP を起動します。
 ```bash
 docker compose up -d
 ```
+
+PostgreSQL は `config/database/` を `/docker-entrypoint-initdb.d` にマウントしており、コンテナ初回作成時に `setup.sql` から DDL（テーブル・ビュー）と DML（初期データ）が投入されます。
 
 ### 2. バックエンド起動
 
@@ -80,9 +82,11 @@ npm run build-storybook # Storybookビルド
 # ログ確認
 docker compose logs -f
 
-# 停止・ボリューム削除
+# 停止・コンテナと匿名ボリュームの削除
 docker compose down -v
 ```
+
+> DB のデータは postgres イメージの匿名ボリュームに保持されます（`docker-compose.yml` の `db-data` は宣言のみで未使用）。`docker compose down` でコンテナを削除すると、次回の `up` では新しいボリュームで DB が初期化されます。データを残したい場合は `docker compose stop` を使ってください。
 
 ## DB 操作
 
@@ -105,3 +109,21 @@ docker compose exec db psql -U user -d kumamoto_henno_map
 | ユーザー名 | user |
 | パスワード | pass |
 
+## ドキュメント
+
+設計書は `docs/` に Docsify 形式で配置しており、[GitHub Pages](https://taichi0373.github.io/kumamoto-henno-map/) で公開しています。ローカルで確認する場合:
+
+```bash
+cd docs
+npm install
+npm run serve   # http://localhost:3000（フロントエンドと同じポートのため同時起動時は `npx docsify serve . -p 3001`）
+```
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [`docs/`](docs/README.md) | 基本設計書（概要・機能・DB・API） |
+| [`docs/01_overview/deploy_env_vars.md`](docs/01_overview/deploy_env_vars.md) | デプロイ環境変数一覧 |
+| [`docs/01_overview/k3s_deploy.md`](docs/01_overview/k3s_deploy.md) | k3s デプロイ手順 |
+| [`docs/01_overview/pdf_extraction_tool.md`](docs/01_overview/pdf_extraction_tool.md) | PDF特典抽出ツール（`tools/`） |
+| [`config/otp/README.md`](config/otp/README.md) | OpenTripPlanner の設定・グラフビルド |
+| [`CLAUDE.md`](CLAUDE.md) | 開発ルール・アーキテクチャ要点 |
