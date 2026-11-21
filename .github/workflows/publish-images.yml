@@ -11,6 +11,7 @@ on:
     paths:
       - 'deploy/helm/**'
       - 'deploy/scripts/**'
+      - 'deploy/.env.example'
       - 'config/database/**'
 
 env:
@@ -38,13 +39,14 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
+      # deploy/.env.example（雛形の値）でデプロイスクリプトごと検証する
       - name: Lint & template
+        env:
+          ENV_FILE: deploy/.env.example
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          bash deploy/scripts/sync-db-files.sh
-          CHART=deploy/helm/kumamoto-henno-map
-          ARGS=(-f "$CHART/values-home.yaml" -f "$CHART/values-secret.example.yaml" --set global.imageTag="$GITHUB_SHA")
-          helm lint "$CHART" "${ARGS[@]}"
-          helm template khm "$CHART" "${ARGS[@]}" > /dev/null
+          bash deploy/scripts/deploy.sh lint
+          bash deploy/scripts/deploy.sh template > /dev/null
 
   # アプリイメージ（front / back）
   publish-app:

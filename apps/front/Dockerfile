@@ -1,7 +1,8 @@
 # ===== ビルドステージ =====
 FROM node:22-alpine AS build
 WORKDIR /app
-COPY package.json package-lock.json ./
+# .npmrc（legacy-peer-deps=true）を含めないと lock ファイルと整合せず npm ci が失敗する
+COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 COPY . .
 # VITE_API_BASE_URL は設定しない（同一オリジンの相対パス '/kumamoto-henno-map/api' を使用し、Ingress でバックエンドへ振り分ける）

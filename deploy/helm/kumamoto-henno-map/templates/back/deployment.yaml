@@ -22,6 +22,17 @@ spec:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
       {{- include "khm.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.db.enabled }}
+      # クラスタ内 DB は Ready になるまで Headless Service の DNS が引けないため、起動を待ってから back を起動する
+      initContainers:
+        - name: wait-db
+          image: {{ printf "%s:%s" .Values.db.image.repository .Values.db.image.tag }}
+          imagePullPolicy: {{ .Values.db.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - until pg_isready -h {{ include "khm.dbHost" . }} -p 5432 -q; do echo "waiting for db"; sleep 2; done
+      {{- end }}
       containers:
         - name: back
           image: {{ include "khm.image" (dict "root" $ "image" $b.image) }}
@@ -33,7 +44,7 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: {{ $b.javaOpts | quote }}
             - name: TZ
-              value: Asia/Tokyo
+              value: {{ $b.timeZone | quote }}
             # ----- DB -----
             - name: DB_HOST
               value: {{ include "khm.dbHost" . | quote }}
@@ -48,6 +59,8 @@ spec:
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef: { name: {{ $secret }}, key: db-password }
+            - name: SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE
+              value: {{ $b.dbMaxPoolSize | quote }}
             # ----- アプリ設定 -----
             - name: FORWARD_HEADERS_STRATEGY
               value: {{ $b.forwardHeadersStrategy | quote }}
@@ -89,16 +102,16 @@ spec:
             - name: ADMIN_EMAIL
               valueFrom:
                 secretKeyRef: { name: {{ $secret }}, key: admin-email, optional: true }
-          # Spring Boot の起動は数十秒かかるため startupProbe で待つ
+          # Spring Boot の起動は数十秒かかるため startupProbe で待つ（HealthController: GET /health）
           startupProbe:
-            tcpSocket: { port: http }
+            httpGet: { path: {{ printf "%s/health" .Values.ingress.apiPath }}, port: http }
             periodSeconds: 5
             failureThreshold: 36
           readinessProbe:
-            tcpSocket: { port: http }
+            httpGet: { path: {{ printf "%s/health" .Values.ingress.apiPath }}, port: http }
             periodSeconds: 10
           livenessProbe:
-            tcpSocket: { port: http }
+            httpGet: { path: {{ printf "%s/health" .Values.ingress.apiPath }}, port: http }
             periodSeconds: 30
           resources:
             {{- toYaml $b.resources | nindent 12 }}
