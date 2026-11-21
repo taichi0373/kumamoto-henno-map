@@ -52,3 +52,7 @@ config/otp/data/*.zip
 config/otp/data/*.pbf
 config/otp/data/*.obj
 config/otp/data/.venv
+
+### helm ###
+deploy/helm/kumamoto-henno-map/files/
+deploy/helm/kumamoto-henno-map/values-secret.yaml

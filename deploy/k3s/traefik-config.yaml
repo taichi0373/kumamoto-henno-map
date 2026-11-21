@@ -1,0 +1,16 @@
+# k3s 同梱 Traefik の設定上書き（kubectl apply -f で適用。チャート外のクラスタ設定）
+# cloudflared Pod（Pod CIDR 10.42.0.0/16）から届く X-Forwarded-For / X-Forwarded-Proto を信頼し、
+# バックエンドへそのまま引き渡す。未設定だと Traefik がヘッダーを上書きし、全リクエストの送信元が
+# cloudflared の IP になってログイン試行制限が全ユーザー共通になってしまう。
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      web:
+        forwardedHeaders:
+          trustedIPs:
+            - 10.42.0.0/16

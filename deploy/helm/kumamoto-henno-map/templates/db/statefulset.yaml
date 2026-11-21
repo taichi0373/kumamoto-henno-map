@@ -1,0 +1,80 @@
+{{- if .Values.db.enabled }}
+{{- $ctx := dict "root" $ "component" "db" }}
+{{- $d := .Values.db }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "khm.fullname" . }}-db
+  labels:
+    {{- include "khm.componentLabels" $ctx | nindent 4 }}
+spec:
+  serviceName: {{ include "khm.fullname" . }}-db
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "khm.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "khm.componentLabels" $ctx | nindent 8 }}
+    spec:
+      containers:
+        - name: postgres
+          image: {{ printf "%s:%s" $d.image.repository $d.image.tag }}
+          imagePullPolicy: {{ $d.image.pullPolicy }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: {{ $d.name | quote }}
+            - name: POSTGRES_USER
+              value: {{ $d.username | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: {{ include "khm.secretName" . }}, key: db-password }
+            - name: TZ
+              value: Asia/Tokyo
+          readinessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            # postgres:18 以降はデータディレクトリが /var/lib/postgresql/18/docker のため親ディレクトリをマウントする
+            - name: data
+              mountPath: /var/lib/postgresql
+            {{- if $d.initSchema }}
+            - name: init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+            {{- end }}
+          resources:
+            {{- toYaml $d.resources | nindent 12 }}
+      {{- if $d.initSchema }}
+      volumes:
+        - name: init
+          configMap:
+            name: {{ include "khm.fullname" . }}-db-init
+            items:
+              {{- range $path, $_ := .Files.Glob "files/database/**" }}
+              - key: {{ include "khm.dbInitKey" $path }}
+                path: {{ trimPrefix "files/database/" $path }}
+              {{- end }}
+      {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- with $d.storage.storageClassName }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $d.storage.size }}
+{{- end }}

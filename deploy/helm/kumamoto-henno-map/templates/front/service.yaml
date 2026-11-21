@@ -1,0 +1,14 @@
+{{- $ctx := dict "root" $ "component" "front" }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "khm.fullname" . }}-front
+  labels:
+    {{- include "khm.componentLabels" $ctx | nindent 4 }}
+spec:
+  selector:
+    {{- include "khm.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

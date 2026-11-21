@@ -1,0 +1,76 @@
+{{- if and .Values.db.enabled .Values.db.backup.enabled }}
+{{- $d := .Values.db }}
+{{- $bk := $d.backup }}
+{{- $secret := include "khm.secretName" . }}
+{{- $remote := printf "r2:%s/%s" $bk.r2.bucket $bk.r2.prefix }}
+# pg_dump（initContainer）→ rclone で R2 へアップロード → 保持期間を過ぎたダンプを削除
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "khm.fullname" . }}-db-backup
+  labels:
+    {{- include "khm.componentLabels" (dict "root" $ "component" "db-backup") | nindent 4 }}
+spec:
+  schedule: {{ $bk.schedule | quote }}
+  timeZone: {{ $bk.timeZone | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          initContainers:
+            - name: dump
+              image: {{ printf "%s:%s" $d.image.repository $d.image.tag }}
+              command:
+                - sh
+                - -c
+                - pg_dump -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -Fc -f "/backup/{{ $d.name }}-$(date +%Y%m%d-%H%M%S).dump"
+              env:
+                - name: PGHOST
+                  value: {{ include "khm.fullname" . }}-db
+                - name: PGUSER
+                  value: {{ $d.username | quote }}
+                - name: PGDATABASE
+                  value: {{ $d.name | quote }}
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef: { name: {{ $secret }}, key: db-password }
+                - name: TZ
+                  value: {{ $bk.timeZone | quote }}
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          containers:
+            - name: upload
+              image: {{ $bk.rcloneImage }}
+              command:
+                - sh
+                - -c
+                - rclone copy /backup {{ $remote }} && rclone delete {{ $remote }} --min-age {{ $bk.retentionDays }}d
+              env:
+                # rclone の設定ファイルを使わず環境変数でリモート "r2" を定義する
+                - name: RCLONE_CONFIG_R2_TYPE
+                  value: s3
+                - name: RCLONE_CONFIG_R2_PROVIDER
+                  value: Cloudflare
+                - name: RCLONE_CONFIG_R2_ENDPOINT
+                  value: {{ required "db.backup.r2.endpoint を指定してください" $bk.r2.endpoint | quote }}
+                - name: RCLONE_CONFIG_R2_NO_CHECK_BUCKET
+                  value: "true"
+                - name: RCLONE_CONFIG_R2_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef: { name: {{ $secret }}, key: r2-access-key-id }
+                - name: RCLONE_CONFIG_R2_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef: { name: {{ $secret }}, key: r2-secret-access-key }
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: backup
+              emptyDir: {}
+{{- end }}
