@@ -68,14 +68,18 @@ public class EmailVerificationService {
 
     /**
      * 新規登録時の確認メールを送信する
+     * <p>
+     * 未確認ユーザーは登録から {@link #TOKEN_EXPIRY_HOURS} 時間で削除されるため、
+     * トークンの有効期限も送信日時ではなく登録日時を基準とする。
+     * </p>
      * @param user 登録したユーザー（未確認状態）
      */
     public void sendSignupVerification(UsersEntity user) {
-        String token = issueToken(user.getUserId(), null);
+        String token = issueToken(user.getUserId(), null, calcSignupExpiresAt(user));
         String body = "自主返納特典マップへのご登録ありがとうございます。\n\n"
             + "以下のURLを開き、画面のボタンを押してメールアドレスの確認を完了してください。\n"
             + "確認が完了するまでログインできません。\n"
-            + "このURLの有効期限は" + TOKEN_EXPIRY_HOURS + "時間です。期限内に確認されない場合、登録は削除されます。\n\n"
+            + "このURLの有効期限はご登録から" + TOKEN_EXPIRY_HOURS + "時間です。期限内に確認されない場合、登録は削除されます。\n\n"
             + buildVerifyUrl(token) + "\n\n"
             + "このメールに心当たりがない場合は、本メールを破棄してください。\n"
             + "なお、このメールアドレスへの返信はできません。";
@@ -97,7 +101,7 @@ public class EmailVerificationService {
             logger.info("送信間隔内のためメールアドレス変更の確認メールをスキップしました: userId={}", userId);
             return;
         }
-        String token = issueToken(userId, newEmail);
+        String token = issueToken(userId, newEmail, LocalDateTime.now().plusHours(TOKEN_EXPIRY_HOURS));
         String body = "メールアドレス変更のリクエストを受け付けました。\n\n"
             + "以下のURLを開き、画面のボタンを押して変更を完了してください。\n"
             + "確認が完了するまでは、変更前のメールアドレスが使用されます。\n"
@@ -112,7 +116,8 @@ public class EmailVerificationService {
      * 新規登録時の確認メールを再送する
      * <p>
      * 指定メールアドレスの未確認ユーザーが存在する場合のみ送信する。
-     * 存在しない場合・確認済みの場合・送信間隔内の場合も、列挙攻撃対策のため正常終了する。
+     * 存在しない場合・確認済みの場合・送信間隔内の場合・登録から有効期限を経過した場合も、
+     * 列挙攻撃対策のため正常終了する。
      * </p>
      * @param email メールアドレス
      */
@@ -124,6 +129,11 @@ public class EmailVerificationService {
         EmailVerificationTokensEntity latest = emailVerificationTokensDao.selectLatestByUserId(user.getUserId());
         if (latest != null && isWithinResendInterval(latest)) {
             logger.info("送信間隔内のため確認メールの再送をスキップしました: userId={}", user.getUserId());
+            return;
+        }
+        // 削除待ちのユーザーには期限切れのリンクしか送れないため送信しない
+        if (!calcSignupExpiresAt(user).isAfter(LocalDateTime.now())) {
+            logger.info("登録から有効期限を経過しているため確認メールの再送をスキップしました: userId={}", user.getUserId());
             return;
         }
         sendSignupVerification(user);
@@ -198,9 +208,10 @@ public class EmailVerificationService {
      * </p>
      * @param userId ユーザーID
      * @param newEmail 変更後メールアドレス（新規登録時はnull）
+     * @param expiresAt 有効期限
      * @return 平文トークン
      */
-    private String issueToken(Long userId, String newEmail) {
+    private String issueToken(Long userId, String newEmail, LocalDateTime expiresAt) {
         LocalDateTime now = LocalDateTime.now();
         emailVerificationTokensDao.markAllAsUsedByUserId(userId, now);
 
@@ -209,11 +220,28 @@ public class EmailVerificationService {
         tokenEntity.setUserId(userId);
         tokenEntity.setToken(TokenUtils.hashToken(token));
         tokenEntity.setNewEmail(newEmail);
-        tokenEntity.setExpiresAt(now.plusHours(TOKEN_EXPIRY_HOURS));
+        tokenEntity.setExpiresAt(expiresAt);
         tokenEntity.setUsed(false);
         tokenEntity.setSystemField(new SystemField(now, now));
         emailVerificationTokensDao.insert(tokenEntity);
         return token;
+    }
+
+    /**
+     * 新規登録時トークンの有効期限を算出する
+     * <p>
+     * 未確認ユーザーの自動削除と揃えるため、登録日時から {@link #TOKEN_EXPIRY_HOURS} 時間後とする。
+     * 登録日時が取得できない場合は現在日時を基準とする。
+     * </p>
+     * @param user 未確認ユーザー
+     * @return 有効期限
+     */
+    private LocalDateTime calcSignupExpiresAt(UsersEntity user) {
+        SystemField systemField = user.getSystemField();
+        LocalDateTime createdAt = systemField != null && systemField.getSysCreatedAt() != null
+                ? systemField.getSysCreatedAt()
+                : LocalDateTime.now();
+        return createdAt.plusHours(TOKEN_EXPIRY_HOURS);
     }
 
     /**

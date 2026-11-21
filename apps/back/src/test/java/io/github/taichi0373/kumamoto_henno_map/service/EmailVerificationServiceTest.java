@@ -52,18 +52,17 @@ class EmailVerificationServiceTest {
         testUser.setUserId(1L);
         testUser.setUsername("testuser");
         testUser.setEmail("old@example.com");
-        LocalDateTime createdAt = LocalDateTime.of(2026, 1, 1, 0, 0);
+        LocalDateTime createdAt = LocalDateTime.now().minusHours(1);
         testUser.setSystemField(new SystemField(createdAt, createdAt));
     }
 
     /**
-     * 新規登録時はハッシュ化したトークンを24時間の期限で保存し、平文トークン入りのURLを登録アドレスへ送信すること
+     * 新規登録時はハッシュ化したトークンを登録から24時間の期限で保存し、平文トークン入りのURLを登録アドレスへ送信すること
      */
     @Test
     void 新規登録時の確認メールはハッシュ化したトークンを保存して送信する() {
         // Arrange
         when(mailService.getFrontendBaseUrl()).thenReturn("http://localhost:3000");
-        LocalDateTime before = LocalDateTime.now();
 
         // Act
         emailVerificationService.sendSignupVerification(testUser);
@@ -77,7 +76,7 @@ class EmailVerificationServiceTest {
         assertThat(saved.getUserId()).isEqualTo(1L);
         assertThat(saved.getNewEmail()).isNull();
         assertThat(saved.getUsed()).isFalse();
-        assertThat(saved.getExpiresAt()).isAfterOrEqualTo(before.plusHours(24));
+        assertThat(saved.getExpiresAt()).isEqualTo(testUser.getSystemField().getSysCreatedAt().plusHours(24));
 
         ArgumentCaptor<String> bodyCaptor = ArgumentCaptor.forClass(String.class);
         verify(mailService).send(eq("old@example.com"), anyString(), bodyCaptor.capture());
@@ -185,6 +184,49 @@ class EmailVerificationServiceTest {
 
         // Assert
         verify(mailService).send(eq("old@example.com"), anyString(), anyString());
+    }
+
+    /**
+     * 再送したトークンの有効期限は再送日時ではなく登録日時を基準とすること（未確認ユーザーの自動削除と揃える）
+     */
+    @Test
+    void 再送したトークンの有効期限は登録から24時間となる() {
+        // Arrange
+        LocalDateTime createdAt = LocalDateTime.now().minusHours(23);
+        testUser.setSystemField(new SystemField(createdAt, createdAt));
+        when(mailService.getFrontendBaseUrl()).thenReturn("http://localhost:3000");
+        when(usersDao.selectByEmail("old@example.com")).thenReturn(testUser);
+        when(emailVerificationTokensDao.selectLatestByUserId(1L))
+                .thenReturn(buildToken(null, LocalDateTime.now().minusSeconds(61)));
+
+        // Act
+        emailVerificationService.resendSignupVerification("old@example.com");
+
+        // Assert
+        ArgumentCaptor<EmailVerificationTokensEntity> tokenCaptor =
+                ArgumentCaptor.forClass(EmailVerificationTokensEntity.class);
+        verify(emailVerificationTokensDao).insert(tokenCaptor.capture());
+        assertThat(tokenCaptor.getValue().getExpiresAt()).isEqualTo(createdAt.plusHours(24));
+    }
+
+    /**
+     * 登録から24時間を経過した削除待ちの未確認ユーザーへの再送要求は送信しないこと
+     */
+    @Test
+    void 登録から24時間を経過した未確認ユーザーへの再送は送信しない() {
+        // Arrange
+        LocalDateTime createdAt = LocalDateTime.now().minusHours(25);
+        testUser.setSystemField(new SystemField(createdAt, createdAt));
+        when(usersDao.selectByEmail("old@example.com")).thenReturn(testUser);
+        when(emailVerificationTokensDao.selectLatestByUserId(1L))
+                .thenReturn(buildToken(null, LocalDateTime.now().minusSeconds(61)));
+
+        // Act
+        emailVerificationService.resendSignupVerification("old@example.com");
+
+        // Assert
+        verify(emailVerificationTokensDao, never()).insert(any());
+        verify(mailService, never()).send(anyString(), anyString(), anyString());
     }
 
     /**

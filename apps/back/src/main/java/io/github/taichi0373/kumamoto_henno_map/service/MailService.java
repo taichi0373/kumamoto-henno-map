@@ -48,7 +48,8 @@ public class MailService {
     /**
      * プレーンテキストメールを送信する
      * <p>
-     * sandboxモードの場合は API を呼ばず、開発時の動作確認用に本文をログ出力する。
+     * sandboxモードの場合は API を呼ばず、開発時の動作確認用に本文を DEBUG ログ出力する。
+     * 本文にはトークン入りのURLが含まれるため、INFO には件名のみ出力する。
      * </p>
      * @param to 送信先メールアドレス
      * @param subject 件名
@@ -58,7 +59,8 @@ public class MailService {
     public void send(String to, String subject, String body) {
         // Resend には sandbox 機能がないため、API を呼ばずに送信をスキップする
         if (sandboxMode) {
-            logger.info("sandboxモードのためメールの送信をスキップしました: subject={}\n{}", subject, body);
+            logger.info("sandboxモードのためメールの送信をスキップしました: subject={}", subject);
+            logger.debug("sandboxモードのメール本文:\n{}", body);
             return;
         }
 
