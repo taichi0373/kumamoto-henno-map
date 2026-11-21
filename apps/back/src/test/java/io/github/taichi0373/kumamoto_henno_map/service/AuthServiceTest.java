@@ -1,6 +1,7 @@
 package io.github.taichi0373.kumamoto_henno_map.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import io.github.taichi0373.kumamoto_henno_map.exception.EmailNotVerifiedException;
 import io.github.taichi0373.kumamoto_henno_map.repository.dao.UsersDao;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
 import io.github.taichi0373.kumamoto_henno_map.util.JwtUtil;
@@ -51,6 +53,7 @@ class AuthServiceTest {
         testUser.setUsername("testuser");
         testUser.setPasswordHash("hashed");
         testUser.setIsAdmin("0");
+        testUser.setEmailVerifiedAt(LocalDateTime.of(2026, 1, 1, 0, 0));
     }
 
     /**
@@ -148,5 +151,39 @@ class AuthServiceTest {
         // Assert
         assertThat(result).isNull();
         verify(usersDao, never()).updateLastLogin(any(), any(), any());
+    }
+
+    /**
+     * パスワードが正しくメールアドレスが未確認の場合は未確認例外となり、ログイン情報は更新されないこと
+     */
+    @Test
+    void メールアドレス未確認の場合は未確認例外となる() {
+        // Arrange
+        testUser.setEmailVerifiedAt(null);
+        when(usersDao.selectByUsername("testuser")).thenReturn(testUser);
+        when(passwordEncoder.matches("password", "hashed")).thenReturn(true);
+
+        // Act & Assert
+        assertThatThrownBy(() -> authService.login("testuser", "password", "192.168.1.1"))
+                .isInstanceOf(EmailNotVerifiedException.class);
+        verify(usersDao, never()).updateLastLogin(any(), any(), any());
+        verify(jwtUtil, never()).generateToken(any());
+    }
+
+    /**
+     * メールアドレス未確認でもパスワードが誤っている場合は通常の認証失敗（null）となること
+     */
+    @Test
+    void メールアドレス未確認でもパスワード誤りは認証失敗となる() {
+        // Arrange
+        testUser.setEmailVerifiedAt(null);
+        when(usersDao.selectByUsername("testuser")).thenReturn(testUser);
+        when(passwordEncoder.matches("wrong", "hashed")).thenReturn(false);
+
+        // Act
+        var result = authService.login("testuser", "wrong", "192.168.1.1");
+
+        // Assert
+        assertThat(result).isNull();
     }
 }

@@ -14,6 +14,7 @@
 | USERS | ユーザー | システム利用者の情報を管理 | データ |
 | REFRESH_TOKENS | リフレッシュトークン | JWT認証用リフレッシュトークンを管理 | データ |
 | PASSWORD_RESET_TOKENS | パスワードリセットトークン | パスワードリセット用トークンを管理 | データ |
+| EMAIL_VERIFICATION_TOKENS | メールアドレス確認トークン | 会員登録時・メールアドレス変更時の確認用トークンを管理 | データ |
 | COMMUNITY_BUS | コミュニティバス路線 | コミュニティバスの路線情報を管理 | データ |
 | FARE_DISCOUNT | 運転免許返納特典運賃割引 | 運賃割引の詳細情報を管理 | データ |
 
@@ -41,6 +42,7 @@
 - `USERS` → `MUNICIPALITY`（自治体コードで関連）
 - `REFRESH_TOKENS` → `USERS`（ユーザーIDで関連・ON DELETE CASCADE）
 - `PASSWORD_RESET_TOKENS` → `USERS`（ユーザーIDで関連・ON DELETE CASCADE）
+- `EMAIL_VERIFICATION_TOKENS` → `USERS`（ユーザーIDで関連・ON DELETE CASCADE）
 - `COMMUNITY_BUS` → `AGENCY`（事業者IDで関連）
 - `FARE_DISCOUNT` → `BENEFIT`, `AGENCY`（特典ID・事業者IDで関連）
 

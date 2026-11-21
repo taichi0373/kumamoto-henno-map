@@ -289,6 +289,27 @@ public interface UsersDao {
     }
 
     /**
+     * メールアドレス未確認のまま作成日時が閾値以前のユーザーを一括削除する
+     * <p>
+     * 関連するトークンは ON DELETE CASCADE で削除される。
+     * </p>
+     *
+     * @param threshold 作成日時の閾値（この日時以前に作成された未確認ユーザーが対象）
+     * @return 削除件数
+     */
+    default int deleteUnverifiedCreatedBefore(LocalDateTime threshold) {
+        QueryDsl queryDsl = new QueryDsl(Config.get(this));
+        UsersEntity_ e = new UsersEntity_();
+
+        return queryDsl.delete(e)
+                .where(c -> {
+                    c.isNull(e.emailVerifiedAt);
+                    c.le(e.systemField.sysCreatedAt, threshold);
+                })
+                .execute();
+    }
+
+    /**
      * 登録
      */
     @Insert

@@ -291,6 +291,12 @@ const updateUsersInfo = async () => {
       const response = await apiClient.put(`/users`, requestData)
       if (response.status === responseStatusConstant.OK) {
         ToastMessageUtils.success(API_RESPONSE_MESSAGE.UPDATE_SUCCESS)
+        // メールアドレス変更時は確認完了まで旧アドレスのままであることを案内する
+        const result = (response.data as { data?: { emailVerificationPending?: boolean } }).data
+        if (result?.emailVerificationPending) {
+          barErrMode.value = 'success'
+          barErrMsg.value = API_RESPONSE_MESSAGE.EMAIL_CHANGE_PENDING
+        }
         // ユーザー情報の再取得
         await getUsersInfo()
       } else {
