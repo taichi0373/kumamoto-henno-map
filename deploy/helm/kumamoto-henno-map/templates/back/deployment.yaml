@@ -44,7 +44,7 @@ spec:
             - name: JAVA_TOOL_OPTIONS
               value: {{ $b.javaOpts | quote }}
             - name: TZ
-              value: Asia/Tokyo
+              value: {{ $b.timeZone | quote }}
             # ----- DB -----
             - name: DB_HOST
               value: {{ include "khm.dbHost" . | quote }}

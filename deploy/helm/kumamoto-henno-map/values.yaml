@@ -40,6 +40,9 @@ back:
     tag: ""
     pullPolicy: IfNotPresent
   javaOpts: "-Xmx512m"
+  # JVM のタイムゾーン。トークン有効期限等は LocalDateTime.now() で記録・比較するため、
+  # 同じ DB を使う他の環境（Render 等）と必ず揃えること（ずれると期限判定・定期削除が誤動作する）
+  timeZone: Asia/Tokyo
   # 転送ヘッダー処理戦略
   # NATIVE: Tomcat の RemoteIpValve が X-Forwarded-For を右から辿り、内部プロキシ（10.x 等）を除いた
   #         最初のアドレスをクライアント IP とする。Cloudflare が左側に積まれた偽装値を残しても影響を受けない。
