@@ -27,6 +27,7 @@ INSERT INTO BENEFIT VALUES (
   ADDRESS,             -- 店舗住所がある場合は '住所文字列'、なければ NULL
   NULL,                -- LATITUDE（常にNULLで出力）
   NULL,                -- LONGITUDE（常にNULLで出力）
+  NULL,                -- LAST_CONFIRMED_DATE（常にNULLで出力）
   CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP
 );
@@ -115,7 +116,7 @@ INSERT INTO BENEFIT VALUES (
   '返納証明書の交付日から2年間',
   '096-XXX-XXXX',
   'https://example.com/info.pdf',
-  NULL, NULL, NULL,
+  NULL, NULL, NULL, NULL,
   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
@@ -128,7 +129,7 @@ INSERT INTO BENEFIT VALUES (
   '096-YYY-YYYY',
   '',
   '熊本市中央区〇〇町1-2-3',
-  NULL, NULL,
+  NULL, NULL, NULL,
   CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 );
 
@@ -138,7 +139,8 @@ INSERT INTO BENEFIT VALUES (
 
 - 情報が不明・記載なしの場合は '' （空文字）を使用してください（NULLではなく）
 - 住所（ADDRESS）だけは情報がない場合 NULL を使用してください
-- LATITUDE・LONGITUDEは常に NULL で出力してください
+- LATITUDE・LONGITUDE・LAST_CONFIRMED_DATE は常に NULL で出力してください
+  （LAST_CONFIRMED_DATE は管理者が情報を確認した日のため、自動生成時は設定しない）
 - テキストに自治体名が書かれていて、上記の自治体コード表にない場合は
   最も近い上位自治体（例: 不明な村→所属郡→熊本県「43」）を使用してください
 - BENEFIT_NAMEに特典名が明確でない場合は「事業者名 + 特典種別」を使用してください

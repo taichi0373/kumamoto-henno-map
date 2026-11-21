@@ -112,11 +112,11 @@ erDiagram
     }
 
     MUNICIPALITY      ||--o{ BENEFIT             : provides
-    MUNICIPALITY      ||--o{ USERS               : has
+    MUNICIPALITY      |o--o{ USERS               : has
     BENEFIT_CATEGORY  ||--o{ BENEFIT             : classifies
     BENEFIT           ||--o{ BENEFIT_ELIGIBILITY : requires
     BENEFIT           ||--o{ FARE_DISCOUNT        : includes
-    AGENCY            ||--o{ COMMUNITY_BUS        : operates
+    AGENCY            |o--o{ COMMUNITY_BUS        : operates
     AGENCY            ||--o{ FARE_DISCOUNT        : offers
     USERS             ||--o{ REFRESH_TOKENS       : owns
     USERS             ||--o{ PASSWORD_RESET_TOKENS : requests

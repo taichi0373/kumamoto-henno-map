@@ -22,7 +22,8 @@ graph TD
     Signup -- 登録完了 / ログインリンク --> Login
     Signup -. 確認メール内URL .-> VerifyEmail[S017: メールアドレス確認画面]
     Profile -. メールアドレス変更時<br/>確認メール内URL .-> VerifyEmail
-    VerifyEmail -- 確認完了 --> Login
+    VerifyEmail -- 確認完了後のリンク<br/>未ログイン: ログインへ --> Login
+    VerifyEmail -- 確認完了後のリンク<br/>ログイン済み: プロフィールへ --> Profile
     VerifyEmail -- トークンなし / 再送する --> ResendVerify[S018: 確認メール再送画面]
     Login -- 確認メールが届かない方はこちら --> ResendVerify
     ResendVerify -- ログインに戻る --> Login
@@ -105,7 +106,7 @@ graph TD
     Signup -- 登録完了<br/>/login?signupSuccess=1 / すでにアカウントをお持ちの方はこちら --> Login
     Signup -- 確認メール送信 --> MailSent[メール受信確認]
     MailSent -- URLクリック --> VerifyEmail[S017: メールアドレス確認画面]
-    VerifyEmail -- 確認ボタン押下で確認完了 --> Login
+    VerifyEmail -- 確認ボタン押下で確認完了<br/>「ログインへ」リンク --> Login
     Login -- 未確認でログイン<br/>確認を促すメッセージ / 確認メールが届かない方はこちら --> ResendVerify[S018: 確認メール再送画面]
     ResendVerify -- 確認メール再送 --> MailSent
     Login -- 認証成功<br/>redirect クエリの画面 または / --> HomeAuth[S001: ホーム画面 ログイン済み]

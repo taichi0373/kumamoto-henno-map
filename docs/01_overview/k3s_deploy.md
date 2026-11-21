@@ -1,6 +1,6 @@
-# k3s（自宅サーバー）デプロイ手順
+# k3s デプロイ手順
 
-自宅サーバー1台に k3s を構築し、Helm チャート `deploy/helm/kumamoto-henno-map` でアプリ一式をデプロイする手順です。
+サーバー1台に k3s を構築し、Helm チャート `deploy/helm/kumamoto-henno-map` でアプリ一式をデプロイする手順です。
 
 ## 構成
 
@@ -130,8 +130,8 @@ helm rollback khm <REVISION> -n khm
 
 | ステップ | 設定（`deploy/.env` / values） | 内容 |
 |---|---|---|
-| 1 | `DB_ENABLED=false`、`EXTERNAL_DB_HOST` / `EXTERNAL_DB_USERNAME` / `DB_PASSWORD` に Supabase の Session pooler の情報 | Supabase に接続したまま、front / back / otp / cloudflared を自宅で稼働させる |
-| 2 | `DB_ENABLED=true`、values で `db.initSchema: false` | 自宅の DB を空で起動し、Supabase のダンプをリストアする（下記） |
+| 1 | `DB_ENABLED=false`、`EXTERNAL_DB_HOST` / `EXTERNAL_DB_USERNAME` / `DB_PASSWORD` に Supabase の Session pooler の情報 | Supabase に接続したまま、front / back / otp / cloudflared を k3s で稼働させる |
+| 2 | `DB_ENABLED=true`、values で `db.initSchema: false` | クラスタ内の DB を空で起動し、Supabase のダンプをリストアする（下記） |
 | 3 | — | 動作確認後に Supabase を停止する |
 
 ステップ1の注意:
@@ -149,7 +149,7 @@ helm rollback khm <REVISION> -n khm
 pg_dump "postgresql://postgres:<PW>@db.xxxxx.supabase.co:5432/postgres?sslmode=require" \
   -Fc --no-owner --no-privileges -n public -f supabase.dump
 
-# 自宅 DB へリストア
+# クラスタ内 DB へリストア
 kubectl -n khm cp supabase.dump khm-db-0:/tmp/supabase.dump
 kubectl -n khm exec -it khm-db-0 -- \
   pg_restore -U app -d kumamoto_henno_map --no-owner --no-privileges /tmp/supabase.dump

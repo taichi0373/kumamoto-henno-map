@@ -366,6 +366,8 @@ sequenceDiagram
 { "success": false, "data": null, "message": "メールアドレスの確認に失敗しました" }
 ```
 
+> 確認処理中の DB エラーは SQLState に応じて変換される。一意制約違反（23505）は 409（「既に登録されています」）、データ例外・整合性制約違反（22xxx / 23xxx）は 400（「入力内容が正しくありません（…）」）、それ以外は 500 を返す。
+
 ---
 
 ### POST /auth/email-verification/resend
@@ -834,6 +836,7 @@ sequenceDiagram
       "address": "熊本県熊本市中央区手取本町1-1",
       "latitude": 32.8032,
       "longitude": 130.7079,
+      "lastConfirmedDate": "2026-04-01",
       "categoryCd": "BS001",
       "categoryName": "ショッピング",
       "displayOrder": 1,
@@ -1697,7 +1700,9 @@ CSVファイルで自治体を一括登録・更新する。
 
 - **認証**: 必須（管理者）
 
-**リクエスト**: `UsersEntity` 形式のJSONボディ
+**リクエスト**: `UsersEntity` 形式のJSONボディ（`passwordHash`・`isAdmin`・`emailVerifiedAt` は無視され、既存の値を保持する）
+
+メールアドレスを変更した場合は、一般ユーザーの `PUT /users` と異なり確認メールを送信せず即時に反映する。確認状態（`emailVerifiedAt`）は変更前の値のまま保持する。
 
 **レスポンス 200 OK** — 更新後の `AdminUserResponseDto`
 

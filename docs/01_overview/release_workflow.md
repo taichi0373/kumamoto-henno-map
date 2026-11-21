@@ -125,8 +125,20 @@ GitHub Release の変更履歴は、マージされた PR のタイトルから�
 | develop へのマージ後 push（`docs/`・`apps/front/`・`apps/back/` 配下の変更時） | ビルド・テスト + GitHub Pages デプロイ（設計書・Storybook・Javadoc・OpenAPI） |
 | develop → main の PR（リリース PR） | ビルド・テスト |
 | main 向け PR のマージ（タイトルが `Release v*`） | タグ作成・GitHub Release 作成 |
-| main 向け PR のマージ（その他） | なし |
+| main への push（マージ） | k3s 用コンテナイメージのビルド・GHCR への push（`publish-images.yml`） |
 | release.yml の手動実行（workflow_dispatch） | 入力したバージョンでタグ作成・GitHub Release 作成 |
+
+### ビルド・テスト / Pages デプロイの構成
+
+| ワークフロー | トリガー | 内容 |
+|------------|---------|------|
+| `pull-request-review.yml` | develop / main 向けの PR | `review-precheck.yml` で変更箇所を判定し、該当するビルドのみ実行 |
+| `push-review.yml` | develop への push（`docs/`・`apps/front/`・`apps/back/` 配下の変更時）、手動 | 変更箇所に応じてビルド・テストし、`deploy-pages.yml` で GitHub Pages を更新 |
+| `review-precheck.yml` | 呼び出し専用（`workflow_call`） | `apps/front`・`apps/front/src/components`・`apps/back`・`docs` の変更有無を出力 |
+| `build-frontend.yml` | 呼び出し専用 | フロントエンドの lint・ビルド・テスト・Storybook ビルド |
+| `build-backend.yml` | 呼び出し専用 | バックエンドのコンパイル・テスト・Javadoc 生成 |
+| `build-document.yml` | 呼び出し専用 | Docsify ドキュメントの Pages アーティファクト作成（`is-deploy: true` 指定時のみデプロイ。PR 時はデプロイしない） |
+| `deploy-pages.yml` | 呼び出し専用 | 設計書・Storybook・Javadoc・OpenAPI をまとめて GitHub Pages へデプロイ |
 
 ### その他のワークフロー
 
@@ -138,3 +150,13 @@ GitHub Release の変更履歴は、マージされた PR のタイトルから�
 | `dependabot-auto-merge.yml` | Dependabot の PR 作成・更新時 | パッチ・マイナー更新は自動マージ、メジャー更新は「要レビュー」ラベルを付与 |
 | `auto-label-pr.yml` | PR 作成時 | PR へのラベル自動付与 |
 | `auto-delete-branch.yml` | PR クローズ時 | マージ済みブランチの削除 |
+| `publish-images.yml` | main への push、手動、Helm チャート・`config/database/` 変更時の PR | front / back / otp イメージをコミット SHA と `latest` のタグで GHCR へ push（PR 時は Helm の lint / template のみ）。詳細は [k3s デプロイ手順](k3s_deploy.md) |
+
+### `.github/` 配下のその他の設定
+
+| ファイル | 内容 |
+|---------|------|
+| `dependabot.yml` | Dependabot による依存関係の自動更新設定 |
+| `labels.yml` | リポジトリで使うラベルの定義（作成・更新は `gh label` で手動管理） |
+| `PULL_REQUEST_TEMPLATE.md` | PR 作成時のテンプレート |
+| `copilot-instructions.md` | GitHub Copilot 向けのコーディング指示 |

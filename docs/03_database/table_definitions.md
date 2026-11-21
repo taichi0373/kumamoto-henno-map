@@ -129,7 +129,7 @@
 | EMAIL_VERIFIED_AT | TIMESTAMP | | | | メールアドレス確認日時（NULL:未確認。未確認のまま作成から24時間経過したユーザーは自動削除） |
 
 **制約**:
-- 主キー制約: `USERS_PK` (USER_ID)
+- 主キー制約: USER_ID（制約名は自動付与）
 - ユニーク制約: `USERS_USERNAME_UNIQUE` (USERNAME)
 - ユニーク制約: `USERS_EMAIL_UNIQUE` (EMAIL)
 - 外部キー制約: `USERS_FK` (MUNICIPALITY_CD → MUNICIPALITY.MUNICIPALITY_CD)
@@ -260,3 +260,15 @@ JWT認証用リフレッシュトークンを管理するデータテーブル�
 
 **結合テーブル**:
 - `FARE_DISCOUNT` LEFT JOIN `BENEFIT_ELIGIBILITY`
+
+---
+
+## スキーマ変更（既存DB向け移行SQL）
+
+テーブル定義を変更した場合、新規構築用の `config/database/DDL/` に加えて、稼働中のDBに適用する移行SQLを `config/database/ALT/{バージョン}/DDL/ALT_{テーブル名}.SQL` に格納する。DBの初期化SQLは新規構築時（データディレクトリが空のとき）にしか実行されないため、既存DBには ALT を手動で適用する。
+
+| バージョン | ファイル | 内容 |
+|-----------|---------|------|
+| 1.1.8 | `ALT_USERS.SQL` | USERS に `LAST_LOGIN_AT`・`LAST_LOGIN_IP` を追加（カラム順を揃えるため、バックアップ → 再作成 → データ移行で実施） |
+| 1.1.11 | `ALT_USERS.SQL` | USERS に `EMAIL_VERIFIED_AT` を追加し、既存ユーザーを確認済みにする |
+| 1.1.11 | `ALT_EMAIL_VERIFICATION_TOKENS.SQL` | EMAIL_VERIFICATION_TOKENS を新設（`ALT_USERS.SQL` の適用後に実行） |
