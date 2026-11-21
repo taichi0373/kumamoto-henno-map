@@ -45,7 +45,7 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 30
           volumeMounts:
-            # postgres:18 以降はデータディレクトリが /var/lib/postgresql/18/docker のため親ディレクトリをマウントする
+            # postgres:18 以降はバージョン別サブディレクトリに保存するため親をマウントする
             - name: data
               mountPath: /var/lib/postgresql
             {{- if $d.initSchema }}

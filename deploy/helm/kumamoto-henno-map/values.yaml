@@ -1,27 +1,20 @@
-# =====================================================================
-# くまもと自主返納特典マップ Helm チャート 既定値
-# 環境ごとの差分は values-home.yaml 等、接続先・秘密情報は deploy/.env（deploy/scripts/deploy.sh が注入）で上書きする
-# =====================================================================
+# 既定値（環境差分は values-*.yaml、接続先・秘密情報は deploy/.env で上書きする）
 
 global:
-  # front / back / otp イメージの既定タグ（各コンポーネントの image.tag が空のとき使用）
-  # deploy/.env の IMAGE_TAG（CI が付与するコミット SHA）を deploy.sh が注入する
-  # （latest + IfNotPresent ではノードに古いイメージが残り更新が反映されないため、既定値は持たせない）
+  # 既定値は持たせない（latest だと古いイメージが残るため。deploy.sh が注入する）
   imageTag: ""
-  # GHCR のパッケージを非公開にしている場合は pull 用 Secret 名を指定する
   imagePullSecrets: []
 
-# ----- Ingress（k3s 標準の Traefik を使用） -----
+# ----- Ingress -----
 ingress:
   enabled: true
   className: traefik
-  # 公開するホスト名（Cloudflare Tunnel の Public Hostname と一致させる）
   hosts:
     - www.kumamoto-henno-map.com
-  # バックエンドへ振り分けるパス（server.servlet.context-path と一致させる）
+  # server.servlet.context-path と一致させる
   apiPath: /kumamoto-henno-map/api
 
-# ----- フロントエンド（nginx + Vite ビルド成果物） -----
+# ----- フロントエンド -----
 front:
   replicas: 1
   image:
@@ -32,7 +25,7 @@ front:
     requests: { cpu: 10m, memory: 32Mi }
     limits: { memory: 128Mi }
 
-# ----- バックエンド（Spring Boot） -----
+# ----- バックエンド -----
 back:
   replicas: 1
   image:
@@ -40,16 +33,11 @@ back:
     tag: ""
     pullPolicy: IfNotPresent
   javaOpts: "-Xmx512m"
-  # JVM のタイムゾーン。トークン有効期限等は LocalDateTime.now() で記録・比較するため、
-  # 同じ DB を使う他の環境（Render 等）と必ず揃えること（ずれると期限判定・定期削除が誤動作する）
+  # 同じ DB を使う他環境と揃える（ずれるとトークンの期限判定が狂う）
   timeZone: Asia/Tokyo
-  # DB コネクションプールの最大接続数（HikariCP。Spring Boot 既定は 10）
-  # Supabase の Session pooler は全クライアント合計で接続数が制限される（無料プランは 15）ため、
-  # 他の環境（Render 等）と同じ DB を共有する場合は合計が上限を超えないよう小さくする
+  # DB を他環境と共有する場合は合計が Supabase の接続上限を超えないようにする
   dbMaxPoolSize: 10
-  # 転送ヘッダー処理戦略
-  # NATIVE: Tomcat の RemoteIpValve が X-Forwarded-For を右から辿り、内部プロキシ（10.x 等）を除いた
-  #         最初のアドレスをクライアント IP とする。Cloudflare が左側に積まれた偽装値を残しても影響を受けない。
+  # X-Forwarded-For を右から辿り、偽装された値を無視する
   forwardHeadersStrategy: NATIVE
   corsAllowedOrigins: https://www.kumamoto-henno-map.com
   frontendBaseUrl: https://www.kumamoto-henno-map.com
@@ -60,23 +48,21 @@ back:
     requests: { cpu: 100m, memory: 512Mi }
     limits: { memory: 1Gi }
 
-# ----- OpenTripPlanner（graph.obj 同梱イメージ） -----
+# ----- OpenTripPlanner -----
 otp:
   replicas: 1
   image:
     repository: ghcr.io/taichi0373/kumamoto-henno-map-otp
     tag: ""
     pullPolicy: IfNotPresent
-  # JVM ヒープ（limits.memory より 1GB 程度小さくする）
+  # limits.memory より 1GB 程度小さくする
   heapSize: 3g
   resources:
     requests: { cpu: 200m, memory: 3Gi }
     limits: { memory: 4Gi }
 
 # ----- PostgreSQL -----
-# enabled: true  → クラスタ内に StatefulSet で構築する
-# enabled: false → externalDb（Supabase 等）へ接続する
-# （deploy/.env の DB_ENABLED で上書き可能）
+# false の場合は externalDb へ接続する
 db:
   enabled: true
   image:
@@ -85,19 +71,15 @@ db:
     pullPolicy: IfNotPresent
   name: kumamoto_henno_map
   username: app
-  # 初回起動時（データディレクトリが空のとき）に config/database の DDL / DML を投入する
-  # SQL は deploy.sh が実行時にチャート内（files/database）へコピーする
-  # Supabase からダンプをリストアする場合は false にする
+  # 初回起動時に config/database の DDL / DML を投入する（ダンプをリストアする場合は false）
   initSchema: true
   storage:
     size: 5Gi
-    # 空なら k3s 既定の local-path を使用
     storageClassName: ""
   resources:
     requests: { cpu: 50m, memory: 256Mi }
     limits: { memory: 1Gi }
-  # pg_dump の結果を Cloudflare R2（S3 互換）へ退避する
-  # 有効化と R2 の接続先は deploy/.env の DB_BACKUP_ENABLED / R2_* で指定する
+  # pg_dump を Cloudflare R2 へ退避する
   backup:
     enabled: false
     schedule: "0 3 * * *"
@@ -105,12 +87,10 @@ db:
     retentionDays: 30
     rcloneImage: rclone/rclone:1.69.1
     r2:
-      # https://<ACCOUNT_ID>.r2.cloudflarestorage.com
       endpoint: ""
       bucket: kumamoto-henno-map-backup
       prefix: postgres
 
-# db.enabled=false のときの接続先（deploy/.env の EXTERNAL_DB_* で上書きする）
 externalDb:
   host: ""
   port: 5432
@@ -130,11 +110,9 @@ cloudflared:
     requests: { cpu: 10m, memory: 32Mi }
     limits: { memory: 128Mi }
 
-# ----- 秘密情報 -----
-# 値は deploy/.env に書き、deploy.sh が標準入力経由で注入する（このファイルには書かない）
+# ----- 秘密情報（deploy/.env に書く。このファイルには書かない） -----
 secrets:
-  # 既存の Secret を使う場合はその名前を指定する（指定時はチャートで Secret を作成しない）
-  # キー名は templates/secret.yaml を参照
+  # 指定時はチャートで Secret を作成しない
   existingSecret: ""
   dbPassword: ""
   jwtSecret: ""

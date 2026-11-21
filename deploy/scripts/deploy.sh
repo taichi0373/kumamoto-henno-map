@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
-# deploy/.env の設定を読み込み、Helm チャートをデプロイ・検証する
-#
-# 使い方:
-#   bash deploy/scripts/deploy.sh [apply|template|lint]   （省略時は apply）
-#   ENV_FILE=path/to/.env bash deploy/scripts/deploy.sh   （.env の場所を変える場合）
-#
-# - .env はシェルとして実行せず KEY=VALUE として解釈する（値に $ や記号を含んでもよい）
-# - 既に環境変数として設定されている値は .env より優先する（CI で IMAGE_TAG を上書きする用途）
-# - 秘密情報はコマンドライン引数ではなく標準入力（-f -）で Helm に渡す（ps 等で見えないようにするため）
+# deploy/.env を読み込み Helm チャートをデプロイする
+# 使い方: bash deploy/scripts/deploy.sh [apply|template|lint]
+# 秘密情報は ps で見えないよう標準入力で Helm に渡す
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -28,11 +22,10 @@ while IFS= read -r line || [ -n "$line" ]; do
   value="${line#*=}"
   key="${key//[[:space:]]/}"
   [[ "$key" =~ ^[A-Z_][A-Z0-9_]*$ ]] || { echo "不正な行です: $key" >&2; exit 1; }
-  # 前後の引用符を外す
   if [[ "$value" =~ ^\"(.*)\"$ ]] || [[ "$value" =~ ^\'(.*)\'$ ]]; then
     value="${BASH_REMATCH[1]}"
   fi
-  # 既に環境変数がある場合はそちらを優先する
+  # 既存の環境変数を優先する（CI で IMAGE_TAG を上書きする用途）
   [ -n "${!key+x}" ] || export "$key=$value"
 done < "$ENV_FILE"
 
@@ -42,7 +35,7 @@ RELEASE_NAME="${RELEASE_NAME:-khm}"
 NAMESPACE="${NAMESPACE:-khm}"
 
 # ----- values の生成 -----
-# YAML のダブルクォート文字列として出力する（改行を含む値は扱わない）
+# YAML のダブルクォート文字列として出力する
 q() {
   local s="$1"
   [[ "$s" == *$'\n'* ]] && { echo "改行を含む値は設定できません" >&2; exit 1; }
@@ -51,7 +44,7 @@ q() {
   printf '"%s"' "$s"
 }
 
-# 値が設定されているときだけ出力し、未設定なら values ファイルの値を使う
+# 未設定なら values ファイルの値を使う
 opt() {
   local indent="$1" key="$2" value="$3"
   [ -n "$value" ] && printf '%s%s: %s\n' "$indent" "$key" "$value"
@@ -89,7 +82,6 @@ generate_values() {
   printf '  r2SecretAccessKey: %s\n' "$(q "${R2_SECRET_ACCESS_KEY:-}")"
 }
 
-# DB 初期化 SQL をチャート内へコピー（db.initSchema=true の場合に必要）
 bash "$ROOT_DIR/deploy/scripts/sync-db-files.sh" > /dev/null
 
 ARGS=(-f "$CHART/$VALUES_FILE" -f -)

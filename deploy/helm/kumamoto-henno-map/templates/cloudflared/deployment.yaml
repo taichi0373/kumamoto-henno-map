@@ -1,8 +1,7 @@
 {{- if .Values.cloudflared.enabled }}
 {{- $ctx := dict "root" $ "component" "cloudflared" }}
 {{- $c := .Values.cloudflared }}
-# Cloudflare Tunnel（外向き接続のみでインターネットへ公開する。ルーターのポート開放は不要）
-# 転送先（Public Hostname → http://traefik.kube-system.svc.cluster.local:80）は Cloudflare ダッシュボードで設定する
+# Cloudflare Tunnel（転送先は Cloudflare ダッシュボードで設定する）
 apiVersion: apps/v1
 kind: Deployment
 metadata:

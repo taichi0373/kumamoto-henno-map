@@ -1,7 +1,6 @@
 {{- if .Values.ingress.enabled }}
 {{- $fullname := include "khm.fullname" . }}
-# 同一オリジンで front と back を公開する（vercel.json の rewrites に相当）
-# TLS は Cloudflare 側で終端するため、ここでは HTTP のみ
+# front と back を同一オリジンで公開する（TLS は Cloudflare で終端）
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# config/database の初期化 SQL を Helm チャート内（files/database）へコピーする
-# Helm はチャートディレクトリ外のファイルを .Files で参照できないため、deploy.sh がデプロイ前に自動で実行する
+# config/database の初期化 SQL をチャート内へコピーする（Helm はチャート外を参照できないため）
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"

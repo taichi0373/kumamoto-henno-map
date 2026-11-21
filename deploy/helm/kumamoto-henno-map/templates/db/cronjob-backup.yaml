@@ -3,7 +3,7 @@
 {{- $bk := $d.backup }}
 {{- $secret := include "khm.secretName" . }}
 {{- $remote := printf "r2:%s/%s" $bk.r2.bucket $bk.r2.prefix }}
-# pg_dump（initContainer）→ rclone で R2 へアップロード → 保持期間を過ぎたダンプを削除
+# pg_dump → R2 へアップロード → 古いダンプを削除
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -52,7 +52,6 @@ spec:
                 - -c
                 - rclone copy /backup {{ $remote }} && rclone delete {{ $remote }} --min-age {{ $bk.retentionDays }}d
               env:
-                # rclone の設定ファイルを使わず環境変数でリモート "r2" を定義する
                 - name: RCLONE_CONFIG_R2_TYPE
                   value: s3
                 - name: RCLONE_CONFIG_R2_PROVIDER

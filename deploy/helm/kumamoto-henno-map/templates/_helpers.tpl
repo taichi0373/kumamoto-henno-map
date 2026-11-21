@@ -1,12 +1,12 @@
 {{/*
-リソース名の接頭辞（リリース名をそのまま使う。例: khm-back）
+リソース名の接頭辞
 */}}
 {{- define "khm.fullname" -}}
 {{- .Release.Name | trunc 50 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
-セレクタに含めない共通ラベル（chart バージョン等はアップグレードで変わるためセレクタに使わない）
+共通ラベル（アップグレードで変わるためセレクタには使わない）
 */}}
 {{- define "khm.commonLabels" -}}
 helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version }}
@@ -15,7 +15,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 {{/*
-コンポーネントに属さないリソース（Secret / Ingress / ConfigMap）のラベル
+コンポーネントに属さないリソースのラベル
 */}}
 {{- define "khm.labels" -}}
 {{ include "khm.commonLabels" . }}
@@ -25,7 +25,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{/*
 コンポーネント単位のセレクタラベル
-使い方: include "khm.selectorLabels" (dict "root" $ "component" "back")
 */}}
 {{- define "khm.selectorLabels" -}}
 app.kubernetes.io/name: {{ .root.Chart.Name }}
@@ -33,9 +32,6 @@ app.kubernetes.io/instance: {{ .root.Release.Name }}
 app.kubernetes.io/component: {{ .component }}
 {{- end -}}
 
-{{/*
-共通ラベル + セレクタラベル
-*/}}
 {{- define "khm.componentLabels" -}}
 {{ include "khm.commonLabels" .root }}
 {{ include "khm.selectorLabels" . }}
@@ -43,7 +39,6 @@ app.kubernetes.io/component: {{ .component }}
 
 {{/*
 イメージ参照（image.tag が空なら global.imageTag を使う）
-使い方: include "khm.image" (dict "root" $ "image" .Values.back.image)
 */}}
 {{- define "khm.image" -}}
 {{- $tag := default .root.Values.global.imageTag .image.tag -}}
@@ -51,15 +46,12 @@ app.kubernetes.io/component: {{ .component }}
 {{- end -}}
 
 {{/*
-Secret 名（existingSecret 指定時はそれを使う）
+Secret 名
 */}}
 {{- define "khm.secretName" -}}
 {{- default (printf "%s-secret" (include "khm.fullname" .)) .Values.secrets.existingSecret -}}
 {{- end -}}
 
-{{/*
-imagePullSecrets ブロック
-*/}}
 {{- define "khm.imagePullSecrets" -}}
 {{- with .Values.global.imagePullSecrets }}
 imagePullSecrets:
@@ -70,7 +62,7 @@ imagePullSecrets:
 {{- end -}}
 
 {{/*
-DB 接続先（db.enabled に応じてクラスタ内 / 外部を切り替える）
+DB 接続先（クラスタ内 / 外部）
 */}}
 {{- define "khm.dbHost" -}}
 {{- if .Values.db.enabled -}}
@@ -97,7 +89,7 @@ DB 接続先（db.enabled に応じてクラスタ内 / 外部を切り替える
 {{- end -}}
 
 {{/*
-DB 初期化 SQL の ConfigMap キー（ConfigMap のキーに "/" は使えないため "_" に置換）
+DB 初期化 SQL の ConfigMap キー（キーに "/" は使えないため "_" に置換）
 */}}
 {{- define "khm.dbInitKey" -}}
 {{- trimPrefix "files/database/" . | replace "/" "_" -}}
