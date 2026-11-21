@@ -1,0 +1,140 @@
+# =====================================================================
+# くまもと自主返納特典マップ Helm チャート 既定値
+# 環境ごとの差分は values-home.yaml、秘密情報は values-secret.yaml で上書きする
+# =====================================================================
+
+global:
+  # front / back / otp イメージの既定タグ（各コンポーネントの image.tag が空のとき使用）
+  # CI が付与するコミット SHA を --set global.imageTag=<sha> で必ず指定する
+  # （latest + IfNotPresent ではノードに古いイメージが残り更新が反映されないため、既定値は持たせない）
+  imageTag: ""
+  # GHCR のパッケージを非公開にしている場合は pull 用 Secret 名を指定する
+  imagePullSecrets: []
+
+# ----- Ingress（k3s 標準の Traefik を使用） -----
+ingress:
+  enabled: true
+  className: traefik
+  # 公開するホスト名（Cloudflare Tunnel の Public Hostname と一致させる）
+  hosts:
+    - www.kumamoto-henno-map.com
+  # バックエンドへ振り分けるパス（server.servlet.context-path と一致させる）
+  apiPath: /kumamoto-henno-map/api
+
+# ----- フロントエンド（nginx + Vite ビルド成果物） -----
+front:
+  replicas: 1
+  image:
+    repository: ghcr.io/taichi0373/kumamoto-henno-map-front
+    tag: ""
+    pullPolicy: IfNotPresent
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { memory: 128Mi }
+
+# ----- バックエンド（Spring Boot） -----
+back:
+  replicas: 1
+  image:
+    repository: ghcr.io/taichi0373/kumamoto-henno-map-back
+    tag: ""
+    pullPolicy: IfNotPresent
+  javaOpts: "-Xmx512m"
+  # 転送ヘッダー処理戦略
+  # NATIVE: Tomcat の RemoteIpValve が X-Forwarded-For を右から辿り、内部プロキシ（10.x 等）を除いた
+  #         最初のアドレスをクライアント IP とする。Cloudflare が左側に積まれた偽装値を残しても影響を受けない。
+  forwardHeadersStrategy: NATIVE
+  corsAllowedOrigins: https://www.kumamoto-henno-map.com
+  frontendBaseUrl: https://www.kumamoto-henno-map.com
+  mailFrom: noreply@kumamoto-henno-map.com
+  awsRegion: us-east-1
+  awsLocationPlaceIndex: kumamoto-henno-map-index
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { memory: 1Gi }
+
+# ----- OpenTripPlanner（graph.obj 同梱イメージ） -----
+otp:
+  replicas: 1
+  image:
+    repository: ghcr.io/taichi0373/kumamoto-henno-map-otp
+    tag: ""
+    pullPolicy: IfNotPresent
+  # JVM ヒープ（limits.memory より 1GB 程度小さくする）
+  heapSize: 3g
+  resources:
+    requests: { cpu: 200m, memory: 3Gi }
+    limits: { memory: 4Gi }
+
+# ----- PostgreSQL -----
+# enabled: true  → クラスタ内に StatefulSet で構築する
+# enabled: false → externalDb（Supabase 等）へ接続する
+db:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "18"
+    pullPolicy: IfNotPresent
+  name: kumamoto_henno_map
+  username: app
+  # 初回起動時（データディレクトリが空のとき）に config/database の DDL / DML を投入する
+  # 事前に deploy/scripts/sync-db-files.sh を実行してチャート内へ SQL をコピーしておくこと
+  # Supabase からダンプをリストアする場合は false にする
+  initSchema: true
+  storage:
+    size: 5Gi
+    # 空なら k3s 既定の local-path を使用
+    storageClassName: ""
+  resources:
+    requests: { cpu: 50m, memory: 256Mi }
+    limits: { memory: 1Gi }
+  # pg_dump の結果を Cloudflare R2（S3 互換）へ退避する
+  backup:
+    enabled: false
+    schedule: "0 3 * * *"
+    timeZone: Asia/Tokyo
+    retentionDays: 30
+    rcloneImage: rclone/rclone:1.69.1
+    r2:
+      # https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+      endpoint: ""
+      bucket: kumamoto-henno-map-backup
+      prefix: postgres
+
+# db.enabled=false のときの接続先
+externalDb:
+  host: ""
+  port: 5432
+  name: postgres
+  username: postgres
+  sslParams: "?sslmode=require"
+
+# ----- Cloudflare Tunnel -----
+cloudflared:
+  enabled: true
+  replicas: 1
+  image:
+    repository: cloudflare/cloudflared
+    tag: "2025.4.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { memory: 128Mi }
+
+# ----- 秘密情報（values-secret.yaml で設定し、Git には含めない） -----
+secrets:
+  # 既存の Secret を使う場合はその名前を指定する（指定時はチャートで Secret を作成しない）
+  # キー名は templates/secret.yaml を参照
+  existingSecret: ""
+  dbPassword: ""
+  jwtSecret: ""
+  resendApiKey: ""
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+  slackWebhookUrl: ""
+  adminUsername: ""
+  adminPassword: ""
+  adminEmail: ""
+  cloudflaredToken: ""
+  r2AccessKeyId: ""
+  r2SecretAccessKey: ""

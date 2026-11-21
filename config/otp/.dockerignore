@@ -1,0 +1,4 @@
+# イメージには graph.obj と設定ファイルのみを含めるため、元データはビルドコンテキストから除外する
+data/*.zip
+data/*.pbf
+data/.venv

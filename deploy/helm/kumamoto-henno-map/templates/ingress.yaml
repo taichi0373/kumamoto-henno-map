@@ -1,0 +1,33 @@
+{{- if .Values.ingress.enabled }}
+{{- $fullname := include "khm.fullname" . }}
+# 同一オリジンで front と back を公開する（vercel.json の rewrites に相当）
+# TLS は Cloudflare 側で終端するため、ここでは HTTP のみ
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "khm.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - host: {{ . | quote }}
+      http:
+        paths:
+          - path: {{ $.Values.ingress.apiPath }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullname }}-back
+                port:
+                  name: http
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullname }}-front
+                port:
+                  name: http
+    {{- end }}
+{{- end }}

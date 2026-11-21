@@ -23,7 +23,7 @@
 | `JWT_SECRET` | JWTシークレットキー（32文字以上推奨） | ランダム文字列 | ✅ |
 | `CORS_ALLOWED_ORIGINS` | 許可するオリジン（カンマ区切り） | `https://www.kumamoto-henno-map.com` | ✅ |
 | `FRONTEND_BASE_URL` | パスワードリセットメール・メールアドレス確認メールに使用するフロントURL | `https://www.kumamoto-henno-map.com` | ✅ |
-| `FORWARD_HEADERS_STRATEGY` | リバースプロキシのヘッダー処理 | `FRAMEWORK` | ✅ |
+| `FORWARD_HEADERS_STRATEGY` | リバースプロキシのヘッダー処理（k3s 構成では `NATIVE`。[k3s デプロイ手順](k3s_deploy.md) 参照） | `FRAMEWORK` | ✅ |
 | `OTP_API_URL` | OpenTripPlanner APIのURL | `https://otp.kumamoto-henno-map.com/otp/routers/default/plan` | ✅ |
 | `RESEND_API_KEY` | Resend APIキー（`re_`から始まる文字列） | Resendダッシュボードで発行 | ✅ |
 | `MAIL_FROM` | 送信元メールアドレス（Resendで認証済みドメインのアドレス） | `noreply@kumamoto-henno-map.com` | ✅ |

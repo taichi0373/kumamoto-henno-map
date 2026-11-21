@@ -1,0 +1,18 @@
+{{- if and .Values.db.enabled .Values.db.initSchema }}
+{{- $files := .Files.Glob "files/database/**" }}
+{{- if not ($files.Get "files/database/setup.sql") }}
+{{- fail "files/database/setup.sql がありません。deploy/scripts/sync-db-files.sh を実行するか db.initSchema=false にしてください" }}
+{{- end }}
+# config/database の setup.sql / DDL / DML を初回起動時に投入するための ConfigMap
+# ディレクトリ構造は statefulset.yaml の items で復元する（setup.sql の \ir 相対パスを維持するため）
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "khm.fullname" . }}-db-init
+  labels:
+    {{- include "khm.labels" . | nindent 4 }}
+data:
+  {{- range $path, $_ := $files }}
+  {{ include "khm.dbInitKey" $path }}: {{ $.Files.Get $path | toJson }}
+  {{- end }}
+{{- end }}
