@@ -124,6 +124,5 @@ npm run serve   # http://localhost:3000（フロントエンドと同じポー�
 | [`docs/`](docs/README.md) | 基本設計書（概要・機能・DB・API） |
 | [`docs/01_overview/deploy_env_vars.md`](docs/01_overview/deploy_env_vars.md) | デプロイ環境変数一覧 |
 | [`docs/01_overview/k3s_deploy.md`](docs/01_overview/k3s_deploy.md) | k3s デプロイ手順 |
-| [`docs/01_overview/pdf_extraction_tool.md`](docs/01_overview/pdf_extraction_tool.md) | PDF特典抽出ツール（`tools/`） |
 | [`config/otp/README.md`](config/otp/README.md) | OpenTripPlanner の設定・グラフビルド |
 | [`CLAUDE.md`](CLAUDE.md) | 開発ルール・アーキテクチャ要点 |

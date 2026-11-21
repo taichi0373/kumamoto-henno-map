@@ -9,7 +9,6 @@
 - [デプロイ環境変数一覧](01_overview/deploy_env_vars.md)
 - [k3s デプロイ手順](01_overview/k3s_deploy.md)
 - [リリースワークフロー](01_overview/release_workflow.md)
-- [PDF特典抽出ツール](01_overview/pdf_extraction_tool.md)
 
 ### 2. 機能・画面仕様
 - [機能一覧](02_functions/feature_list.md)
@@ -50,7 +49,6 @@ kumamoto-henno-map/
 ├── config/database/    # DDL・DML・移行SQL（ALT）
 ├── config/otp/         # 経路探索（OpenTripPlanner）設定・GTFSデータ
 ├── deploy/             # k3s 用 Helm チャート・デプロイスクリプト
-├── tools/              # PDF特典抽出ツール（Python）
 ├── docs/               # 基本設計書（Docsify）
 ├── .github/            # GitHub Actions ワークフロー・Dependabot 設定
 └── docker-compose.yml  # ローカル開発用（PostgreSQL・OTP）

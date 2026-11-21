@@ -1,5 +1,5 @@
 {{- $ctx := dict "root" $ "component" "otp" }}
-# バックエンドからのみ利用する内部サービス（Ingress では公開しない）
+# バックエンドからのみ利用する
 apiVersion: v1
 kind: Service
 metadata:

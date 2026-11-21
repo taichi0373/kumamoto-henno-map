@@ -8,7 +8,7 @@ metadata:
     {{- include "khm.componentLabels" $ctx | nindent 4 }}
 spec:
   replicas: {{ $o.replicas }}
-  # 単一ノードでは新旧 Pod を同時に載せるメモリが無いため、旧 Pod を止めてから起動する
+  # 新旧 Pod を同時に載せるメモリが無いため、旧 Pod を止めてから起動する
   strategy:
     type: Recreate
   selector:
@@ -30,7 +30,7 @@ spec:
           env:
             - name: JAVA_TOOL_OPTIONS
               value: {{ printf "-Xmx%s" $o.heapSize | quote }}
-          # graph.obj の読み込みに数分かかるため長めに待つ
+          # graph.obj の読み込みに数分かかる
           startupProbe:
             tcpSocket: { port: http }
             periodSeconds: 10

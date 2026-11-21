@@ -23,7 +23,7 @@ spec:
     spec:
       {{- include "khm.imagePullSecrets" . | nindent 6 }}
       {{- if .Values.db.enabled }}
-      # クラスタ内 DB は Ready になるまで Headless Service の DNS が引けないため、起動を待ってから back を起動する
+      # Headless Service は DB が Ready になるまで名前解決できないため待つ
       initContainers:
         - name: wait-db
           image: {{ printf "%s:%s" .Values.db.image.repository .Values.db.image.tag }}
@@ -89,7 +89,7 @@ spec:
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef: { name: {{ $secret }}, key: aws-secret-access-key }
-            # 以下は任意（Secret にキーが無ければ未設定として起動する）
+            # 以下は任意
             - name: SLACK_WEBHOOK_URL
               valueFrom:
                 secretKeyRef: { name: {{ $secret }}, key: slack-webhook-url, optional: true }
@@ -102,7 +102,7 @@ spec:
             - name: ADMIN_EMAIL
               valueFrom:
                 secretKeyRef: { name: {{ $secret }}, key: admin-email, optional: true }
-          # Spring Boot の起動は数十秒かかるため startupProbe で待つ（HealthController: GET /health）
+          # 起動に数十秒かかるため startupProbe で待つ
           startupProbe:
             httpGet: { path: {{ printf "%s/health" .Values.ingress.apiPath }}, port: http }
             periodSeconds: 5

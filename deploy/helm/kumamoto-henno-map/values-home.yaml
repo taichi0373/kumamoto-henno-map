@@ -1,6 +1,4 @@
 # k3s 単一ノード構成向けの上書き値
-# DB の接続先・秘密情報は deploy/.env で設定する
-# 使い方: VALUES_FILE=values-home.yaml を deploy/.env に設定し、bash deploy/scripts/deploy.sh
 
 ingress:
   hosts:
@@ -8,7 +6,7 @@ ingress:
     - kumamoto-henno-map.com
 
 otp:
-  # サーバーのメモリに合わせて調整する（例: 8GB 機なら 3g / 4Gi）
+  # サーバーのメモリに合わせて調整する
   heapSize: 3g
   resources:
     limits: { memory: 4Gi }

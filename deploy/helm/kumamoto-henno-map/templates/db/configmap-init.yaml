@@ -3,8 +3,7 @@
 {{- if not ($files.Get "files/database/setup.sql") }}
 {{- fail "files/database/setup.sql がありません。deploy/scripts/deploy.sh 経由でデプロイするか db.initSchema=false にしてください" }}
 {{- end }}
-# config/database の setup.sql / DDL / DML を初回起動時に投入するための ConfigMap
-# ディレクトリ構造は statefulset.yaml の items で復元する（setup.sql の \ir 相対パスを維持するため）
+# 初回起動時に投入する DB 初期化 SQL（ディレクトリ構造は statefulset.yaml で復元する）
 apiVersion: v1
 kind: ConfigMap
 metadata:
