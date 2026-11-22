@@ -38,7 +38,7 @@
     "@vitejs/plugin-vue": "^6.0.11",
     "@vue/devtools-api": "^8.2.1",
     "dotenv": "^18.0.10",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "eslint-plugin-vue": "^10.12.1",
     "globals": "^17.14.0",
     "jest": "^30.5.2",
