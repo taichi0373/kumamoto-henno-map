@@ -30,7 +30,7 @@
               >
                 <template #title>{{ benefit.benefitName }}</template>
                 <!-- 特典内容 -->
-                <p>特典内容：{{ benefit.benefitDetail }}</p>
+                <p class="multiline-text">特典内容：{{ benefit.benefitDetail }}</p>
                 <!-- 条件 -->
                 <ul style="list-style: none; padding-left: 0;">
                   <!-- 対象年齢 -->
@@ -55,7 +55,7 @@
                   </li>
                   <!-- 備考 -->
                   <li v-if="benefit.eligibilityNote">
-                    <small>※{{ benefit.eligibilityNote }}</small>
+                    <small class="multiline-text">※{{ benefit.eligibilityNote }}</small>
                   </li>
                 </ul>
                 <AppLink v-if="benefit.benefitUrl" :to="benefit.benefitUrl">詳細を見る</AppLink>
@@ -352,6 +352,11 @@ watch(() => props.usersBenefits, () => {
 .accordion-enter-from,
 .accordion-leave-to {
   opacity: 0;
+}
+
+// 特典内容・備考の改行をそのまま表示
+.multiline-text {
+  white-space: pre-line;
 }
 
 .report-btn,
