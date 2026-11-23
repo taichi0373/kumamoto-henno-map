@@ -10,6 +10,9 @@ on:
       - 'docker-compose.yml'
       - 'config/otp/**'
 
+permissions:
+  contents: read
+
 jobs:
   graph-build:
     # Github-hosted runner を使用

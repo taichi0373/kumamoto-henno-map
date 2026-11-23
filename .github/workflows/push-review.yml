@@ -14,6 +14,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# GITHUB_TOKEN の既定権限（必要なジョブのみ個別に付与）
+permissions:
+  contents: read
+
 # jobs: 動作内容
 jobs:
   # 前処理（差分チェック）

@@ -30,6 +30,8 @@ jobs:
   # バックエンドのビルド処理
   backend-build:
     name: Backend Build
+    permissions:
+      contents: read
     timeout-minutes: ${{ inputs.timeout-minutes }}
     # Github-hosted runner を使用
     runs-on: ubuntu-latest
