@@ -61,6 +61,7 @@ erDiagram
         char      IS_ADMIN
         timestamp LAST_LOGIN_AT
         varchar   LAST_LOGIN_IP
+        timestamp EMAIL_VERIFIED_AT
     }
 
     REFRESH_TOKENS {
@@ -75,6 +76,15 @@ erDiagram
         bigserial TOKEN_ID
         bigint    USER_ID
         varchar   TOKEN
+        timestamp EXPIRES_AT
+        boolean   USED
+    }
+
+    EMAIL_VERIFICATION_TOKENS {
+        bigserial TOKEN_ID
+        bigint    USER_ID
+        varchar   TOKEN
+        varchar   NEW_EMAIL
         timestamp EXPIRES_AT
         boolean   USED
     }
@@ -102,14 +112,15 @@ erDiagram
     }
 
     MUNICIPALITY      ||--o{ BENEFIT             : provides
-    MUNICIPALITY      ||--o{ USERS               : has
+    MUNICIPALITY      |o--o{ USERS               : has
     BENEFIT_CATEGORY  ||--o{ BENEFIT             : classifies
     BENEFIT           ||--o{ BENEFIT_ELIGIBILITY : requires
     BENEFIT           ||--o{ FARE_DISCOUNT        : includes
-    AGENCY            ||--o{ COMMUNITY_BUS        : operates
+    AGENCY            |o--o{ COMMUNITY_BUS        : operates
     AGENCY            ||--o{ FARE_DISCOUNT        : offers
     USERS             ||--o{ REFRESH_TOKENS       : owns
     USERS             ||--o{ PASSWORD_RESET_TOKENS : requests
+    USERS             ||--o{ EMAIL_VERIFICATION_TOKENS : verifies
 ```
 
 ---
@@ -126,6 +137,7 @@ erDiagram
 | USERS | MUNICIPALITY_CD | MUNICIPALITY.MUNICIPALITY_CD | - |
 | REFRESH_TOKENS | USER_ID | USERS.USER_ID | CASCADE |
 | PASSWORD_RESET_TOKENS | USER_ID | USERS.USER_ID | CASCADE |
+| EMAIL_VERIFICATION_TOKENS | USER_ID | USERS.USER_ID | CASCADE |
 | COMMUNITY_BUS | COMMUNITY_BUS_ID | AGENCY.AGENCY_ID | - |
 | FARE_DISCOUNT | BENEFIT_ID | BENEFIT.BENEFIT_ID | - |
 | FARE_DISCOUNT | AGENCY_ID | AGENCY.AGENCY_ID | - |
@@ -146,3 +158,7 @@ erDiagram
 ### PASSWORD_RESET_TOKENS のユニーク制約
 
 `TOKEN` に一意制約（`PASSWORD_RESET_TOKENS_TOKEN_UNIQUE`）が設定されており、同一ハッシュ値のトークンは登録不可。
+
+### EMAIL_VERIFICATION_TOKENS のユニーク制約
+
+`TOKEN` に一意制約（`EMAIL_VERIFICATION_TOKENS_TOKEN_UNIQUE`）が設定されており、同一ハッシュ値のトークンは登録不可。

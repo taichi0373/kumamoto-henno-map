@@ -205,7 +205,8 @@ const onClick = async () => {
       const response = await apiClient.post('/users/signup', requestData)
       if (response.status === responseStatusConstant.CREATED) {
         isLoading.value = false
-        router.push('/login')
+        // 確認メール送信済みであることをログイン画面で案内する
+        router.push({ path: '/login', query: { signupSuccess: '1' } })
       } else {
         barErrMode.value = 'error'
         barErrMsg.value = API_RESPONSE_MESSAGE.CREATE_FAILED

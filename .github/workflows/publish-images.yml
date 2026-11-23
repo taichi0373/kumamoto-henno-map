@@ -1,0 +1,130 @@
+name: Publish container images
+
+# main へのマージ時に front / back / otp のイメージをビルドし GHCR へ push する
+# タグ: コミット SHA（helm の global.imageTag に指定する）と latest
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+  # Helm チャートの変更時は lint / template のみ実行する
+  pull_request:
+    paths:
+      - 'deploy/helm/**'
+      - 'deploy/scripts/**'
+      - 'deploy/.env.example'
+      - 'config/database/**'
+
+env:
+  TZ: Asia/Tokyo
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/kumamoto-henno-map
+
+# GITHUB_TOKEN の既定権限を最小化する（push が必要なジョブのみ packages: write を個別付与）
+permissions:
+  contents: read
+
+# 同一ブランチの並行実行を防止
+concurrency:
+  group: publish-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # Helm チャートの静的検証
+  helm-lint:
+    name: Helm Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+
+      # deploy/.env.example（雛形の値）でデプロイスクリプトごと検証する
+      - name: Lint & template
+        env:
+          ENV_FILE: deploy/.env.example
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          bash deploy/scripts/deploy.sh lint
+          bash deploy/scripts/deploy.sh template > /dev/null
+
+  # アプリイメージ（front / back）
+  publish-app:
+    name: Publish ${{ matrix.name }}
+    if: github.event_name != 'pull_request'
+    needs: helm-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - name: front
+            context: apps/front
+          - name: back
+            context: apps/back
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.name }}:latest
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+  # OTP イメージ（graph.obj をビルドして同梱する）
+  publish-otp:
+    name: Publish otp
+    if: github.event_name != 'pull_request'
+    needs: helm-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Build OTP graph
+        run: |
+          docker run --rm \
+            -e JAVA_TOOL_OPTIONS=-Xmx4g \
+            -v "$PWD/config/otp/data":/var/opentripplanner \
+            docker.io/opentripplanner/opentripplanner:2.5.0 \
+            --build --save
+          test -f config/otp/data/graph.obj
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        run: |
+          docker build \
+            -t "$IMAGE_PREFIX-otp:$GITHUB_SHA" \
+            -t "$IMAGE_PREFIX-otp:latest" \
+            config/otp
+          docker push "$IMAGE_PREFIX-otp:$GITHUB_SHA"
+          docker push "$IMAGE_PREFIX-otp:latest"

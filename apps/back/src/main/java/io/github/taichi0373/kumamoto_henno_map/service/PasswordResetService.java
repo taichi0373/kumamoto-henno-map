@@ -1,19 +1,12 @@
 package io.github.taichi0373.kumamoto_henno_map.service;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.resend.Resend;
-import com.resend.core.exception.ResendException;
-import com.resend.services.emails.model.CreateEmailOptions;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +16,7 @@ import io.github.taichi0373.kumamoto_henno_map.repository.dao.UsersDao;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.PasswordResetTokensEntity;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.SystemField;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
+import io.github.taichi0373.kumamoto_henno_map.util.TokenUtils;
 
 /**
  * パスワードリセットサービス
@@ -39,9 +33,6 @@ public class PasswordResetService {
     /** トークン有効期限（分） */
     private static final int TOKEN_EXPIRY_MINUTES = 30;
 
-    /** トークンのバイト長（256bit = 32バイト、hex文字列で64文字） */
-    private static final int TOKEN_BYTE_LENGTH = 32;
-
     /** ユーザーDAO */
     @Autowired
     private UsersDao usersDao;
@@ -54,21 +45,9 @@ public class PasswordResetService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
-    /** Resend APIキー */
-    @Value("${resend.api-key}")
-    private String resendApiKey;
-
-    /** Resend sandboxモード（trueの場合はAPIを呼ばず、メールは送信されない） */
-    @Value("${resend.sandbox:false}")
-    private boolean sandboxMode;
-
-    /** フロントエンドのベースURL */
-    @Value("${app.password-reset.base-url:http://localhost:3000}")
-    private String frontendBaseUrl;
-
-    /** メール送信元アドレス */
-    @Value("${app.mail.from}")
-    private String mailFrom;
+    /** メール送信サービス */
+    @Autowired
+    private MailService mailService;
 
     /**
      * パスワードリセットメールを送信する
@@ -85,53 +64,27 @@ public class PasswordResetService {
             return;
         }
 
-        // SecureRandomで64文字のhexトークンを生成
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] tokenBytes = new byte[TOKEN_BYTE_LENGTH];
-        secureRandom.nextBytes(tokenBytes);
-        StringBuilder sb = new StringBuilder();
-        for (byte b : tokenBytes) {
-            sb.append(String.format("%02x", b));
-        }
-        String token = sb.toString();
+        String token = TokenUtils.generateToken();
 
         // トークンをDBに保存（DB漏えい対策のためSHA-256ハッシュのみ保存）
         LocalDateTime now = LocalDateTime.now();
         PasswordResetTokensEntity tokenEntity = new PasswordResetTokensEntity();
         tokenEntity.setUserId(user.getUserId());
-        tokenEntity.setToken(hashToken(token));
+        tokenEntity.setToken(TokenUtils.hashToken(token));
         tokenEntity.setExpiresAt(now.plusMinutes(TOKEN_EXPIRY_MINUTES));
         tokenEntity.setUsed(false);
         tokenEntity.setSystemField(new SystemField(now, now));
         passwordResetTokensDao.insert(tokenEntity);
 
-        // パスワードリセットメールを送信（Resend HTTP API）
-        String resetUrl = frontendBaseUrl + "/reset-password?token=" + token;
+        // パスワードリセットメールを送信
+        String resetUrl = mailService.getFrontendBaseUrl() + "/reset-password?token=" + token;
         String body = "パスワードリセットのリクエストを受け付けました。\n\n"
             + "以下のURLからパスワードをリセットしてください。\n"
             + "このURLの有効期限は30分です。\n\n"
             + resetUrl + "\n\n"
             + "このメールに心当たりがない場合は、本メールを破棄してください。\n"
             + "なお、このメールアドレスへの返信はできません。";
-
-        // Resend には sandbox 機能がないため、API を呼ばずに送信をスキップする
-        if (sandboxMode) {
-            logger.info("sandboxモードのためパスワードリセットメールの送信をスキップしました: userId={}", user.getUserId());
-            return;
-        }
-
-        CreateEmailOptions params = CreateEmailOptions.builder()
-            .from(mailFrom)
-            .to(email)
-            .subject("【自主返納特典マップ】パスワードリセットのご案内")
-            .text(body)
-            .build();
-
-        try {
-            new Resend(resendApiKey).emails().send(params);
-        } catch (ResendException e) {
-            throw new RuntimeException("Resendメール送信エラー: " + e.getMessage(), e);
-        }
+        mailService.send(email, "【自主返納特典マップ】パスワードリセットのご案内", body);
     }
 
     /**
@@ -141,6 +94,7 @@ public class PasswordResetService {
      * DBにはハッシュのみ保存されているため、照合時に同じSHA-256ハッシュを計算して比較する。
      * used=false かつ期限内の条件付き UPDATE を原子的に実行することで、
      * 同時リクエストによるトークンの二重使用を防ぐ。
+     * リセットメールの受信によりメールアドレスの所有が確認できたため、未確認の場合は確認済みにする。
      * </p>
      * @param token リセットトークン（平文）
      * @param newPassword 新しいパスワード（平文）
@@ -148,7 +102,7 @@ public class PasswordResetService {
      */
     @Transactional
     public boolean confirmPasswordReset(String token, String newPassword) {
-        String tokenHash = hashToken(token);
+        String tokenHash = TokenUtils.hashToken(token);
         PasswordResetTokensEntity tokenEntity = passwordResetTokensDao.selectByToken(tokenHash);
 
         LocalDateTime now = LocalDateTime.now();
@@ -172,6 +126,9 @@ public class PasswordResetService {
         }
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
+        if (user.getEmailVerifiedAt() == null) {
+            user.setEmailVerifiedAt(now);
+        }
         SystemField currentSystemField = user.getSystemField();
         LocalDateTime sysCreatedAt = currentSystemField != null && currentSystemField.getSysCreatedAt() != null
                 ? currentSystemField.getSysCreatedAt()
@@ -194,30 +151,6 @@ public class PasswordResetService {
     public void cleanupExpiredTokens() {
         int deleted = passwordResetTokensDao.deleteExpiredOrUsed(LocalDateTime.now());
         logger.info("パスワードリセットトークンのクリーンアップ完了: {}件削除", deleted);
-    }
-
-    /**
-     * トークンをSHA-256でハッシュ化する
-     * <p>
-     * DBには平文トークンを保存せず、このハッシュ値のみを保存する。
-     * メールには平文トークンを送信し、照合時に同じハッシュを計算して比較する。
-     * </p>
-     * @param token 平文トークン
-     * @return SHA-256ハッシュ（64文字hex文字列）
-     */
-    private String hashToken(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder();
-            for (byte b : hashBytes) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            // SHA-256はJava標準で必ず利用可能なため到達しない
-            throw new IllegalStateException("SHA-256アルゴリズムが利用できません", e);
-        }
     }
 
 }

@@ -23,6 +23,7 @@ import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
 import io.github.taichi0373.kumamoto_henno_map.dto.ApiResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.ChangePasswordRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.DeleteAccountRequestDto;
+import io.github.taichi0373.kumamoto_henno_map.dto.UpdateUserProfileResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UserResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UsersDto;
 import io.github.taichi0373.kumamoto_henno_map.exception.AdminAccountDeletionException;
@@ -111,10 +112,11 @@ public class UsersController {
     /**
      * ユーザー情報の更新
      */
-    @Operation(summary = "ユーザー情報更新", description = "JWT で認証されたユーザー自身の情報を更新する。")
+    @Operation(summary = "ユーザー情報更新",
+            description = "JWT で認証されたユーザー自身の情報を更新する。メールアドレスの変更は、変更後のアドレスに送信した確認メールで確認が完了してから反映する。")
     @SecurityRequirement(name = "bearerAuth")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "更新成功（data: null）"),
+            @ApiResponse(responseCode = "200", description = "更新成功（data: UpdateUserProfileResponseDto）"),
             @ApiResponse(responseCode = "400", description = "ユーザー名未入力・メールアドレス未入力または形式不正・生年月日不正",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "401", description = "未認証",
@@ -127,7 +129,7 @@ public class UsersController {
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
     })
     @PutMapping
-    public ResponseEntity<ApiResponseDto<Void>> updateUserProfile(
+    public ResponseEntity<ApiResponseDto<UpdateUserProfileResponseDto>> updateUserProfile(
             @RequestBody UsersDto users,
             Authentication auth) {
         try {
@@ -186,13 +188,13 @@ public class UsersController {
             }
 
             // ユーザー情報更新
-            Integer result = usersService.updateUsersInfo(users);
+            UpdateUserProfileResponseDto result = usersService.updateUsersInfo(users);
             if (ValidateUtils.isNullOrEmpty(result)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponseDto.error("ユーザーが見つかりません"));
             }
 
-            return ResponseEntity.ok(ApiResponseDto.success(null));
+            return ResponseEntity.ok(ApiResponseDto.success(result));
         } catch (Exception e) {
             return DbExceptionUtils.toErrorResponse(e, "ユーザー情報の更新に失敗しました");
         }
@@ -350,7 +352,7 @@ public class UsersController {
      */
     @Operation(summary = "ユーザー登録", description = "新規アカウントを作成する。認証・CSRF 保護は不要。")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "登録成功（data: UserResponseDto）"),
+            @ApiResponse(responseCode = "201", description = "登録成功（data: UserResponseDto）。メールアドレス未確認の状態で登録し、確認メールを送信する"),
             @ApiResponse(responseCode = "400", description = "パスワードが短すぎる・メールアドレス未入力または形式不正",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "409", description = "ユーザー名またはメールアドレスが既に使用されている（同時登録によるDB制約違反を含む）",

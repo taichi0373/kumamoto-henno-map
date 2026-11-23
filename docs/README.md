@@ -7,6 +7,7 @@
 - [技術スタック](01_overview/tech_stack.md)
 - [命名規則](01_overview/naming_conventions.md)
 - [デプロイ環境変数一覧](01_overview/deploy_env_vars.md)
+- [k3s デプロイ手順](01_overview/k3s_deploy.md)
 - [リリースワークフロー](01_overview/release_workflow.md)
 
 ### 2. 機能・画面仕様
@@ -31,13 +32,13 @@
 
 **フロントエンド**: Vue 3 + TypeScript + Vite
 
-**バックエンド**: Java 21 + Spring Boot + Doma 2
+**バックエンド**: Java 21 + Spring Boot 4 + Doma 2
 
-**データベース**: PostgreSQL
+**データベース**: PostgreSQL（本番: Supabase）
 
 **経路探索エンジン**: OTP 2.5.0
 
-**その他**: Docker, GitHub Actions
+**その他**: Docker, GitHub Actions, k3s + Helm
 
 ## プロジェクト構成
 
@@ -45,7 +46,10 @@
 kumamoto-henno-map/
 ├── apps/front/         # フロントエンド（Vue 3 + TypeScript + Vite）
 ├── apps/back/          # バックエンド（Java 21 + Spring Boot + Doma 2）
-├── config/database/    # データベース設定
-├── config/otp/         # 経路探索設定
-└── docs/               # 基本設計書
+├── config/database/    # DDL・DML・移行SQL（ALT）
+├── config/otp/         # 経路探索（OpenTripPlanner）設定・GTFSデータ
+├── deploy/             # k3s 用 Helm チャート・デプロイスクリプト
+├── docs/               # 基本設計書（Docsify）
+├── .github/            # GitHub Actions ワークフロー・Dependabot 設定
+└── docker-compose.yml  # ローカル開発用（PostgreSQL・OTP）
 ```

@@ -1,6 +1,7 @@
 package io.github.taichi0373.kumamoto_henno_map.service;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import io.github.taichi0373.kumamoto_henno_map.dto.UpdateUserProfileResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UserResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.UsersDto;
 import io.github.taichi0373.kumamoto_henno_map.exception.AdminAccountDeletionException;
@@ -44,9 +46,19 @@ public class UsersService {
      */
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
+    /**
+     * メールアドレス確認サービス
+     */
+    @Autowired
+    private EmailVerificationService emailVerificationService;
     
     /**
      * 新規登録
+     * <p>
+     * メールアドレス未確認の状態で登録し、確認メールを送信する。
+     * 確認メールの送信に失敗しても登録は取り消さない（再送画面から再送できるため）。
+     * </p>
      * @param users ユーザ情報
      * @return 登録されたユーザー情報DTO（機微情報を含まない）
      */
@@ -69,6 +81,7 @@ public class UsersService {
             newUser.setSystemField(new SystemField(now, now));
 
             usersDao.insert(newUser);
+            sendSignupVerificationSafely(newUser);
             // insert後にDTOへ変換してpasswordHashを含めずに返す
             return toUserResponseDto(newUser);
         } catch (DataIntegrityViolationException e) {
@@ -171,8 +184,6 @@ public class UsersService {
         dto.setAddress(user.getMunicipalityCd());
         dto.setLicenseStatus(user.getLicenseStatus());
         dto.setLicenseSurrenderedAt(user.getLicenseSurrenderedAt());
-        dto.setLastLoginAt(user.getLastLoginAt());
-        dto.setLastLoginIp(user.getLastLoginIp());
         return dto;
     }
 
@@ -246,13 +257,16 @@ public class UsersService {
      * <p>
      * 指定されたユーザーIDのユーザー情報を更新する。
      * ユーザーが存在しない場合はnullを返す。
+     * メールアドレスが変更された場合は即時には反映せず、変更後のアドレスへ確認メールを送信する。
+     * 確認メールの送信に失敗した場合は、更新全体をロールバックする。
      * DB アクセスエラー等の予期しない例外は RuntimeException としてスローする（呼び出し元で 500 として処理する）。
      * </p>
      * @param users 更新するユーザー情報DTO
-     * @return 更新件数（ユーザーが存在しない場合はnull）
-     * @throws RuntimeException DB アクセスエラー等の内部エラー
+     * @return 更新結果（ユーザーが存在しない場合はnull）
+     * @throws RuntimeException DB アクセスエラー・メール送信エラー等の内部エラー
      */
-    public Integer updateUsersInfo(UsersDto users) {
+    @Transactional
+    public UpdateUserProfileResponseDto updateUsersInfo(UsersDto users) {
         try {
             UsersEntity existingUser = usersDao.selectById(users.getUserId());
             if (ValidateUtils.isNullOrEmpty(existingUser)) {
@@ -260,9 +274,11 @@ public class UsersService {
             }
             LocalDateTime now = LocalDateTime.now();
             
+            // メールアドレスは確認完了まで変更前のまま保持する
+            boolean emailChanged = !Objects.equals(existingUser.getEmail(), users.getEmail());
+
             // ユーザー情報を更新
             existingUser.setUsername(users.getUsername());
-            existingUser.setEmail(users.getEmail());
             existingUser.setBirthDate(users.getBirthDate());
             existingUser.setMunicipalityCd(users.getAddress());
             existingUser.setLicenseStatus(users.getLicenseStatus());
@@ -274,14 +290,29 @@ public class UsersService {
             existingUser.setSystemField(new SystemField(sysCreatedAt, now));
             
             // データベースに更新を保存
-            Integer result = usersDao.update(existingUser);
-            
-            return result;
+            usersDao.update(existingUser);
+
+            if (emailChanged) {
+                emailVerificationService.sendEmailChangeVerification(existingUser.getUserId(), users.getEmail());
+            }
+            return new UpdateUserProfileResponseDto(emailChanged);
         } catch (Exception e) {
             Long userId = users != null ? users.getUserId() : null;
             logger.error("ユーザー情報更新中に予期しないエラーが発生しました userId={}", userId, e);
             throw new RuntimeException("ユーザー情報の更新に失敗しました", e);
         }
 
+    }
+
+    /**
+     * 新規登録時の確認メールを送信する（失敗時は警告ログのみ）
+     * @param user 登録したユーザー
+     */
+    private void sendSignupVerificationSafely(UsersEntity user) {
+        try {
+            emailVerificationService.sendSignupVerification(user);
+        } catch (RuntimeException e) {
+            logger.warn("確認メールの送信に失敗しました: userId={}", user.getUserId(), e);
+        }
     }
 }

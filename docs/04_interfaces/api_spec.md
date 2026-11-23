@@ -175,6 +175,12 @@ sequenceDiagram
 { "success": false, "data": null, "message": "ユーザー名またはパスワードが正しくありません" }
 ```
 
+**レスポンス 403 Forbidden** — パスワードは正しいがメールアドレスが未確認（パスワードが誤っている場合は 401）。ログイン失敗回数には数えない
+
+```json
+{ "success": false, "data": null, "message": "メールアドレスの確認が完了していません。確認メールのリンクから確認を完了してください。" }
+```
+
 **レスポンス 429 Too Many Requests** — ログイン試行回数超過（15分後に解除）
 
 ```json
@@ -312,13 +318,91 @@ sequenceDiagram
 { "success": false, "data": null, "message": "パスワードのリセットに失敗しました" }
 ```
 
+> リセット完了時、メールアドレスが未確認のユーザーは確認済みにする（リセットメールの受信でメールアドレスの所有を確認できるため）。
+
+---
+
+### POST /auth/email-verification/confirm
+
+確認トークンでメールアドレスの確認を確定する。会員登録時のトークンはアカウントを確認済み（ログイン可能）にし、メールアドレス変更時のトークンはメールアドレスを変更後のアドレスに切り替える。トークンは発行から24時間有効で、一度使用すると無効になる。
+
+- **認証**: 不要
+
+**リクエスト**
+
+```json
+{
+  "token": "abc123..."
+}
+```
+
+**レスポンス 200 OK**
+
+```json
+{ "success": true, "data": null }
+```
+
+**レスポンス 400 Bad Request** — トークンが未入力・無効・期限切れ・使用済み
+
+```json
+{ "success": false, "data": null, "message": "このリンクは無効または期限切れです。" }
+```
+
+**レスポンス 409 Conflict** — 変更後のメールアドレスが確認時点で他のユーザーに使用されている（メールアドレスは変更しない）
+
+```json
+{ "success": false, "data": null, "message": "このメールアドレスは既に使用されています" }
+```
+
+**レスポンス 429 Too Many Requests** — 失敗回数超過（5回失敗で15分間ロック）
+
+```json
+{ "success": false, "data": null, "message": "試行回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
+```
+
+**レスポンス 500 Internal Server Error**
+
+```json
+{ "success": false, "data": null, "message": "メールアドレスの確認に失敗しました" }
+```
+
+> 確認処理中の DB エラーは SQLState に応じて変換される。一意制約違反（23505）は 409（「既に登録されています」）、データ例外・整合性制約違反（22xxx / 23xxx）は 400（「入力内容が正しくありません（…）」）、それ以外は 500 を返す。
+
+---
+
+### POST /auth/email-verification/resend
+
+会員登録時の確認メールを再送する。指定メールアドレスの未確認ユーザーが存在する場合のみ送信する。メールアドレスの存在有無・確認状態・形式の正誤・メール送信の成否に関わらず同一レスポンス（200）を返す（列挙攻撃対策）。同一ユーザーへの送信は前回送信から60秒以内の場合スキップする。
+
+- **認証**: 不要
+
+**リクエスト**
+
+```json
+{
+  "email": "taro@example.com"
+}
+```
+
+**レスポンス 200 OK**
+
+```json
+{ "success": true, "data": null }
+```
+
+**レスポンス 429 Too Many Requests** — 再送要求回数超過（5回で15分間ロック）
+
+```json
+{ "success": false, "data": null, "message": "再送要求回数が上限を超えました。しばらく時間をおいて再度お試しください。" }
+```
+
 ---
 
 ## 2. ユーザー (`/users`)
 
 ### POST /users/signup
 
-ユーザー登録（新規アカウント作成）。
+ユーザー登録（新規アカウント作成）。メールアドレス未確認の状態で登録し、登録したメールアドレスへ確認メールを送信する。確認が完了するまでログインできず、登録から24時間以内に確認が完了しない場合は自動削除される。確認メールの送信に失敗しても登録は取り消さない（`POST /auth/email-verification/resend` で再送できる）。
 
 - **認証**: 不要
 
@@ -421,17 +505,10 @@ sequenceDiagram
     "birthDate": "2000-01-01",
     "address": "43100",
     "licenseStatus": "2",
-    "licenseSurrenderedAt": "2024-04-01",
-    "lastLoginAt": "2026-10-25T09:30:00",
-    "lastLoginIp": "192.168.1.1"
+    "licenseSurrenderedAt": "2024-04-01"
   }
 }
 ```
-
-| フィールド | 型 | 説明 |
-|---|---|---|
-| lastLoginAt | string (ISO 8601) \| null | 最終ログイン日時（サーバー時刻・タイムゾーンなし）。ログイン記録がない場合は null |
-| lastLoginIp | string \| null | 最終ログインIPアドレス。ログイン記録がない場合は null |
 
 **レスポンス 401 Unauthorized** — 未認証
 **レスポンス 403 Forbidden** — 他ユーザーへのアクセス
@@ -443,6 +520,8 @@ sequenceDiagram
 ### PUT /users
 
 ユーザー情報更新。認証されたユーザー自身のみ更新可。
+
+メールアドレスを変更した場合は即時に反映せず、変更後のアドレスへ確認メールを送信する。確認（`POST /auth/email-verification/confirm`）が完了するまでは変更前のメールアドレスのまま保持する。同じ変更後アドレスへの送信は前回送信から60秒以内の場合スキップする。確認メールの送信に失敗した場合は更新全体を取り消し、500 を返す。
 
 - **認証**: 必須（`Authorization: Bearer <token>`）
 
@@ -462,8 +541,12 @@ sequenceDiagram
 **レスポンス 200 OK**
 
 ```json
-{ "success": true, "data": null }
+{ "success": true, "data": { "emailVerificationPending": false } }
 ```
+
+| フィールド | 型 | 説明 |
+|---|---|---|
+| emailVerificationPending | boolean | メールアドレスを変更し、確認待ちの場合 `true` |
 
 **レスポンス 400 Bad Request** — バリデーションエラー（ユーザー名は `POST /users/signup` と同じチェック、メールアドレス未入力・形式不正、`生年月日を入力してください`、`生年月日に未来日は登録できません`）。PUT では生年月日が必須
 **レスポンス 401 Unauthorized** — 未認証
@@ -746,6 +829,7 @@ sequenceDiagram
       "address": "熊本県熊本市中央区手取本町1-1",
       "latitude": 32.8032,
       "longitude": 130.7079,
+      "lastConfirmedDate": "2026-04-01",
       "categoryCd": "BS001",
       "categoryName": "ショッピング",
       "displayOrder": 1,
@@ -1609,7 +1693,9 @@ CSVファイルで自治体を一括登録・更新する。
 
 - **認証**: 必須（管理者）
 
-**リクエスト**: `UsersEntity` 形式のJSONボディ
+**リクエスト**: `UsersEntity` 形式のJSONボディ（`passwordHash`・`isAdmin`・`emailVerifiedAt` は無視され、既存の値を保持する）
+
+メールアドレスを変更した場合は、一般ユーザーの `PUT /users` と異なり確認メールを送信せず即時に反映する。確認状態（`emailVerifiedAt`）は変更前の値のまま保持する。
 
 **レスポンス 200 OK** — 更新後の `AdminUserResponseDto`
 
@@ -1634,6 +1720,6 @@ CSVファイルで自治体を一括登録・更新する。
 | 403 Forbidden | 他ユーザーのリソースへのアクセス、管理者権限なしでの管理APIアクセス（`アクセス権限がありません`） |
 | 404 Not Found | 対象リソースが存在しない |
 | 409 Conflict | ユーザー名・メールアドレスの重複登録、パスワード不一致、DB の一意制約違反（`既に登録されています`）、参照中データの削除 |
-| 429 Too Many Requests | レート制限超過（ログイン・登録・パスワードリセット・退会） |
+| 429 Too Many Requests | レート制限超過（ログイン・登録・パスワードリセット・メールアドレス確認・退会） |
 | 500 Internal Server Error | サーバー内部エラー、OTP 接続失敗 |
 | 503 Service Unavailable | DB 接続エラー |

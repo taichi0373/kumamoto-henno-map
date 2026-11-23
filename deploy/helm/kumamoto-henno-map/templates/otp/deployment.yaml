@@ -1,0 +1,45 @@
+{{- $ctx := dict "root" $ "component" "otp" }}
+{{- $o := .Values.otp }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "khm.fullname" . }}-otp
+  labels:
+    {{- include "khm.componentLabels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ $o.replicas }}
+  # 新旧 Pod を同時に載せるメモリが無いため、旧 Pod を止めてから起動する
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "khm.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "khm.componentLabels" $ctx | nindent 8 }}
+    spec:
+      {{- include "khm.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: otp
+          image: {{ include "khm.image" (dict "root" $ "image" $o.image) }}
+          imagePullPolicy: {{ $o.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ printf "-Xmx%s" $o.heapSize | quote }}
+          # graph.obj の読み込みに数分かかる
+          startupProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            periodSeconds: 30
+          resources:
+            {{- toYaml $o.resources | nindent 12 }}

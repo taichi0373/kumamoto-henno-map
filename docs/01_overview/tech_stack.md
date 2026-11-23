@@ -75,7 +75,7 @@ graph TB
 | ESLint + Prettier | - | コード品質管理 |
 | Jest | 30.x | ユニットテスト |
 | Playwright | 1.x | E2Eテスト |
-| Storybook | 10.6.5 | コンポーネント開発・ドキュメント |
+| Storybook | 10.x | コンポーネント開発・ドキュメント |
 | Vite | 8.x | ビルドツール |
 | vite-plugin-pwa | 2.x | PWA対応（Service Worker生成） |
 | PrimeFlex / PrimeIcons | 4.x / 7.x | CSSユーティリティ・アイコン |
@@ -88,14 +88,15 @@ graph TB
 |------|-----------|------|
 | Java | 21 (LTS) | 言語 |
 | Spring Boot | 4.1.2 | Webフレームワーク |
-| Doma 2 | 3.14.1 | O/Rマッパー |
+| Doma 2 | 3.15.0 | O/Rマッパー |
 | jjwt | 0.13.0 | JWT認証 |
 | springdoc-openapi | 3.2.0 | OpenAPI仕様書（Swagger UI / ReDoc） |
-| Resend Java SDK | 4.29.0 | パスワードリセットメール送信 |
-| AWS SDK for Java v2 | 2.57.6 | AWS Location Service 連携 |
+| Resend Java SDK | 4.30.0 | パスワードリセットメール・メールアドレス確認メール送信 |
+| AWS SDK for Java v2 | 2.58.0 | AWS Location Service 連携 |
 | Caffeine | - | キャッシュ |
 | Apache Commons CSV | 1.14.1 | CSVインポート/エクスポート |
-| Gradle | 9.8.2 | ビルドツール |
+| Apache HttpClient 5 | 5.6.5 | OpenTripPlanner API 呼び出し |
+| Gradle | 9.9.1 | ビルドツール |
 
 ## データベース
 
@@ -110,7 +111,7 @@ graph TB
 | OpenTripPlanner | 2.5.0 | GTFS経路探索 |
 | OpenStreetMap | - | 地図データ |
 | AWS Location Service | - | ジオコーディング（住所・座標取得） |
-| Resend | - | パスワードリセットメール送信 |
+| Resend | - | パスワードリセットメール・メールアドレス確認メール送信 |
 | Slack Incoming Webhook | - | フィードバック・特典情報報告の通知 |
 | Nominatim（OpenStreetMap） | - | 出発地・目的地の地名検索、逆ジオコーディング（フロントエンドから直接呼び出し） |
 
@@ -124,6 +125,20 @@ graph TB
 | Dependabot | - | 依存関係の自動更新 |
 | Docsify | 4.13.1 | ドキュメントホスティング（ビルド不要） |
 | GitHub Pages | - | ドキュメントホスティング |
+| GitHub Container Registry（GHCR） | - | k3s 用コンテナイメージの保管（`publish-images.yml` で push） |
+| k3s | - | 単一ノード構成の軽量 Kubernetes |
+| Helm | 3.x | k3s へのデプロイ（`deploy/helm/kumamoto-henno-map`） |
+| Traefik | - | k3s 同梱の Ingress コントローラー（front / back のパス振り分け） |
+| Cloudflare Tunnel（cloudflared） | - | k3s サーバーをポート開放せずに公開 |
+| Cloudflare R2 | - | DB バックアップ（`pg_dump`）の保管先 |
+
+### コンテナイメージ
+
+| イメージ | ベースイメージ | Dockerfile |
+|----------|---------------|------------|
+| フロントエンド | `node:22-alpine`（ビルド）/ `nginx:1.28-alpine`（実行） | `apps/front/Dockerfile` |
+| バックエンド | `eclipse-temurin:21-jdk-alpine`（ビルド）/ `eclipse-temurin:21-jre-alpine`（実行） | `apps/back/Dockerfile` |
+| OpenTripPlanner | `opentripplanner/opentripplanner:2.5.0` | `config/otp/Dockerfile` |
 
 ## ホスティング・本番環境
 
@@ -134,6 +149,8 @@ graph TB
 | Supabase | 本番データベース（PostgreSQL 17） | 外部接続（SSL必須） |
 | Hetzner VPS | OpenTripPlannerサーバー（Nginx + SSL） | `https://otp.kumamoto-henno-map.com` |
 | Cloudflare | ドメイン管理・DNS | `kumamoto-henno-map.com` |
+
+> k3s へ移行する構成も用意しています。front / back / OTP / DB を1台の k3s 上で動かし、Cloudflare Tunnel 経由で公開します。詳細は [k3s デプロイ手順](k3s_deploy.md) を参照してください。
 
 ### ドメイン構成
 

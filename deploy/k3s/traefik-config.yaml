@@ -1,0 +1,14 @@
+# k3s 同梱 Traefik の設定（kubectl apply -f で適用）
+# cloudflared からの X-Forwarded-* を信頼する（未設定だと全員が同じ IP 扱いになりログイン試行制限が共通化する）
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      web:
+        forwardedHeaders:
+          trustedIPs:
+            - 10.42.0.0/16

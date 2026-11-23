@@ -1,0 +1,15 @@
+{{ .Release.Name }} をデプロイしました（namespace: {{ .Release.Namespace }}）
+
+状態確認:
+  kubectl -n {{ .Release.Namespace }} get pods,svc,ingress
+
+DB 接続先: {{ include "khm.dbHost" . }}{{ if not .Values.db.enabled }}（外部 DB）{{ end }}
+
+公開ホスト:
+{{- range .Values.ingress.hosts }}
+  https://{{ . }}
+{{- end }}
+{{- if not .Values.cloudflared.enabled }}
+
+※ cloudflared が無効です。外部公開する場合は別途経路を用意してください。
+{{- end }}

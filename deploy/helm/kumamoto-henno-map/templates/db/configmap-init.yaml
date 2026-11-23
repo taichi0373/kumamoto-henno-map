@@ -1,0 +1,17 @@
+{{- if and .Values.db.enabled .Values.db.initSchema }}
+{{- $files := .Files.Glob "files/database/**" }}
+{{- if not ($files.Get "files/database/setup.sql") }}
+{{- fail "files/database/setup.sql がありません。deploy/scripts/deploy.sh 経由でデプロイするか db.initSchema=false にしてください" }}
+{{- end }}
+# 初回起動時に投入する DB 初期化 SQL（ディレクトリ構造は statefulset.yaml で復元する）
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "khm.fullname" . }}-db-init
+  labels:
+    {{- include "khm.labels" . | nindent 4 }}
+data:
+  {{- range $path, $_ := $files }}
+  {{ include "khm.dbInitKey" $path }}: {{ $.Files.Get $path | toJson }}
+  {{- end }}
+{{- end }}

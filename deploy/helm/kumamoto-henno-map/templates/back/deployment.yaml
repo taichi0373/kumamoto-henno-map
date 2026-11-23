@@ -1,0 +1,117 @@
+{{- $ctx := dict "root" $ "component" "back" }}
+{{- $fullname := include "khm.fullname" . }}
+{{- $secret := include "khm.secretName" . }}
+{{- $b := .Values.back }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}-back
+  labels:
+    {{- include "khm.componentLabels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ $b.replicas }}
+  selector:
+    matchLabels:
+      {{- include "khm.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "khm.componentLabels" $ctx | nindent 8 }}
+      annotations:
+        # Secret の内容が変わったら Pod を再作成する
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+    spec:
+      {{- include "khm.imagePullSecrets" . | nindent 6 }}
+      {{- if .Values.db.enabled }}
+      # Headless Service は DB が Ready になるまで名前解決できないため待つ
+      initContainers:
+        - name: wait-db
+          image: {{ printf "%s:%s" .Values.db.image.repository .Values.db.image.tag }}
+          imagePullPolicy: {{ .Values.db.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - until pg_isready -h {{ include "khm.dbHost" . }} -p 5432 -q; do echo "waiting for db"; sleep 2; done
+      {{- end }}
+      containers:
+        - name: back
+          image: {{ include "khm.image" (dict "root" $ "image" $b.image) }}
+          imagePullPolicy: {{ $b.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8081
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ $b.javaOpts | quote }}
+            - name: TZ
+              value: {{ $b.timeZone | quote }}
+            # ----- DB -----
+            - name: DB_HOST
+              value: {{ include "khm.dbHost" . | quote }}
+            - name: DB_PORT
+              value: {{ include "khm.dbPort" . | quote }}
+            - name: DB_NAME
+              value: {{ include "khm.dbName" . | quote }}
+            - name: DB_USERNAME
+              value: {{ include "khm.dbUsername" . | quote }}
+            - name: DB_SSL_PARAMS
+              value: {{ include "khm.dbSslParams" . | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: db-password }
+            - name: SPRING_DATASOURCE_HIKARI_MAXIMUMPOOLSIZE
+              value: {{ $b.dbMaxPoolSize | quote }}
+            # ----- アプリ設定 -----
+            - name: FORWARD_HEADERS_STRATEGY
+              value: {{ $b.forwardHeadersStrategy | quote }}
+            - name: CORS_ALLOWED_ORIGINS
+              value: {{ $b.corsAllowedOrigins | quote }}
+            - name: FRONTEND_BASE_URL
+              value: {{ $b.frontendBaseUrl | quote }}
+            - name: MAIL_FROM
+              value: {{ $b.mailFrom | quote }}
+            - name: OTP_API_URL
+              value: {{ printf "http://%s-otp:8080/otp/routers/default/plan" $fullname | quote }}
+            - name: AWS_REGION
+              value: {{ $b.awsRegion | quote }}
+            - name: AWS_LOCATION_PLACE_INDEX
+              value: {{ $b.awsLocationPlaceIndex | quote }}
+            # ----- 秘密情報 -----
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: jwt-secret }
+            - name: RESEND_API_KEY
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: resend-api-key }
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: aws-access-key-id }
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: aws-secret-access-key }
+            # 以下は任意
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: slack-webhook-url, optional: true }
+            - name: ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: admin-username, optional: true }
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: admin-password, optional: true }
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef: { name: {{ $secret }}, key: admin-email, optional: true }
+          # 起動に数十秒かかるため startupProbe で待つ
+          startupProbe:
+            httpGet: { path: {{ printf "%s/health" .Values.ingress.apiPath }}, port: http }
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet: { path: {{ printf "%s/health" .Values.ingress.apiPath }}, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: {{ printf "%s/health" .Values.ingress.apiPath }}, port: http }
+            periodSeconds: 30
+          resources:
+            {{- toYaml $b.resources | nindent 12 }}

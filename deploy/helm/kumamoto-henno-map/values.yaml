@@ -1,0 +1,128 @@
+# 既定値（環境差分は values-*.yaml、接続先・秘密情報は deploy/.env で上書きする）
+
+global:
+  # 既定値は持たせない（latest だと古いイメージが残るため。deploy.sh が注入する）
+  imageTag: ""
+  imagePullSecrets: []
+
+# ----- Ingress -----
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - www.kumamoto-henno-map.com
+  # server.servlet.context-path と一致させる
+  apiPath: /kumamoto-henno-map/api
+
+# ----- フロントエンド -----
+front:
+  replicas: 1
+  image:
+    repository: ghcr.io/taichi0373/kumamoto-henno-map-front
+    tag: ""
+    pullPolicy: IfNotPresent
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { memory: 128Mi }
+
+# ----- バックエンド -----
+back:
+  replicas: 1
+  image:
+    repository: ghcr.io/taichi0373/kumamoto-henno-map-back
+    tag: ""
+    pullPolicy: IfNotPresent
+  javaOpts: "-Xmx512m"
+  # 同じ DB を使う他環境と揃える（ずれるとトークンの期限判定が狂う）
+  timeZone: Asia/Tokyo
+  # DB を他環境と共有する場合は合計が Supabase の接続上限を超えないようにする
+  dbMaxPoolSize: 10
+  # X-Forwarded-For を右から辿り、偽装された値を無視する
+  forwardHeadersStrategy: NATIVE
+  corsAllowedOrigins: https://www.kumamoto-henno-map.com
+  frontendBaseUrl: https://www.kumamoto-henno-map.com
+  mailFrom: noreply@kumamoto-henno-map.com
+  awsRegion: us-east-1
+  awsLocationPlaceIndex: kumamoto-henno-map-index
+  resources:
+    requests: { cpu: 100m, memory: 512Mi }
+    limits: { memory: 1Gi }
+
+# ----- OpenTripPlanner -----
+otp:
+  replicas: 1
+  image:
+    repository: ghcr.io/taichi0373/kumamoto-henno-map-otp
+    tag: ""
+    pullPolicy: IfNotPresent
+  # limits.memory より 1GB 程度小さくする
+  heapSize: 3g
+  resources:
+    requests: { cpu: 200m, memory: 3Gi }
+    limits: { memory: 4Gi }
+
+# ----- PostgreSQL -----
+# false の場合は externalDb へ接続する
+db:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "18"
+    pullPolicy: IfNotPresent
+  name: kumamoto_henno_map
+  username: app
+  # 初回起動時に config/database の DDL / DML を投入する（ダンプをリストアする場合は false）
+  initSchema: true
+  storage:
+    size: 5Gi
+    storageClassName: ""
+  resources:
+    requests: { cpu: 50m, memory: 256Mi }
+    limits: { memory: 1Gi }
+  # pg_dump を Cloudflare R2 へ退避する
+  backup:
+    enabled: false
+    schedule: "0 3 * * *"
+    timeZone: Asia/Tokyo
+    retentionDays: 30
+    rcloneImage: rclone/rclone:1.69.1
+    r2:
+      endpoint: ""
+      bucket: kumamoto-henno-map-backup
+      prefix: postgres
+
+externalDb:
+  host: ""
+  port: 5432
+  name: postgres
+  username: postgres
+  sslParams: "?sslmode=require"
+
+# ----- Cloudflare Tunnel -----
+cloudflared:
+  enabled: true
+  replicas: 1
+  image:
+    repository: cloudflare/cloudflared
+    tag: "2025.4.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests: { cpu: 10m, memory: 32Mi }
+    limits: { memory: 128Mi }
+
+# ----- 秘密情報（deploy/.env に書く。このファイルには書かない） -----
+secrets:
+  # 指定時はチャートで Secret を作成しない
+  existingSecret: ""
+  dbPassword: ""
+  jwtSecret: ""
+  resendApiKey: ""
+  awsAccessKeyId: ""
+  awsSecretAccessKey: ""
+  slackWebhookUrl: ""
+  adminUsername: ""
+  adminPassword: ""
+  adminEmail: ""
+  cloudflaredToken: ""
+  r2AccessKeyId: ""
+  r2SecretAccessKey: ""

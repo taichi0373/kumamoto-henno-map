@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+import io.github.taichi0373.kumamoto_henno_map.exception.EmailNotVerifiedException;
 import io.github.taichi0373.kumamoto_henno_map.dto.LoginResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.repository.dao.UsersDao;
 import io.github.taichi0373.kumamoto_henno_map.repository.entity.UsersEntity;
@@ -112,6 +113,7 @@ public class AuthService implements UserDetailsService {
      * ログイン処理
      * <p>
      * パスワードを検証し、成功時にJWTトークンを含むレスポンスを返す。
+     * パスワードが正しくてもメールアドレスが未確認の場合はログインさせない。
      * ログイン成功時は最終ログイン日時とIPアドレスをDBに保存する。
      * 保存は付随情報のため、失敗しても警告ログのみ出力してログインは継続する。
      * </p>
@@ -119,11 +121,16 @@ public class AuthService implements UserDetailsService {
      * @param password パスワード
      * @param clientIp クライアントIPアドレス
      * @return ログインレスポンスDTO（認証失敗時はnull）
+     * @throws EmailNotVerifiedException パスワードは正しいがメールアドレスが未確認の場合
      */
     public LoginResponseDto login(String username, String password, String clientIp) {
         UsersEntity user = usersDao.selectByUsername(username);
         if (user == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             return null;
+        }
+        // 未確認はパスワードが正しい場合のみ通知する（誤りの場合は通常の認証失敗とする）
+        if (user.getEmailVerifiedAt() == null) {
+            throw new EmailNotVerifiedException("メールアドレスの確認が完了していません");
         }
         try {
             usersDao.updateLastLogin(user.getUserId(), LocalDateTime.now(), truncateIp(clientIp));

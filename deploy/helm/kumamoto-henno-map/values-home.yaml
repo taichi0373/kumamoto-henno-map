@@ -1,0 +1,12 @@
+# k3s 単一ノード構成向けの上書き値
+
+ingress:
+  hosts:
+    - www.kumamoto-henno-map.com
+    - kumamoto-henno-map.com
+
+otp:
+  # サーバーのメモリに合わせて調整する
+  heapSize: 3g
+  resources:
+    limits: { memory: 4Gi }

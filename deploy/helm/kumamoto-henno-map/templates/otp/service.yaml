@@ -1,0 +1,15 @@
+{{- $ctx := dict "root" $ "component" "otp" }}
+# バックエンドからのみ利用する
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "khm.fullname" . }}-otp
+  labels:
+    {{- include "khm.componentLabels" $ctx | nindent 4 }}
+spec:
+  selector:
+    {{- include "khm.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

@@ -16,17 +16,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.github.taichi0373.kumamoto_henno_map.dto.ApiResponseDto;
+import io.github.taichi0373.kumamoto_henno_map.dto.EmailVerificationConfirmRequestDto;
+import io.github.taichi0373.kumamoto_henno_map.dto.EmailVerificationResendRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.LoginRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.LoginResponseDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.PasswordResetConfirmRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.PasswordResetRequestDto;
 import io.github.taichi0373.kumamoto_henno_map.dto.RefreshResponseDto;
+import io.github.taichi0373.kumamoto_henno_map.exception.EmailNotVerifiedException;
 import io.github.taichi0373.kumamoto_henno_map.service.AuthService;
+import io.github.taichi0373.kumamoto_henno_map.service.EmailVerificationService;
+import io.github.taichi0373.kumamoto_henno_map.service.EmailVerificationService.ConfirmResult;
 import io.github.taichi0373.kumamoto_henno_map.service.LoginAttemptService;
 import io.github.taichi0373.kumamoto_henno_map.service.PasswordResetService;
 import io.github.taichi0373.kumamoto_henno_map.service.RefreshTokenService;
 import io.github.taichi0373.kumamoto_henno_map.service.RefreshTokenService.RotationResult;
 import io.github.taichi0373.kumamoto_henno_map.constants.CodeConstants;
+import io.github.taichi0373.kumamoto_henno_map.util.DbExceptionUtils;
 import io.github.taichi0373.kumamoto_henno_map.util.RequestUtils;
 import io.github.taichi0373.kumamoto_henno_map.util.ValidateUtils;
 import jakarta.servlet.http.Cookie;
@@ -72,6 +78,10 @@ public class AuthController {
     @Autowired
     private PasswordResetService passwordResetService;
 
+    /** メールアドレス確認サービス */
+    @Autowired
+    private EmailVerificationService emailVerificationService;
+
     /** ログイン試行管理サービス */
     @Autowired
     private LoginAttemptService loginAttemptService;
@@ -105,6 +115,8 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "ログイン成功（data: LoginResponseDto）"),
             @ApiResponse(responseCode = "401", description = "ユーザー名またはパスワードが正しくない",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "403", description = "メールアドレスが未確認（パスワードが正しい場合のみ）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "429", description = "ログイン試行回数が上限を超えた（15分後に解除）",
                     content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
             @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
@@ -134,6 +146,10 @@ public class AuthController {
             setRefreshTokenCookie(httpResponse, refreshToken);
 
             return ResponseEntity.ok(ApiResponseDto.success(response));
+        } catch (EmailNotVerifiedException e) {
+            // パスワードは正しいため失敗として記録しない
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponseDto.error("メールアドレスの確認が完了していません。確認メールのリンクから確認を完了してください。"));
         } catch (Exception e) {
             // 例外を誘発する入力での試行が試行制限をすり抜けないよう、失敗として記録する
             loginAttemptService.recordLoginFailure(clientIp);
@@ -302,6 +318,84 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponseDto.error("パスワードのリセットに失敗しました"));
         }
+    }
+
+    /**
+     * メールアドレス確認
+     */
+    @Operation(summary = "メールアドレス確認",
+            description = "確認メールのトークンでメールアドレスの確認を確定する。新規登録時はアカウントを有効化し、変更時はメールアドレスを切り替える。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "確認成功（data: null）"),
+            @ApiResponse(responseCode = "400", description = "トークンが未入力・無効・期限切れ・使用済み",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "409", description = "変更後のメールアドレスが他のユーザーに使用されている",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "429", description = "試行回数が上限を超えた（15分後に解除）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "サーバー内部エラー",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @PostMapping("/email-verification/confirm")
+    public ResponseEntity<ApiResponseDto<Void>> confirmEmailVerification(
+            @RequestBody EmailVerificationConfirmRequestDto request,
+            HttpServletRequest httpRequest) {
+        String clientIp = RequestUtils.getClientIp(httpRequest);
+        if (loginAttemptService.isEmailVerificationBlocked(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponseDto.error("試行回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
+        }
+        try {
+            if (ValidateUtils.isNullOrEmpty(request.getToken())) {
+                loginAttemptService.recordEmailVerificationFailure(clientIp);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("このリンクは無効または期限切れです。"));
+            }
+            ConfirmResult result = emailVerificationService.confirm(request.getToken());
+            if (result == ConfirmResult.INVALID) {
+                loginAttemptService.recordEmailVerificationFailure(clientIp);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponseDto.error("このリンクは無効または期限切れです。"));
+            }
+            loginAttemptService.recordEmailVerificationSuccess(clientIp);
+            if (result == ConfirmResult.CONFLICT) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(ApiResponseDto.error("このメールアドレスは既に使用されています"));
+            }
+            return ResponseEntity.ok(ApiResponseDto.success(null));
+        } catch (Exception e) {
+            return DbExceptionUtils.toErrorResponse(e, "メールアドレスの確認に失敗しました");
+        }
+    }
+
+    /**
+     * 確認メール再送
+     */
+    @Operation(summary = "確認メール再送", description = "未確認ユーザーへ新規登録時の確認メールを再送する。認証不要。")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "処理完了（メールアドレスの存在有無・確認状態に関わらず同一レスポンス）"),
+            @ApiResponse(responseCode = "429", description = "再送要求回数超過（15分後に解除）",
+                    content = @Content(schema = @Schema(implementation = ApiResponseDto.class)))
+    })
+    @PostMapping("/email-verification/resend")
+    public ResponseEntity<ApiResponseDto<Void>> resendEmailVerification(
+            @RequestBody EmailVerificationResendRequestDto request,
+            HttpServletRequest httpRequest) {
+        String clientIp = RequestUtils.getClientIp(httpRequest);
+        if (loginAttemptService.isEmailVerificationResendBlocked(clientIp)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ApiResponseDto.error("再送要求回数が上限を超えました。しばらく時間をおいて再度お試しください。"));
+        }
+        loginAttemptService.recordEmailVerificationResendAttempt(clientIp);
+        if (!ValidateUtils.isEmail(request.getEmail())) {
+            return ResponseEntity.ok(ApiResponseDto.success(null));
+        }
+        try {
+            emailVerificationService.resendSignupVerification(request.getEmail());
+        } catch (Exception e) {
+            logger.warn("確認メールの再送中にエラーが発生しました", e);
+        }
+        return ResponseEntity.ok(ApiResponseDto.success(null));
     }
 
     /**

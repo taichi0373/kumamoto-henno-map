@@ -30,6 +30,8 @@ jobs:
   # バックエンドのビルド処理
   backend-build:
     name: Backend Build
+    permissions:
+      contents: read
     timeout-minutes: ${{ inputs.timeout-minutes }}
     # Github-hosted runner を使用
     runs-on: ubuntu-latest
@@ -70,7 +72,7 @@ jobs:
 
       # Java セットアップ
       - name: Set up Java
-        uses: actions/setup-java@v6.1.0
+        uses: actions/setup-java@v6.3.0
         with:
           distribution: ${{ inputs.java-distribution }}
           java-version: ${{ inputs.java-version }}
