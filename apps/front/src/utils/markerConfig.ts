@@ -74,7 +74,7 @@ const buildBenefitPopupHtml = (
   /* 特典内容 */
   html += `<div style="margin-bottom:10px;">`
   html += `<div style="font-size:11px; font-weight:bold; color:${textSecondary}; margin-bottom:4px; padding:2px 6px; background:${bgLabel}; border-radius:3px; display:inline-block;">特典内容</div>`
-  html += `<div style="color:${textPrimary}; padding-left:2px;">${benefitDetail}</div>`
+  html += `<div style="color:${textPrimary}; padding-left:2px; white-space:pre-line;">${benefitDetail}</div>`
   html += `</div>`
 
   /* 情報リスト */
